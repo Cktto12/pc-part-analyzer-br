@@ -2654,7 +2654,6 @@ async function testPhoneAlertNow() {
     PROMO_STATE.notifyPhone = prevSetting;
   }
 }
-}
 
 function checkAndFireDealNotifications(forceTest = false) {
   const qualifying = evaluateDealsForAlerts();
