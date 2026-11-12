@@ -532,6 +532,24 @@
             </div>
           </div>
 
+          <!-- Background Monitor Status & Offline Notice -->
+          <div class="p-3 rounded-xl bg-sky-950/30 border border-sky-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sky-300 flex items-center gap-1.5">⚡ Monitoramento Contínuo em Segundo Plano</span>
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">● Ativo no PC</span>
+              </div>
+              <p class="text-[11px] text-slate-300">
+                O servidor Python local monitora os grupos silenciosamente a cada 10 min. Se bater suas metas ou for Pechincha, ele dispara o aviso no <strong>Windows e no seu Celular mesmo com todas as abas do navegador fechadas</strong>!
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button type="button" onclick="testBackgroundAlertNow()" class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md transition">
+                🔔 Testar em 2º Plano
+              </button>
+            </div>
+          </div>
+
           <!-- Phone Notification Configuration (ntfy.sh, WhatsApp CallMeBot, Email SMTP) -->
           <div id="promo-phone-config-box" class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/40 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
@@ -927,7 +945,7 @@
                 <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCBSort('rank')">#</th>
                 <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCBSort('name')">Placa de Vídeo</th>
                 <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCBSort('price')">Preço Hoje</th>
-                <th id="th-target" class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCBSort('target')">Preço Alvo</th>
+                <th id="th-target" class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCBSort('target')">Faixa Esperada (Alvo / BF)</th>
                 <th id="th-trend" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('trend')">Tendência 90d</th>
                 <th class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('my_cb')">Seu Custo-Benefício</th>
                 <th id="th-hb_cb" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('hb_cb')">CB HardwareBarato</th>
@@ -1145,6 +1163,8 @@
               <div>
                 <label class="text-[11px] text-slate-300 font-semibold block mb-1">Escolha o Produto Alvo:</label>
                 <select id="bf-target-item" onchange="onBFTargetItemChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"></select>
+                <!-- Dynamic Hardware Info Pill (RAM, VRAM, Arch) -->
+                <div id="bf-target-info-pill" class="mt-2 flex flex-wrap items-center gap-2"></div>
               </div>
 
               <div class="grid grid-cols-2 gap-2.5 text-xs">
@@ -1158,12 +1178,30 @@
                 </div>
               </div>
 
-              <div class="bg-slate-900/90 p-3 rounded-lg border border-amber-500/30">
+              <!-- Coupon Simulator & Live Deal Tester -->
+              <div class="bg-slate-900/90 p-3 rounded-lg border border-amber-500/30 space-y-2.5">
                 <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-mono uppercase text-amber-300 block font-bold">Testar Preço de Cupom / Live Agora (R$):</label>
-                  <span class="text-[10px] text-slate-400 font-mono">Simule se vale a compra</span>
+                  <label class="text-[10px] font-mono uppercase text-amber-300 block font-bold">Simular Cupom ou Preço Live (R$):</label>
+                  <span class="text-[10px] text-slate-400 font-mono">Dedução automática</span>
                 </div>
-                <input type="number" id="bf-input-test-price" oninput="updateBFPromoEvaluator()" placeholder="Ex: 1999" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono font-extrabold text-white text-sm mt-1" step="50" />
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <span class="text-[9px] font-mono uppercase text-slate-400 block">Preço Anunciado (R$)</span>
+                    <input type="number" id="bf-input-test-price" oninput="recalcBFCoupon()" placeholder="Ex: 3500" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono font-extrabold text-white text-xs mt-0.5" step="50" />
+                  </div>
+                  <div>
+                    <span class="text-[9px] font-mono uppercase text-amber-400 block">Cupom / Desconto (R$ ou %)</span>
+                    <input type="text" id="bf-input-coupon" oninput="recalcBFCoupon()" placeholder="Ex: 300 ou 10%" class="w-full bg-slate-950 border border-amber-500/40 rounded px-2.5 py-1.5 font-mono font-bold text-amber-300 text-xs mt-0.5" />
+                  </div>
+                </div>
+
+                <!-- Active coupons detected for this item -->
+                <div id="bf-active-coupons-container" class="hidden"></div>
+
+                <!-- Coupon result breakdown -->
+                <div id="bf-coupon-calc-summary" class="hidden px-2.5 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300"></div>
+
                 <div id="bf-test-verdict" class="mt-2 text-xs"></div>
               </div>
             </div>

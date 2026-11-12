@@ -34,15 +34,15 @@ jobs:
         run: |
           python scraper.py
 
-      - name: Run Flash Promos & Coupon Radar
+      - name: Run Flash Promos & Coupon Radar with Cloud Alerts
         run: |
-          python promo_radar.py
+          python promo_radar.py --notify
 
       - name: Commit and push changes
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/hardware_db.json data/promos_cache.json
+          git add data/hardware_db.json data/promos_cache.json data/alert_config.json data/notified_history.json || true
           git diff --staged --quiet || (git commit -m "chore: auto-update hardware prices and promo coupons [skip ci]" && git push)
 
       - name: Setup Pages

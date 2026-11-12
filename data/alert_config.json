@@ -1,0 +1,35 @@
+{
+  "notifyEnabled": true,
+  "intervalMins": 10,
+  "notifyWinToast": true,
+  "notifyPhone": true,
+  "phoneService": "ntfy",
+  "ntfyTopic": "meu_alerta_gpu_cecatto",
+  "ntfyRing": false,
+  "ntfyPriority": "default",
+  "trigCB": true,
+  "notifyMinCB": 92,
+  "trigBF": true,
+  "bfMode": "user_or_low",
+  "trigHB": true,
+  "hbMinBrl": 150,
+  "hbMinPct": 8,
+  "notifyLogic": "OR",
+  "custom_targets": [
+    {
+      "slug": "rtx-5060",
+      "name": "RTX 5060",
+      "max_price": 2300
+    },
+    {
+      "slug": "rtx-5070",
+      "name": "RTX 5070",
+      "max_price": 3800
+    },
+    {
+      "slug": "rtx-4060",
+      "name": "RTX 4060",
+      "max_price": 1850
+    }
+  ]
+}

@@ -8,9 +8,11 @@ Serves the web application on http://localhost:8080 and provides:
 import os
 import sys
 import json
+import time
 import base64
 import socket
 import argparse
+import threading
 import webbrowser
 import subprocess
 import smtplib
@@ -25,6 +27,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "hardware_db.json")
+ALERT_CONFIG_PATH = os.path.join(BASE_DIR, "data", "alert_config.json")
+NOTIFIED_HISTORY_PATH = os.path.join(BASE_DIR, "data", "notified_history.json")
 
 def detect_local_pc():
     """Detects local Windows PC hardware using PowerShell Get-CimInstance."""
@@ -92,15 +96,32 @@ def send_windows_native_notification(title, line1, line2="", url="", popup_box=F
         """
 
     ps_script = f"""
+    $toastSent = $false
     try {{
         [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
         [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
         $rawXml = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('{xml_b64}'))
         $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
         $xml.LoadXml($rawXml)
-        $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}}\\WindowsPowerShell\\v1.0\\powershell.exe').Show($toast)
+        $toast = New-Object Windows.UI.Notifications.ToastNotification $xml
+        $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}}\\WindowsPowerShell\\v1.0\\powershell.exe')
+        $notifier.Show($toast)
+        $toastSent = $true
     }} catch {{}}
+
+    if (-not $toastSent) {{
+        try {{
+            Add-Type -AssemblyName System.Windows.Forms
+            $balloon = New-Object System.Windows.Forms.NotifyIcon
+            $balloon.Icon = [System.Drawing.SystemIcons]::Information
+            $balloon.BalloonTipTitle = '{t_esc}'
+            $balloon.BalloonTipText = "{l1_esc}`n{l2_esc}"
+            $balloon.Visible = $true
+            $balloon.ShowBalloonTip(7000)
+            Start-Sleep -Seconds 2
+            $balloon.Dispose()
+        }} catch {{}}
+    }}
     {popup_snippet}
     """
     try:
@@ -119,29 +140,34 @@ def send_phone_alert_ntfy(topic, title, message, url="", priority="default", rin
     """Sends a push notification to phone via free ntfy.sh topic.
     By default (ring=False, priority='default'), it arrives as a standard polite notification,
     respecting Do Not Disturb and normal system volume settings.
+    Uses JSON POST to support full UTF-8 emojis and clean cross-platform delivery.
     """
     clean_topic = topic.strip().lstrip("/")
     if not clean_topic:
         return {"ok": False, "error": "Tópico ntfy não configurado"}
-    endpoint = f"https://ntfy.sh/{quote(clean_topic)}"
-    headers = {
-        "Title": title[:200].encode("utf-8"),
-        "Priority": priority or ("urgent" if ring else "default"),
-        "Tags": "bell,mag" if not ring else "rotating_light,fire",
-        "User-Agent": "GPU-Analyzer-Pro/1.0"
+
+    payload = {
+        "topic": clean_topic,
+        "title": title[:200],
+        "message": message,
+        "priority": 5 if ring else (4 if priority == "urgent" else 3),
+        "tags": ["bell", "mag"] if not ring else ["rotating_light", "fire"]
     }
     if ring:
-        # Ringtone/alarm tag in ntfy only when explicitly requested
-        headers["Call"] = "yes"
+        payload["call"] = "yes"
     if url and url.startswith("http"):
-        headers["Click"] = url
-        headers["Actions"] = f"view, Abrir Oferta, {url}"
+        payload["click"] = url
+        payload["actions"] = [{"action": "view", "label": "Abrir Oferta", "url": url}]
 
     try:
+        data_bytes = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         req = urllib.request.Request(
-            endpoint,
-            data=message.encode("utf-8"),
-            headers=headers,
+            "https://ntfy.sh",
+            data=data_bytes,
+            headers={
+                "Content-Type": "application/json; charset=utf-8",
+                "User-Agent": "GPU-Analyzer-Pro/1.0"
+            },
             method="POST"
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
@@ -213,6 +239,179 @@ def send_phone_alert_email(smtp_cfg, title, body_text, url=""):
     except Exception as e:
         return {"ok": False, "error": str(e), "service": "email"}
 
+def load_alert_config():
+    """Loads alert preferences and target items from alert_config.json."""
+    if os.path.exists(ALERT_CONFIG_PATH):
+        try:
+            with open(ALERT_CONFIG_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "notifyEnabled": True,
+        "intervalMins": 10,
+        "notifyWinToast": True,
+        "notifyPhone": True,
+        "phoneService": "ntfy",
+        "ntfyTopic": "meu_alerta_gpu_cecatto",
+        "ntfyRing": False,
+        "ntfyPriority": "default",
+        "trigCB": True,
+        "notifyMinCB": 92,
+        "trigBF": True,
+        "bfMode": "user_or_low",
+        "trigHB": True,
+        "hbMinBrl": 150,
+        "hbMinPct": 8,
+        "notifyLogic": "OR",
+        "custom_targets": [
+            {"slug": "rtx-5060", "name": "RTX 5060", "max_price": 2300},
+            {"slug": "rtx-5070", "name": "RTX 5070", "max_price": 3800}
+        ]
+    }
+
+def save_alert_config(cfg):
+    """Saves alert preferences to alert_config.json."""
+    os.makedirs(os.path.dirname(ALERT_CONFIG_PATH), exist_ok=True)
+    with open(ALERT_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+def load_notified_history():
+    """Loads notified deals history, pruning items older than 48 hours."""
+    if os.path.exists(NOTIFIED_HISTORY_PATH):
+        try:
+            with open(NOTIFIED_HISTORY_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                now = time.time()
+                return {k: v for k, v in data.items() if now - v < 172800}
+        except Exception:
+            pass
+    return {}
+
+def save_notified_history(history):
+    os.makedirs(os.path.dirname(NOTIFIED_HISTORY_PATH), exist_ok=True)
+    try:
+        with open(NOTIFIED_HISTORY_PATH, "w", encoding="utf-8") as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def check_and_notify_deals(cfg=None, db=None, force_notify=False):
+    """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts."""
+    if cfg is None:
+        cfg = load_alert_config()
+    if not cfg.get("notifyEnabled", True) and not force_notify:
+        return {"notified": 0, "status": "disabled"}
+
+    if db is None:
+        if not os.path.exists(DB_PATH):
+            return {"notified": 0, "status": "no_db"}
+        with open(DB_PATH, "r", encoding="utf-8") as f:
+            db = json.load(f)
+
+    from promo_radar import scan_live_promotions
+    res = scan_live_promotions(db, max_age_hours=24)
+    matched = res.get("matched_deals", [])
+    history = load_notified_history()
+    notified_count = 0
+
+    min_cb = int(cfg.get("notifyMinCB", 92))
+    hb_brl = float(cfg.get("hbMinBrl", 150))
+    hb_pct = float(cfg.get("hbMinPct", 8))
+    trig_cb = bool(cfg.get("trigCB", True))
+    trig_hb = bool(cfg.get("trigHB", True))
+    targets = cfg.get("custom_targets", [])
+
+    for d in matched:
+        post_id = d.get("post_id") or f"{d.get('channel_id')}_{d.get('price_brl')}_{d.get('matched_slug')}"
+        if not force_notify and post_id in history:
+            continue
+
+        qualifies = False
+        reason = ""
+
+        # Check target list (e.g. RTX 5060 <= 2300, RTX 5070 <= 3800)
+        matched_slug = d.get("matched_slug")
+        price = d.get("price_brl", 999999)
+        for tgt in targets:
+            if tgt.get("slug") == matched_slug and price <= tgt.get("max_price", 0):
+                qualifies = True
+                reason = f"Meta Atingida (≤ R$ {tgt['max_price']:,.2f})"
+                break
+
+        # Check high CB or pechincha
+        if not qualifies and trig_cb and (d.get("cb_score", 0) >= min_cb or d.get("is_pechincha")):
+            qualifies = True
+            reason = f"Pechincha / CB {d.get('cb_score')}/100"
+
+        # Check savings vs HardwareBarato
+        savings_brl = d.get("savings_vs_hb_brl", 0)
+        savings_pct = (savings_brl / max(1, d.get("hb_price_brl", 1))) * 100
+        if not qualifies and trig_hb and (savings_brl >= hb_brl or savings_pct >= hb_pct):
+            qualifies = True
+            reason = f"Economia de R$ {savings_brl:.0f} ({savings_pct:.0f}%) vs HB"
+
+        if qualifies:
+            coup_text = f" • Cupom: {d['coupon_code']}" if d.get("coupon_code") else ""
+            title = f"🔥 {d.get('matched_name')} por R$ {price:,.2f}"
+            line1 = f"{reason}{coup_text} (@{d.get('channel_id')})"
+            line2 = d.get("title", "")[:120]
+            url = d.get("buy_url") or d.get("post_url") or ""
+
+            # 1. Native Windows Toast Notification (Runs in background even if site is closed!)
+            if cfg.get("notifyWinToast", True):
+                send_windows_native_notification(title, line1, line2, url)
+
+            # 2. Phone Push Notification (ntfy.sh / WhatsApp / Email)
+            if cfg.get("notifyPhone", True):
+                svc = cfg.get("phoneService", "ntfy")
+                if svc == "ntfy" and cfg.get("ntfyTopic"):
+                    send_phone_alert_ntfy(
+                        topic=cfg["ntfyTopic"],
+                        title=title,
+                        message=f"{line1}\n{line2}",
+                        url=url,
+                        priority=cfg.get("ntfyPriority", "default"),
+                        ring=bool(cfg.get("ntfyRing", False))
+                    )
+                elif svc == "whatsapp" and cfg.get("waNumber") and cfg.get("waApikey"):
+                    send_phone_alert_whatsapp(
+                        phone=cfg["waNumber"],
+                        apikey=cfg["waApikey"],
+                        message=f"*{title}*\n\n{line1}\n{line2}\n{url}"
+                    )
+                elif svc == "email" and cfg.get("smtp"):
+                    send_phone_alert_email(
+                        cfg.get("smtp", {}),
+                        title,
+                        f"{line1}\n{line2}",
+                        url
+                    )
+
+            history[post_id] = time.time()
+            notified_count += 1
+            if force_notify:
+                break
+
+    save_notified_history(history)
+    return {"notified": notified_count, "total_matched": len(matched)}
+
+def background_promo_monitor_thread():
+    """Background daemon thread: scans for deals and dispatches notifications at any time."""
+    time.sleep(15)  # initial delay after server boot
+    while True:
+        try:
+            cfg = load_alert_config()
+            interval_mins = max(2, int(cfg.get("intervalMins", 10)))
+            if cfg.get("notifyEnabled", True):
+                res = check_and_notify_deals(cfg)
+                if res.get("notified", 0) > 0:
+                    print(f"[Background Monitor] Enviou {res['notified']} alerta(s) de novas ofertas em segundo plano!")
+        except Exception as e:
+            print(f"[Background Monitor Erro] {e}")
+            interval_mins = 10
+        time.sleep(interval_mins * 60)
+
 class AppRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
@@ -281,11 +480,34 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 return self.send_json(data)
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/alert-config":
+            return self.send_json(load_alert_config())
+        elif parsed.path == "/api/alert-history":
+            return self.send_json(load_notified_history())
         return super().do_GET()
 
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/refresh":
+        if parsed.path == "/api/alert-config":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                save_alert_config(body)
+                return self.send_json({"ok": True, "config": body})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/test-background-alert":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                cfg = load_alert_config()
+                if body:
+                    cfg.update(body)
+                res = check_and_notify_deals(cfg, force_notify=True)
+                return self.send_json({"ok": True, "result": res})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/refresh":
             try:
                 from scraper import build_database
                 db = build_database(DB_PATH)
@@ -380,6 +602,11 @@ def run_server(host="127.0.0.1", port=8080, open_browser=True):
     else:
         browse_url = f"http://{host}:{actual_port}"
         print(f"  -> Acesso na rede / PC:   http://{host}:{actual_port}")
+
+    # Inicia o monitor de promoções contínuo em segundo plano (roda mesmo com navegador fechado)
+    monitor_thread = threading.Thread(target=background_promo_monitor_thread, daemon=True)
+    monitor_thread.start()
+    print("  -> Monitor em 2º plano:   ATIVO (Varredura e alertas mesmo com o navegador fechado!)")
 
     if open_browser:
         try:

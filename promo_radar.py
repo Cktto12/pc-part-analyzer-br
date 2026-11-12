@@ -27,6 +27,10 @@ DEFAULT_CHANNELS = [
 DEFAULT_SEARCH_QUERIES = [
     "",              # latest general messages in channel
     "RTX",           # NVIDIA GPUs
+    "5060",          # RTX 5060 specific spotlight
+    "5070",          # RTX 5070 specific spotlight
+    "4060",          # RTX 4060 popular baseline
+    "7600",          # RX 7600 popular baseline
     "RX ",           # AMD GPUs
     "Ryzen",         # AMD CPUs
     "DDR4",          # DDR4 RAM
@@ -35,26 +39,26 @@ DEFAULT_SEARCH_QUERIES = [
 
 # Words that indicate a complete PC, laptop, monitor, or console rather than a standalone GPU/CPU
 EXCLUDE_SYSTEM_RE = re.compile(
-    r"\b(notebook|laptop|macbook|pc\s*gamer|computador|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|gabinete|water\s*cooler|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
+    r"\b(notebook|laptop|macbook|computador\s*completo|pc\s*completo|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
     re.IGNORECASE,
 )
 
 # Specific GPU pattern rules (ordered from most specific to least specific!)
 GPU_MATCH_RULES = [
-    ("rtx-5090",         r"\brtx\s*5090\b"),
-    ("rtx-5080",         r"\brtx\s*5080\b"),
-    ("rtx-5070-ti",      r"\brtx\s*5070\s*ti\b"),
-    ("rtx-5070",         r"\brtx\s*5070(?!\s*ti)\b"),
-    ("rtx-5060-ti-16gb", r"\brtx\s*5060\s*ti\b.*?\b16\s*gb\b|\b16\s*gb\b.*?\brtx\s*5060\s*ti\b"),
-    ("rtx-5060-ti-8gb",  r"\brtx\s*5060\s*ti\b(?!.*?\b16\s*gb\b)"),
-    ("rtx-5060",         r"\brtx\s*5060(?!\s*ti)\b"),
-    ("rtx-5050",         r"\brtx\s*5050\b"),
-    ("rtx-4080-super",   r"\brtx\s*4080\s*super\b"),
-    ("rtx-4080",         r"\brtx\s*4080(?!\s*super)\b"),
-    ("rtx-4070-ti",      r"\brtx\s*4070\s*ti\b"),
-    ("rtx-4070",         r"\brtx\s*4070(?!\s*ti)\b"),
-    ("rtx-4060-ti-8gb",  r"\brtx\s*4060\s*ti\b"),
-    ("rtx-4060",         r"\brtx\s*4060(?!\s*ti)\b"),
+    ("rtx-5090",         r"\b(?:rtx|geforce)?\s*5090\b"),
+    ("rtx-5080",         r"\b(?:rtx|geforce)?\s*5080\b"),
+    ("rtx-5070-ti",      r"\b(?:rtx|geforce)?\s*5070\s*ti\b"),
+    ("rtx-5070",         r"\b(?:rtx|geforce)?\s*5070(?!\s*ti)\b"),
+    ("rtx-5060-ti-16gb", r"\b(?:rtx|geforce)?\s*5060\s*ti\b.*?\b16\s*gb\b|\b16\s*gb\b.*?\b(?:rtx|geforce)?\s*5060\s*ti\b"),
+    ("rtx-5060-ti-8gb",  r"\b(?:rtx|geforce)?\s*5060\s*ti\b(?!.*?\b16\s*gb\b)"),
+    ("rtx-5060",         r"\b(?:rtx|geforce)?\s*5060(?!\s*ti)\b"),
+    ("rtx-5050",         r"\b(?:rtx|geforce)?\s*5050\b"),
+    ("rtx-4080-super",   r"\b(?:rtx|geforce)?\s*4080\s*super\b"),
+    ("rtx-4080",         r"\b(?:rtx|geforce)?\s*4080(?!\s*super)\b"),
+    ("rtx-4070-ti",      r"\b(?:rtx|geforce)?\s*4070\s*ti\b"),
+    ("rtx-4070",         r"\b(?:rtx|geforce)?\s*4070(?!\s*ti)\b"),
+    ("rtx-4060-ti-8gb",  r"\b(?:rtx|geforce)?\s*4060\s*ti\b"),
+    ("rtx-4060",         r"\b(?:rtx|geforce)?\s*4060(?!\s*ti)\b"),
     ("rtx-3080-ti",      r"\brtx\s*3080\s*ti\b"),
     ("rtx-3080-12gb",    r"\brtx\s*3080\b.*?\b12\s*gb\b"),
     ("rtx-3080-10gb",    r"\brtx\s*3080(?!\s*ti)\b"),
@@ -239,7 +243,8 @@ def extract_price_and_coupon(lines):
 
 def match_catalog_item(title_and_first_lines, db):
     """Matches a deal's title against our GPU / CPU catalog, ignoring full PCs and laptops."""
-    if EXCLUDE_SYSTEM_RE.search(title_and_first_lines):
+    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram)\b", title_and_first_lines, re.I))
+    if not has_component_clue and EXCLUDE_SYSTEM_RE.search(title_and_first_lines):
         return None, None
 
     for slug, pat in GPU_MATCH_RULES:
@@ -475,3 +480,16 @@ if __name__ == "__main__":
             f"R$ {d['price_brl']} (HB: R$ {d['hb_price_brl']} -> diff: R$ {-d['savings_vs_hb_brl']:+.2f}) "
             f"| Cupom: {d['coupon_code'] or d['coupon_info'] or '-'}"
         )
+
+    if "--notify" in sys.argv:
+        print("\n[Promo Radar Cloud] Avaliando ofertas para notificações remotas (ntfy.sh / WhatsApp)...")
+        try:
+            from server import check_and_notify_deals, load_alert_config
+            cfg = load_alert_config()
+            # If running on Linux/cloud without a Windows GUI, disable Windows toast
+            if sys.platform != "win32":
+                cfg["notifyWinToast"] = False
+            notif_res = check_and_notify_deals(cfg, db)
+            print(f"[Promo Radar Cloud] Resultado do envio de alertas: {notif_res}")
+        except Exception as e:
+            print(f"[Promo Radar Cloud] Aviso ao processar alertas: {e}")

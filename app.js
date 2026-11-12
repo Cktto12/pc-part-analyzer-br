@@ -189,17 +189,20 @@ function getEffectiveEngineeringScore(gpu) {
   const bench = gpu.gaming_score || 1500;
   const heft = parseFloat(STATE.vramHeft) || 1.6;
 
-  // 1. AI Training & Simulação 3D (NVIDIA Omniverse, Isaac Sim, PhysX 5):
-  //    Heavily requires NVIDIA RTX / CUDA & >=12GB VRAM for scene textures + physics tensors
+  // 1. AI Training & Simulação 3D (NVIDIA Omniverse, Isaac Sim, PhysX 5, PyTorch Neural Nets):
+  //    Requires CUDA + Tensor Cores (FP8/FP16/BF16) & >=12GB VRAM
   // 2. Ethernet Frame / High-Speed Packet Processing (DOCA GPUNetIO, DPDK GPU, CuPy/RAPIDS cuDF ring buffers):
   //    Depends on Memory Bandwidth (GB/s), CUDA stream throughput, and VRAM buffer size
   // 3. OpenDSS / Power Grid Time-Series & Monte Carlo Co-Simulation (CuPy / cuSOLVER sparse matrix & AI surrogate models):
   //    Depends on CUDA sparse solvers + FP16/FP32 compute + bandwidth
-  const cudaEcoMult = gpu.brand === 'NVIDIA' ? (heft >= 1.5 ? 1.45 : 1.30) : (gpu.brand === 'Intel' ? 0.85 : 0.72);
+  const isNvidia = gpu.brand === 'NVIDIA';
+  const hasTensorCores = isNvidia && (gpu.arch && (gpu.arch.includes('Blackwell') || gpu.arch.includes('Ada') || gpu.arch.includes('Ampere') || gpu.arch.includes('Turing')));
+  const cudaEcoMult = isNvidia ? (hasTensorCores ? (heft >= 1.5 ? 1.50 : 1.35) : 1.15) : (gpu.brand === 'Intel' ? 0.85 : 0.65);
   const vramTwinBonus = vram >= 16 ? 1200 : (vram >= 12 ? 750 : (vram <= 8 && heft >= 1.5 ? -300 : 150));
+  const tensorTrainBonus = hasTensorCores ? 650 : (isNvidia ? 200 : -450);
 
-  const rawEng = (bench * 0.42) + (bw * 2.8) + (fp16 * 19) + (vram * 130) + vramTwinBonus;
-  return Math.max(300, Math.round(rawEng * cudaEcoMult));
+  const rawEng = (bench * 0.40) + (bw * 2.8) + (fp16 * 19) + (vram * 130) + vramTwinBonus + tensorTrainBonus;
+  return Math.max(200, Math.round(rawEng * cudaEcoMult));
 }
 
 // Compute composite contextual performance score for a GPU based on user sliders
@@ -634,8 +637,44 @@ function renderDuelAnalysis() {
   const bScoreTech = getTechScore(baseGpu);
   const cScoreTech = getTechScore(candGpu);
 
-  const bScoreAI = Math.min(100, Math.max(15, Math.round(((baseGpu.llm_14b_tok_s || 5) / 40) * 75 + (baseGpu.vram_gb >= 16 ? 25 : (baseGpu.vram_gb >= 12 ? 15 : 5)))));
-  const cScoreAI = Math.min(100, Math.max(15, Math.round(((candGpu.llm_14b_tok_s || 5) / 40) * 75 + (candGpu.vram_gb >= 16 ? 25 : (candGpu.vram_gb >= 12 ? 15 : 5)))));
+  const getAIInferenceScore = (gpu) => {
+    const isNvidia = gpu.brand === 'NVIDIA';
+    const isIntel = gpu.brand === 'Intel';
+    const vram = gpu.vram_gb || 8;
+    const tok8 = gpu.llm_8b_tok_s || (isNvidia ? 40 : 15);
+    const tok14 = gpu.llm_14b_tok_s || (isNvidia ? 8 : 4);
+
+    // AI Hardware Acceleration Factor (Tensor Cores / XMX vs No Matrix Units)
+    let hwBonus = 0;
+    if (isNvidia) {
+      if (gpu.arch && (gpu.arch.includes('Blackwell') || gpu.slug.includes('50'))) {
+        hwBonus = 24; // 5th Gen Tensor Cores + FP4/FP8 transformer engine
+      } else if (gpu.arch && (gpu.arch.includes('Ada') || gpu.slug.includes('40'))) {
+        hwBonus = 18; // 4th Gen Tensor Cores + FP8
+      } else if (gpu.arch && (gpu.arch.includes('Ampere') || gpu.slug.includes('30'))) {
+        hwBonus = 12; // 3rd Gen Tensor Cores (BF16/TF32)
+      } else {
+        hwBonus = 6;  // Turing
+      }
+    } else if (isIntel && gpu.arch && gpu.arch.includes('Battlemage')) {
+      hwBonus = 12; // Intel XMX Matrix Engines
+    } else {
+      // Polaris RX 580 or older architectures with NO matrix accelerators
+      hwBonus = 0;
+    }
+
+    // High throughput on 8B models (Llama 3 8B, Gemma 2, Mistral 7B)
+    const speed8 = Math.min(42, (tok8 / 110) * 42);
+    // Throughput on 14B models (offloads on 8GB, fast on 12GB+)
+    const speed14 = Math.min(26, (tok14 / 65) * 26);
+    // VRAM headroom for KV cache and context window
+    const vramTier = vram >= 16 ? 12 : (vram >= 12 ? 8 : (vram >= 10 ? 4 : (vram >= 8 ? 1 : -10)));
+
+    return Math.min(100, Math.max(10, Math.round(hwBonus + speed8 + speed14 + vramTier)));
+  };
+
+  const bScoreAI = getAIInferenceScore(baseGpu);
+  const cScoreAI = getAIInferenceScore(candGpu);
 
   const bTrainRaw = getEffectiveEngineeringScore(baseGpu);
   const cTrainRaw = getEffectiveEngineeringScore(candGpu);
@@ -1154,6 +1193,7 @@ function renderCBTable() {
     return STATE.cbSortAsc ? (va - vb) : (vb - va);
   });
 
+  const basePrice = (baseGpu && baseGpu.price_brl) ? baseGpu.price_brl : 2000;
   const cols = STATE.cbColumns || { target: true, trend: false, hb_cb: false, rel_verdict: true, actions: true };
   const tbody = document.getElementById('cb-table-body');
   tbody.innerHTML = rows.map((g, idx) => {
@@ -1180,7 +1220,9 @@ function renderCBTable() {
 
     const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-[10px]">✨ ${getGpuTechProfile(g).badge}</span>` : '';
     const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px]" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs HB (${g._flashPromo.age_hours}h)</span>` : '';
-    const couponBadge = g.coupon ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[10px]">Cupom: ${g.coupon}</span>` : '';
+    const couponBadge = g.coupon
+      ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[10px] hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
+      : '';
 
     return `
       <tr class="hover:bg-slate-800/50 transition">
@@ -1202,7 +1244,8 @@ function renderCBTable() {
         </td>
         <td class="py-3 px-3 text-right font-mono ${cols.target ? '' : 'hidden'}">
           <span class="font-bold text-emerald-300 text-xs block">${fmtBRL(g.price_stats.target_price)}</span>
-          <span class="text-[10px] text-slate-400">Mín 90d: ${fmtBRLShort(g.price_stats.min_90d)}</span>
+          <span class="text-[10px] text-sky-400 font-medium block">BF: ${fmtBRLShort(g.price_stats.min_90d * 0.95)} ~ ${fmtBRLShort(g.price_stats.target_price)}</span>
+          <span class="text-[9px] text-slate-500">Mín 90d: ${fmtBRLShort(g.price_stats.min_90d)}</span>
         </td>
         <td class="py-3 px-3 text-center ${cols.trend ? '' : 'hidden'}">
           ${getPriceStatusBadgeHTML(g)}
@@ -1223,24 +1266,41 @@ function renderCBTable() {
               <span class="text-[10px] text-slate-500">Referência</span>
             </div>
           ` : `
-            <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
-              <div class="flex items-center justify-between">
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">${rel.label}</span>
-                <span class="text-[11px] font-bold inline-flex items-center gap-1 ${rel.perfGainPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-                  ${SPEEDOMETER_SVG}
-                  ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}%
+            <div class="space-y-1.5 w-52 ml-auto font-mono text-right">
+              <!-- Top Row: Compact Badge + Small Justo Limit (No Overlap) -->
+              <div class="flex items-center justify-between gap-1 text-[10px]">
+                <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">
+                  ${rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'VALE A PENA') : (rel.tier === 'stretch' ? 'ÁGIO ALTO' : 'NÃO COMPENSA'))}
                 </span>
+                <span class="text-[9px] text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
               </div>
-              <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800">
-                <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Base"></div>
-                <div class="h-full rounded-full ${rel.perfGainPct >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${rel.perfGainPct >= 0 ? Math.min(100, 50 + Math.min(50, rel.perfGainPct * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + rel.perfGainPct / 100)).toFixed(1)}%;"></div>
+
+              <!-- Bar 1: Desempenho (Speedometer Icon Beside Bar) -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-sky-400 shrink-0" title="Desempenho Relativo">${SPEEDOMETER_SVG}</span>
+                <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho: ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}%">
+                  <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
+                  <div class="h-full rounded-full ${rel.perfGainPct >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${rel.perfGainPct >= 0 ? Math.min(100, 50 + Math.min(50, rel.perfGainPct * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + rel.perfGainPct / 100)).toFixed(1)}%;"></div>
+                </div>
               </div>
-              <div class="flex items-center justify-between text-[10px] text-slate-400">
-                <span class="inline-flex items-center gap-1 ${rel.actualDelta <= rel.fairMaxDelta ? 'text-emerald-300' : 'text-amber-300'}">
-                  ${MONEY_SVG}
+
+              <!-- Bar 2: Preço / Investimento (Money Icon Beside Bar) -->
+              <div class="flex items-center gap-1.5">
+                <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Diferença de Preço">${MONEY_SVG}</span>
+                <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}">
+                  <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
+                  <div class="h-full rounded-full ${rel.actualDelta <= 0 ? 'bg-gradient-to-r from-emerald-500 to-emerald-300' : (rel.actualDelta <= rel.fairMaxDelta ? 'bg-sky-400' : 'bg-amber-400')}" style="width: ${rel.actualDelta <= 0 ? Math.max(15, 50 - Math.min(45, (Math.abs(rel.actualDelta) / Math.max(1, basePrice)) * 50)).toFixed(1) : Math.min(100, 50 + Math.min(50, (rel.actualDelta / Math.max(1, basePrice)) * 50)).toFixed(1)}%;"></div>
+                </div>
+              </div>
+
+              <!-- Bottom Row: Deltas Under Both Bars -->
+              <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+                <span class="font-bold ${rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400'}">
+                  ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf
+                </span>
+                <span class="font-bold ${rel.actualDelta <= rel.fairMaxDelta ? 'text-emerald-300' : 'text-amber-300'}">
                   ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}
                 </span>
-                <span class="text-[9px] text-slate-500">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
               </div>
             </div>
           `}
