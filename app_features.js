@@ -223,6 +223,7 @@ function getGpuTechProfile(gpu) {
   if (/rtx-50/.test(s) || /rtx 50/.test(n)) {
     return {
       gen: 'rtx50',
+      isBlackwell: true,
       badge: 'DLSS 4 + MFG 4×',
       shortBadge: 'MFG 4×',
       color: 'emerald',
@@ -235,6 +236,7 @@ function getGpuTechProfile(gpu) {
   if (/rtx-40/.test(s) || /rtx 40/.test(n)) {
     return {
       gen: 'rtx40',
+      isAda: true,
       badge: 'DLSS 4 + FG 2×',
       shortBadge: 'FG 2×',
       color: 'sky',
@@ -247,6 +249,7 @@ function getGpuTechProfile(gpu) {
   if (/rtx-(20|30)/.test(s) || /rtx (20|30)/.test(n)) {
     return {
       gen: 'rtx30',
+      isAmpere: /rtx-30/.test(s) || /rtx 30/.test(n),
       badge: 'DLSS 4 SR (s/ FG Nativo)',
       shortBadge: 'DLSS SR',
       color: 'indigo',

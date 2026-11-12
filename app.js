@@ -627,12 +627,68 @@ function renderDuelAnalysis() {
 
   const getTechScore = (g) => {
     const p = typeof getGpuTechProfile === 'function' ? getGpuTechProfile(g) : {};
-    if (p.isBlackwell) return 98;
-    if (g.arch && g.arch.includes('Ada')) return 85;
-    if (g.brand === 'NVIDIA' && g.arch && g.arch.includes('Ampere')) return 70;
-    if (g.brand === 'AMD' && g.arch && g.arch.includes('RDNA 4')) return 82;
-    if (g.brand === 'AMD' && g.arch && g.arch.includes('RDNA 3')) return 68;
-    return 45;
+    const arch = (g.arch || '').toLowerCase();
+    const slug = (g.slug || '').toLowerCase();
+    const brand = (g.brand || '').toUpperCase();
+    const isNvidia = brand === 'NVIDIA';
+    const isAmd = brand === 'AMD';
+    const isIntel = brand === 'INTEL';
+
+    // 1. Blackwell (RTX 50 series): 4th Gen RT Cores, DLSS 4 Transformer, Multi-Frame Gen 4x, Ray Reconstruction, SER
+    if (p.isBlackwell || p.gen === 'rtx50' || arch.includes('blackwell') || slug.includes('50')) {
+      if (slug.includes('5090')) return 100;
+      if (slug.includes('5080')) return 98;
+      if (slug.includes('5070-ti') || slug.includes('5070ti')) return 97;
+      if (slug.includes('5070')) return 96;
+      if (slug.includes('5060-ti') || slug.includes('5060ti')) return 94;
+      return 93; // RTX 5060
+    }
+
+    // 2. Ada Lovelace (RTX 40 series): 3rd Gen RT Cores, DLSS 3.5, Frame Gen 2x, Ray Reconstruction, SER
+    if (p.isAda || p.gen === 'rtx40' || arch.includes('ada') || slug.includes('40')) {
+      if (slug.includes('4090')) return 96;
+      if (slug.includes('4080')) return 93;
+      if (slug.includes('4070')) return 89;
+      if (slug.includes('4060-ti') || slug.includes('4060ti')) return 86;
+      return 84; // RTX 4060
+    }
+
+    // 3. Ampere (RTX 30 series): 2nd Gen RT Cores, DLSS 2/3.7 Super Resolution
+    if (isNvidia && (p.isAmpere || p.gen === 'rtx30' || arch.includes('ampere') || slug.includes('30'))) {
+      if (slug.includes('3080') || slug.includes('3090')) return 78;
+      if (slug.includes('3070')) return 73;
+      return 68; // RTX 3060 / 3050
+    }
+
+    // 4. Turing (RTX 20 series): 1st Gen RT Cores, DLSS 2
+    if (isNvidia && (slug.includes('rtx-20') || slug.includes('2080') || slug.includes('2070') || slug.includes('2060'))) {
+      return 56;
+    }
+
+    // 5. AMD RDNA 4: 3rd Gen AMD RT, FSR 4 AI upscaling
+    if (isAmd && (p.gen === 'rdna4' || arch.includes('rdna 4') || slug.includes('8800') || slug.includes('8600') || slug.includes('8700'))) {
+      return 82;
+    }
+
+    // 6. AMD RDNA 3: 2nd Gen AMD RT, FSR 3.1 Frame Gen
+    if (isAmd && (p.gen === 'rdna3' || arch.includes('rdna 3') || slug.includes('7900') || slug.includes('7800') || slug.includes('7700') || slug.includes('7600'))) {
+      if (slug.includes('7900')) return 72;
+      return 64; // RX 7600
+    }
+
+    // 7. AMD RDNA 2 (RX 6000 series): Basic RT
+    if (isAmd && (slug.includes('6900') || slug.includes('6800') || slug.includes('6700') || slug.includes('6600') || slug.includes('6500'))) {
+      return 42;
+    }
+
+    // 8. Intel Battlemage / Alchemist: XeSS AI upscaling, dedicated RT hardware
+    if (isIntel) {
+      if (arch.includes('battlemage') || slug.includes('b580') || slug.includes('b570')) return 76;
+      return 60; // Arc A770/A750
+    }
+
+    // 9. Legacy / No RT hardware (Polaris RX 580, GTX 1660/1060/Pascal)
+    return 12;
   };
   const bScoreTech = getTechScore(baseGpu);
   const cScoreTech = getTechScore(candGpu);
