@@ -5,6 +5,8 @@ Brazilian WhatsApp promotion bots (@ofertasadrenaline, @peperaiohardware, @iskan
 @benchpromos, @kabumofertas, @nerdofertas, @ofertastechbr), extracts product price,
 coupon codes/discounts, store links, and matches them against the HardwareBarato catalog.
 """
+import os
+import sys
 import re
 import html
 import json
@@ -13,6 +15,13 @@ import urllib.request
 import urllib.parse
 import concurrent.futures
 from datetime import datetime, timezone
+
+try:
+    from config import get_market_config, get_promotion_channels, get_monetary_config
+except Exception:
+    get_market_config = None
+    get_promotion_channels = None
+    get_monetary_config = None
 
 DEFAULT_CHANNELS = [
     {"id": "ofertasadrenaline", "name": "Ofertas Adrenaline"},
@@ -35,6 +44,9 @@ DEFAULT_SEARCH_QUERIES = [
     "Ryzen",         # AMD CPUs
     "DDR4",          # DDR4 RAM
     "DDR5",          # DDR5 RAM
+    "expirou",       # Expiry detection
+    "acabou",        # Stock finish detection
+    "esgotou",       # Sold out detection
 ]
 
 # Words that indicate a complete PC, laptop, monitor, or console rather than a standalone GPU/CPU
@@ -128,21 +140,34 @@ RAM_MATCH_RULES = [
 ]
 
 
-def parse_brl_number(s):
-    """Converts Brazilian formatted price string (e.g. '2.645,92' or '2611' or '585,00') to float."""
-    s = s.strip()
-    if "," in s and "." in s:
-        s = s.replace(".", "").replace(",", ".")
-    elif "," in s:
-        s = s.replace(",", ".")
-    elif "." in s:
-        parts = s.split(".")
-        if len(parts[-1]) == 3:
-            s = s.replace(".", "")
+def parse_price_number(s, monetary=None):
+    """Converts a formatted price string into float using regional monetary rules."""
+    s = str(s).strip()
+    if not monetary and get_monetary_config:
+        monetary = get_monetary_config()
+    monetary = monetary or {}
+    dec_sep = monetary.get("decimal_separator", ",")
+    thou_sep = monetary.get("thousands_separator", ".")
+
+    if dec_sep == ",":
+        if "," in s and "." in s:
+            s = s.replace(".", "").replace(",", ".")
+        elif "," in s:
+            s = s.replace(",", ".")
+        elif "." in s:
+            parts = s.split(".")
+            if len(parts[-1]) == 3:
+                s = s.replace(".", "")
+    else:
+        # Standard US/UK decimal period
+        s = s.replace(",", "")
+
     try:
         return float(s)
     except ValueError:
         return 0.0
+
+parse_brl_number = parse_price_number
 
 
 def extract_price_and_coupon(lines):
@@ -167,7 +192,7 @@ def extract_price_and_coupon(lines):
     )
     if m_code:
         word = m_code.group(1).upper()
-        if word not in {"PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA", "SHOPEE", "KABUM", "MAGALU", "MERCADO"}:
+        if word not in {"PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA", "SHOPEE", "KABUM", "MAGALU", "MERCADO", "HTTPS", "HTTP", "WWW", "COM", "BR"}:
             coupon_code = word
 
     # Detect explicit discount values like "R$ 300 OFF", "300 de desconto", "cupom de 300"
@@ -197,10 +222,18 @@ def extract_price_and_coupon(lines):
                 if len(cleaned_c) >= 4:
                     coupon_info = cleaned_c
 
-        # Check all R$ occurrences in this line
-        for m in re.finditer(r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)", line, re.IGNORECASE):
-            val = parse_brl_number(m.group(1))
-            if val < 80 or val > 40000:
+        # Dynamic monetary config & regex from active market config
+        monetary = get_monetary_config() if get_monetary_config else {}
+        min_val = float(monetary.get("min_valid_hardware_price", 80.0))
+        max_val = float(monetary.get("max_valid_hardware_price", 45000.0))
+        price_pat = monetary.get("price_regex") or r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
+        market_cfg = get_market_config() if get_market_config else {}
+        cash_keywords = market_cfg.get("promotion_sources", {}).get("cash_intent_keywords", ["por r$", "valor", "💵", "pix", "à vista", "a vista", "🔥"])
+
+        # Check all price occurrences in this line
+        for m in re.finditer(price_pat, line, re.IGNORECASE):
+            val = parse_price_number(m.group(1), monetary)
+            if val < min_val or val > max_val:
                 continue
             # Check context around the match in the same line
             start, end = m.span()
@@ -216,29 +249,42 @@ def extract_price_and_coupon(lines):
             if re.search(r"\d+\s*x\s*(?:de\s*)?$", before):
                 continue
 
-            # Priority score: lines with "por R$", "valor:", "💵", "à vista", "pix" get highest priority
+            # Priority score: lines with cash intent keywords get highest priority
             prio = 1
-            if any(k in low for k in ["por r$", "valor", "💵", "pix", "à vista", "a vista", "🔥"]):
+            if any(k in low for k in cash_keywords):
                 prio = 3
             elif "parcelado" in low or "12x" in low or "10x" in low:
                 prio = 0
             candidates.append((prio, val))
 
     if not candidates:
-        return None, coupon_code, coupon_info
+        return None, None, 0.0, coupon_code, coupon_info
 
     # Pick highest priority, then lowest cash price among top priority
     max_prio = max(c[0] for c in candidates)
     best_vals = [c[1] for c in candidates if c[0] == max_prio]
     base_price = min(best_vals)
 
+    # In Telegram deal channels, advertised cash prices ('por R$ X', 'à vista por R$ X')
+    # already represent the final checkout price with any coupon applied.
+    # We do NOT deduct the discount a second time unless the post only specified a "De R$ X" (list price).
     final_price = base_price
-    if detected_discount_brl > 0 and detected_discount_brl < base_price * 0.45:
-        final_price = base_price - detected_discount_brl
-    elif detected_discount_pct > 0:
-        final_price = base_price * (1.0 - (detected_discount_pct / 100.0))
+    discount_applied = 0.0
 
-    return round(final_price, 2), coupon_code, coupon_info
+    has_final_price_indicator = any(
+        re.search(r"\b(por|sai\s*por|fica\s*por|pagando|preço|preco|valor|à\s*vista|a\s*vista|pix)\b", line, re.I)
+        for line in lines
+    )
+
+    if not has_final_price_indicator:
+        if detected_discount_brl > 0 and detected_discount_brl < base_price * 0.45:
+            final_price = base_price - detected_discount_brl
+            discount_applied = detected_discount_brl
+        elif detected_discount_pct > 0:
+            discount_applied = round(base_price * (detected_discount_pct / 100.0), 2)
+            final_price = base_price - discount_applied
+
+    return round(final_price, 2), round(base_price, 2), round(discount_applied, 2), coupon_code, coupon_info
 
 
 def match_catalog_item(title_and_first_lines, db):
@@ -324,7 +370,7 @@ def fetch_channel_query(ch_id, ch_name, query=""):
         ]
         title = (title_lines[0] if title_lines else lines[0]).strip(" ⭐️🔥🚨⚡🏹")
 
-        price, coupon_code, coupon_info = extract_price_and_coupon(lines)
+        price, raw_price, discount_applied, coupon_code, coupon_info = extract_price_and_coupon(lines)
         if not price:
             continue
 
@@ -336,7 +382,10 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             "timestamp": iso_dt,
             "title": title[:160],
             "head_text": " ".join(lines[:3])[:260],
+            "raw_text": clean_text[:400],
             "price_brl": price,
+            "raw_price_brl": raw_price,
+            "discount_applied": discount_applied,
             "coupon_code": coupon_code,
             "coupon_info": coupon_info,
             "buy_url": product_links[-1] if product_links else f"https://t.me/{post_id}",
@@ -364,14 +413,24 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     if not force and _PROMO_CACHE["data"] and (now - _PROMO_CACHE["updated_at"] < 90):
         return _PROMO_CACHE["data"]
 
-    channels = list(DEFAULT_CHANNELS)
+    if get_promotion_channels:
+        cfg_channels = get_promotion_channels()
+        channels = list(cfg_channels) if cfg_channels else list(DEFAULT_CHANNELS)
+    else:
+        channels = list(DEFAULT_CHANNELS)
+
     if extra_channels:
         for ch in extra_channels:
             ch_clean = ch.strip().lstrip("@").split("/")[-1]
             if ch_clean and not any(c["id"].lower() == ch_clean.lower() for c in channels):
                 channels.append({"id": ch_clean, "name": f"@{ch_clean}"})
 
-    queries = list(DEFAULT_SEARCH_QUERIES)
+    if get_market_config:
+        cfg_queries = get_market_config().get("promotion_sources", {}).get("search_keywords")
+        queries = list(cfg_queries) if cfg_queries else list(DEFAULT_SEARCH_QUERIES)
+    else:
+        queries = list(DEFAULT_SEARCH_QUERIES)
+
     if extra_queries:
         for q in extra_queries:
             if q and q not in queries:
@@ -432,8 +491,28 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
 
         all_promos.append(item)
 
-    matched_deals.sort(key=lambda x: (x["age_hours"] > 24, -x["savings_vs_hb_brl"], x["price_brl"]))
-    all_promos.sort(key=lambda x: x["age_hours"])
+    # 1. Scan channel messages for real-time coupon and stock expiry announcements
+    try:
+        import coupon_tracker
+        coupon_tracker.scan_texts_for_expiries(by_post.values())
+    except Exception as e:
+        print(f"[PromoRadar] Aviso ao varrer mensagens de expiração: {e}")
+
+    # 2. Sitewise Live Testing: test store links and coupons directly against store pages in parallel
+    try:
+        import coupon_tracker
+        print(f"[PromoRadar Sitewise] Testando links e cupons de {min(len(matched_deals), 50)} ofertas candidatas...")
+        test_results = coupon_tracker.test_deals_batch(matched_deals, max_items=50)
+        print(f"[PromoRadar Sitewise] Validação concluída: {len(test_results)} ofertas testadas nas lojas.")
+    except Exception as e:
+        print(f"[PromoRadar] Aviso no validador sitewise de ofertas: {e}")
+
+    # 3. Rewire deals and strictly recompute best_by_slug using verified active deals
+    try:
+        import coupon_tracker
+        matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(matched_deals, all_promos)
+    except Exception as e:
+        print(f"[PromoRadar] Aviso ao reconfigurar status de cupons: {e}")
 
     payload = {
         "ok": True,
@@ -443,6 +522,7 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
         "matched_deals": matched_deals[:80],
         "best_by_slug": best_by_slug,
         "recent_feed": all_promos[:60],
+        "coupon_status": (coupon_tracker.load_coupon_status() if 'coupon_tracker' in locals() else {}),
     }
     _PROMO_CACHE["updated_at"] = now
     _PROMO_CACHE["data"] = payload
@@ -477,7 +557,7 @@ if __name__ == "__main__":
     for d in res["matched_deals"][:15]:
         print(
             f"  [{d['age_hours']}h ago] @{d['channel_id']} | {d['matched_name']}: "
-            f"R$ {d['price_brl']} (HB: R$ {d['hb_price_brl']} -> diff: R$ {-d['savings_vs_hb_brl']:+.2f}) "
+            f"R$ {d['price_brl']} (Catálogo: R$ {d['hb_price_brl']} -> diff: R$ {-d['savings_vs_hb_brl']:+.2f}) "
             f"| Cupom: {d['coupon_code'] or d['coupon_info'] or '-'}"
         )
 

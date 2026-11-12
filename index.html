@@ -128,10 +128,10 @@
         <span>Custo-Benefício & Alvos</span>
       </button>
 
-      <!-- Tab 3: Meu Setup & Consumo -->
+      <!-- Tab 3: Objetivo de Compra & Consumo -->
       <button onclick="switchTab('builder')" id="tab-btn-builder" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
         <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-        <span>Meu Setup & Consumo (Watts)</span>
+        <span>Objetivo de Compra & Consumo</span>
       </button>
 
       <!-- Tab 4: Upgrades de Plataforma -->
@@ -152,6 +152,12 @@
         <span>Simulador de Desempenho Real</span>
       </button>
 
+      <!-- Tab 7: Configurações do Sistema -->
+      <button onclick="switchTab('config')" id="tab-btn-config" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
+        <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <span>Configurações do Sistema</span>
+      </button>
+
       <!-- Quick Actions in Sidebar -->
       <div class="pt-4 mt-4 border-t border-slate-800/80 space-y-1.5">
         <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 px-3 block font-semibold">Configurações & Painéis</span>
@@ -170,7 +176,7 @@
     <div class="p-4 border-t border-slate-800/80 bg-slate-950/60">
       <div class="flex items-center gap-2">
         <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-        <p class="text-[11px] text-slate-300 font-medium truncate">HardwareBarato Live</p>
+        <p class="text-[11px] text-slate-300 font-medium truncate">Database Live</p>
       </div>
       <p class="text-[10px] text-slate-500 font-mono mt-0.5 truncate" id="sidebar-status">Histórico de até 600 dias</p>
     </div>
@@ -202,149 +208,26 @@
         </div>
       </div>
 
-      <!-- Right: Action Buttons (Cargas & Monitor, Radar, Sync) -->
+      <!-- Right: Action Buttons (Radar, Sync, Configurações) -->
       <div class="flex items-center gap-2">
-        <!-- Button: Context & Workloads Toggle -->
-        <button onclick="toggleContextSettings()" id="btn-toggle-context" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 transition cursor-pointer" title="Clique para ajustar monitor, FPS e distribuição de pesos">
-          <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-          <span class="font-semibold">Cargas & Monitor</span>
-          <span id="top-context-summary" class="hidden md:inline font-mono text-[11px] text-slate-400 pl-2 border-l border-slate-700">1440p @ 144Hz • IA 45%</span>
-        </button>
-
-        <!-- Button: Live Promo Radar -->
-        <button id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer">
+        <!-- Button: Live Promo Radar (Prominent at top) -->
+        <button id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 transition cursor-pointer" title="Abrir Radar de Promoções e Cupons ao Vivo">
           <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           <span class="hidden sm:inline">Radar</span>
-          <span id="promo-radar-badge" class="px-1.5 py-0.5 rounded-md bg-slate-950 text-amber-300 font-mono text-[10px]">...</span>
+          <span id="promo-radar-badge" class="px-1.5 py-0.5 rounded-md bg-slate-950 text-amber-300 font-mono text-[10px] border border-amber-500/30">...</span>
         </button>
 
-        <!-- Button: Refresh HardwareBarato -->
-        <button id="btn-refresh-hb" onclick="refreshHardwareBarato()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sm transition cursor-pointer" title="Atualizar dados ao vivo do HardwareBarato">
+        <!-- Button: Refresh Database -->
+        <button id="btn-refresh-db" onclick="refreshDatabase()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sm transition cursor-pointer" title="Sincronizar base de dados">
           <svg id="icon-refresh" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           <span class="hidden sm:inline">Sync</span>
         </button>
-      </div>
-    </div>
 
-    <!-- COLLAPSIBLE PREFERENCES & CONTEXT PANEL (OPENS ON CLICK) -->
-    <div id="context-settings-panel" class="hidden border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl px-4 py-5 shadow-2xl">
-      <div class="max-w-[1640px] mx-auto space-y-4">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-            <h3 class="text-sm font-bold text-white">Preferências de Exibição, Tecnologias & Divisão de Cargas</h3>
-          </div>
-          <button onclick="toggleContextSettings()" class="text-xs font-semibold text-slate-400 hover:text-white px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer">
-            ✕ Fechar Painel
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <!-- Col 1: Monitor, Refresh Rate & DLSS -->
-          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3.5">
-            <span class="text-xs font-semibold text-slate-300 block">Exibição & Tecnologias de Renderização</span>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="text-[11px] text-slate-400 block mb-1">Resolução do Monitor</label>
-                <select id="global-select-monitor" onchange="onMonitorOrMaxFPSChange()" class="w-full bg-slate-950 text-xs text-white font-medium rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-sky-400">
-                  <option value="768p">1366×768 (HD)</option>
-                  <option value="900p">1600×900 (HD+)</option>
-                  <option value="1080p">1920×1080 (Full HD)</option>
-                  <option value="uw1080p">2560×1080 (Ultrawide FHD)</option>
-                  <option value="1440p" selected>2560×1440 (Quad HD 2K)</option>
-                  <option value="uw1440p">3440×1440 (Ultrawide QHD)</option>
-                  <option value="4k">3840×2160 (4K UHD)</option>
-                </select>
-              </div>
-              <div>
-                <label class="text-[11px] text-slate-400 block mb-1">Teto de Taxa (FPS / Hz)</label>
-                <div class="flex items-center gap-1.5">
-                  <select id="global-select-maxfps" onchange="onMonitorMaxFPSPresetChange(this.value)" class="w-full bg-slate-950 text-xs text-white font-medium rounded-lg px-2 py-1.5 border border-slate-700 focus:outline-none focus:border-emerald-400">
-                    <option value="60">60 Hz</option>
-                    <option value="75">75 Hz</option>
-                    <option value="100">100 Hz</option>
-                    <option value="120">120 Hz</option>
-                    <option value="144" selected>144 Hz</option>
-                    <option value="165">165 Hz</option>
-                    <option value="180">180 Hz</option>
-                    <option value="240">240 Hz</option>
-                    <option value="360">360 Hz</option>
-                    <option value="999">Ilimitado</option>
-                  </select>
-                  <input type="number" id="global-input-maxfps" value="144" min="30" max="1000" oninput="onMonitorOrMaxFPSChange()" class="w-14 bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-1.5 text-xs font-mono font-bold text-emerald-400 text-center focus:border-emerald-400 focus:outline-none" title="Digite o limite exato" />
-                </div>
-              </div>
-              <div>
-                <label class="text-[11px] text-slate-400 block mb-1">DLSS & Frame Gen</label>
-                <select id="global-select-dlss-mode" onchange="onGlobalDlssModeChange(this.value)" class="w-full bg-slate-950 text-xs text-white font-medium rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-amber-400">
-                  <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
-                  <option value="sr">Só Upscaling (DLSS / FSR)</option>
-                  <option value="native">Raster Nativo Puro</option>
-                  <option value="max_fg">Máximo Bruto (MFG 4×)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Col 2: Workload Weight Sliders & VRAM Profile -->
-          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3.5">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-semibold text-slate-300">Ponderação do Seu Uso (Soma 100%)</span>
-              <div class="flex items-center gap-1.5">
-                <button type="button" onclick="setWorkloadPreset(70, 20, 10, '1.0')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium cursor-pointer">Preset Gamer</button>
-                <button type="button" onclick="setWorkloadPreset(25, 45, 30, '1.6')" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-medium cursor-pointer">Preset Equilibrado</button>
-                <button type="button" onclick="setWorkloadPreset(10, 60, 30, '2.3')" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-medium cursor-pointer">Preset IA/Eng</button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <!-- Gaming -->
-              <div class="space-y-1">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-emerald-400 font-medium text-[11px]">Jogos</span>
-                  <div class="flex items-center gap-0.5">
-                    <input type="number" id="num-w-gaming" min="0" max="100" value="25" oninput="onWeightNumberInput('gaming', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-emerald-400 focus:outline-none" />
-                    <span class="text-[10px] font-mono text-slate-400">%</span>
-                  </div>
-                </div>
-                <input type="range" id="slider-w-gaming" min="0" max="100" value="25" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" />
-              </div>
-
-              <!-- AI -->
-              <div class="space-y-1">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-purple-400 font-medium text-[11px]">IA Local</span>
-                  <div class="flex items-center gap-0.5">
-                    <input type="number" id="num-w-ai" min="0" max="100" value="45" oninput="onWeightNumberInput('ai', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-purple-400 focus:outline-none" />
-                    <span class="text-[10px] font-mono text-slate-400">%</span>
-                  </div>
-                </div>
-                <input type="range" id="slider-w-ai" min="0" max="100" value="45" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#a855f7;" />
-              </div>
-
-              <!-- Engineering / Sim -->
-              <div class="space-y-1">
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-amber-400 font-medium text-[11px]">Treinamento & Simulação</span>
-                  <div class="flex items-center gap-0.5">
-                    <input type="number" id="num-w-soft" min="0" max="100" value="30" oninput="onWeightNumberInput('soft', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-amber-400 focus:outline-none" />
-                    <span class="text-[10px] font-mono text-slate-400">%</span>
-                  </div>
-                </div>
-                <input type="range" id="slider-w-soft" min="0" max="100" value="30" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f59e0b;" />
-              </div>
-            </div>
-
-            <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-3">
-              <label class="text-[11px] text-slate-400 font-medium">Exigência de VRAM para Modelos:</label>
-              <select id="select-vram-heft" onchange="onWeightSliderInput()" class="bg-slate-950 text-xs text-white font-medium rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:border-purple-400">
-                <option value="1.0">Leve — LLM 8B + Base (8 GB ok)</option>
-                <option value="1.6" selected>Médio — LLM 14B + Treinamento (12 GB+ Ideal)</option>
-                <option value="2.3">Pesado — LLM 32B + CUDA (16 GB+)</option>
-              </select>
-            </div>
-          </div>
-        </div>
+        <!-- Button: Settings Tab Shortcut -->
+        <button onclick="switchTab('config')" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 transition cursor-pointer" title="Abrir Configurações do Sistema (PC de Referência, Monitor, Pesos, Moeda)">
+          <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span class="hidden sm:inline">Configurações</span>
+        </button>
       </div>
     </div>
   </header>
@@ -358,16 +241,23 @@
     <section id="promo-radar-panel" class="hidden glass-card rounded-2xl p-6 border border-amber-500/35 shadow-2xl shadow-amber-500/10 space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono text-[10px] font-bold uppercase">⚡ Radar de Ofertas & Cupons em Tempo Real</span>
             <span id="promo-radar-status" class="text-[11px] font-mono text-slate-400">Pronto para escanear</span>
+            <span id="sitewise-validator-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="sitewise-validator-text">Validador Sitewise 24/7 Ativo</span>
+            </span>
           </div>
           <h2 class="text-lg font-bold text-white mt-1">Ofertas Relâmpago dos Grupos de Hardware</h2>
           <p class="text-xs text-slate-300">
-            Monitora canais (@ofertasadrenaline, @peperaiohardware, @benchpromos, etc.) e cruza com a média do HardwareBarato para detectar pechinchas e aplicar cupons automaticamente.
+            Monitora canais de ofertas e cupons e cruza com a base de dados do catálogo para detectar pechinchas e aplicar cupons automaticamente.
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
+          <button onclick="testAllRadarCoupons()" id="btn-test-all-coupons" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 shadow-sm transition-all cursor-pointer flex items-center gap-1.5" title="Testa diretamente se os cupons e links de ofertas do radar continuam ativos na loja">
+            <span>🧪 Testar Cupons & Links</span>
+          </button>
           <button onclick="scanLivePromos(true)" id="btn-scan-promos-now" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all cursor-pointer">
             Buscar Ofertas Agora
           </button>
@@ -417,7 +307,7 @@
               <span>Alertas Automáticos de Ofertas</span>
             </label>
             <span id="notify-active-rules-summary" class="px-2.5 py-0.5 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] font-mono text-emerald-300">
-              Gatilhos: CB ≥ 92 OU Meta BF OU −R$ 150 / −8% vs HB
+              Gatilhos: CB ≥ 92 OU Meta BF OU −R$ 150 / −8% vs Catálogo
             </span>
             <span id="notify-perm-status" class="text-[11px] font-mono text-slate-400">Windows Toast + Tela + Som</span>
           </div>
@@ -462,17 +352,17 @@
               </select>
             </div>
 
-            <!-- Trigger 3: Comparison vs HardwareBarato (HB) -->
+            <!-- Trigger 3: Comparison vs Database / Base Catalog -->
             <div class="p-3 rounded-xl bg-slate-950/85 border border-emerald-500/30 space-y-2">
               <label class="flex items-center justify-between cursor-pointer">
-                <span class="font-bold text-emerald-300 flex items-center gap-1.5">Comparação vs. HardwareBarato</span>
+                <span class="font-bold text-emerald-300 flex items-center gap-1.5">Comparação vs. Catálogo Base</span>
                 <input type="checkbox" id="chk-trig-hb" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
               </label>
               <select id="select-notify-hb-mode" onchange="onUpdatePromoNotificationSettings()" class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2 py-1 text-xs text-white font-semibold">
-                <option value="brl_or_pct" selected>Economia ≥ R$ Mínimo OU ≥ % Mínimo vs HB</option>
-                <option value="brl_only">Apenas Desconto em Reais (≥ R$ X abaixo do HB)</option>
-                <option value="pct_only">Apenas Desconto Percentual (≥ Y% abaixo do HB)</option>
-                <option value="brl_and_pct">Ambos: ≥ R$ X E ≥ Y% abaixo do HB</option>
+                <option value="brl_or_pct" selected>Economia ≥ R$ Mínimo OU ≥ % Mínimo vs Catálogo</option>
+                <option value="brl_only">Apenas Desconto em Reais (≥ R$ X abaixo do Catálogo)</option>
+                <option value="pct_only">Apenas Desconto Percentual (≥ Y% abaixo do Catálogo)</option>
+                <option value="brl_and_pct">Ambos: ≥ R$ X E ≥ Y% abaixo do Catálogo</option>
               </select>
               <div class="grid grid-cols-2 gap-2">
                 <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
@@ -769,6 +659,19 @@
               <!-- Two Score Hero Cards -->
               <div class="grid grid-cols-2 gap-3" id="duel-versus-ratings"></div>
 
+              <!-- Comparative Scale Mode Selector (Relative vs Absolute Segmented Buttons) -->
+              <div class="flex flex-wrap items-center justify-between gap-2 pt-2 pb-1 border-b border-slate-800 text-xs">
+                <span class="font-bold text-slate-300">Modo de Comparação:</span>
+                <div class="inline-flex p-0.5 bg-slate-950 border border-slate-700/80 rounded-lg text-[11px] font-mono" id="group-duel-scale-mode">
+                  <button type="button" id="btn-scale-rel-duel" onclick="setComparisonScaleMode('relative')" class="px-2.5 py-1 rounded font-bold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm" title="Escala focada na diferença direta vs a Placa Base">
+                    ⚖️ Escala Relativa (vs Placa Base)
+                  </button>
+                  <button type="button" id="btn-scale-abs-duel" onclick="setComparisonScaleMode('absolute')" class="px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200" title="Escala ancorada no topo máximo absoluto do catálogo (RTX 5090)">
+                    📊 Escala Absoluta (vs Topo RTX 5090)
+                  </button>
+                </div>
+              </div>
+
               <!-- Comparative Visual Bars with Icons (Speedometer, Money, Robot, Training) -->
               <div class="space-y-2.5 pt-2" id="duel-versus-bars"></div>
             </div>
@@ -830,7 +733,7 @@
         <div class="lg:col-span-7 glass-card rounded-2xl p-5">
           <div class="flex items-center justify-between mb-3">
             <div>
-              <h3 class="text-sm font-bold text-white">Histórico Completo de Preços Reais (2025–2026 — Hardware Barato)</h3>
+              <h3 class="text-sm font-bold text-white">Histórico Completo de Preços Reais de Mercado (2025–2026)</h3>
               <p class="text-xs text-slate-400">Inclui a Black Friday de Nov/2025 até hoje para comparar oscilações reais e o Preço Alvo.</p>
             </div>
           </div>
@@ -878,7 +781,17 @@
               <option value="12">Mínimo 12 GB VRAM (Recomendado IA/Redes)</option>
               <option value="16">Mínimo 16 GB VRAM (Ideal IA/LLMs)</option>
             </select>
-            <select id="cb-filter-base-rel" onchange="renderCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold"></select>
+            <select id="cb-filter-base-rel" onchange="renderCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold" title="Escolha a Placa Base de Comparação"></select>
+
+            <!-- Scale Mode Segmented Control in CB Table -->
+            <div class="inline-flex p-0.5 bg-slate-900 border border-slate-700 rounded-lg text-[11px] font-mono" id="group-cb-scale-mode">
+              <button type="button" id="btn-scale-rel-cb" onclick="setComparisonScaleMode('relative')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm" title="Escala Relativa vs Placa Base">
+                ⚖️ Relativa (Base)
+              </button>
+              <button type="button" id="btn-scale-abs-cb" onclick="setComparisonScaleMode('absolute')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200" title="Escala Absoluta vs Topo">
+                📊 Absoluta (Topo)
+              </button>
+            </div>
 
             <!-- Column Visibility Config Dropdown -->
             <div class="relative inline-block text-left" id="cb-col-menu-wrapper">
@@ -900,7 +813,7 @@
                 </label>
                 <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
                   <input type="checkbox" id="cb-chk-hb_cb" onchange="toggleCBCol('hb_cb', this.checked)" class="rounded border-slate-700 text-sky-500 focus:ring-0">
-                  <span>CB HardwareBarato</span>
+                  <span>CB Catálogo Base</span>
                 </label>
                 <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
                   <input type="checkbox" id="cb-chk-rel_verdict" onchange="toggleCBCol('rel_verdict', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
@@ -948,7 +861,7 @@
                 <th id="th-target" class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCBSort('target')">Faixa Esperada (Alvo / BF)</th>
                 <th id="th-trend" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('trend')">Tendência 90d</th>
                 <th class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('my_cb')">Seu Custo-Benefício</th>
-                <th id="th-hb_cb" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('hb_cb')">CB HardwareBarato</th>
+                <th id="th-hb_cb" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('hb_cb')">CB Catálogo</th>
                 <th id="th-rel-verdict" class="py-3 px-3 text-right">Relação vs Base</th>
                 <th id="th-actions" class="py-3 px-3 text-center">Ações</th>
               </tr>
@@ -967,15 +880,23 @@
         <div class="lg:col-span-8 glass-card rounded-2xl p-5 space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div>
-              <h2 class="text-xl font-bold tracking-tight text-white">Meu Setup & Simulador de Consumo</h2>
+              <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <span>🎯 Objetivo de Compra & Montagem</span>
+              </h2>
               <p class="text-xs text-slate-300 mt-0.5">
-                Valide peças existentes, simule upgrades e acompanhe a demanda elétrica total (Watts).
+                Monte sua máquina desejada ou planeje o próximo upgrade sem alterar o seu PC de Referência configurado no sistema.
               </p>
             </div>
-            <div class="flex items-center gap-2">
-              <button onclick="detectMyLocalPC()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-500/15 transition flex items-center gap-2 cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <span>Detectar Hardware Local (API Windows)</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="copyRefPCToTargetBuild()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Preencher com os dados do seu PC de Referência configurado na Aba Configurações">
+                <span>📋 Copiar do Meu PC de Referência</span>
+              </button>
+              <button type="button" onclick="clearTargetBuild()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Limpar todas as peças para planejar uma máquina do zero">
+                <span>🗑️ Limpar Peças</span>
+              </button>
+              <button type="button" onclick="detectMyLocalPC(false)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Detectar hardware físico via API Windows e carregar no Objetivo de Compra">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span>Detectar (WMI)</span>
               </button>
             </div>
           </div>
@@ -987,6 +908,9 @@
             </div>
             <span class="text-[11px] font-mono text-slate-400">Você pode alterar qualquer peça, TDP ou preço abaixo</span>
           </div>
+
+          <!-- Socket Compatibility & VRM Throttling Alert Banner -->
+          <div id="builder-compat-banner" class="rounded-xl p-3 bg-slate-950 border border-slate-800 text-xs"></div>
 
           <div class="space-y-3" id="builder-parts-container"></div>
         </div>
@@ -1099,10 +1023,10 @@
         <!-- 4 Side-by-Side Platform Comparison Cards -->
         <div id="upg-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-5"></div>
 
-        <!-- RAM Price Analyzer Table (Live DDR4 vs DDR5 Deals from Hardware Barato) -->
+        <!-- RAM Price Analyzer Table (Live DDR4 vs DDR5 Deals from Database) -->
         <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-7 bg-slate-900/80 rounded-xl p-4 border border-slate-800">
-            <h3 class="text-sm font-bold text-white mb-1">Comparativo Real de Preços de Memória RAM Hoje (HardwareBarato)</h3>
+            <h3 class="text-sm font-bold text-white mb-1">Comparativo Real de Preços de Memória RAM Hoje (Database)</h3>
             <p class="text-xs text-slate-400 mb-3">Veja a diferença real por Gigabyte entre módulos DDR4 e DDR5 ativos nas lojas agora:</p>
             <div id="upg-ram-deals-table" class="space-y-2 text-xs"></div>
           </div>
@@ -1431,10 +1355,379 @@
       </div>
     </section>
 
+    <!-- ===================================================================== -->
+    <!-- TAB 7: CONFIGURAÇÕES DO SISTEMA (SITE CONFIGURATION)                  -->
+    <!-- ===================================================================== -->
+    <section id="tab-config" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 border border-sky-500/30 shadow-xl space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <span>Configurações do Sistema</span>
+            </h2>
+            <p class="text-xs text-slate-300 mt-1">
+              Personalize seu PC de referência (com suporte a caixas vazias), base de dados, escala gráfica e parâmetros regionais.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="saveUserReferencePC()" class="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-md shadow-sky-500/15 transition cursor-pointer flex items-center gap-1.5">
+              <span>💾 Salvar Configurações</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. MEU PC DE REFERÊNCIA (COM CAIXAS VAZIAS SUPORTADAS) -->
+        <div class="rounded-xl p-4 bg-slate-900/80 border border-slate-700/80 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-mono uppercase text-sky-400 font-bold block">1. Meu PC de Referência</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                Defina seu computador atual para comparativos e simulações. Deixe as caixas vazias se não possuir a peça ou se estiver montando do zero.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="detectMyLocalPC(true)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition cursor-pointer flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <span>Detectar Meu PC (WMI)</span>
+              </button>
+              <button type="button" onclick="clearUserReferencePC()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition cursor-pointer flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                <span>Limpar / Deixar Vazio</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Form Grid for Reference PC Parts -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="cfg-ref-parts-container">
+            <!-- CPU Box -->
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-200">Processador (CPU)</label>
+                <span class="text-[10px] font-mono text-slate-400">Socket / TDP</span>
+              </div>
+              <select id="cfg-ref-cpu-select" onchange="onCfgPartSelect('cpu', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400"></select>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="text" id="cfg-ref-cpu-name" placeholder="Nome customizado" oninput="onCfgCustomInput('cpu', 'name', this.value)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs" />
+                <input type="number" id="cfg-ref-cpu-tdp" placeholder="TDP (W)" oninput="onCfgCustomInput('cpu', 'tdp', parseFloat(this.value)||0)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-amber-300 font-mono text-xs text-right" />
+              </div>
+            </div>
+
+            <!-- GPU Box -->
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-200">Placa de Vídeo (GPU)</label>
+                <span class="text-[10px] font-mono text-slate-400">VRAM / TDP</span>
+              </div>
+              <select id="cfg-ref-gpu-select" onchange="onCfgPartSelect('gpu', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400"></select>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="text" id="cfg-ref-gpu-name" placeholder="Nome customizado" oninput="onCfgCustomInput('gpu', 'name', this.value)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs" />
+                <input type="number" id="cfg-ref-gpu-tdp" placeholder="TDP (W)" oninput="onCfgCustomInput('gpu', 'tdp', parseFloat(this.value)||0)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-amber-300 font-mono text-xs text-right" />
+              </div>
+            </div>
+
+            <!-- Motherboard Box -->
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-200">Placa-Mãe</label>
+                <span class="text-[10px] font-mono text-slate-400">Chipset / VRM</span>
+              </div>
+              <select id="cfg-ref-mobo-select" onchange="onCfgPartSelect('mobo', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400"></select>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="text" id="cfg-ref-mobo-name" placeholder="Nome customizado" oninput="onCfgCustomInput('mobo', 'name', this.value)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs" />
+                <input type="text" id="cfg-ref-mobo-socket" placeholder="Socket (AM4, LGA1700)" oninput="onCfgCustomInput('mobo', 'socket', this.value)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-sky-300 font-mono text-xs" />
+              </div>
+            </div>
+
+            <!-- RAM Box -->
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-200">Memória RAM</label>
+                <span class="text-[10px] font-mono text-slate-400">Capacidade / Padrão</span>
+              </div>
+              <select id="cfg-ref-ram-select" onchange="onCfgPartSelect('ram', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400"></select>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="number" id="cfg-ref-ram-cap" placeholder="GB (ex: 16, 32)" oninput="onCfgCustomInput('ram', 'capacity_gb', parseInt(this.value)||0)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-purple-300 font-mono text-xs" />
+                <select id="cfg-ref-ram-type" onchange="onCfgCustomInput('ram', 'memory_type', this.value)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-slate-300 text-xs">
+                  <option value="DDR4">DDR4</option>
+                  <option value="DDR5">DDR5</option>
+                  <option value="DDR3">DDR3</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- PSU Box -->
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-200">Fonte de Alimentação (PSU)</label>
+                <span class="text-[10px] font-mono text-slate-400">Potência (Watts)</span>
+              </div>
+              <select id="cfg-ref-psu-select" onchange="onCfgPartSelect('psu', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400"></select>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <input type="text" id="cfg-ref-psu-name" placeholder="Nome customizado" oninput="onCfgCustomInput('psu', 'name', this.value)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-slate-200 text-xs" />
+                <input type="number" id="cfg-ref-psu-watts" placeholder="Potência (W)" oninput="onCfgCustomInput('psu', 'watts', parseFloat(this.value)||0)" class="bg-slate-900/60 border border-slate-800 rounded px-2 py-1 text-amber-300 font-mono text-xs text-right" />
+              </div>
+            </div>
+
+            <!-- Storage Box -->
+            <div class="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-slate-200">Armazenamento (SSD / HD)</label>
+                <span class="text-[10px] font-mono text-slate-400">Tipo / Modelo</span>
+              </div>
+              <input type="text" id="cfg-ref-storage-name" placeholder="ex: SSD NVMe M.2 1TB" oninput="onCfgCustomInput('storage', 'name', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400" />
+              <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
+                <span>Consumo estimado:</span>
+                <span class="font-mono text-amber-300">~10W</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Compatibility & VRM Banner inside Config -->
+          <div id="cfg-ref-compat-banner" class="rounded-xl p-3.5 bg-slate-950 border border-slate-800 text-xs"></div>
+        </div>
+
+        <!-- 2. EXIBIÇÃO, MONITOR & DISTRIBUIÇÃO DE CARGAS -->
+        <div id="cfg-section-display-workloads" class="rounded-xl p-4 bg-slate-900/80 border border-slate-700/80 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-mono uppercase text-sky-400 font-bold block">2. Exibição, Monitor & Distribuição de Cargas</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                Defina resolução do monitor, limite de FPS, modo de DLSS e os pesos percentuais de uso (Jogos vs IA vs Engenharia).
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <!-- Col 1: Monitor, Refresh Rate & DLSS -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3.5">
+              <span class="text-xs font-bold text-slate-200 block">Exibição & Tecnologias de Renderização</span>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">Resolução do Monitor</label>
+                  <select id="global-select-monitor" onchange="onMonitorOrMaxFPSChange()" class="w-full bg-slate-900 text-xs text-white font-medium rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-sky-400 cursor-pointer">
+                    <option value="768p">1366×768 (HD)</option>
+                    <option value="900p">1600×900 (HD+)</option>
+                    <option value="1080p">1920×1080 (Full HD)</option>
+                    <option value="uw1080p">2560×1080 (Ultrawide FHD)</option>
+                    <option value="1440p" selected>2560×1440 (Quad HD 2K)</option>
+                    <option value="uw1440p">3440×1440 (Ultrawide QHD)</option>
+                    <option value="4k">3840×2160 (4K UHD)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">Teto de Taxa (FPS / Hz)</label>
+                  <div class="flex items-center gap-1.5">
+                    <select id="global-select-maxfps" onchange="onMonitorMaxFPSPresetChange(this.value)" class="w-full bg-slate-900 text-xs text-white font-medium rounded-lg px-2 py-1.5 border border-slate-700 focus:outline-none focus:border-emerald-400 cursor-pointer">
+                      <option value="60">60 Hz</option>
+                      <option value="75">75 Hz</option>
+                      <option value="100">100 Hz</option>
+                      <option value="120">120 Hz</option>
+                      <option value="144" selected>144 Hz</option>
+                      <option value="165">165 Hz</option>
+                      <option value="180">180 Hz</option>
+                      <option value="240">240 Hz</option>
+                      <option value="360">360 Hz</option>
+                      <option value="999">Ilimitado</option>
+                    </select>
+                    <input type="number" id="global-input-maxfps" value="144" min="30" max="1000" oninput="onMonitorOrMaxFPSChange()" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-1.5 py-1.5 text-xs font-mono font-bold text-emerald-400 text-center focus:border-emerald-400 focus:outline-none" title="Digite o limite exato" />
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">DLSS & Frame Gen</label>
+                  <select id="global-select-dlss-mode" onchange="onGlobalDlssModeChange(this.value)" class="w-full bg-slate-900 text-xs text-white font-medium rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-amber-400 cursor-pointer">
+                    <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
+                    <option value="sr">Só Upscaling (DLSS / FSR)</option>
+                    <option value="native">Raster Nativo Puro</option>
+                    <option value="max_fg">Máximo Bruto (MFG 4×)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2: Workload Weight Sliders & VRAM Profile -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-200">Ponderação do Seu Uso (Soma 100%)</span>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="setWorkloadPreset(70, 20, 10, '1.0')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium cursor-pointer">Preset Gamer</button>
+                  <button type="button" onclick="setWorkloadPreset(25, 45, 30, '1.6')" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-medium cursor-pointer">Preset Equilibrado</button>
+                  <button type="button" onclick="setWorkloadPreset(10, 60, 30, '2.3')" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-medium cursor-pointer">Preset IA/Eng</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- Gaming -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-emerald-400 font-medium text-[11px]">Jogos</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-w-gaming" min="0" max="100" value="25" oninput="onWeightNumberInput('gaming', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-emerald-400 focus:outline-none" />
+                      <span class="text-[10px] font-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-w-gaming" min="0" max="100" value="25" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" />
+                </div>
+
+                <!-- AI -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-purple-400 font-medium text-[11px]">IA Local</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-w-ai" min="0" max="100" value="45" oninput="onWeightNumberInput('ai', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-purple-400 focus:outline-none" />
+                      <span class="text-[10px] font-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-w-ai" min="0" max="100" value="45" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#a855f7;" />
+                </div>
+
+                <!-- Engineering / Sim -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-amber-400 font-medium text-[11px]">Treinamento & Simulação</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-w-soft" min="0" max="100" value="30" oninput="onWeightNumberInput('soft', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-amber-400 focus:outline-none" />
+                      <span class="text-[10px] font-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-w-soft" min="0" max="100" value="30" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f59e0b;" />
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                <label class="text-[11px] text-slate-400 font-medium">Exigência de VRAM para Modelos:</label>
+                <select id="select-vram-heft" onchange="onWeightSliderInput()" class="bg-slate-900 text-xs text-white font-medium rounded-lg px-2.5 py-1 border border-slate-700 focus:outline-none focus:border-purple-400 cursor-pointer">
+                  <option value="1.0">Leve — LLM 8B + Base (8 GB ok)</option>
+                  <option value="1.6" selected>Médio — LLM 14B + Treinamento (12 GB+ Ideal)</option>
+                  <option value="2.3">Pesado — LLM 32B + CUDA (16 GB+)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. BASE DE DADOS (DATABASE CONFIGURATION & SOURCES) -->
+        <div class="rounded-xl p-4 bg-slate-900/80 border border-slate-700/80 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-mono uppercase text-sky-400 font-bold block">3. Fonte da Base de Dados</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                Escolha a origem do catálogo de hardware e histórico de preços. A arquitetura suporta múltiplas fontes desacopladas.
+              </p>
+            </div>
+            <button type="button" onclick="refreshDatabase()" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-md transition cursor-pointer flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              <span>Sincronizar Base Agora</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Active Source Selector -->
+            <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <label class="text-xs font-bold text-slate-200 block">Fonte Ativa no Momento:</label>
+              <select id="cfg-select-db-source" onchange="changeDatabaseSource(this.value)" class="w-full bg-slate-900 text-sky-300 font-bold text-xs border border-slate-700 rounded-lg p-2.5 focus:outline-none cursor-pointer">
+                <option value="hardware_barato" class="bg-slate-900 text-white font-medium">🌐 Database Principal (Web / API)</option>
+                <option value="local_cache" class="bg-slate-900 text-white font-medium">💾 Database Local (Cache Offline)</option>
+              </select>
+              <p class="text-[11px] text-slate-400 mt-1 leading-snug">
+                Alterne para o modo Local para carregar instantaneamente do disco sem consultar a web, ou Principal para puxar ofertas atualizadas.
+              </p>
+            </div>
+
+            <!-- Database Stats -->
+            <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <span class="text-xs font-bold text-slate-200 block">Estatísticas do Catálogo Carregado:</span>
+              <div class="grid grid-cols-3 gap-2 text-center font-mono text-xs" id="cfg-db-stats-grid">
+                <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">GPUs</span>
+                  <span id="cfg-stat-gpus" class="text-sm font-bold text-sky-300">--</span>
+                </div>
+                <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">CPUs</span>
+                  <span id="cfg-stat-cpus" class="text-sm font-bold text-emerald-300">--</span>
+                </div>
+                <div class="bg-slate-900 p-2 rounded border border-slate-800">
+                  <span class="text-[10px] text-slate-400 block">Placas-Mãe</span>
+                  <span id="cfg-stat-mobos" class="text-sm font-bold text-amber-300">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. MODO DE ESCALA COMPARATIVA PADRÃO -->
+        <div class="rounded-xl p-4 bg-slate-900/80 border border-slate-700/80 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-mono uppercase text-amber-400 font-bold block">4. Modo de Escala dos Gráficos & Barras</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                Escolha como as barras e radares comparam o desempenho entre as peças.
+              </p>
+            </div>
+            <div class="inline-flex p-1 bg-slate-950 border border-slate-700 rounded-xl text-xs font-mono">
+              <button type="button" id="btn-scale-rel-cfg" onclick="setComparisonScaleMode('relative')" class="px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-sky-400 text-slate-950">
+                ⚖️ Escala Relativa (vs Placa Base)
+              </button>
+              <button type="button" id="btn-scale-abs-cfg" onclick="setComparisonScaleMode('absolute')" class="px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200">
+                📊 Escala Absoluta (vs Topo RTX 5090)
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-300">
+            <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800 space-y-1">
+              <strong class="text-sky-300 block">⚖️ Modo Relativo (vs Placa Base):</strong>
+              <p class="text-slate-400 text-[11px]">
+                A placa base é a referência de 100%. A barra da placa candidata mostra diretamente o ganho proporcional (+XX% vs Base), permitindo ver claramente a diferença direta entre elas.
+              </p>
+            </div>
+            <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800 space-y-1">
+              <strong class="text-amber-300 block">📊 Modo Absoluto (vs Topo RTX 5090):</strong>
+              <p class="text-slate-400 text-[11px]">
+                O teto da barra (100%) é sempre a placa mais forte registrada no catálogo (RTX 5090). Placas intermediárias preenchem apenas sua fatia real do topo (ex: 5060 em ~25%, 5070 em ~42%).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. REGIÃO, BASE MONETÁRIA & MOEDA -->
+        <div class="rounded-xl p-4 bg-slate-900/80 border border-slate-700/80 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="text-xs font-mono uppercase text-emerald-400 font-bold block">5. Região, Mercado & Base Monetária</span>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                Configuração regional modular (moeda, separadores decimais, canais de promoções e lojas).
+              </p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <label class="text-xs font-bold text-slate-200 block">País / Região Ativa:</label>
+              <select id="cfg-select-market-region" onchange="changeMarketRegion(this.value)" class="w-full bg-slate-900 text-amber-300 font-bold text-xs border border-slate-700 rounded-lg p-2.5 focus:outline-none cursor-pointer">
+                <option value="br" class="bg-slate-900 text-white font-medium">🇧🇷 Brasil (BRL - R$)</option>
+                  <option value="mx" class="bg-slate-900 text-white font-medium">🇲🇽 México (MXN - $)</option>
+                <option value="us" class="bg-slate-900 text-white font-medium">🇺🇸 United States (USD - $)</option>
+                <option value="eu" class="bg-slate-900 text-white font-medium">🇪🇺 União Europeia (EUR - €)</option>
+                <option value="uk" class="bg-slate-900 text-white font-medium">🇬🇧 Reino Unido (GBP - £)</option>
+              </select>
+              <p class="text-[11px] text-slate-400 mt-1">
+                Para adicionar um novo país, basta adicionar um arquivo <code>.json</code> na pasta <code>config/regions/</code>.
+              </p>
+            </div>
+            <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs font-mono" id="cfg-market-monetary-preview">
+              <span class="text-slate-400 text-[10px] uppercase font-bold block">Regras Monetárias Ativas:</span>
+              <div class="flex justify-between py-0.5 border-b border-slate-800/80"><span class="text-slate-500">Símbolo da Moeda:</span><span id="cfg-money-sym" class="text-emerald-300 font-bold">R$</span></div>
+              <div class="flex justify-between py-0.5 border-b border-slate-800/80"><span class="text-slate-500">Código ISO:</span><span id="cfg-money-code" class="text-white">BRL</span></div>
+              <div class="flex justify-between py-0.5 border-b border-slate-800/80"><span class="text-slate-500">Locale Numérico:</span><span id="cfg-money-locale" class="text-sky-300">pt-BR</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer class="border-t border-slate-800/80 py-4 px-4 text-center text-xs text-slate-500 mt-8">
-    Dados monitorados em tempo real via <a href="https://www.hardwarebarato.com/" target="_blank" class="text-sky-400 hover:underline">HardwareBarato.com</a> • Calculadora Relacional Contextual (Jogos, Inferência IA Local, AI Training, Ethernet & OpenDSS)
+    Dados sincronizados e calculados via Database de hardware • Calculadora Relacional Contextual (Jogos, Inferência IA Local, AI Training & Produtividade)
   </footer>
 
   <!-- Floating Deal Notification Toast Container -->

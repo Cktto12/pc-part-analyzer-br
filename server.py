@@ -22,6 +22,8 @@ from xml.sax.saxutils import escape as xml_escape
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, quote
 import urllib.request
+import sources
+import config
 
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -296,6 +298,29 @@ def save_notified_history(history):
     except Exception:
         pass
 
+def format_deal_notification(d, reasons_list=None, coup_code=None):
+    """Formats an emoji-rich, highly readable push alert matching the user's preferred format."""
+    price = d.get("price_brl", 0)
+    name = d.get("matched_name") or d.get("title", "Hardware")
+    coup = (coup_code or d.get("coupon_code") or d.get("coupon_info") or "").strip()
+    coupon_tag = f" (c/ Cupom: {coup})" if coup else ""
+    title = f"🔥 {name} por R$ {price:,.2f}{coupon_tag}"
+
+    reasons_line = " • ".join(reasons_list) if reasons_list else "🔥 Oferta Detectada"
+    coupon_line = f"\n🎟️ Cupom Necessário: {coup}" if coup else ""
+
+    savings_brl = d.get("savings_vs_hb_brl", 0)
+    hb_price = d.get("hb_price_brl", 0)
+    diff_line = f"\n📉 Economia vs Ref: -R$ {savings_brl:,.2f} (Ref: R$ {hb_price:,.2f})" if savings_brl > 0 else ""
+    channel_line = f"\n📢 Canal: @{d.get('channel_id', 'radar')}"
+    deal_title = (d.get("title") or "").strip()[:140]
+
+    message = f"{reasons_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
+    url = d.get("buy_url") or d.get("post_url") or ""
+    line1 = f"{reasons_line}{' | Cupom: ' + coup if coup else ''}"
+    line2 = f"Canal @{d.get('channel_id', 'radar')} — {deal_title[:80]}"
+    return title, message, line1, line2, url
+
 def check_and_notify_deals(cfg=None, db=None, force_notify=False):
     """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts."""
     if cfg is None:
@@ -323,53 +348,56 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
     targets = cfg.get("custom_targets", [])
 
     for d in matched:
-        post_id = d.get("post_id") or f"{d.get('channel_id')}_{d.get('price_brl')}_{d.get('matched_slug')}"
-        if not force_notify and post_id in history:
+        post_id = d.get("post_id") or f"{d.get('channel_id')}_{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
+        price_key = f"{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
+        if not force_notify and (post_id in history or price_key in history):
             continue
 
         qualifies = False
-        reason = ""
+        reasons = []
 
-        # Check target list (e.g. RTX 5060 <= 2300, RTX 5070 <= 3800)
+        # 1. Check target list (e.g. RTX 5060 <= 2300, RTX 5070 <= 3800)
         matched_slug = d.get("matched_slug")
         price = d.get("price_brl", 999999)
         for tgt in targets:
             if tgt.get("slug") == matched_slug and price <= tgt.get("max_price", 0):
                 qualifies = True
-                reason = f"Meta Atingida (≤ R$ {tgt['max_price']:,.2f})"
+                reasons.append(f"🎯 Meta Atingida (≤ R$ {tgt['max_price']:,.2f})")
                 break
 
-        # Check high CB or pechincha
-        if not qualifies and trig_cb and (d.get("cb_score", 0) >= min_cb or d.get("is_pechincha")):
+        # 2. Check high CB or pechincha
+        cb = d.get("cb_score", 0)
+        is_pech = bool(d.get("is_pechincha"))
+        if trig_cb and (cb >= min_cb or is_pech):
             qualifies = True
-            reason = f"Pechincha / CB {d.get('cb_score')}/100"
+            if cb > 0:
+                reasons.append(f"🏆 CB {cb}/100")
+            if is_pech:
+                reasons.append("🔥 PECHINCHA")
 
-        # Check savings vs HardwareBarato
+        # 3. Check savings vs Catalog / Base Database
         savings_brl = d.get("savings_vs_hb_brl", 0)
-        savings_pct = (savings_brl / max(1, d.get("hb_price_brl", 1))) * 100
-        if not qualifies and trig_hb and (savings_brl >= hb_brl or savings_pct >= hb_pct):
+        hb_price = d.get("hb_price_brl", 0)
+        savings_pct = (savings_brl / max(1, hb_price)) * 100 if hb_price > 0 else 0
+        if trig_hb and (savings_brl >= hb_brl or savings_pct >= hb_pct):
             qualifies = True
-            reason = f"Economia de R$ {savings_brl:.0f} ({savings_pct:.0f}%) vs HB"
+            reasons.append(f"📉 −R$ {savings_brl:,.0f} (−{savings_pct:.0f}%) vs Database")
 
         if qualifies:
-            coup_text = f" • Cupom: {d['coupon_code']}" if d.get("coupon_code") else ""
-            title = f"🔥 {d.get('matched_name')} por R$ {price:,.2f}"
-            line1 = f"{reason}{coup_text} (@{d.get('channel_id')})"
-            line2 = d.get("title", "")[:120]
-            url = d.get("buy_url") or d.get("post_url") or ""
+            title, message, line1, line2, url = format_deal_notification(d, reasons)
 
             # 1. Native Windows Toast Notification (Runs in background even if site is closed!)
             if cfg.get("notifyWinToast", True):
                 send_windows_native_notification(title, line1, line2, url)
 
-            # 2. Phone Push Notification (ntfy.sh / WhatsApp / Email)
+            # 2. Phone Push Notification (ntfy.sh / WhatsApp / Email) with emojis
             if cfg.get("notifyPhone", True):
                 svc = cfg.get("phoneService", "ntfy")
                 if svc == "ntfy" and cfg.get("ntfyTopic"):
                     send_phone_alert_ntfy(
                         topic=cfg["ntfyTopic"],
                         title=title,
-                        message=f"{line1}\n{line2}",
+                        message=message,
                         url=url,
                         priority=cfg.get("ntfyPriority", "default"),
                         ring=bool(cfg.get("ntfyRing", False))
@@ -378,17 +406,18 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
                     send_phone_alert_whatsapp(
                         phone=cfg["waNumber"],
                         apikey=cfg["waApikey"],
-                        message=f"*{title}*\n\n{line1}\n{line2}\n{url}"
+                        message=f"*{title}*\n\n{message}\n{url}"
                     )
                 elif svc == "email" and cfg.get("smtp"):
                     send_phone_alert_email(
                         cfg.get("smtp", {}),
                         title,
-                        f"{line1}\n{line2}",
+                        message,
                         url
                     )
 
             history[post_id] = time.time()
+            history[price_key] = time.time()
             notified_count += 1
             if force_notify:
                 break
@@ -396,9 +425,44 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
     save_notified_history(history)
     return {"notified": notified_count, "total_matched": len(matched)}
 
+def run_sitewise_coupon_validator():
+    """Runs a continuous sitewise validation of links and coupons in data/promos_cache.json and updates the DB."""
+    try:
+        cache_path = os.path.join(BASE_DIR, "data", "promos_cache.json")
+        if not os.path.exists(cache_path):
+            return
+        with open(cache_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        deals = data.get("matched_deals", [])
+        if not deals:
+            return
+
+        import coupon_tracker
+        results = coupon_tracker.test_deals_batch(deals, max_items=50)
+        rewired, best_slug = coupon_tracker.rewire_deals_and_best_by_slug(deals, data.get("recent_feed", []))
+        data["matched_deals"] = rewired
+        data["best_by_slug"] = best_slug
+        data["coupon_status"] = coupon_tracker.load_coupon_status()
+        data["last_sitewise_test_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+        if os.path.exists(DB_PATH):
+            with open(DB_PATH, "r", encoding="utf-8") as f:
+                db = json.load(f)
+            db["live_promos"] = data
+            with open(DB_PATH, "w", encoding="utf-8") as f:
+                json.dump(db, f, ensure_ascii=False, indent=2)
+
+        print(f"[Sitewise Validator] {len(results)} ofertas/cupons verificados na base em segundo plano.")
+    except Exception as e:
+        print(f"[Sitewise Validator Erro] {e}")
+
 def background_promo_monitor_thread():
-    """Background daemon thread: scans for deals and dispatches notifications at any time."""
-    time.sleep(15)  # initial delay after server boot
+    """Background daemon thread: scans for deals, verifies coupons sitewise, and dispatches notifications."""
+    time.sleep(10)  # initial delay after server boot
+    run_sitewise_coupon_validator()
     while True:
         try:
             cfg = load_alert_config()
@@ -407,6 +471,7 @@ def background_promo_monitor_thread():
                 res = check_and_notify_deals(cfg)
                 if res.get("notified", 0) > 0:
                     print(f"[Background Monitor] Enviou {res['notified']} alerta(s) de novas ofertas em segundo plano!")
+            run_sitewise_coupon_validator()
         except Exception as e:
             print(f"[Background Monitor Erro] {e}")
             interval_mins = 10
@@ -427,13 +492,29 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/hardware":
+        if parsed.path == "/api/market-config":
+            return self.send_json({
+                "ok": True,
+                "config": config.get_market_config(),
+                "available_regions": config.list_available_regions(),
+                "active_region": config.get_market_config().get("region_id", "br")
+            })
+        elif parsed.path == "/api/sources":
+            return self.send_json({
+                "ok": True,
+                "sources": sources.list_sources(),
+                "active_source": sources.get_active_source_id()
+            })
+        elif parsed.path == "/api/hardware":
             if not os.path.exists(DB_PATH):
-                from scraper import build_database
-                db = build_database(DB_PATH)
+                db = sources.sync_active_source(DB_PATH)
                 return self.send_json(db)
             with open(DB_PATH, "r", encoding="utf-8") as f:
-                return self.send_json(json.load(f))
+                db = json.load(f)
+            active = sources.get_active_source()
+            db["source_id"] = active.source_id
+            db["source_name"] = active.source_name
+            return self.send_json(db)
         elif parsed.path == "/api/my-pc":
             return self.send_json(detect_local_pc())
         elif parsed.path == "/api/tg-raw":
@@ -484,11 +565,59 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
             return self.send_json(load_alert_config())
         elif parsed.path == "/api/alert-history":
             return self.send_json(load_notified_history())
+        elif parsed.path == "/api/test-coupon":
+            try:
+                qs = parse_qs(parsed.query)
+                url = qs.get("url", [""])[0]
+                code = qs.get("code", [None])[0]
+                price = float(qs.get("price", ["0"])[0]) if qs.get("price") else None
+                post_id = qs.get("post_id", [""])[0] or None
+                import coupon_tracker
+                res = coupon_tracker.test_deal_url_and_coupon(url, coupon_code=code, expected_price=price, post_id=post_id)
+                return self.send_json({"ok": True, "result": res})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/coupon-status":
+            try:
+                import coupon_tracker
+                return self.send_json({"ok": True, "status": coupon_tracker.load_coupon_status()})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
         return super().do_GET()
 
     def do_POST(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/alert-config":
+        if parsed.path == "/api/test-coupon":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                url = body.get("url", "")
+                code = body.get("coupon_code") or body.get("code")
+                price = body.get("price")
+                import coupon_tracker
+                res = coupon_tracker.test_deal_url_and_coupon(url, coupon_code=code, expected_price=price)
+                return self.send_json({"ok": True, "result": res})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/mark-coupon-status":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                code = body.get("coupon_code") or body.get("code")
+                post_id = body.get("post_id")
+                url = body.get("url")
+                status = body.get("status", "expired")
+                reason = body.get("reason", "Marcado pelo usuário/cliente")
+                import coupon_tracker
+                res = {}
+                if code:
+                    res["coupon"] = coupon_tracker.record_coupon_status(code, status, reason, source="user_override")
+                if post_id or url:
+                    res["deal"] = coupon_tracker.record_deal_status(post_id, status, reason, source="user_override", url=url)
+                return self.send_json({"ok": True, "updated": res})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/alert-config":
             try:
                 length = int(self.headers.get("Content-Length", "0"))
                 body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
@@ -507,10 +636,61 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/market-config/select":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                region_id = body.get("region_id") or body.get("region")
+                if not region_id or not config.set_active_region(region_id):
+                    return self.send_json({"ok": False, "error": f"Região inválida: {region_id}"}, status=400)
+                try:
+                    import promo_radar
+                    promo_radar._PROMO_CACHE["updated_at"] = 0
+                    promo_radar._PROMO_CACHE["data"] = None
+                except Exception:
+                    pass
+                return self.send_json({
+                    "ok": True,
+                    "active_region": region_id,
+                    "config": config.get_market_config(),
+                    "available_regions": config.list_available_regions()
+                })
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/market-config":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                if not body:
+                    return self.send_json({"ok": False, "error": "Config payload vazio"}, status=400)
+                config.save_market_config(body)
+                return self.send_json({"ok": True, "config": config.get_market_config()})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/sources/select":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                sid = body.get("source_id") or body.get("source")
+                if not sid or not sources.set_active_source(sid):
+                    return self.send_json({"ok": False, "error": f"Fonte não encontrada: {sid}"}, status=400)
+                active = sources.get_active_source()
+                return self.send_json({
+                    "ok": True,
+                    "active_source": sid,
+                    "source_name": active.source_name,
+                    "sources": sources.list_sources()
+                })
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
         elif parsed.path == "/api/refresh":
             try:
-                from scraper import build_database
-                db = build_database(DB_PATH)
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                sid = body.get("source_id") or parse_qs(parsed.query).get("source", [None])[0]
+                if sid:
+                    sources.set_active_source(sid)
+                db = sources.sync_active_source(DB_PATH)
                 return self.send_json({"ok": True, "db": db})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
@@ -536,24 +716,37 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 title = body.get("title", "🔥 Alerta de Pechincha")
                 message = body.get("message", "")
                 url = body.get("url", "")
+                post_id = body.get("post_id") or body.get("deal_id")
+                force = bool(body.get("force", False))
+
+                # Deduplication check: prevent duplicate notifications across browser & background monitor
+                if post_id and not force:
+                    history = load_notified_history()
+                    if post_id in history:
+                        return self.send_json({"ok": True, "skipped": True, "reason": "already_notified"})
 
                 if channel == "ntfy":
                     topic = body.get("topic", "")
-                    priority = body.get("priority", "urgent")
-                    ring = bool(body.get("ring", True))
+                    priority = body.get("priority", "default")
+                    ring = bool(body.get("ring", False))
                     res = send_phone_alert_ntfy(topic, title, message, url, priority, ring)
-                    return self.send_json(res)
                 elif channel == "whatsapp":
                     phone = body.get("phone", "")
                     apikey = body.get("apikey", "")
                     res = send_phone_alert_whatsapp(phone, apikey, f"*{title}*\n\n{message}\n{url}")
-                    return self.send_json(res)
                 elif channel == "email":
                     smtp_cfg = body.get("smtp", {})
                     res = send_phone_alert_email(smtp_cfg, title, message, url)
-                    return self.send_json(res)
                 else:
                     return self.send_json({"ok": False, "error": f"Canal desconhecido: {channel}"}, status=400)
+
+                # Persist post_id to notified history on success
+                if post_id and res.get("ok"):
+                    history = load_notified_history()
+                    history[post_id] = time.time()
+                    save_notified_history(history)
+
+                return self.send_json(res)
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
         self.send_json({"error": "Not found"}, status=404)

@@ -12,6 +12,21 @@ import statistics
 import concurrent.futures
 from datetime import datetime
 
+try:
+    from config import get_market_config
+except Exception:
+    get_market_config = None
+
+def get_catalog_base_url():
+    if get_market_config:
+        try:
+            cfg = get_market_config()
+            db_settings = cfg.get("database_source_settings", {})
+            return (db_settings.get("catalog_base_url") or 'https://www.hardwarebarato.com').rstrip('/')
+        except Exception:
+            pass
+    return 'https://www.hardwarebarato.com'
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 # Detailed architectural & AI metadata for all 57 GPUs on Hardware Barato
@@ -194,7 +209,7 @@ def compute_ai_and_software_scores(slug, bench, spec):
     }
 
 def fetch_json_arrays(path):
-    url = 'https://www.hardwarebarato.com' + path
+    url = get_catalog_base_url() + path
     req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     html = urllib.request.urlopen(req, timeout=20).read().decode('utf-8', errors='ignore')
     pushes = re.findall(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', html, re.DOTALL)
@@ -379,14 +394,14 @@ def build_database(output_path):
     with concurrent.futures.ThreadPoolExecutor(max_workers=12) as ex:
         enriched_gpus = list(ex.map(fetch_gpu_detail, raw_gpus))
 
-    # Add RX 580 2048SP 8GB reference baseline entry so user can compare their current GPU
+    # Add RX 580 2048SP 8GB reference baseline entry
     rx580_scores = compute_ai_and_software_scores("rx-580-8gb-ref", 890, GPU_SPECS["rx-580-8gb-ref"])
     enriched_gpus.append({
         "slug": "rx-580-8gb-ref",
-        "name": "RX 580 2048SP 8GB (Referência / Sua GPU)",
+        "name": "RX 580 2048SP 8GB",
         "href": "https://www.hardwarebarato.com/produtos/placas-de-video",
         "brand": "AMD",
-        "arch": "Polaris (Sua GPU)",
+        "arch": "Polaris",
         "vram_gb": 8,
         "memory_type": "GDDR5",
         "bus_bits": 256,
@@ -397,10 +412,10 @@ def build_database(output_path):
         "regular_price_brl": 650.0,
         "installment_price_brl": 650.0,
         "coupon": None,
-        "coupon_label": "Referência Usada",
+        "coupon_label": "Usada / Entrada",
         "store_name": "referencia",
         "offer_url": "https://www.hardwarebarato.com/produtos/placas-de-video",
-        "offer_title": "AMD Radeon RX 580 2048SP 8GB GDDR5 (Sua GPU Atual Detectada)",
+        "offer_title": "AMD Radeon RX 580 2048SP 8GB GDDR5",
         "image": "",
         "hb_cb_score": 55,
         "gaming_score": rx580_scores["gaming_score"],
@@ -488,7 +503,7 @@ def build_database(output_path):
 
     cpus = [{
         "slug": "xeon-e5-2680-v4",
-        "name": "Intel Xeon E5-2680 v4 (14C/28T - Seu CPU Atual)",
+        "name": "Intel Xeon E5-2680 v4 (14C/28T)",
         "tdp_w": 120,
         "benchmark": 2150,
         "single_core_factor": 0.68,

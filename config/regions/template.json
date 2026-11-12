@@ -1,0 +1,56 @@
+{
+  "_comment": "TEMPLATES & GUIDE FOR ADDING NEW COUNTRY/REGION PROFILES",
+  "_instructions": "To add a new country: 1) Copy this file to '<country_code>.json' in 'config/regions/' (e.g. 'jp.json', 'ca.json', 'au.json'). 2) Fill out the fields below. 3) Select it in the UI or call POST /api/market-config/select. The app will automatically adapt currency symbols, formatting, stores, and promo channels.",
+  "region_id": "custom_region_id",
+  "region_name": "Country / Region Full Name",
+  "country_code": "ISO-2 letter code (e.g. CA, AU, JP)",
+  "flag_emoji": "Country Flag Emoji",
+  "monetary": {
+    "currency_code": "ISO-4217 code (e.g. CAD, AUD, JPY)",
+    "currency_symbol": "Symbol (e.g. $, ¥, £, €)",
+    "symbol_position": "prefix or suffix",
+    "locale": "BCP-47 locale (e.g. en-CA, ja-JP, en-AU)",
+    "decimal_separator": ". or ,",
+    "thousands_separator": ", or .",
+    "decimal_digits": 2,
+    "price_regex": "Regular expression pattern to extract prices from text feeds",
+    "min_valid_hardware_price": 20.0,
+    "max_valid_hardware_price": 10000.0,
+    "vram_step_bonus_factor": 45.0,
+    "default_alert_min_savings": 30.0,
+    "default_budget_ceiling": 1200.0
+  },
+  "promotion_sources": {
+    "enabled": true,
+    "engine": "telegram_mirror (or rss / api)",
+    "channels": [
+      {
+        "id": "telegram_channel_or_feed_id",
+        "name": "Display Name",
+        "url": "https://t.me/s/channel_id"
+      }
+    ],
+    "search_keywords": ["", "RTX", "5060", "5070", "4060", "7600", "RX", "Ryzen", "DDR5"],
+    "coupon_keywords": ["coupon", "promo code", "voucher", "discount"],
+    "cash_intent_keywords": ["deal", "price:", "lowest", "sale", "🔥"]
+  },
+  "stores": [
+    {
+      "id": "store_unique_id",
+      "name": "Store Display Name",
+      "domain": "store.com",
+      "icon": "🛒"
+    }
+  ],
+  "database_source_settings": {
+    "default_source_id": "hardware_barato or local_cache",
+    "catalog_base_url": "https://primary-hardware-catalog-url.com",
+    "catalog_endpoint": "/products/endpoint",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  },
+  "seasonal_events": {
+    "primary_event": "Black Friday / End of Year Sales",
+    "season_months": [11, 12],
+    "baseline_days": 600
+  }
+}

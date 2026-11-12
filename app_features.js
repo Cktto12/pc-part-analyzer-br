@@ -20,6 +20,7 @@ function saveUserPrefs() {
       monitorRes: STATE.monitorRes,
       monitorMaxFps: STATE.monitorMaxFps,
       dlssMode: STATE.dlssMode,
+      comparisonScaleMode: STATE.comparisonScaleMode,
       wGaming: STATE.wGaming, wAI: STATE.wAI, wSoft: STATE.wSoft,
       games: STATE.games,
       bfRanges: STATE.bfRanges,
@@ -34,7 +35,7 @@ function loadUserPrefs() {
   STATE.dlssMode = 'perceived';
   STATE.games = JSON.parse(JSON.stringify(DEFAULT_GAMES));
   STATE.bfRanges = {};
-  STATE.upg = { cpu: {}, reuseRam: true };
+  STATE.upg = { cpu: {}, mobo: {}, reuseRam: true };
   STATE.focusGameId = 'cyberpunk';
   STATE.showGameEditor = false;
   try {
@@ -43,25 +44,34 @@ function loadUserPrefs() {
       if (p.monitorRes && MONITOR_RES[p.monitorRes]) STATE.monitorRes = p.monitorRes;
       if (p.monitorMaxFps) STATE.monitorMaxFps = p.monitorMaxFps;
       if (p.dlssMode && ['perceived', 'sr', 'native', 'max_fg'].includes(p.dlssMode)) STATE.dlssMode = p.dlssMode;
+      if (p.comparisonScaleMode && ['relative', 'absolute'].includes(p.comparisonScaleMode)) STATE.comparisonScaleMode = p.comparisonScaleMode;
       if (typeof p.wGaming === 'number') { STATE.wGaming = p.wGaming; STATE.wAI = p.wAI; STATE.wSoft = p.wSoft; }
       if (Array.isArray(p.games) && p.games.length) STATE.games = p.games;
       if (p.bfRanges) STATE.bfRanges = p.bfRanges;
-      if (p.upg) STATE.upg = Object.assign({ cpu: {}, reuseRam: true }, p.upg);
+      if (p.upg) {
+        STATE.upg = Object.assign({ cpu: {}, mobo: {}, reuseRam: true }, p.upg);
+        if (!STATE.upg.mobo) STATE.upg.mobo = {};
+        if (!STATE.upg.cpu) STATE.upg.cpu = {};
+      }
     }
   } catch (_) { /* ignore corrupt prefs */ }
 
   // Reflect into DOM
-  document.getElementById('global-select-monitor').value = STATE.monitorRes;
-  document.getElementById('global-input-maxfps').value = STATE.monitorMaxFps;
+  const elMon = document.getElementById('global-select-monitor');
+  if (elMon) elMon.value = STATE.monitorRes;
+  const elFpsInput = document.getElementById('global-input-maxfps');
+  if (elFpsInput) elFpsInput.value = STATE.monitorMaxFps;
   const preset = document.getElementById('global-select-maxfps');
-  if ([...preset.options].some(o => +o.value === +STATE.monitorMaxFps)) preset.value = String(STATE.monitorMaxFps);
+  if (preset && [...preset.options].some(o => +o.value === +STATE.monitorMaxFps)) preset.value = String(STATE.monitorMaxFps);
   const gDlss = document.getElementById('global-select-dlss-mode');
   if (gDlss) gDlss.value = STATE.dlssMode;
   const sDlss = document.getElementById('sim-select-upscale');
   if (sDlss) sDlss.value = STATE.dlssMode;
   [['gaming', STATE.wGaming], ['ai', STATE.wAI], ['soft', STATE.wSoft]].forEach(([k, v]) => {
-    document.getElementById(`slider-w-${k}`).value = v;
-    document.getElementById(`num-w-${k}`).value = v;
+    const sl = document.getElementById(`slider-w-${k}`);
+    if (sl) sl.value = v;
+    const nm = document.getElementById(`num-w-${k}`);
+    if (nm) nm.value = v;
   });
 }
 
@@ -194,14 +204,16 @@ function getCpuSocket(cpu) {
   return cpu.socket;
 }
 
-function isXeonLike(cpu) {
-  return !!cpu && (cpu.is_xeon || /xeon/i.test(cpu.name || '') || /xeon/i.test(cpu.slug || ''));
+function isLegacyArchitecture(cpu) {
+  if (!cpu) return false;
+  return !!(cpu.is_xeon || /xeon|core 2|phenom|fx-/i.test(cpu.name || '') || (cpu.benchmark && cpu.benchmark < 2500));
 }
+const isXeonLike = isLegacyArchitecture;
 
 function getCpuGamingIndex(cpu) {
   if (!cpu) return 70;
   if (CPU_GAMING_INDEX[cpu.slug]) return CPU_GAMING_INDEX[cpu.slug];
-  if (isXeonLike(cpu)) return 36;
+  if (isLegacyArchitecture(cpu)) return 36;
   if (/threadripper/i.test(cpu.slug)) return 62;
   const b = cpu.benchmark || 3000;
   return Math.max(40, Math.min(80, Math.round(30 + b / 250)));
@@ -209,7 +221,7 @@ function getCpuGamingIndex(cpu) {
 
 function getSimCpu() {
   const sel = document.getElementById('sim-select-cpu');
-  const slug = (sel && sel.value) || STATE.build.cpu.slug || 'xeon-e5-2680-v4';
+  const slug = (sel && sel.value) || (STATE.build && STATE.build.cpu && STATE.build.cpu.slug) || (DB.cpus[0] ? DB.cpus[0].slug : '');
   return DB.cpus.find(c => c.slug === slug) || DB.cpus[0];
 }
 
@@ -250,7 +262,7 @@ function getGpuTechProfile(gpu) {
     return {
       gen: 'rtx30',
       isAmpere: /rtx-30/.test(s) || /rtx 30/.test(n),
-      badge: 'DLSS 4 SR (s/ FG Nativo)',
+      badge: 'DLSS Super Resolução',
       shortBadge: 'DLSS SR',
       color: 'indigo',
       srGain: 1.36,
@@ -324,7 +336,17 @@ function estimateGpuBaseFps(gpu, game, useSR = false, extraVramGB = 0) {
   let vramPenalty = 1.0;
   if ((gpu.vram_gb || 8) < vramNeeded - 2) vramPenalty = 0.62;
   else if ((gpu.vram_gb || 8) < vramNeeded) vramPenalty = 0.80;
-  return Math.max(1, game.fps1440 * ratio * resMult * upMult * vramPenalty);
+
+  let pciePenalty = 1.0;
+  const activeCpu = (typeof getSimCpu === 'function') ? getSimCpu() : STATE.refPC?.cpu;
+  const activeMobo = STATE.refPC?.mobo || STATE.build?.mobo;
+  if (typeof isPlatformPCIe3 === 'function' && isPlatformPCIe3(activeCpu, activeMobo)) {
+    const isX4 = typeof PCIE_X4_GPUS !== 'undefined' && PCIE_X4_GPUS.has(gpu.slug);
+    const isX8 = typeof PCIE_X8_GPUS !== 'undefined' && PCIE_X8_GPUS.has(gpu.slug);
+    if (isX4) pciePenalty = (gpu.vram_gb || 8) < vramNeeded ? 0.72 : 0.88;
+    else if (isX8) pciePenalty = (gpu.vram_gb || 8) < vramNeeded ? 0.86 : 0.96;
+  }
+  return Math.max(1, game.fps1440 * ratio * resMult * upMult * vramPenalty * pciePenalty);
 }
 
 // Backwards-compatible wrapper used by calibration & legacy callers
@@ -337,21 +359,39 @@ function estimateGpuFps(gpu, game, upscale = false) {
 }
 
 function estimateCpuCap(cpu, game) {
-  return Math.max(1, (game.cpuFps || 200) * getCpuGamingIndex(cpu) / 100);
+  let baseCap = Math.max(1, (game.cpuFps || 200) * getCpuGamingIndex(cpu) / 100);
+  // Apply 0.78 RT-BVH overhead penalty to CPU cap on ray-tracing titles (Argon Item 11)
+  const isRt = game && ((game.title && game.title.includes('(RT')) || game.id === 'cyberpunk' || game.rt);
+  if (isRt) {
+    baseCap *= 0.78;
+  }
+  return baseCap;
 }
 
-// Combine GPU-limited and CPU-limited FPS with a smooth minimum (real games are rarely 100% one or the other)
+// Combine GPU-limited and CPU-limited FPS with resolution & workload aware dynamic k (Argon Item 11)
 function combineFps(gpuFps, cpuCap) {
-  const k = 4;
+  if (gpuFps <= 0) return 0;
+  if (cpuCap <= 0) return 0;
+  // Dynamic k: When gpuFps is significantly lower than cpuCap (e.g. 4K native or heavy GPU bottleneck),
+  // increase k to 6 so slower CPU doesn't artificially drag down GPU-bound framerates.
+  const k = (gpuFps < 0.70 * cpuCap) ? 6 : 4;
   return 1 / Math.pow(Math.pow(1 / gpuFps, k) + Math.pow(1 / cpuCap, k), 1 / k);
 }
 
 function getMyCurrentGpu() {
+  if (STATE.build && STATE.build.gpu && STATE.build.gpu.slug) {
+    const found = DB.gpus.find(g => g.slug === STATE.build.gpu.slug);
+    if (found) return found;
+  }
   return DB.gpus.find(g => g.slug === 'rx-580-8gb-ref') || DB.gpus[0];
 }
 
 function getMyCurrentCpu() {
-  return DB.cpus.find(c => c.slug === 'xeon-e5-2680-v4') || DB.cpus[0];
+  if (STATE.build && STATE.build.cpu && STATE.build.cpu.slug) {
+    const found = DB.cpus.find(c => c.slug === STATE.build.cpu.slug);
+    if (found) return found;
+  }
+  return DB.cpus[0];
 }
 
 // Optional calibration: if user typed the FPS they actually measure on their current PC,
@@ -419,14 +459,13 @@ function computeDlssMfgMetrics(gpu, cpu, game, modeOverride = null) {
     if (dlssMode === 'native') return nativePure === dispFps ? baseFps : baseFps;
     if (dlssMode === 'sr' || !canUseFG) return baseFps * tech.qualityFactor;
     const extraFrames = Math.max(0, dispFps - baseFps);
-    // Latency discount: MFG feels amazing when base rendered FPS >= 55, decent at 40-54, and laggy below 38 FPS
-    let fgUtilityWeight = 0.62;
-    if (baseFps < 36) fgUtilityWeight = 0.20;
-    else if (baseFps < 48) fgUtilityWeight = 0.42;
-    else if (baseFps < 60) fgUtilityWeight = 0.54;
-    // Slight diminishing perceptual value between 2x FG and 4x MFG for mouse-feel
-    if (activeFgMult === 3) fgUtilityWeight *= 0.90;
-    if (activeFgMult === 4) fgUtilityWeight *= 0.82;
+    // Latency discount & utility weight (Argon Item 2: dampen to max 0.25 for 2x FG and 0.15 for 4x MFG)
+    let fgUtilityWeight = 0.25;
+    if (baseFps < 36) fgUtilityWeight = 0.08;
+    else if (baseFps < 48) fgUtilityWeight = 0.16;
+    else if (baseFps < 60) fgUtilityWeight = 0.22;
+    if (activeFgMult === 3) fgUtilityWeight *= 0.75;
+    if (activeFgMult === 4) fgUtilityWeight = 0.15;
     return (baseFps + extraFrames * fgUtilityWeight) * tech.qualityFactor;
   };
 
@@ -480,19 +519,23 @@ function getRelevantGames() {
 }
 
 // Gaming score used in Duelo, Custo-Benefício & Upgrade Planner:
-// Respects monitor resolution, VRAM needs, Hz cap, AND the selected DLSS 4 / MFG Perceived Mode!
-function getEffectiveGamingScore(gpu) {
+// Respects monitor resolution, VRAM needs, Hz cap (when applicable), AND the selected DLSS 4 / MFG Perceived Mode!
+// When uncapped=true, measures the pure hardware capability without clamping to monitor Hz.
+function getEffectiveGamingScore(gpu, uncapped = false) {
   const games = getRelevantGames();
   if (!games.length || !STATE.monitorRes) return gpu.gaming_score || 1500;
-  const cap = STATE.monitorMaxFps >= 999 ? Infinity : STATE.monitorMaxFps;
+  const cap = uncapped ? Infinity : (STATE.monitorMaxFps >= 999 ? Infinity : STATE.monitorMaxFps);
   const mode = STATE.dlssMode || 'perceived';
   let refSum = 0, effSum = 0;
   games.forEach(gm => {
     // Baseline reference: RTX 5060 native 1440p FPS
     const ref5060 = gm.fps1440;
     const m = computeDlssMfgMetrics(gpu, null, gm, mode);
-    // Cap displayed/perceived FPS by monitor Hz so frames beyond the screen refresh rate don't inflate score
-    const eff = Math.min(cap, m.pure);
+    // Soft logarithmic dampening above monitor cap when uncapped=false (Argon Item 2)
+    let eff = m.pure;
+    if (!uncapped && isFinite(cap)) {
+      eff = (m.pure <= cap) ? m.pure : (cap + Math.sqrt(m.pure - cap) * 3);
+    }
     refSum += ref5060;
     effSum += eff;
   });
@@ -559,33 +602,36 @@ function resetGamesToDefault() {
   renderSimulator();
 }
 
-function getXeonWarningHTML(cpu, gpuA, gpuB) {
+function getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB) {
   const parts = [];
-  if (isXeonLike(cpu)) {
+  if (!cpu) return '';
+  const cpuIndex = getCpuGamingIndex(cpu);
+  const isBudgetOrLegacy = cpuIndex <= 45 || isLegacyArchitecture(cpu);
+
+  if (isBudgetOrLegacy) {
     parts.push(`
       <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/50 text-xs text-amber-100 space-y-1.5">
-        <div class="font-bold text-amber-300">⚠️ Estimativa com Xeon pode falhar — margem de erro alta (±25–35%)</div>
+        <div class="font-bold text-amber-300">💡 Análise de Arquitetura do Processador (${cpu.name})</div>
         <ul class="list-disc pl-5 space-y-0.5 text-[11px]">
-          <li>Quase nenhum review moderno testa <strong>Xeon E5 v3/v4 (X99 chinesa)</strong>; o índice de jogo (${getCpuGamingIndex(cpu)}/100 vs 9800X3D) é uma extrapolação por clock (2.4–3.3 GHz), IPC Broadwell e latência de memória (~85–95 ns).</li>
-          <li>O <strong>E5-2680 v4 não aceita o "Turbo Unlock"</strong> (só funciona em v3 Haswell); sem ele, o all-core fica ~2.9 GHz. Jogos com 1–2 threads pesadas (CS2, Valorant, MSFS, Minecraft, BG3 Ato 3) são os mais afetados.</li>
-          <li><strong>Quad-channel</strong> ajuda bastante — se estiver em single/dual-channel, o FPS real pode ser 10–20% menor que o estimado.</li>
-          <li>Melhor caminho: digite no editor abaixo o <strong>FPS que você mede hoje</strong> (RX 580 + Xeon) para calibrar cada jogo.</li>
+          <li>Este processador possui índice de jogos estimado em ${cpuIndex}/100 frente aos modelos topo de linha de alta frequência (como 7800X3D/9800X3D). Em 1080p competitivo com placas muito rápidas, o clock single-core dita o teto de quadros.</li>
+          <li>Em <strong>1440p ou 4K</strong>, ou com tecnologias de upscaling ativo (<strong>DLSS / FSR</strong>), a exigência migra para a GPU, diminuindo a sensibilidade ao processador.</li>
+          <li>Dica de calibração: você pode preencher o campo <strong>Meu FPS Medido</strong> na tabela abaixo para calibrar com precisão os ganhos no seu hardware real.</li>
         </ul>
       </div>`);
   }
-  if (getCpuSocket(cpu) === 'LGA2011-3') {
+  if (getCpuSocket(cpu) === 'LGA2011-3' || (cpu.benchmark && cpu.benchmark < 2500)) {
     const narrow = [gpuA, gpuB].filter(g => g && (PCIE_X8_GPUS.has(g.slug) || PCIE_X4_GPUS.has(g.slug)));
     if (narrow.length) {
       parts.push(`
-        <div class="p-3 rounded-xl bg-rose-950/40 border border-rose-500/40 text-[11px] text-rose-100 mt-2">
-          <strong>🔌 PCIe 3.0 + placa x8/x4:</strong> ${narrow.map(g => `<strong>${g.name}</strong> (${PCIE_X4_GPUS.has(g.slug) ? 'x4' : 'x8'})`).join(', ')}
-          usa só ${narrow.some(g => PCIE_X4_GPUS.has(g.slug)) ? '4' : '8'} lanes — no X99 (PCIe 3.0) isso vira ~${narrow.some(g => PCIE_X4_GPUS.has(g.slug)) ? '4' : '8'} GB/s. Normalmente custa 2–5%,
-          mas quando a VRAM estoura (8GB em 1440p, LLMs com offload) a queda pode passar de 20%. Placas x16 (RTX 5070, 9070 XT…) não sofrem isso.
+        <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-[11px] text-sky-100 mt-2">
+          <strong>🔌 Interface PCIe das Placas:</strong> ${narrow.map(g => `<strong>${g.name}</strong> (${PCIE_X4_GPUS.has(g.slug) ? 'x4' : 'x8'})`).join(', ')}
+          utilizam barramento elétrico reduzido (x4/x8). Em sistemas com PCIe 3.0 isso limita a largura de banda e pode impactar fluidez quando a VRAM transborda. Em placas x16 completas (RTX 5070, 9070 XT), o barramento opera folgado.
         </div>`);
     }
   }
   return parts.join('');
 }
+const getXeonWarningHTML = getCpuArchitectureAdviceHTML;
 
 function fpsBarRow(label, colorText, colorBar, fps, maxFps, bold, monitorCap) {
   const over = monitorCap < 999 && fps > monitorCap;
@@ -626,7 +672,7 @@ function renderSimulatorControls() {
       <p class="text-[10px] text-slate-400 mb-2">
         <strong>FPS ref.</strong> = média numa RTX 5060 em 1440p nativo sem limite de CPU •
         <strong>Teto CPU</strong> = FPS máximo com Ryzen 7 9800X3D (escala pelo índice do seu CPU) •
-        <strong>Meu FPS medido</strong> = o que você vê hoje na RX 580 + Xeon na resolução selecionada (opcional, calibra o jogo).
+        <strong>Meu FPS medido</strong> = o que você vê hoje no seu setup atual na resolução selecionada (opcional, calibra o jogo).
       </p>
       <table class="w-full text-[11px]">
         <thead><tr class="text-slate-400 font-mono text-[10px] uppercase">
@@ -672,9 +718,10 @@ function renderSimulatorResultsOnly() {
 
   document.getElementById('sim-focus-res-label').textContent = getMonitorLabel();
 
-  // Sleek, compact Xeon & DLSS Notice Bar
-  const xeonWarn = getXeonWarningHTML(cpu, gpuA, gpuB);
-  document.getElementById('sim-xeon-warning-banner').innerHTML = `
+  // Sleek, compact Architecture & DLSS Notice Bar
+  const xeonWarn = getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB);
+  const adviceBanner = document.getElementById('sim-cpu-advice-banner') || document.getElementById('sim-xeon-warning-banner');
+  if (adviceBanner) adviceBanner.innerHTML = `
     <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
       <div class="flex items-center gap-2">
         <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold">CONFIG ATIVA</span>
@@ -688,7 +735,7 @@ function renderSimulatorResultsOnly() {
     <div id="sim-xeon-details-box" class="${STATE.showXeonDetails ? '' : 'hidden'} mt-2 space-y-2">
       ${xeonWarn}
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
-        ✨ <strong>DLSS 4 + Multi-Frame Generation (MFG 3×/4×):</strong> A série <strong>RTX 50 (Blackwell)</strong> gera até 4× quadros via Transformer diretamente na GPU após a fila do processador, contornando o teto de FPS do Xeon/CPU para preencher monitores de 144 Hz+.
+        ✨ <strong>DLSS 4 + Multi-Frame Generation (MFG 3×/4×):</strong> A série <strong>RTX 50 (Blackwell)</strong> gera até 4× quadros via Transformer diretamente na GPU após a fila de renderização do processador, aliviando o teto de FPS da CPU para preencher monitores de alta taxa de atualização.
       </div>
     </div>`;
 
@@ -794,21 +841,21 @@ function renderSimulatorResultsOnly() {
       </div>
 
       <!-- Scorecard 2: Running AI -->
-      <div class="glass-elevated rounded-2xl p-4 border border-purple-500/30 flex flex-col justify-between shadow-sm">
+      <div class="glass-elevated rounded-2xl p-4 border border-slate-800 flex flex-col justify-between shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             ${robotSvg}
-            <span class="text-xs font-mono uppercase text-purple-400 font-bold">Executar IA (Inferência)</span>
+            <span class="text-xs font-mono uppercase text-sky-400 font-bold">Executar IA (Inferência)</span>
           </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">${gpuA.vram_gb >= gpuB.vram_gb ? gpuA.name : gpuB.name} +capacidade</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 font-bold">${gpuA.vram_gb >= gpuB.vram_gb ? gpuA.name : gpuB.name} +capacidade</span>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${aiGain >= 0 ? 'text-purple-400' : 'text-rose-400'}">${aiGain >= 0 ? '+' : ''}${aiGain}%</span>
+          <span class="text-3xl font-mono font-black ${aiGain >= 0 ? 'text-sky-400' : 'text-rose-400'}">${aiGain >= 0 ? '+' : ''}${aiGain}%</span>
           <span class="text-xs text-slate-300 font-mono">(14B: ${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s)</span>
         </div>
         <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
           <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Referência Base"></div>
-          <div class="h-full rounded-full ${aiGain >= 0 ? 'bg-gradient-to-r from-purple-400 to-sky-400' : 'bg-rose-400'}" style="width: ${aiGain >= 0 ? Math.min(100, 50 + Math.min(50, aiGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + aiGain / 100)).toFixed(1)}%;"></div>
+          <div class="h-full rounded-full ${aiGain >= 0 ? 'bg-gradient-to-r from-sky-500 to-emerald-400' : 'bg-rose-400'}" style="width: ${aiGain >= 0 ? Math.min(100, 50 + Math.min(50, aiGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + aiGain / 100)).toFixed(1)}%;"></div>
         </div>
         <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
           <span class="text-sky-300 truncate">${gpuA.name}: ${gpuA.vram_gb}GB</span>
@@ -891,19 +938,24 @@ function renderSimulatorResultsOnly() {
 // ============================================================================
 // 4. SUGESTÕES DE MUDANÇA — DDR4 vs DDR5 PLATFORM PLANNER
 // ============================================================================
+// ============================================================================
+// 4. PLATFORM UPGRADE PLANNER (AM4 vs LGA1700 vs AM5 vs LGA1851 vs DDR4/DDR5)
+// ============================================================================
 const PLATFORMS = [
-  { id: 'x99',       label: 'Manter X99 + Xeon',            socket: 'LGA2011-3', mem: 'DDR4', keep: true,
-    note: 'Custo mínimo: só RAM. Aceita DDR4 ECC REG usada (muito mais barata — use o campo R$/GB manual). 14C/28T ótimo p/ OpenDSS paralelo, fraco em jogos.' },
-  { id: 'am4',       label: 'AM4 (Ryzen 5000) + DDR4',       socket: 'AM4',       mem: 'DDR4',
-    note: 'Plataforma encerrada (sem upgrades futuros), mas reaproveita sua DDR4 e tem os 5700X3D/5800X3D.' },
-  { id: 'lga1700d4', label: 'Intel LGA1700 + DDR4',          socket: 'LGA1700',   mem: 'DDR4',
-    note: 'Reaproveita DDR4, mas placas DDR4 ficaram raras/caras. Também plataforma encerrada.' },
-  { id: 'am5',       label: 'AM5 (Ryzen 7000/9000) + DDR5',  socket: 'AM5',       mem: 'DDR5',
-    note: 'Maior longevidade (AMD promete suporte prolongado). DDR5 é o custo dominante hoje.' },
-  { id: 'lga1700d5', label: 'Intel LGA1700 + DDR5',          socket: 'LGA1700',   mem: 'DDR5',
-    note: 'Placas H610/B760 baratas, mas sem upgrades futuros de CPU.' },
-  { id: 'lga1851',   label: 'Intel LGA1851 (Core Ultra) + DDR5', socket: 'LGA1851', mem: 'DDR5',
-    note: 'Plataforma nova da Intel; desempenho em jogos abaixo dos X3D da AMD.' }
+  { id: 'keep_pc',   label: 'Manter Meu Setup Atual',            socket: 'CURRENT', mem: 'CURRENT', keep: true,
+    note: 'Custo mínimo: mantém seu processador e placa-mãe configurados no "Meu PC", investindo apenas em RAM necessária ou GPU.' },
+  { id: 'am4',       label: 'AMD AM4 (Ryzen 5000) + DDR4',       socket: 'AM4',       mem: 'DDR4',
+    note: 'Plataforma madura com excelente custo-benefício que reaproveita memórias DDR4 e conta com 5700X / 5700X3D.' },
+  { id: 'lga1700d4', label: 'Intel LGA1700 Custo-Benefício + DDR4', socket: 'LGA1700',   mem: 'DDR4',
+    note: 'Intel 12ª/13ª/14ª geração reaproveitando pentes DDR4 (Core i3-12100F, i5-12400F até i7-14700KF).' },
+  { id: 'am5',       label: 'AMD AM5 (Ryzen 7000/9000) + DDR5',  socket: 'AM5',       mem: 'DDR5',
+    note: 'Maior longevidade com suporte contínuo de novos processadores pela AMD até 2027+ e cache 3D V-Cache.' },
+  { id: 'lga1700d5', label: 'Intel LGA1700 Intermediário + DDR5', socket: 'LGA1700',   mem: 'DDR5',
+    note: 'Intel 12ª/13ª/14ª geração com memória DDR5 de alta velocidade (Core i5 12600K/13600K/14600K).' },
+  { id: 'lga1700d5_high', label: 'Intel LGA1700 Alta Performance + DDR5', socket: 'LGA1700', mem: 'DDR5', highTier: true,
+    note: 'Core i7 14700K / i9 14900K com placas B760/Z790 com dissipador reforçado para evitar thermal throttling.' },
+  { id: 'lga1851',   label: 'Intel LGA1851 (Core Ultra Série 2) + DDR5', socket: 'LGA1851', mem: 'DDR5',
+    note: 'Nova arquitetura Arrow Lake (Core Ultra 5 245K / Ultra 7 265K / Ultra 9 285K) com alta eficiência térmica e NPU dedicada.' }
 ];
 
 function getRamPriceStats(type) {
@@ -943,11 +995,33 @@ function cheapestRamFor(type, neededGB) {
 }
 
 function getPlatformCpuCandidates(p) {
-  if (p.keep) return DB.cpus.filter(c => isXeonLike(c));
-  return DB.cpus.filter(c => getCpuSocket(c) === p.socket && c.price_brl > 0 && !/threadripper/i.test(c.slug));
+  if (p.keep) {
+    const cur = (STATE.refPC && STATE.refPC.cpu && STATE.refPC.cpu.name) ? STATE.refPC.cpu : ((STATE.build && STATE.build.cpu) || {});
+    if (cur.name) {
+      return [{
+        slug: cur.slug || 'current-cpu',
+        name: cur.name,
+        price_brl: 0,
+        benchmark: cur.benchmark || 5500,
+        tdp_w: cur.tdp || 65,
+        socket: cur.socket || 'AM4'
+      }];
+    }
+    return (DB.cpus || []).slice(0, 3);
+  }
+  let cands = (DB.cpus || []).filter(c => getCpuSocket(c) === p.socket && c.price_brl > 0 && !/threadripper/i.test(c.slug));
+  if (p.id === 'lga1700d5_high') {
+    const high = cands.filter(c => /14900|13900|14700|13700|12900/i.test(c.slug) || /i9|i7/i.test(c.name));
+    if (high.length) cands = high;
+  }
+  return cands;
 }
 
 function getDefaultPlatformCpu(p, cands) {
+  if (p.keep) return cands[0];
+  if (p.id === 'lga1700d5_high') {
+    return cands.find(c => /14700k|13700k|14900k/i.test(c.slug)) || cands[0];
+  }
   // Value pick: gaming index^3.5 / price (favours strong-but-affordable chips)
   let best = cands[0], bestV = -1;
   cands.forEach(c => {
@@ -958,12 +1032,23 @@ function getDefaultPlatformCpu(p, cands) {
 }
 
 function onUpgCpuChange(platformId, slug) {
+  if (!STATE.upg) STATE.upg = {};
+  if (!STATE.upg.cpu) STATE.upg.cpu = {};
   STATE.upg.cpu[platformId] = slug;
   saveUserPrefs();
   renderUpgradeSuggestions();
 }
 
+function onUpgMoboChange(platformId, slug) {
+  if (!STATE.upg) STATE.upg = {};
+  if (!STATE.upg.mobo) STATE.upg.mobo = {};
+  STATE.upg.mobo[platformId] = slug;
+  saveUserPrefs();
+  renderUpgradeSuggestions();
+}
+
 function onUpgReuseRamChange(val) {
+  if (!STATE.upg) STATE.upg = {};
   STATE.upg.reuseRam = val;
   saveUserPrefs();
   renderUpgradeSuggestions();
@@ -972,51 +1057,118 @@ function onUpgReuseRamChange(val) {
 function computePlatformPlan(p, targetGB, budget) {
   const cands = getPlatformCpuCandidates(p);
   if (!cands.length) return null;
-  const cpu = cands.find(c => c.slug === STATE.upg.cpu[p.id]) || getDefaultPlatformCpu(p, cands);
-  const cpuCost = p.keep ? 0 : cpu.price_brl;
+
+  const refRam = (STATE.refPC && STATE.refPC.ram && STATE.refPC.ram.memory_type) ? STATE.refPC.ram : ((STATE.build && STATE.build.ram) || {});
+  const refMobo = (STATE.refPC && STATE.refPC.mobo && STATE.refPC.mobo.name) ? STATE.refPC.mobo : ((STATE.build && STATE.build.mobo) || {});
+
+  const memType = p.keep ? (refRam.memory_type || 'DDR4') : p.mem;
+  const moboCands = p.keep
+    ? [(refMobo.name ? refMobo : { slug: 'current-mobo', name: 'Placa-Mãe Atual', price_brl: 0, socket: cands[0].socket || 'AM4', memory_type: memType })]
+    : (DB.motherboards || []).filter(m => m.socket === p.socket && m.memory_type === p.mem && m.price_brl > 0).sort((a, b) => a.price_brl - b.price_brl);
 
   let mobo = null, moboCost = 0;
   if (p.keep) {
-    mobo = DB.motherboards.find(m => m.socket === 'LGA2011-3') || { name: 'X99 atual', price_brl: 0 };
+    mobo = moboCands[0];
+    moboCost = 0;
   } else {
-    mobo = DB.motherboards.filter(m => m.socket === p.socket && m.memory_type === p.mem).sort((a, b) => a.price_brl - b.price_brl)[0];
+    const savedMoboSlug = STATE.upg?.mobo?.[p.id];
+    if (savedMoboSlug) {
+      mobo = moboCands.find(m => m.slug === savedMoboSlug);
+    }
+    if (!mobo) {
+      if (p.highTier) {
+        mobo = moboCands.find(m => /z790|b760m-p|b760m-k/i.test(m.slug) || /z790/i.test(m.name)) || moboCands[moboCands.length - 1] || moboCands[0];
+      } else {
+        mobo = moboCands[0];
+      }
+    }
     if (!mobo) return null;
     moboCost = mobo.price_brl;
   }
 
-  const currentRam = STATE.build.ram.capacity_gb || 16;
-  const canReuse = p.mem === 'DDR4' && (p.keep || STATE.upg.reuseRam);
+  const currentRam = refRam.capacity_gb || 16;
+  const userRamType = refRam.memory_type || 'DDR4';
+  const canReuse = memType === userRamType && (p.keep || (STATE.upg && STATE.upg.reuseRam));
   const neededGB = Math.max(0, targetGB - (canReuse ? currentRam : 0));
-  const ram = cheapestRamFor(p.mem, neededGB);
+  const ram = cheapestRamFor(memType, neededGB);
 
-  const platformCost = cpuCost + moboCost + ram.cost;
-  const gpuBudget = budget - platformCost;
+  // Joint Combinatorial Optimizer across CPU candidates and GPUs (Argon Drop-in)
+  const userLockedCpu = STATE.upg?.cpu?.[p.id];
+  let bestPair = null;
 
-  // Best GPU that fits the leftover, ranked by YOUR contextual score
-  const gpu = DB.gpus
-    .filter(g => g.slug !== 'rx-580-8gb-ref' && g.price_brl <= gpuBudget)
-    .sort((a, b) => (b._compositeScore || 0) - (a._compositeScore || 0))[0] || null;
+  const candidateCpus = userLockedCpu
+    ? [cands.find(c => c.slug === userLockedCpu) || getDefaultPlatformCpu(p, cands)]
+    : cands;
 
-  let avgFps = 0, avgPure = 0, finalScore = 0;
-  if (gpu) {
+  candidateCpus.forEach(candCpu => {
+    const cCost = p.keep ? 0 : candCpu.price_brl;
+    const pCost = cCost + moboCost + ram.cost;
+    const remGpuBudget = budget - pCost;
+    const bestGpuForCpu = DB.gpus
+      .filter(g => g.slug !== 'rx-580-8gb-ref' && g.price_brl <= remGpuBudget)
+      .sort((a, b) => (b._compositeScore || 0) - (a._compositeScore || 0))[0] || null;
+
+    if (!bestGpuForCpu) {
+      if (!bestPair) {
+        bestPair = { cpu: candCpu, cpuCost: cCost, platformCost: pCost, gpuBudget: remGpuBudget, gpu: null, avgFps: 0, avgPure: 0, finalScore: 0 };
+      }
+      return;
+    }
+
     const games = getRelevantGames();
     const cap = STATE.monitorMaxFps >= 999 ? Infinity : STATE.monitorMaxFps;
+    let aFps = 0, aPure = 0;
     games.forEach(gm => {
-      const r = estimateFps(gpu, cpu, gm);
-      avgFps += Math.min(cap, r.withCpu);
-      avgPure += Math.min(cap, r.pure);
+      const r = estimateFps(bestGpuForCpu, candCpu, gm);
+      aFps += Math.min(cap, r.withCpu);
+      aPure += Math.min(cap, r.pure);
     });
-    avgFps = Math.round(avgFps / games.length);
-    avgPure = Math.round(avgPure / games.length);
+    aFps = Math.round(aFps / games.length);
+    aPure = Math.round(aPure / games.length);
     const tot = Math.max(1, STATE.wGaming + STATE.wAI + STATE.wSoft);
-    const cpuRatio = avgFps / Math.max(1, avgPure);
-    finalScore = Math.round(
-      (STATE.wGaming / tot) * getEffectiveGamingScore(gpu) * cpuRatio +
-      (STATE.wAI / tot) * getEffectiveAIScore(gpu) +
-      (STATE.wSoft / tot) * getEffectiveEngineeringScore(gpu)
+    let cpuRatio = aFps / Math.max(1, aPure);
+
+    // VRM thermal throttling penalty (0.85) if motherboard VRM is underpowered for candCpu (Argon Item 4)
+    if (typeof checkCpuMoboCompatibility === 'function') {
+      const vrmCheck = checkCpuMoboCompatibility(candCpu, mobo);
+      if (vrmCheck && vrmCheck.status === 'warning') {
+        cpuRatio *= 0.85;
+      }
+    }
+
+    const sub = (typeof getSubScoreExtremes === 'function') ? getSubScoreExtremes() : { maxGaming: 14411, maxAI: 21507, maxSoft: 28000 };
+    const pairScore = Math.round(
+      (STATE.wGaming / tot) * ((getEffectiveGamingScore(bestGpuForCpu, true) * cpuRatio) / sub.maxGaming) * 10000 +
+      (STATE.wAI / tot) * (getEffectiveAIScore(bestGpuForCpu) / sub.maxAI) * 10000 +
+      (STATE.wSoft / tot) * (getEffectiveEngineeringScore(bestGpuForCpu) / sub.maxSoft) * 10000
     );
+
+    if (!bestPair || pairScore > bestPair.finalScore) {
+      bestPair = { cpu: candCpu, cpuCost: cCost, platformCost: pCost, gpuBudget: remGpuBudget, gpu: bestGpuForCpu, avgFps: aFps, avgPure: aPure, finalScore: pairScore };
+    }
+  });
+
+  if (!bestPair) {
+    const fallbackCpu = candidateCpus[0];
+    const cCost = p.keep ? 0 : fallbackCpu.price_brl;
+    bestPair = { cpu: fallbackCpu, cpuCost: cCost, platformCost: cCost + moboCost + ram.cost, gpuBudget: budget - (cCost + moboCost + ram.cost), gpu: null, avgFps: 0, avgPure: 0, finalScore: 0 };
   }
-  return { p, cpu, cands, cpuCost, mobo, moboCost, ram, neededGB, canReuse, platformCost, gpuBudget, gpu, avgFps, avgPure, finalScore };
+
+  const cpu = bestPair.cpu;
+  const cpuCost = bestPair.cpuCost;
+  const platformCost = bestPair.platformCost;
+  const gpuBudget = bestPair.gpuBudget;
+  const gpu = bestPair.gpu;
+  const avgFps = bestPair.avgFps;
+  const avgPure = bestPair.avgPure;
+  const finalScore = bestPair.finalScore;
+
+  // Check VRM Compatibility against the actual winning CPU, not cands[0] (Argon Item 4)
+  const comp = (typeof checkCpuMoboCompatibility === 'function')
+    ? checkCpuMoboCompatibility(cpu, mobo)
+    : { status: 'ok', flag: '✓', label: 'Compatível', message: 'Socket compatível.' };
+
+  return { p, cpu, cands, cpuCost, mobo, moboCost, moboCands, comp, memType, ram, neededGB, canReuse, platformCost, gpuBudget, gpu, avgFps, avgPure, finalScore };
 }
 
 function applyPlatformToBuild(platformId) {
@@ -1026,16 +1178,17 @@ function applyPlatformToBuild(platformId) {
   const plan = computePlatformPlan(p, targetGB, budget);
   if (!plan) return;
   const c = plan.cpu;
-  STATE.build.cpu = { slug: c.slug, name: c.name, tdp: c.tdp_w, price: c.price_brl, owned: !!p.keep, benchmark: c.benchmark, socket: getCpuSocket(c) };
+  STATE.build.cpu = { slug: c.slug, name: c.name, tdp: c.tdp_w, price: c.price_brl, owned: !!p.keep, benchmark: c.benchmark, socket: (typeof getCpuSocket === 'function' ? getCpuSocket(c) : (c.socket || p.socket)) };
   const m = plan.mobo;
-  STATE.build.mobo = { slug: m.slug, name: m.name, tdp: m.tdp_w || 35, price: m.price_brl, owned: !!p.keep, socket: m.socket, memory_type: m.memory_type || p.mem };
+  STATE.build.mobo = { slug: m.slug, name: m.name, tdp: m.tdp_w || 35, price: m.price_brl, owned: !!p.keep, socket: m.socket || p.socket, memory_type: m.memory_type || plan.memType };
   STATE.build.ram = {
     slug: plan.ram.slug || STATE.build.ram.slug,
-    name: plan.neededGB > 0 ? `${targetGB} GB ${p.mem} (${plan.canReuse ? 'reaproveita ' + (STATE.build.ram.capacity_gb || 16) + 'GB + ' : ''}${plan.ram.desc})` : STATE.build.ram.name,
+    name: plan.neededGB > 0 ? `${targetGB} GB ${plan.memType} (${plan.canReuse ? 'reaproveita ' + ((STATE.build.ram && STATE.build.ram.capacity_gb) || 16) + 'GB + ' : ''}${plan.ram.desc})` : STATE.build.ram.name,
     tdp: targetGB > 32 ? 15 : 10, price: Math.round(plan.ram.cost), owned: plan.neededGB === 0,
-    capacity_gb: targetGB, memory_type: p.mem
+    capacity_gb: targetGB, memory_type: plan.memType
   };
   if (plan.gpu) STATE.build.gpu = { slug: plan.gpu.slug, name: `${plan.gpu.name} (${plan.gpu.vram_gb}GB)`, tdp: plan.gpu.tdp_w, price: plan.gpu.price_brl, owned: false };
+  if (typeof saveUserBuildPrefs === 'function') saveUserBuildPrefs();
   const simCpuSel = document.getElementById('sim-select-cpu');
   if (simCpuSel) simCpuSel.value = c.slug;
   switchTab('builder');
@@ -1048,42 +1201,80 @@ function renderUpgradeSuggestions() {
   const budget = parseFloat(document.getElementById('upg-budget').value) || 7000;
 
   const plans = PLATFORMS
-    .filter(p => mode === 'ALL' || p.mem === mode)
+    .filter(p => mode === 'ALL' || p.mem === mode || (p.keep && (mode === 'ALL' || (STATE.build.ram?.memory_type || 'DDR4') === mode)))
     .map(p => computePlatformPlan(p, targetGB, budget))
     .filter(Boolean);
   const bestScore = Math.max(...plans.map(pl => pl.finalScore), 1);
 
+  const refCpu = (STATE.refPC && STATE.refPC.cpu && STATE.refPC.cpu.name) ? STATE.refPC.cpu : ((STATE.build && STATE.build.cpu) || {});
+  const curUserRam = (STATE.refPC && STATE.refPC.ram && STATE.refPC.ram.memory_type) ? STATE.refPC.ram : ((STATE.build && STATE.build.ram) || {});
+  const curUserRamCap = curUserRam.capacity_gb || 16;
+  const curUserRamType = curUserRam.memory_type || 'DDR4';
+
   document.getElementById('upg-cards-grid').innerHTML = `
     <div class="md:col-span-2 xl:col-span-4 flex flex-wrap items-center gap-3 text-xs text-slate-300 bg-slate-900/70 border border-slate-800 rounded-lg px-3 py-2">
       <label class="flex items-center gap-1.5 cursor-pointer">
-        <input type="checkbox" ${STATE.upg.reuseRam ? 'checked' : ''} onchange="onUpgReuseRamChange(this.checked)" class="accent-emerald-500" />
-        Reaproveitar meus ${STATE.build.ram.capacity_gb || 16} GB DDR4 nas plataformas DDR4
+        <input type="checkbox" ${(STATE.upg && STATE.upg.reuseRam) ? 'checked' : ''} onchange="onUpgReuseRamChange(this.checked)" class="accent-emerald-500 cursor-pointer" />
+        Reaproveitar meus ${curUserRamCap} GB ${curUserRamType} nas plataformas compatíveis (${curUserRamType})
       </label>
       <span class="text-slate-500">•</span>
       <span>Orçamento ${fmtBRLShort(budget)} = plataforma + melhor GPU que cabe no que sobra (ranqueada pelo seu perfil ${STATE.wGaming}/${STATE.wAI}/${STATE.wSoft}%) • FPS em ${getMonitorLabel()}</span>
     </div>
     ${plans.map(pl => {
       const isBest = pl.finalScore === bestScore && pl.gpu;
-      const memColor = pl.p.mem === 'DDR5' ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+      const memColor = pl.memType === 'DDR5' ? 'bg-sky-500/20 text-sky-300 border-sky-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
       const cpuOptions = pl.cands
         .sort((a, b) => a.price_brl - b.price_brl)
         .map(c => `<option value="${c.slug}" ${c.slug === pl.cpu.slug ? 'selected' : ''}>${c.name} (idx ${getCpuGamingIndex(c)}) — ${pl.p.keep ? 'já tem' : fmtBRLShort(c.price_brl)}</option>`).join('');
+      const moboOptions = (pl.moboCands || [])
+        .map(m => `<option value="${m.slug}" ${m.slug === pl.mobo.slug ? 'selected' : ''}>${m.name} — ${pl.p.keep ? 'já tem' : fmtBRLShort(m.price_brl)}</option>`).join('');
+      const hasVrmAlert = pl.comp && pl.comp.flag === '!';
+
       return `
-      <div class="rounded-xl p-4 border ${isBest ? 'border-emerald-400 bg-emerald-950/30 shadow-lg shadow-emerald-500/10' : 'border-slate-800 bg-slate-900/80'} flex flex-col gap-2 text-xs">
+      <div class="rounded-xl p-4 border ${isBest ? 'border-emerald-400 bg-emerald-950/30 shadow-lg shadow-emerald-500/10' : (hasVrmAlert ? 'border-amber-500/50 bg-slate-900/90' : 'border-slate-800 bg-slate-900/80')} flex flex-col gap-2.5 text-xs">
         <div class="flex items-center justify-between gap-2">
           <span class="font-extrabold text-white text-sm">${pl.p.label}</span>
-          <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${memColor}">${pl.p.mem}</span>
+          <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${memColor}">${pl.memType}</span>
         </div>
         ${isBest ? '<span class="text-[10px] font-mono font-bold text-emerald-300">🏆 MELHOR RESULTADO PARA SEU PERFIL</span>' : ''}
-        <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgCpuChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-white">${cpuOptions}</select>
-        <div class="space-y-1 font-mono text-[11px]">
+        
+        <!-- CPU Selector -->
+        <div>
+          <label class="text-[10px] font-mono text-slate-400 block mb-0.5">Processador:</label>
+          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgCpuChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-white">${cpuOptions}</select>
+        </div>
+
+        <!-- Motherboard Selector & Compatibility Flag -->
+        <div>
+          <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+            <span>Placa-Mãe:</span>
+            ${hasVrmAlert ? `<span class="px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px]">⚠️ [!] Atenção VRM</span>` : ''}
+          </div>
+          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgMoboChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border ${hasVrmAlert ? 'border-amber-500/60' : 'border-slate-700'} rounded px-2 py-1 text-[11px] text-white">
+            ${moboOptions}
+          </select>
+        </div>
+
+        <!-- VRM / Compatibility Warning Alert Box -->
+        ${hasVrmAlert ? `
+          <div class="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-200 text-[11px] flex items-start gap-2 leading-snug">
+            <span class="font-bold font-mono text-amber-400 shrink-0 text-xs">⚠️ [!]</span>
+            <div>
+              <strong class="block text-amber-300 font-semibold">${pl.comp.label}</strong>
+              <span class="text-amber-100/90 text-[10.5px]">${pl.comp.message}</span>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="space-y-1 font-mono text-[11px] pt-1 border-t border-slate-800">
           <div class="flex justify-between"><span class="text-slate-400">CPU</span><span>${pl.p.keep ? 'R$ 0 (já tem)' : fmtBRLShort(pl.cpuCost)}</span></div>
           <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Placa-mãe</span><span class="truncate text-right" title="${pl.mobo.name}">${pl.p.keep ? 'R$ 0 (já tem)' : `${fmtBRLShort(pl.moboCost)} <span class="text-slate-500">${pl.mobo.name}</span>`}</span></div>
-          <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">RAM +${pl.neededGB}GB</span><span class="truncate text-right ${pl.p.mem === 'DDR5' ? 'text-sky-300' : 'text-emerald-300'}" title="${pl.ram.desc}">${fmtBRLShort(pl.ram.cost)}</span></div>
-          <div class="text-[10px] text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus 16GB)' : ''}</div>
+          <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">RAM +${pl.neededGB}GB</span><span class="truncate text-right ${pl.memType === 'DDR5' ? 'text-sky-300' : 'text-emerald-300'}" title="${pl.ram.desc}">${fmtBRLShort(pl.ram.cost)}</span></div>
+          <div class="text-[10px] text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus ' + curUserRamCap + 'GB)' : ''}</div>
           <div class="flex justify-between border-t border-slate-800 pt-1 font-bold"><span class="text-slate-300">Total plataforma</span><span class="text-white">${fmtBRLShort(pl.platformCost)}</span></div>
           <div class="flex justify-between"><span class="text-slate-400">Sobra p/ GPU</span><span class="${pl.gpuBudget > 0 ? 'text-amber-300' : 'text-rose-400'} font-bold">${fmtBRLShort(pl.gpuBudget)}</span></div>
         </div>
+
         <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
           ${pl.gpu ? `
             <div class="text-[10px] text-slate-400 uppercase font-mono">GPU sugerida com a sobra</div>
@@ -1125,21 +1316,19 @@ function renderUpgradeSuggestions() {
   const d4t = cheapestRamFor('DDR4', targetGB), d5t = cheapestRamFor('DDR5', targetGB);
   const premium = d5t.cost - d4t.cost;
   const best = plans.find(pl => pl.finalScore === bestScore);
-  const x99 = plans.find(pl => pl.p.id === 'x99');
-  const bestD4 = plans.filter(pl => pl.p.mem === 'DDR4').sort((a, b) => b.finalScore - a.finalScore)[0];
-  const bestD5 = plans.filter(pl => pl.p.mem === 'DDR5').sort((a, b) => b.finalScore - a.finalScore)[0];
+  const bestD4 = plans.filter(pl => pl.memType === 'DDR4').sort((a, b) => b.finalScore - a.finalScore)[0];
+  const bestD5 = plans.filter(pl => pl.memType === 'DDR5').sort((a, b) => b.finalScore - a.finalScore)[0];
   document.getElementById('upg-recommendation-verdict').innerHTML = `
-    <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">💡 Veredito DDR4 vs DDR5 (${targetGB} GB, orçamento ${fmtBRLShort(budget)})</span>
+    <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">💡 Veredito de Plataforma: Placa-Mãe & RAM (${targetGB} GB, orçamento ${fmtBRLShort(budget)})</span>
     <p class="text-slate-200">Hoje, ${targetGB} GB de <strong class="text-sky-300">DDR5</strong> custam <strong>${fmtBRLShort(premium)} a mais</strong> que ${targetGB} GB de <strong class="text-emerald-300">DDR4</strong>
-      ${d4t.cost > 0 ? `(+${Math.round((premium / d4t.cost) * 100)}%)` : ''}. Esse valor é ~${premium > 0 && best && best.gpu ? Math.round((premium / best.gpu.price_brl) * 100) : 0}% do preço da GPU sugerida.</p>
+      ${d4t.cost > 0 ? `(+${Math.round((premium / d4t.cost) * 100)}%)` : ''}. Além da RAM, a transição para plataformas modernas exige uma <strong class="text-amber-300">nova placa-mãe</strong> (${bestD5 ? fmtBRLShort(bestD5.moboCost) : 'R$ 700+'}), pesando no bolso e reduzindo a verba restante para a GPU.</p>
     ${bestD4 && bestD5 ? `<p class="text-slate-300">Melhor DDR4: <strong>${bestD4.p.label}</strong> → ${bestD4.gpu ? bestD4.gpu.name : 'sem GPU'} (~${bestD4.avgFps} FPS).<br/>
       Melhor DDR5: <strong>${bestD5.p.label}</strong> → ${bestD5.gpu ? bestD5.gpu.name : 'sem GPU'} (~${bestD5.avgFps} FPS).</p>` : ''}
     ${best ? `<div class="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-100">
       <strong>Recomendação para seu perfil:</strong> ${best.p.label} com ${best.cpu.name}${best.gpu ? ` + ${best.gpu.name}` : ''}.
-      ${best.p.mem === 'DDR4' ? 'Com a RAM cara, ficar no DDR4 libera dinheiro para uma GPU melhor — que é onde está o ganho em IA e FPS.' : 'Mesmo pagando o ágio da DDR5, a plataforma nova rende mais no seu perfil e permite upgrades futuros de CPU.'}
+      ${best.memType === 'DDR4' ? 'Com a placa-mãe e RAM caras no ecossistema DDR5, manter-se no DDR4 libera orçamento para uma GPU muito mais potente — gerando salto imediato em IA e FPS.' : 'Mesmo pagando o investimento da nova placa-mãe e DDR5, a plataforma moderna rende mais no seu perfil e viabiliza upgrades futuros de CPU.'}
     </div>` : ''}
-    ${x99 && x99.gpu && STATE.wAI + STATE.wSoft >= 50 ? `<p class="text-[11px] text-purple-200">Como ${STATE.wAI + STATE.wSoft}% do seu uso é IA/Engenharia (limitado pela GPU/VRAM, não pelo CPU), <strong>manter o X99</strong> e investir tudo em GPU + RAM costuma ser o melhor custo-benefício. O Xeon só pesa nos jogos.</p>` : ''}
-    <p class="text-[10px] text-slate-500">Dica X99: kits DDR4 ECC REG 2400 usados (servidor) costumam sair bem abaixo do preço de DDR4 desktop — confirme o suporte da sua X99-P4 e digite o R$/GB no campo manual.</p>`;
+    ${refCpu && refCpu.name ? `<p class="text-[11px] text-slate-400">Seu PC de Referência configurado atualmente: <strong>${refCpu.name}</strong> (${curUserRamCap}GB ${curUserRamType}). Você pode customizar suas peças a qualquer momento na aba <strong>Configurações do Sistema</strong>.</p>` : ''}`;
 }
 
 // ============================================================================
@@ -1181,10 +1370,15 @@ const BF_FAMILIES = {
     label: 'CPUs High-End & X3D (5700X3D → 7800X3D → 9800X3D / Core i7/i9)',
     slugs: ['ryzen-7-5700x', 'ryzen-7-5700x3d', 'ryzen-7-5800x3d', 'ryzen-7-7700', 'ryzen-7-7800x3d', 'ryzen-7-9700x', 'ryzen-7-9800x3d', 'core-i5-14600kf', 'core-i7-14700kf', 'core-ultra-5-245kf']
   },
+  cpu_budget_upgrades: {
+    kind: 'cpu',
+    label: 'Processadores de Entrada & Upgrades (i3 vs R5 vs 5700X3D)',
+    slugs: ['core-i3-12100f', 'core-i3-14100f', 'ryzen-5-5500', 'ryzen-5-5600', 'core-i5-12400f', 'ryzen-7-5700x', 'ryzen-7-5700x3d', 'xeon-e5-2680-v4']
+  },
   cpu_xeon_budget: {
     kind: 'cpu',
-    label: 'CPUs Budget & Upgrades (Xeon E5-2680 v4 vs i3 vs R5 vs 5700X3D)',
-    slugs: ['xeon-e5-2680-v4', 'core-i3-12100f', 'core-i3-14100f', 'ryzen-5-5500', 'ryzen-5-5600', 'core-i5-12400f', 'ryzen-7-5700x', 'ryzen-7-5700x3d']
+    label: 'Processadores de Entrada & Upgrades (i3 vs R5 vs 5700X3D)',
+    slugs: ['core-i3-12100f', 'core-i3-14100f', 'ryzen-5-5500', 'ryzen-5-5600', 'core-i5-12400f', 'ryzen-7-5700x', 'ryzen-7-5700x3d', 'xeon-e5-2680-v4']
   }
 };
 const BF_COLORS = ['#38bdf8', '#10b981', '#a855f7', '#f59e0b', '#f43f5e', '#22d3ee', '#84cc16', '#e879f9', '#fb923c', '#94a3b8', '#06b6d4', '#e11d48'];
@@ -1196,8 +1390,24 @@ function bfToday() { return (DB.updated_at || new Date().toISOString()).slice(0,
 function priceInRange(hist, from, to) {
   return hist.filter(h => h.date >= from && h.date <= to).map(h => h.price);
 }
-const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+// Trimmed mean drops the top 20% scalped/out-of-stock spikes and bottom 5% glitches (Argon Drop-in)
+const mean = a => {
+  if (!a || !a.length) return null;
+  if (a.length < 5) return a.reduce((s, x) => s + x, 0) / a.length;
+  const sorted = [...a].sort((x, y) => x - y);
+  const lo = Math.floor(sorted.length * 0.05);
+  const hi = Math.ceil(sorted.length * 0.80);
+  const slice = sorted.slice(lo, Math.max(lo + 1, hi));
+  return slice.reduce((s, x) => s + x, 0) / slice.length;
+};
 const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+
+function shiftDate(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+window.shiftDate = shiftDate;
 
 function bfAnalyzeItem(item, kind) {
   const hist = [...(item.history || [])].sort((a, b) => a.date.localeCompare(b.date));
@@ -1224,40 +1434,58 @@ function bfAnalyzeItem(item, kind) {
   const allMin = prices.length ? Math.min(...prices) : item.price_brl;
   const last45 = priceInRange(hist, shiftDate(today, -45), today);
   const yearAgo = priceInRange(hist, shiftDate(today, -380), shiftDate(today, -350));
+  
+  // Measure inflation against BOTH this year's September AND last year's Set/Out baseline displayed in the table
   const sep = priceInRange(hist, `${curYear}-09-01`, `${curYear}-09-30`);
-  const octNov = priceInRange(hist, `${curYear}-10-15`, today);
-  const perf = kind === 'gpu' ? (item.gaming_score || 1) : getCpuGamingIndex(item) * 100;
+  const prevYearPreAvg = years[curYear - 1] ? years[curYear - 1].preAvg : null;
+  const baselinePre = (sep.length && prevYearPreAvg) ? Math.min(mean(sep), prevYearPreAvg) : (prevYearPreAvg || mean(sep));
+
+  // Effective current price accounts for active verified coupons
+  let effectiveCurrent = item.price_brl;
+  if (item.coupon && typeof item.coupon === 'string') {
+    const mOff = item.coupon.match(/R\$\s*([0-9]{2,4})\s*OFF/i);
+    if (mOff) effectiveCurrent = Math.max(50, item.price_brl - parseFloat(mOff[1]));
+  }
+
+  // Use contextual composite score if GPU, else gaming index
+  const perf = kind === 'gpu'
+    ? (typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(item) : (item.gaming_score || 1))
+    : getCpuGamingIndex(item) * 100;
+
   return {
     item, kind, hist, years, allMin,
     current: item.price_brl,
+    effectiveCurrent,
     recentAvg: mean(last45) || item.price_brl,
-    yoyPct: yearAgo.length ? ((item.price_brl / mean(yearAgo)) - 1) * 100 : null,
-    preBfInflationPct: sep.length && octNov.length ? ((mean(octNov) / mean(sep)) - 1) * 100 : null,
+    yoyPct: yearAgo.length ? ((effectiveCurrent / mean(yearAgo)) - 1) * 100 : null,
+    preBfInflationPct: baselinePre ? ((effectiveCurrent / baselinePre) - 1) * 100 : null,
+    vsAllMinPct: allMin > 0 ? ((effectiveCurrent / allMin) - 1) * 100 : 0,
     perf,
-    brlPerPerf: item.price_brl / perf * 1000,
+    brlPerPerf: effectiveCurrent / Math.max(1, item.gaming_score || perf) * 1000,
+    brlPerContextualPerf: effectiveCurrent / Math.max(1, perf) * 1000,
     firstDate: hist.length ? hist[0].date : null
   };
 }
 
-function shiftDate(iso, days) {
-  const d = new Date(iso + 'T12:00:00');
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-// Expected promo range for the upcoming BF, from the item's own last-BF discount
-// (or the family median when the product didn't exist yet)
 function bfExpectedRange(st, familyMedianDisc) {
   const curYear = parseInt(bfToday().slice(0, 4));
   const last = st.years[curYear - 1];
   const thisY = st.years[curYear];
-  const disc = (last && last.discount != null) ? last.discount : (familyMedianDisc || 0.10);
-  const base = (thisY && thisY.preAvg) || st.recentAvg || st.current;
-  let low = base * (1 - disc * 1.3);
-  const mid = base * (1 - disc);
-  const high = base * (1 - disc * 0.55);
-  low = Math.max(low, st.allMin * 0.92);
-  return { low: Math.round(low), mid: Math.round(Math.max(low, mid)), high: Math.round(Math.max(mid, high)), disc, base: Math.round(base), ownData: !!(last && last.discount != null) };
+  const disc = Math.max(0.08, (last && last.discount != null) ? last.discount : (familyMedianDisc || 0.10));
+
+  // Anchor to current pre-BF / recent price levels, adjusting gently for artificial pre-BF spikes
+  const rawBase = (thisY && thisY.preAvg) || st.recentAvg || st.current;
+  const inflationHaircut = (st.preBfInflationPct != null && st.preBfInflationPct > 8)
+    ? Math.min(0.10, (st.preBfInflationPct - 5) / 100)
+    : 0;
+  const base = rawBase * (1 - inflationHaircut);
+
+  let low = Math.round(base * (1 - disc * 1.25));
+  const mid = Math.round(base * (1 - disc));
+  const high = Math.round(base * (1 - disc * 0.50));
+  low = Math.max(low, Math.round(st.allMin * 0.92));
+
+  return { low, mid, high: Math.max(mid, high), disc, base: Math.round(base), ownData: !!(last && last.discount != null) };
 }
 
 let BF_CACHE = { fam: null, stats: [], familyMedianDisc: 0.1 };
@@ -1331,9 +1559,9 @@ function renderBlackFridayTab() {
   const firstDates = stats.map(s => s.firstDate).filter(Boolean).sort();
   const postLowerCount = stats.filter(s => s.years[curYear - 1] && s.years[curYear - 1].postLower).length;
   const withPost = stats.filter(s => s.years[curYear - 1] && s.years[curYear - 1].postLower != null).length;
-  const inflated = stats.filter(s => s.preBfInflationPct != null && s.preBfInflationPct > 4);
+  const inflated = stats.filter(s => s.preBfInflationPct != null && s.preBfInflationPct > 6);
   const yoys = stats.map(s => s.yoyPct).filter(v => v != null);
-  const bestValue = [...stats].sort((a, b) => a.brlPerPerf - b.brlPerPerf)[0];
+  const bestValue = [...stats].sort((a, b) => (a.brlPerContextualPerf || a.brlPerPerf) - (b.brlPerContextualPerf || b.brlPerPerf))[0];
   document.getElementById('bf-multiyear-summary').innerHTML = `
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
@@ -1354,15 +1582,15 @@ function renderBlackFridayTab() {
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
         <span class="text-[10px] font-mono uppercase text-slate-400 block">Alerta "metade do dobro"</span>
         <span class="text-xl font-mono font-extrabold ${inflated.length ? 'text-rose-300' : 'text-emerald-300'}">${inflated.length}</span>
-        <span class="block text-[10px] text-slate-500 truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >4% desde Set: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
+        <span class="block text-[10px] text-slate-500 truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >6% desde Set: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
       </div>
       <div class="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
         <span class="text-[10px] font-mono uppercase text-slate-400 block">Melhor R$ por desempenho hoje</span>
         <span class="text-sm font-extrabold text-emerald-300">${bestValue ? bestValue.item.name : '--'}</span>
-        <span class="block text-[10px] text-slate-500">${bestValue ? fmtBRLShort(bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
+        <span class="block text-[10px] text-slate-500">${bestValue ? fmtBRLShort(bestValue.brlPerContextualPerf || bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
       </div>
     </div>
-    <p class="text-[10px] text-slate-500 mt-2">📅 Histórico disponível no HardwareBarato: desde ${firstDates[0] || '--'} (≈ ${firstDates[0] ? Math.round((new Date(bfToday()) - new Date(firstDates[0])) / 86400000) : 0} dias).</p>`;
+    <p class="text-[10px] text-slate-500 mt-2">📅 Histórico disponível na Database: desde ${firstDates[0] || '--'} (≈ ${firstDates[0] ? Math.round((new Date(bfToday()) - new Date(firstDates[0])) / 86400000) : 0} dias).</p>`;
 
   // Target item selector
   const sel = document.getElementById('bf-target-item');
@@ -1381,16 +1609,37 @@ function renderBlackFridayTab() {
     const py = s.years[yPrev] || {};
     const r = s.range;
     let diag, diagColor;
-    if (s.current <= r.high) { diag = 'Já em preço de BF'; diagColor = 'emerald'; }
-    else if (s.preBfInflationPct != null && s.preBfInflationPct > 4) { diag = `Inflado +${Math.round(s.preBfInflationPct)}% desde Set`; diagColor = 'rose'; }
-    else if (s.yoyPct != null && s.yoyPct > 8) { diag = `Encarecendo (+${Math.round(s.yoyPct)}% a/a) — estoque saindo?`; diagColor = 'amber'; }
-    else if (py.postLower) { diag = 'Caiu mais depois da BF passada'; diagColor = 'sky'; }
-    else { diag = 'Aguarde a faixa esperada'; diagColor = 'sky'; }
+    // 1. Check EOL Scarcity / Severe Price Spike FIRST (Argon Drop-in)
+    if (s.yoyPct != null && s.yoyPct > 15 && s.effectiveCurrent > s.allMin * 1.25) {
+      diag = `Encarecendo (+${Math.round(s.yoyPct)}% a/a) — estoque saindo?`;
+      diagColor = 'amber';
+    }
+    // 2. Check Pre-BF Inflation SECOND
+    else if (s.preBfInflationPct != null && s.preBfInflationPct > 6 && s.effectiveCurrent > r.high) {
+      diag = `Inflado +${Math.round(s.preBfInflationPct)}% vs Pré-BF`;
+      diagColor = 'rose';
+    }
+    // 3. Declare "Já em preço de BF" if inside the expected promo range
+    else if (s.effectiveCurrent <= r.high) {
+      diag = s.effectiveCurrent <= r.low ? 'Pechincha / Abaixo do Piso BF' : 'Já em preço de BF';
+      diagColor = 'emerald';
+    }
+    else if (py.postLower) {
+      diag = 'Caiu mais depois da BF passada';
+      diagColor = 'sky';
+    } else {
+      diag = `Aguarde cair ~${fmtBRLShort(s.effectiveCurrent - r.high)}`;
+      diagColor = 'sky';
+    }
     return `
       <tr class="hover:bg-slate-800/50 cursor-pointer" onclick="document.getElementById('bf-target-item').value='${s.item.slug}'; onBFTargetItemChange();">
         <td class="py-2.5 px-3">
-          <div class="font-bold text-white">${s.item.name}</div>
-          <div class="text-[10px] text-slate-400 font-mono">${s.kind === 'gpu' ? `${s.item.vram_gb}GB • score ${s.item.gaming_score}` : `índice jogo ${getCpuGamingIndex(s.item)}`} • ${fmtBRLShort(s.brlPerPerf)}/1000 pts</div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="font-bold text-white">${s.item.name}</span>
+            ${s.item.vram_gb ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-mono">${s.item.vram_gb} GB</span>` : ''}
+            ${s.item.coupon ? `<button onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono hover:bg-amber-500/40 transition cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
+          </div>
+          <div class="text-[10px] text-slate-400 font-mono mt-0.5">${s.kind === 'gpu' ? `${s.item.vram_gb}GB • score ${Math.round(s.perf)}` : `índice jogo ${getCpuGamingIndex(s.item)}`} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
         </td>
         <td class="py-2.5 px-3 text-right font-mono font-bold text-white">${fmtBRLShort(s.current)}</td>
         <td class="py-2.5 px-3 text-right font-mono text-slate-300">${py.preAvg ? fmtBRLShort(py.preAvg) : '<span class="text-slate-600">sem dado</span>'}</td>
@@ -1485,7 +1734,7 @@ function renderBFChart(stats, yPrev) {
       },
       scales: {
         x: { ticks: { color: '#64748b', maxTicksLimit: 12 }, grid: { color: 'rgba(51,65,85,0.25)' } },
-        y: { ticks: { color: '#94a3b8', callback: v => mode === 'index' ? v + '%' : 'R$ ' + v.toLocaleString('pt-BR') }, grid: { color: 'rgba(51,65,85,0.3)' } }
+        y: { ticks: { color: '#94a3b8', callback: v => mode === 'index' ? v + '%' : fmtBRLShort(v) }, grid: { color: 'rgba(51,65,85,0.3)' } }
       }
     }
   });
@@ -1526,9 +1775,10 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
   const minLine = sampled.map(() => uMin);
   const maxLine = sampled.map(() => uMax);
 
+  const currSym = STATE.market?.monetary?.currency_symbol || 'R$';
   const datasets = [
     {
-      label: 'Preço Real (R$)',
+      label: `Preço Real (${currSym})`,
       data: prices,
       borderColor: '#f59e0b',
       backgroundColor: 'rgba(245, 158, 11, 0.08)',
@@ -1539,7 +1789,7 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
       fill: true
     },
     {
-      label: `Meta Mín (R$ ${Math.round(uMin)})`,
+      label: `Meta Mín (${fmtBRLShort(uMin)})`,
       data: minLine,
       borderColor: '#10b981',
       borderWidth: 1.5,
@@ -1548,7 +1798,7 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
       fill: false
     },
     {
-      label: `Teto Aceitável (R$ ${Math.round(uMax)})`,
+      label: `Teto Aceitável (${fmtBRLShort(uMax)})`,
       data: maxLine,
       borderColor: '#38bdf8',
       borderWidth: 1.5,
@@ -1560,7 +1810,7 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
 
   if (testPrice && testPrice > 0) {
     datasets.push({
-      label: `Cupom Teste (R$ ${Math.round(testPrice)})`,
+      label: `Cupom Teste (${fmtBRLShort(testPrice)})`,
       data: sampled.map(() => testPrice),
       borderColor: '#a855f7',
       borderWidth: 1.5,
@@ -1594,7 +1844,7 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
           ticks: {
             color: '#94a3b8',
             font: { size: 10 },
-            callback: (v) => 'R$ ' + Math.round(v).toLocaleString('pt-BR')
+            callback: (v) => fmtBRLShort(v)
           },
           grid: { color: 'rgba(51, 65, 85, 0.25)' }
         }
@@ -1607,6 +1857,7 @@ function onBFTargetItemChange(silent) {
   const slug = document.getElementById('bf-target-item').value;
   const st = BF_CACHE.stats.find(s => s.item.slug === slug);
   if (!st) return;
+  if (!STATE.bfRanges) STATE.bfRanges = {};
   const saved = STATE.bfRanges[slug];
   const uMin = saved ? saved.min : st.range.low;
   const uMax = saved ? saved.max : st.range.high;
@@ -1640,62 +1891,126 @@ function onBFTargetItemChange(silent) {
   // Check if Promo Radar has an active coupon / flash deal for this target item
   const ctnActive = document.getElementById('bf-active-coupons-container');
   if (ctnActive) {
-    const deals = (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals)) 
+    const allMatchingDeals = (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals)) 
       ? PROMO_STATE.lastData.matched_deals.filter(d => d.matched_slug === slug) 
       : [];
-    if (deals.length > 0) {
-      const best = deals[0];
-      const coupRaw = best.coupon_code || best.coupon_info || 'Oferta Flash';
-      const cleanCoup = (best.coupon_code || coupRaw).replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase() || coupRaw;
-      const userStatus = getCouponUserStatus(cleanCoup);
-      const isExpired = userStatus && userStatus.status === 'expired';
-      const isWorking = userStatus && userStatus.status === 'working';
+    const activeDeals = allMatchingDeals.filter(d => {
+      const pId = d.post_id || '';
+      const pIdLower = pId.toLowerCase();
+      const buyUrl = d.buy_url || '';
+      const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
+      const dStat = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
+      const cCode = (d.coupon_code || '').trim().toUpperCase();
+      const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
+      const cStat = cCode ? couponsMap[cCode] : null;
+      if (d.is_expired || (dStat && (dStat.status === 'expired' || dStat.status === 'out_of_stock'))) return false;
+      if (d.is_coupon_expired || (cStat && cStat.status === 'expired')) return false;
+      return true;
+    });
+    const best = activeDeals.length > 0 ? activeDeals[0] : null;
+
+    if (best) {
+      const rawCode = (best.coupon_code || '').trim();
+      const rawInfo = (best.coupon_info || '').trim();
+      let hasRealCoupon = false;
+      let cleanCoup = '';
+
+      if (rawCode && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
+        cleanCoup = rawCode.replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
+        if (cleanCoup.length >= 3) hasRealCoupon = true;
+      } else if (rawInfo && !/^(oferta|link|site|preço|preco|cash|sem|pix)/i.test(rawInfo)) {
+        const m = rawInfo.match(/\b([A-Z0-9_\-]{3,22})\b/);
+        if (m && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|OFERTAFLASH)$/i.test(m[1])) {
+          cleanCoup = m[1].toUpperCase();
+          hasRealCoupon = true;
+        }
+      }
+
+      const pId = best.post_id || '';
+      const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
+      const dealStatus = dealsMap[pId] || dealsMap[pId.toLowerCase()] || (best.buy_url ? dealsMap[best.buy_url] : null);
+      const couponStatus = (cleanCoup && PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons && PROMO_STATE.couponStatus.coupons[cleanCoup]) || null;
+      const isExpired = best.is_expired || (dealStatus && (dealStatus.status === 'expired' || dealStatus.status === 'out_of_stock')) || (couponStatus && couponStatus.status === 'expired');
+      const isWorking = !isExpired && ((dealStatus && dealStatus.status === 'active') || (couponStatus && couponStatus.status === 'active'));
       const buyUrl = best.buy_url || best.post_url || '#';
 
       let freshBadge = '';
       if (isExpired) {
-        freshBadge = '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold">❌ MARCADO EXPIRADO</span>';
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ OFERTA ENCERRADA NA LOJA</span>`;
       } else if (isWorking) {
-        freshBadge = '<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold">✅ CONFIRMADO ATIVO</span>';
+        freshBadge = '<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold">✅ CONFIRMADO ATIVO NA LOJA</span>';
       } else if (best.age_hours <= 2) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 Fresco (${best.age_hours}h atrás - Alta chance)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 Fresco (${best.age_hours}h atrás)</span>`;
       } else if (best.age_hours <= 8) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">🟡 Moderado (${best.age_hours}h atrás - Pode ter limite)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">🟡 Moderado (${best.age_hours}h atrás)</span>`;
       } else {
         freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">🔴 Risco de Expirado (${best.age_hours}h atrás)</span>`;
+      }
+
+      let titleHtml = '';
+      if (hasRealCoupon) {
+        titleHtml = `
+          <span class="font-mono text-amber-300 font-bold">🎟️ Cupom Detectado:</span>
+          <span class="text-white font-mono font-bold ${isExpired ? 'line-through text-slate-400' : ''}">${cleanCoup}</span>
+          <span class="text-emerald-400 font-mono font-bold">(${fmtBRL(best.price_brl)})</span>
+        `;
+      } else {
+        titleHtml = `
+          <span class="font-mono text-emerald-400 font-bold">⚡ Oferta Direta (Sem Cupom):</span>
+          <span class="text-white font-mono font-bold">${fmtBRL(best.price_brl)}</span>
+          <span class="text-slate-400 font-mono text-[10px]">(Preço à vista no link)</span>
+        `;
       }
 
       ctnActive.className = `p-3 rounded-lg ${isExpired ? 'bg-rose-950/30 border border-rose-500/40' : 'bg-amber-500/10 border border-amber-500/30'} flex flex-col gap-2 text-xs`;
       ctnActive.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-1.5">
-          <div class="flex items-center gap-1.5">
-            <span class="font-mono text-amber-300 font-bold">🎟️ Cupom Detectado:</span>
-            <span class="text-white font-mono font-bold ${isExpired ? 'line-through text-slate-400' : ''}">${cleanCoup}</span>
-            <span class="text-emerald-400 font-mono font-bold">(${fmtBRL(best.price_brl)})</span>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            ${titleHtml}
             ${freshBadge}
           </div>
-          <div class="flex items-center gap-1">
-            <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-slate-950 transition font-bold text-[11px] cursor-pointer" title="Copia o código do cupom e abre a página da loja em nova aba">
-              📋 Copiar & Testar na Loja ↗
+          <div class="flex items-center gap-1 flex-wrap">
+            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testa se o link e o cupom continuam ativos na loja automaticamente">
+              <span>🧪 Testar</span>
             </button>
-            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[11px] font-bold hover:bg-amber-300 transition cursor-pointer">
-              ⚡ Simular
+            ${hasRealCoupon ? `
+              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer" title="Copia o cupom e abre a loja">
+                📋 Copiar Cupom
+              </button>
+            ` : ''}
+            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Abrir link da oferta na loja">
+              ↗ Abrir Loja
+            </a>
+            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[11px] font-bold hover:bg-amber-300 transition cursor-pointer" title="Aplica este preço no simulador de Black Friday">
+              ⚡ Simular Preço
             </button>
           </div>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
-          <span>Canal: @${best.channel_id} • há ${best.age_hours}h • Loja: ${best.store_name || 'E-commerce'}</span>
+          <span>Canal: @${best.channel_id} • há ${best.age_hours}h • Loja: ${best.store_name || 'E-commerce'} • Modelo: ${(best.title || '').slice(0, 55)}</span>
           <div class="flex items-center gap-1">
             <span class="text-slate-400 text-[10px]">Funcionou no carrinho?</span>
-            <button onclick="setCouponUserStatus('${cleanCoup}', 'working')" class="px-1.5 py-0.5 rounded ${isWorking ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer" title="Marcar como confirmado ativo">👍 Sim</button>
-            <button onclick="setCouponUserStatus('${cleanCoup}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer" title="Marcar como expirado">👎 Expirou</button>
-            ${(isWorking || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar avaliação">↺ Limpar</button>` : ''}
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isWorking ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer" title="Marcar como confirmado ativo">👍 Sim</button>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer" title="Marcar como expirado">👎 Expirou</button>
+            ${(isWorking || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar avaliação">↺ Limpar</button>` : ''}
           </div>
         </div>
       `;
     } else {
-      ctnActive.className = 'hidden';
-      ctnActive.innerHTML = '';
+      const latestExpired = allMatchingDeals.length > 0 ? allMatchingDeals[0] : null;
+      if (latestExpired) {
+        ctnActive.className = 'p-3 rounded-lg bg-rose-950/20 border border-rose-500/30 flex flex-col gap-1 text-xs';
+        ctnActive.innerHTML = `
+          <div class="flex items-center justify-between gap-1.5 flex-wrap">
+            <span class="font-mono text-rose-300 font-bold">❌ Nenhuma promoção ativa no momento</span>
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-[10px]">Última oferta de ${fmtBRL(latestExpired.price_brl)} encerrada</span>
+          </div>
+          <div class="text-[11px] text-slate-400 font-mono">Preço mantido no catálogo oficial: ${fmtBRL(st.current)}. Simule cupons abaixo.</div>
+        `;
+      } else {
+        ctnActive.className = 'hidden';
+        ctnActive.innerHTML = '';
+      }
     }
   }
 
@@ -1768,7 +2083,10 @@ function applyActiveCouponToBF(dealPrice, coup) {
   const inpPrice = document.getElementById('bf-input-test-price');
   const inpCoup = document.getElementById('bf-input-coupon');
   if (inpPrice) inpPrice.value = Math.round(dealPrice);
-  if (inpCoup) inpCoup.value = unescape(coup);
+  const unescaped = unescape(coup || '').trim();
+  if (inpCoup) {
+    inpCoup.value = (unescaped && !/^(OFERTAFLASH|OFERTA FLASH|NULL|UNDEFINED)$/i.test(unescaped)) ? unescaped : '';
+  }
   recalcBFCoupon();
 }
 
@@ -1787,7 +2105,7 @@ function recalcBFCoupon(skipSave) {
   const userStatus = getCouponUserStatus(cleanCoup);
   const isMarkedExpired = userStatus && userStatus.status === 'expired';
 
-  if (coupRaw) {
+  if (coupRaw && !/^(OFERTAFLASH|OFERTA FLASH)$/i.test(coupRaw)) {
     if (coupRaw.includes('%')) {
       const pct = parseFloat(coupRaw.replace(/[^0-9.]/g, '')) || 0;
       if (pct > 0 && pct <= 60) {
@@ -1816,8 +2134,17 @@ function recalcBFCoupon(skipSave) {
         </div>
         ${isMarkedExpired ? '<div class="text-rose-300 text-[10px] mt-1">⚠️ Você ou o sistema marcaram este cupom como EXPIRADO. A loja pode recusar o desconto no carrinho real.</div>' : ''}
       `;
+    } else if (coupRaw && !/^(OFERTAFLASH|OFERTA FLASH)$/i.test(coupRaw)) {
+      summaryEl.classList.remove('hidden');
+      summaryEl.innerHTML = `
+        <div class="flex items-center justify-between text-xs text-slate-300">
+          <span>🎟️ Cupom <strong>${cleanCoup}</strong> inserido. O preço anunciado de <strong>${fmtBRL(basePrice)}</strong> já é o valor final com este cupom na loja.</span>
+          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-[10px]">⚠️ MARCADO EXPIRADO</span>' : ''}
+        </div>
+      `;
     } else {
       summaryEl.classList.add('hidden');
+      summaryEl.innerHTML = '';
     }
   }
 
@@ -1887,7 +2214,21 @@ const CLIENT_PROMO_CHANNELS = [
   { id: 'ofertastechbr',     name: 'Ofertas Tech BR' }
 ];
 
-const CLIENT_PROMO_QUERIES = ['', 'RTX', '5060', '5070', '4060', '7600', 'RX ', 'Ryzen', 'DDR4', 'DDR5'];
+const CLIENT_PROMO_QUERIES = ['', 'RTX', '5060', '5070', '4060', '7600', 'RX ', 'Ryzen', 'DDR4', 'DDR5', 'expirou', 'acabou', 'esgotou'];
+
+function getClientPromoChannels() {
+  if (window.STATE?.market?.promotion_sources?.channels?.length) {
+    return window.STATE.market.promotion_sources.channels;
+  }
+  return CLIENT_PROMO_CHANNELS;
+}
+
+function getClientPromoQueries() {
+  if (window.STATE?.market?.promotion_sources?.search_keywords?.length) {
+    return window.STATE.market.promotion_sources.search_keywords;
+  }
+  return CLIENT_PROMO_QUERIES;
+}
 
 const CLIENT_EXCLUDE_SYSTEM_RE = /\b(notebook|laptop|macbook|computador\s*completo|pc\s*completo|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b/i;
 
@@ -1974,17 +2315,24 @@ const CLIENT_RAM_RULES = [
   ['ddr4-8gb-3200',    /\bddr4\b.*?\b8\s*gb\b(?!\s*x\s*2)/i]
 ];
 
-function parseBRLClient(rawStr) {
+function parsePriceClient(rawStr) {
   let s = (rawStr || '').trim();
-  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
-  else if (s.includes(',')) s = s.replace(',', '.');
-  else if (s.includes('.')) {
-    const parts = s.split('.');
-    if (parts[parts.length - 1].length === 3) s = s.replace(/\./g, '');
+  const decSep = window.STATE?.market?.monetary?.decimal_separator || ',';
+  if (decSep === ',') {
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else if (s.includes(',')) s = s.replace(',', '.');
+    else if (s.includes('.')) {
+      const parts = s.split('.');
+      if (parts[parts.length - 1].length === 3) s = s.replace(/\./g, '');
+    }
+  } else {
+    // US / UK style: 1,299.99
+    s = s.replace(/,/g, '');
   }
   const v = parseFloat(s);
   return isNaN(v) ? 0 : v;
 }
+const parseBRLClient = parsePriceClient;
 
 function extractPriceAndCouponClient(lines) {
   const fullText = lines.join('\n');
@@ -1994,51 +2342,58 @@ function extractPriceAndCouponClient(lines) {
   let detectedDiscountPct = 0;
   const candidates = [];
 
-  const mCode = fullText.match(/(?:cupom|c[oó]digo)\s*(?:de\s*desconto)?\s*[:\-]?\s*\b([A-Z0-9]{4,18})\b/i);
+  const mCode = fullText.match(/(?:cupom|c[oó]digo|promo code|coupon)\s*(?:de\s*desconto)?\s*[:\-]?\s*\b([A-Z0-9]{4,18})\b/i);
   if (mCode) {
     const w = mCode[1].toUpperCase();
-    const stop = new Set(['PARA', 'ESTA', 'ESSA', 'HOJE', 'AQUI', 'MAIS', 'PELO', 'SITE', 'LOJA', 'SHOPEE', 'KABUM', 'MAGALU', 'MERCADO']);
+    const stop = new Set(['PARA', 'ESTA', 'ESSA', 'HOJE', 'AQUI', 'MAIS', 'PELO', 'SITE', 'LOJA', 'SHOPEE', 'KABUM', 'MAGALU', 'MERCADO', 'AMAZON', 'NEWEGG', 'BESTBUY', 'HTTPS', 'HTTP', 'WWW', 'COM', 'BR']);
     if (!stop.has(w)) couponCode = w;
   }
 
   // Detect explicit discount amounts or percentages
   for (const line of lines) {
-    const mDisc = line.match(/(?:cupom\s*de|desconto\s*de|menos|abatimento|off\s*de)\s*R?\$?\s*([0-9]{2,4})/i) ||
-                  line.match(/R\$\s*([0-9]{2,4})\s*(?:off|de\s*desconto)/i);
+    const mDisc = line.match(/(?:cupom\s*de|desconto\s*de|menos|abatimento|off\s*de|save)\s*R?\$?\s*([0-9]{2,4})/i) ||
+                  line.match(/(?:R\$|\$|€|£)\s*([0-9]{2,4})\s*(?:off|de\s*desconto|discount)/i);
     if (mDisc) {
       const dVal = parseFloat(mDisc[1]);
-      if (dVal >= 30 && dVal <= 3000) detectedDiscountBRL = Math.max(detectedDiscountBRL, dVal);
+      if (dVal >= 10 && dVal <= 3000) detectedDiscountBRL = Math.max(detectedDiscountBRL, dVal);
     }
-    const mPct = line.match(/\b([1-9][0-9]?)\s*%\s*(?:off|de\s*desconto)/i);
+    const mPct = line.match(/\b([1-9][0-9]?)\s*%\s*(?:off|de\s*desconto|discount)/i);
     if (mPct) {
       const pVal = parseFloat(mPct[1]);
       if (pVal >= 3 && pVal <= 40) detectedDiscountPct = Math.max(detectedDiscountPct, pVal);
     }
   }
 
-  const priceRe = /R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)/gi;
+  const customPriceRegex = window.STATE?.market?.monetary?.price_regex;
+  const priceRe = customPriceRegex
+    ? new RegExp(customPriceRegex, 'gi')
+    : /R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)/gi;
+  const minValidPrice = window.STATE?.market?.monetary?.min_valid_hardware_price || 80;
+  const maxValidPrice = window.STATE?.market?.monetary?.max_valid_hardware_price || 45000;
+  const cashKeywords = window.STATE?.market?.promotion_sources?.cash_intent_keywords || ['por r$', 'valor', '💵', 'pix', 'à vista', 'a vista', '🔥', '$', '€', '£', 'lowest', 'deal'];
+
   for (const line of lines) {
     const low = line.toLowerCase();
-    if (!couponInfo && ['cupom', '🎟', '🏷', 'resgate', 'moedas'].some(k => low.includes(k))) {
+    if (!couponInfo && ['cupom', '🎟', '🏷', 'resgate', 'moedas', 'coupon', 'code:'].some(k => low.includes(k))) {
       const cleaned = line.replace(/https?:\/\/\S+/g, '').replace(/^[\s\-•🎟️🏷️💵🔥*]+|[\s\-•🎟️🏷️💵🔥*]+$/g, '');
       if (cleaned.length >= 4) couponInfo = cleaned;
     }
     let m;
     priceRe.lastIndex = 0;
     while ((m = priceRe.exec(line)) !== null) {
-      const val = parseBRLClient(m[1]);
-      if (val < 80 || val > 40000) continue;
+      const val = parsePriceClient(m[1]);
+      if (val < minValidPrice || val > maxValidPrice) continue;
       const start = m.index;
       const end = start + m[0].length;
       const before = line.slice(Math.max(0, start - 22), start).toLowerCase();
       const after = line.slice(end, Math.min(line.length, end + 22)).toLowerCase();
-      if (/\b(off|desconto)\b/.test(after) || /\b(cupom\s*de|desconto\s*de|resgate|abatimento)\b/.test(before)) {
+      if (/\b(off|desconto|discount)\b/.test(after) || /\b(cupom\s*de|desconto\s*de|resgate|abatimento|save)\b/.test(before)) {
         if (!detectedDiscountBRL || val > detectedDiscountBRL) detectedDiscountBRL = Math.max(detectedDiscountBRL, val);
         continue;
       }
       if (/\d+\s*x\s*(?:de\s*)?$/.test(before)) continue;
       let prio = 1;
-      if (['por r$', 'valor', '💵', 'pix', 'à vista', 'a vista', '🔥'].some(k => low.includes(k))) prio = 3;
+      if (cashKeywords.some(k => low.includes(k))) prio = 3;
       else if (low.includes('parcelado') || low.includes('12x') || low.includes('10x')) prio = 0;
       candidates.push([prio, val]);
     }
@@ -2048,15 +2403,21 @@ function extractPriceAndCouponClient(lines) {
   const bestVals = candidates.filter(c => c[0] === maxPrio).map(c => c[1]);
   const basePrice = Math.min(...bestVals);
 
-  // If a coupon discount was detected and the post advertised a base price, deduct coupon discount automatically
+  // Double-Discount Guard: If post has final price indicators, do NOT subtract coupon a second time (Argon Item 12)
+  const hasFinalPriceIndicator = lines.some(line =>
+    /\b(por|sai\s*por|fica\s*por|pagando|preço|preco|valor|à\s*vista|a\s*vista|pix)\b/i.test(line)
+  );
+
   let finalPrice = basePrice;
   let discountApplied = 0;
-  if (detectedDiscountBRL > 0 && detectedDiscountBRL < basePrice * 0.45) {
-    finalPrice = basePrice - detectedDiscountBRL;
-    discountApplied = detectedDiscountBRL;
-  } else if (detectedDiscountPct > 0) {
-    discountApplied = Math.round(basePrice * (detectedDiscountPct / 100));
-    finalPrice = basePrice - discountApplied;
+  if (!hasFinalPriceIndicator) {
+    if (detectedDiscountBRL > 0 && detectedDiscountBRL < basePrice * 0.45) {
+      finalPrice = basePrice - detectedDiscountBRL;
+      discountApplied = detectedDiscountBRL;
+    } else if (detectedDiscountPct > 0) {
+      discountApplied = Math.round(basePrice * (detectedDiscountPct / 100));
+      finalPrice = basePrice - discountApplied;
+    }
   }
 
   return {
@@ -2151,6 +2512,79 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
   const byPost = new Map();
   rawPosts.forEach(p => byPost.set(p.post_id, p));
 
+  // Initialize client coupon status registry from memory, DB.live_promos, and localStorage
+  if (!PROMO_STATE.couponStatus) {
+    PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+  }
+  if (!PROMO_STATE.couponStatus.coupons) PROMO_STATE.couponStatus.coupons = {};
+  if (!PROMO_STATE.couponStatus.deals) PROMO_STATE.couponStatus.deals = {};
+
+  // 1. Seed from authoritative backend/DB live_promos status
+  if (typeof DB !== 'undefined' && DB && DB.live_promos && DB.live_promos.coupon_status) {
+    const cs = DB.live_promos.coupon_status;
+    if (cs.coupons) Object.assign(PROMO_STATE.couponStatus.coupons, cs.coupons);
+    if (cs.deals) Object.assign(PROMO_STATE.couponStatus.deals, cs.deals);
+  }
+
+  // 2. Overlay any client-side tests from localStorage, BUT NEVER let a stale local 'active' status overwrite a server 'expired'/'out_of_stock' status!
+  try {
+    const local = JSON.parse(localStorage.getItem('gpuAnalyzerCouponStatus_v1') || '{}');
+    if (local.coupons) {
+      Object.keys(local.coupons).forEach(k => {
+        const cur = PROMO_STATE.couponStatus.coupons[k];
+        if (!cur || cur.status !== 'expired') {
+          PROMO_STATE.couponStatus.coupons[k] = local.coupons[k];
+        }
+      });
+    }
+    if (local.deals) {
+      Object.keys(local.deals).forEach(k => {
+        const cur = PROMO_STATE.couponStatus.deals[k];
+        if (!cur || cur.status !== 'expired') {
+          PROMO_STATE.couponStatus.deals[k] = local.deals[k];
+        }
+      });
+    }
+  } catch (_) {}
+
+  const clientExpiryRegexes = [
+    /\b([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|morreu|invalido|inválido|finalizou)\b/i,
+    /(?:cupom|c[oó]digo)\s+([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|invalido|inválido)\b/i,
+    /(?:expirou|acabou|esgotou|encerrou|finalizou)\s+(?:o\s+)?(?:cupom\s+)?[:\-]?\s*\b([A-Z0-9]{4,22})\b/i,
+    /o\s+cupom\s+([A-Z0-9]{4,22})\s+expirou/i
+  ];
+  const clientStopWords = new Set(['PARA', 'ESTA', 'ESSA', 'HOJE', 'AQUI', 'MAIS', 'PELO', 'SITE', 'LOJA', 'SHOPEE', 'KABUM', 'MAGALU', 'MERCADO', 'AMAZON', 'PROMO', 'OFERTA', 'LINK', 'DISPONIVEL', 'DISPONÍVEL', 'VALOR', 'PRECO', 'PREÇO', 'ESTOQUE', 'PRODUTO', 'AINDA', 'LIVRE', 'AGORA', 'TUDO', 'NAQUELE', 'KKKKKKK', 'CUPOMO', 'BLUSINHAS', 'RESGATE', 'SUBSTITUEM', 'APARECER', 'IFP43VOM', 'HTTPS', 'HTTP', 'WWW', 'COM', 'BR']);
+
+  // Scan all incoming posts for real-time expiry announcements
+  rawPosts.forEach(p => {
+    const txt = ((p.title || '') + ' ' + (p.head_text || '') + ' ' + (p.raw_text || '')).toLowerCase();
+    if (/acabou|expir|esgot|encerr|finaliz|invalido|inválido/.test(txt)) {
+      clientExpiryRegexes.forEach(re => {
+        const m = txt.match(re);
+        if (m && m[1]) {
+          const c = m[1].toUpperCase();
+          if (!clientStopWords.has(c) && c.length >= 4) {
+            PROMO_STATE.couponStatus.coupons[c] = {
+              status: 'expired',
+              reason: `Canal @${p.channel_id || 'radar'} avisou: '${txt.slice(0, 70)}...'`,
+              updated_at: new Date().toLocaleTimeString('pt-BR')
+            };
+          }
+        }
+      });
+      if (/^\s*\[?(?:esgotou|acabou|encerrado|expirado)\]?/i.test(p.title || '')) {
+        PROMO_STATE.couponStatus.deals[p.post_id] = {
+          status: 'out_of_stock',
+          reason: 'Post editado para Esgotado/Acabou'
+        };
+      }
+    }
+  });
+
+  try {
+    localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+  } catch (_) {}
+
   const nowMs = Date.now();
   const matchedDeals = [];
   const allPromos = [];
@@ -2175,17 +2609,71 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
       item.matched_name = m.item.name;
       item.hb_price_brl = hbPrice;
       item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
+
+      const couponCode = (item.coupon_code || '').toUpperCase();
+      const pId = item.post_id || '';
+      const pIdLower = pId.toLowerCase();
+      const buyUrl = item.buy_url || '';
+      const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
+      const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
+
+      const cStatus = couponCode ? couponsMap[couponCode] : null;
+      const dStatus = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
+
+      if (dStatus && (dStatus.status === 'expired' || dStatus.status === 'out_of_stock')) {
+        item.is_expired = true;
+        item.deal_status = dStatus.status;
+        item.deal_status_reason = dStatus.reason;
+      } else if (item.age_hours > 8 && item.savings_vs_hb_brl > 250 && (!dStatus || dStatus.status !== 'active')) {
+        // Unverified old flash post (>8h ago claiming > R$ 250 off) is considered expired by default
+        item.is_expired = true;
+        item.deal_status = 'expired';
+        item.deal_status_reason = `Oferta relâmpago antiga (${item.age_hours}h atrás) pendente de validação`;
+      } else {
+        item.is_expired = false;
+        item.deal_status = 'active';
+      }
+
+      if (cStatus && cStatus.status === 'expired') {
+        item.is_coupon_expired = true;
+        item.coupon_status = 'expired';
+        item.coupon_status_reason = cStatus.reason;
+        // REWIRE PRICING: Revoke expired coupon discount!
+        if (item.raw_price_brl && item.raw_price_brl > item.price_brl) {
+          item.price_brl = item.raw_price_brl;
+          item.coupon_discount_revoked = true;
+        } else if (item.discount_applied > 0) {
+          item.price_brl = Math.round((item.price_brl + item.discount_applied) * 100) / 100;
+          item.coupon_discount_revoked = true;
+        }
+        if (hbPrice > 0) {
+          item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
+        }
+      } else {
+        item.is_coupon_expired = false;
+        item.coupon_status = couponCode ? 'active' : 'none';
+      }
+
       matchedDeals.push(item);
 
       const slug = m.item.slug;
-      if (!bestBySlug[slug] || item.price_brl < bestBySlug[slug].price_brl) {
-        bestBySlug[slug] = item;
+      // CRITICAL: ONLY ACTIVE, NON-EXPIRED DEALS CAN BE BEST BY SLUG!
+      if (!item.is_expired && item.deal_status === 'active' && !item.is_coupon_expired) {
+        if (!bestBySlug[slug] || item.price_brl < bestBySlug[slug].price_brl) {
+          bestBySlug[slug] = item;
+        }
       }
     }
     allPromos.push(item);
   });
 
-  matchedDeals.sort((a, b) => ((a.age_hours > 24) - (b.age_hours > 24)) || (b.savings_vs_hb_brl - a.savings_vs_hb_brl) || (a.price_brl - b.price_brl));
+  matchedDeals.sort((a, b) => (
+    (a.is_expired ? 1 : 0) - (b.is_expired ? 1 : 0) ||
+    (a.is_coupon_expired ? 1 : 0) - (b.is_coupon_expired ? 1 : 0) ||
+    ((a.age_hours > 24) - (b.age_hours > 24)) ||
+    (b.savings_vs_hb_brl - a.savings_vs_hb_brl) ||
+    (a.price_brl - b.price_brl)
+  ));
   allPromos.sort((a, b) => a.age_hours - b.age_hours);
 
   return {
@@ -2195,7 +2683,8 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
     matched_count: matchedDeals.length,
     matched_deals: matchedDeals.slice(0, 80),
     best_by_slug: bestBySlug,
-    recent_feed: allPromos.slice(0, 60)
+    recent_feed: allPromos.slice(0, 60),
+    coupon_status: PROMO_STATE.couponStatus
   };
 }
 
@@ -2241,9 +2730,72 @@ let PROMO_STATE = {
   notifiedKeys: new Set()
 };
 
+const NOTIFIED_STORAGE_KEY = 'gpuAnalyzerNotifiedDeals_v2';
+
+function loadPersistedNotifiedKeys() {
+  try {
+    const local = JSON.parse(localStorage.getItem(NOTIFIED_STORAGE_KEY) || '[]');
+    if (Array.isArray(local)) local.forEach(k => PROMO_STATE.notifiedKeys.add(k));
+
+    const sess = JSON.parse(sessionStorage.getItem('gpuAnalyzerNotifiedDeals_v1') || '[]');
+    if (Array.isArray(sess)) sess.forEach(k => PROMO_STATE.notifiedKeys.add(k));
+  } catch (_) {}
+}
+
+function persistNotifiedKeys() {
+  try {
+    const list = [...PROMO_STATE.notifiedKeys].slice(-400);
+    localStorage.setItem(NOTIFIED_STORAGE_KEY, JSON.stringify(list));
+    sessionStorage.setItem('gpuAnalyzerNotifiedDeals_v1', JSON.stringify(list.slice(-100)));
+  } catch (_) {}
+}
+
+async function syncNotifiedHistoryFromServer() {
+  try {
+    const res = await fetch('data/notified_history.json?t=' + Date.now());
+    if (res.ok) {
+      const hist = await res.json();
+      if (hist && typeof hist === 'object') {
+        Object.keys(hist).forEach(k => PROMO_STATE.notifiedKeys.add(k));
+        persistNotifiedKeys();
+      }
+    }
+  } catch (_) {}
+}
+
+async function syncCouponStatusFromServer() {
+  try {
+    let statusObj = null;
+    try {
+      const res = await fetch('/api/coupon-status?t=' + Date.now());
+      if (res.ok) {
+        const d = await res.json();
+        statusObj = d.status || d;
+      }
+    } catch (_) {}
+    if (!statusObj) {
+      try {
+        const resStatic = await fetch('data/coupon_status.json?t=' + Date.now());
+        if (resStatic.ok) statusObj = await resStatic.json();
+      } catch (_) {}
+    }
+    if (statusObj && typeof statusObj === 'object') {
+      if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+      if (!PROMO_STATE.couponStatus.coupons) PROMO_STATE.couponStatus.coupons = {};
+      if (!PROMO_STATE.couponStatus.deals) PROMO_STATE.couponStatus.deals = {};
+      if (statusObj.coupons) Object.assign(PROMO_STATE.couponStatus.coupons, statusObj.coupons);
+      if (statusObj.deals) Object.assign(PROMO_STATE.couponStatus.deals, statusObj.deals);
+      try {
+        localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+      } catch (_) {}
+    }
+  } catch (_) {}
+}
+
 try {
-  const savedKeys = JSON.parse(sessionStorage.getItem('gpuAnalyzerNotifiedDeals_v1') || '[]');
-  if (Array.isArray(savedKeys)) savedKeys.forEach(k => PROMO_STATE.notifiedKeys.add(k));
+  loadPersistedNotifiedKeys();
+  syncNotifiedHistoryFromServer();
+  syncCouponStatusFromServer();
   const savedCfg = JSON.parse(localStorage.getItem('gpuAnalyzerPromoSettings_v1') || 'null');
   if (savedCfg && typeof savedCfg === 'object') {
     [
@@ -2505,10 +3057,10 @@ function updateNotificationPermissionLabel() {
       parts.push(bfLabels[PROMO_STATE.bfMode] || '🏷️ Meta BF');
     }
     if (PROMO_STATE.trigHB) {
-      if (PROMO_STATE.hbMode === 'brl_only') parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} vs HB`);
-      else if (PROMO_STATE.hbMode === 'pct_only') parts.push(`📉 −${PROMO_STATE.hbMinPct}% vs HB`);
-      else if (PROMO_STATE.hbMode === 'brl_and_pct') parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} E −${PROMO_STATE.hbMinPct}% vs HB`);
-      else parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} / −${PROMO_STATE.hbMinPct}% vs HB`);
+      if (PROMO_STATE.hbMode === 'brl_only') parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} vs Database`);
+      else if (PROMO_STATE.hbMode === 'pct_only') parts.push(`📉 −${PROMO_STATE.hbMinPct}% vs Database`);
+      else if (PROMO_STATE.hbMode === 'brl_and_pct') parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} E −${PROMO_STATE.hbMinPct}% vs Database`);
+      else parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} / −${PROMO_STATE.hbMinPct}% vs Database`);
     }
     const joiner = PROMO_STATE.notifyLogic === 'AND' ? ' E ' : ' OU ';
     sumEl.textContent = parts.length ? `Gatilhos: ${parts.join(joiner)}` : 'Nenhum gatilho marcado';
@@ -2589,7 +3141,8 @@ function evaluateDealsForAlerts() {
 
     if (d.matched_kind === 'gpu' && catalogItem) {
       const comp = getContextualCompositeScore(catalogItem);
-      const rawAtDealPrice = comp / Math.pow(Math.max(1, d.price_brl), 0.92);
+      const pPenalty = (catalogItem._dominatedBy && catalogItem._paretoPenalty) ? Math.pow(catalogItem._paretoPenalty, 0.85) : 1.0;
+      const rawAtDealPrice = (comp / Math.max(1, d.price_brl + (catalogItem._psuUpgradeCost || 0))) * pPenalty;
       cbScore = maxGpuRawRatio > 0
         ? Math.min(100, Math.round((rawAtDealPrice / maxGpuRawRatio) * 100))
         : (catalogItem._myCBScore || null);
@@ -2624,7 +3177,7 @@ function evaluateDealsForAlerts() {
       }
     }
 
-    // 3. Evaluate Comparison vs HardwareBarato (HB)
+    // 3. Evaluate Comparison vs Database
     const pctVsHB = d.hb_price_brl > 0 ? ((d.hb_price_brl - d.price_brl) / d.hb_price_brl) * 100 : 0;
     const minBrl = PROMO_STATE.hbMinBrl || 150;
     const minPct = PROMO_STATE.hbMinPct || 8;
@@ -2637,7 +3190,7 @@ function evaluateDealsForAlerts() {
     else hitHB = passBrl || passPct;
 
     if (hitHB && d.savings_vs_hb_brl > 0) {
-      reasons.push(`📉 −${fmtBRLShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs HB`);
+      reasons.push(`📉 −${fmtBRLShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Database`);
     }
 
     d.cb_score = cbScore;
@@ -2774,16 +3327,19 @@ function firePhoneNotification(deal) {
   const reasons = (deal.alert_reasons || []).join(' • ');
   const couponTxt = (deal.coupon_code || deal.coupon_info) ? `\n🎟️ Cupom Necessário: ${deal.coupon_code || deal.coupon_info}` : '';
   const couponTag = (deal.coupon_code || deal.coupon_info) ? ` (c/ Cupom: ${deal.coupon_code || deal.coupon_info})` : '';
-  const hbDiffTxt = deal.hb_price_brl > deal.price_brl ? `\n📉 Economia vs HB: -${fmtBRL(deal.savings_vs_hb_brl)} (HB: ${fmtBRL(deal.hb_price_brl)})` : '';
+  const hbDiffTxt = deal.hb_price_brl > deal.price_brl ? `\n📉 Economia vs Ref: -${fmtBRL(deal.savings_vs_hb_brl)} (Ref: ${fmtBRL(deal.hb_price_brl)})` : '';
   const title = `🔥 ${deal.matched_name} por ${fmtBRL(deal.price_brl)}${couponTag}`;
-  const message = `${reasons}${couponTxt}${hbDiffTxt}\nCanal: @${deal.channel_id}\n${deal.title}`;
+  const message = `${reasons}${couponTxt}${hbDiffTxt}\n📢 Canal: @${deal.channel_id}\n${deal.title}`;
   const url = deal.buy_url && deal.buy_url.startsWith('http') ? deal.buy_url : (deal.post_url || '');
+
+  const postId = deal.post_id || `${deal.channel_id}_${deal.matched_slug}_${Math.round(deal.price_brl)}`;
 
   const payload = {
     channel: PROMO_STATE.phoneService || 'ntfy',
     title,
     message,
-    url
+    url,
+    post_id: postId
   };
 
   if (PROMO_STATE.phoneService === 'ntfy') {
@@ -2810,6 +3366,10 @@ function firePhoneNotification(deal) {
   }).then(r => {
     if (!r.ok) throw new Error('API não disponível no servidor estático');
     return r.json();
+  }).then(res => {
+    if (res && res.skipped) {
+      console.log('[Phone Alert] Oferta já notificada anteriormente, duplicata evitada:', postId);
+    }
   }).catch(async () => {
     // Client-side fallback for GitHub Pages (zero backend needed)
     if (payload.channel === 'ntfy' && payload.topic) {
@@ -2847,7 +3407,7 @@ async function testPhoneAlertNow() {
     price_brl: 1849,
     hb_price_brl: 2159,
     savings_vs_hb_brl: 310,
-    alert_reasons: ['🏆 CB 95/100', '🔥 PECHINCHA', '−R$ 310 vs HB'],
+    alert_reasons: ['🏆 CB 95/100', '🔥 PECHINCHA', '−R$ 310 vs Database'],
     coupon_code: 'PC10',
     channel_id: 'ofertasadrenaline',
     title: 'Placa de Vídeo GeForce RTX 5060 com cupom de desconto nos grupos!',
@@ -2861,8 +3421,9 @@ async function testPhoneAlertNow() {
     const payload = {
       channel: PROMO_STATE.phoneService || 'ntfy',
       title: `🔥 [TESTE] ${sampleDeal.matched_name} por ${fmtBRL(sampleDeal.price_brl)} (c/ Cupom: PC10)`,
-      message: `🔔 Teste de disparo no celular bem-sucedido!\n\n🏆 CB 95/100 • PECHINCHA\n🎟️ Cupom Necessário: PC10\n📉 Economia: -R$ 310,00 vs HB\n\nRecebida como notificação comum (respeitando o modo Não Perturbe e volume padrão).`,
-      url: 'https://t.me/s/ofertasadrenaline'
+      message: `🔔 Teste de disparo no celular bem-sucedido!\n\n🏆 CB 95/100 • PECHINCHA\n🎟️ Cupom Necessário: PC10\n📉 Economia: -R$ 310,00 vs Catálogo\n📢 Canal: @ofertasadrenaline\n\nRecebida como notificação comum (respeitando o modo Não Perturbe e volume padrão).`,
+      url: 'https://t.me/s/ofertasadrenaline',
+      force: true
     };
 
     if (PROMO_STATE.phoneService === 'ntfy') {
@@ -2949,15 +3510,19 @@ function checkAndFireDealNotifications(forceTest = false) {
   if (!PROMO_STATE.notifyEnabled && !forceTest) return;
 
   const newAlerts = qualifying.filter(d => {
-    const key = `${d.matched_slug}:${Math.round(d.price_brl)}`;
-    if (!forceTest && PROMO_STATE.notifiedKeys.has(key)) return false;
-    PROMO_STATE.notifiedKeys.add(key);
+    const postId = d.post_id || `${d.channel_id}_${d.matched_slug}_${Math.round(d.price_brl)}`;
+    const priceKey = `${d.matched_slug}:${Math.round(d.price_brl)}`;
+    if (!forceTest) {
+      if (PROMO_STATE.notifiedKeys.has(postId) || PROMO_STATE.notifiedKeys.has(priceKey)) {
+        return false;
+      }
+    }
+    PROMO_STATE.notifiedKeys.add(postId);
+    PROMO_STATE.notifiedKeys.add(priceKey);
     return true;
   });
 
-  try {
-    sessionStorage.setItem('gpuAnalyzerNotifiedDeals_v1', JSON.stringify([...PROMO_STATE.notifiedKeys].slice(-100)));
-  } catch (_) {}
+  persistNotifiedKeys();
 
   if (newAlerts.length > 0) {
     playDealAlertChime();
@@ -2980,7 +3545,7 @@ function checkAndFireDealNotifications(forceTest = false) {
       cb_score: 95,
       is_high_cb: true,
       is_pechincha: true,
-      alert_reasons: [`🏆 CB 95/100`, `🔥 −R$ 310 vs HB`],
+      alert_reasons: [`🏆 CB 95/100`, `🔥 −R$ 310 vs Database`],
       coupon_code: 'PC10',
       channel_id: 'ofertasadrenaline',
       title: 'Teste de Notificação: Placa de Vídeo RTX 5060 com cupom relâmpago nos grupos!',
@@ -3054,7 +3619,7 @@ function applyFlashPromosToCatalog() {
   ['gpus', 'cpus', 'rams'].forEach(group => {
     (DB[group] || []).forEach(it => {
       const promo = bestMap[it.slug];
-      if (PROMO_STATE.applyFlash && promo && promo.price_brl < it._hbPrice) {
+      if (PROMO_STATE.applyFlash && promo && !promo.is_expired && promo.deal_status === 'active' && !promo.is_coupon_expired && promo.price_brl < it._hbPrice) {
         it.price_brl = promo.price_brl;
         it.coupon = promo.coupon_code || promo.coupon_info || 'PROMO GRUPO';
         it.store_name = `@${promo.channel_id}`;
@@ -3074,7 +3639,7 @@ function applyFlashPromosToCatalog() {
   const badge = document.getElementById('promo-radar-badge');
   if (badge) {
     const totalDeals = (PROMO_STATE.lastData && PROMO_STATE.lastData.matched_count) || 0;
-    badge.textContent = appliedCount > 0 ? `${appliedCount} abaixo do HB` : `${totalDeals} ofertas`;
+    badge.textContent = appliedCount > 0 ? `${appliedCount} abaixo do Catálogo` : `${totalDeals} ofertas`;
   }
 
   enrichGPUsWithContextualMetrics();
@@ -3177,6 +3742,12 @@ async function scanLivePromos(force = false) {
   const extraQ = ((document.getElementById('input-promo-query') || {}).value || '').trim();
   const extraCh = ((document.getElementById('input-promo-channels') || {}).value || '').trim();
 
+  // Always refresh notified history and coupon status ledger before evaluating deals
+  await Promise.all([
+    syncNotifiedHistoryFromServer(),
+    syncCouponStatusFromServer()
+  ]);
+
   // If only changing the time-window filter and we already have rawPosts in memory or localStorage (<15 min old),
   // re-filter 100% locally in the browser with ZERO network requests!
   if (!force && !extraQ && !extraCh) {
@@ -3219,7 +3790,7 @@ async function scanLivePromos(force = false) {
   if (btn) btn.disabled = true;
 
   try {
-    const channels = [...CLIENT_PROMO_CHANNELS];
+    const channels = [...getClientPromoChannels()];
     if (extraCh) {
       extraCh.split(',').forEach(raw => {
         const id = raw.trim().replace(/^@/, '').split('/').pop();
@@ -3228,7 +3799,7 @@ async function scanLivePromos(force = false) {
         }
       });
     }
-    const queries = [...CLIENT_PROMO_QUERIES];
+    const queries = [...getClientPromoQueries()];
     if (extraQ && !queries.includes(extraQ)) queries.push(extraQ);
 
     const tasks = [];
@@ -3299,12 +3870,18 @@ function renderPromoRadarPanel() {
   const matchedEl = document.getElementById('promo-matched-list');
   const feedEl = document.getElementById('promo-general-feed');
   const sumEl = document.getElementById('promo-matched-summary');
+  const sitewiseEl = document.getElementById('sitewise-validator-text');
 
   const deals = data.matched_deals || [];
   const cheaperCount = deals.filter(d => d.savings_vs_hb_brl > 0).length;
   const hotCount = deals.filter(d => d.is_high_cb || d.is_pechincha).length;
   if (sumEl) {
-    sumEl.textContent = `${deals.length} ofertas (${cheaperCount} abaixo do HB • ${hotCount} 🔔 alertas CB/Pechincha)`;
+    sumEl.textContent = `${deals.length} ofertas (${cheaperCount} abaixo do Catálogo • ${hotCount} 🔔 alertas CB/Pechincha)`;
+  }
+  if (sitewiseEl) {
+    const cCount = Object.keys((PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {}).length;
+    const timeStr = data.last_sitewise_test_at || data.scanned_at || '';
+    sitewiseEl.textContent = `Validador Sitewise 24/7 Ativo: ${cCount} cupons/links validados continuamente${timeStr ? ` (${timeStr})` : ''}`;
   }
 
   if (matchedEl) {
@@ -3313,13 +3890,15 @@ function renderPromoRadarPanel() {
       : deals.map(d => {
           const isCheaper = d.savings_vs_hb_brl > 0;
           const isHot = d.is_high_cb || d.is_pechincha;
+          const isCouponExpired = d.is_coupon_expired || d.coupon_status === 'expired';
+          const isOutOfStock = d.is_expired || d.deal_status === 'out_of_stock';
           const rawCoup = d.coupon_code || d.coupon_info;
           let couponBadge = '';
           if (rawCoup) {
             const cleanCoup = (d.coupon_code || rawCoup).replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase() || rawCoup;
             const uStat = typeof getCouponUserStatus === 'function' ? getCouponUserStatus(cleanCoup) : null;
-            const isExp = uStat && uStat.status === 'expired';
-            const isWrk = uStat && uStat.status === 'working';
+            const isExp = isCouponExpired || (uStat && uStat.status === 'expired');
+            const isWrk = !isCouponExpired && (d.coupon_status === 'active' || (uStat && uStat.status === 'working'));
             let freshTag = '';
             if (isExp) {
               freshTag = '<span class="text-rose-400 font-bold ml-1">❌ Expirado</span>';
@@ -3336,6 +3915,8 @@ function renderPromoRadarPanel() {
                 🎟️ ${cleanCoup} 📋 ${freshTag}
               </button>
             `;
+          } else if (!isOutOfStock) {
+            couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta no link sem cupom'}">⚡ Oferta Direta (Sem Cupom)</span>`;
           }
           const cbBadge = d.cb_score != null
             ? `<span class="px-1.5 py-0.5 rounded ${d.is_high_cb ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50 font-extrabold' : 'bg-slate-800 text-slate-300'} font-mono text-[10px]">${d.is_high_cb ? '🏆 ' : ''}CB ${d.cb_score}/100</span>`
@@ -3343,26 +3924,47 @@ function renderPromoRadarPanel() {
           const pechBadge = d.is_pechincha
             ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/50 font-mono font-extrabold text-[10px]">🔥 PECHINCHA</span>`
             : '';
+          const statusBadge = isOutOfStock
+            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ Esgotado</span>`
+            : (isCouponExpired && d.coupon_discount_revoked
+              ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-semibold">Preço Sem Cupom</span>`
+              : '');
+          const safeId = (d.post_id || '').replace(/[^a-zA-Z0-9]/g, '_');
+          const cleanCoupCode = (d.coupon_code || '').replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
+          const isTestedActive = !isOutOfStock && !isCouponExpired && (d.coupon_status === 'active' || d.deal_status === 'active');
+          const testBtnClass = isTestedActive
+            ? 'px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
+            : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1';
+          const testBtnLabel = isTestedActive ? '✅ Testado' : '🧪 Testar';
           return `
-            <div class="p-3 rounded-xl bg-slate-950/80 border ${isHot ? 'border-amber-400/60 shadow-md shadow-amber-500/10' : isCheaper ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div class="p-3 rounded-xl bg-slate-950/80 border ${isOutOfStock ? 'border-rose-900/60 opacity-75' : isHot ? 'border-amber-400/60 shadow-md shadow-amber-500/10' : isCheaper ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold text-[10px]">${d.matched_name}</span>
-                  <span class="font-mono font-extrabold text-sm ${isCheaper ? 'text-emerald-400' : 'text-white'}">${fmtBRL(d.price_brl)}</span>
-                  ${isCheaper
-                    ? `<span class="text-[10px] font-mono text-emerald-300 font-bold">(−${fmtBRLShort(d.savings_vs_hb_brl)} vs HB ${fmtBRLShort(d.hb_price_brl)})</span>`
-                    : `<span class="text-[10px] font-mono text-slate-500">(HB: ${fmtBRLShort(d.hb_price_brl)})</span>`}
+                  <span class="font-mono font-extrabold text-sm ${isOutOfStock ? 'text-slate-400 line-through' : isCheaper ? 'text-emerald-400' : 'text-white'}">
+                    ${d.coupon_discount_revoked && d.raw_price_brl ? `<span class="line-through text-slate-500 text-xs mr-1">${fmtBRL(d.raw_price_brl - (d.discount_applied||0))}</span>` : ''}
+                    ${fmtBRL(d.price_brl)}
+                  </span>
+                  ${isCheaper && !isOutOfStock
+                    ? `<span class="text-[10px] font-mono text-emerald-300 font-bold">(−${fmtBRLShort(d.savings_vs_hb_brl)} vs Ref ${fmtBRLShort(d.hb_price_brl)})</span>`
+                    : `<span class="text-[10px] font-mono text-slate-500">(Ref: ${fmtBRLShort(d.hb_price_brl)})</span>`}
                   ${cbBadge}
                   ${pechBadge}
+                  ${statusBadge}
                   ${couponBadge}
                 </div>
                 <div class="text-[11px] text-slate-300 truncate max-w-xl" title="${d.title}">${d.title}</div>
                 <div class="text-[10px] font-mono text-slate-500">
                   Canal: <a href="${d.post_url}" target="_blank" class="text-sky-400 hover:underline">@${d.channel_id} ↗</a> • há ${d.age_hours}h
                   ${d.coupon_url ? ` • <a href="${d.coupon_url}" target="_blank" class="text-amber-300 hover:underline">Resgatar Cupom ↗</a>` : ''}
+                  ${d.coupon_status_reason ? ` • <span class="text-amber-400/90">${d.coupon_status_reason}</span>` : ''}
+                  ${d.deal_status_reason ? ` • <span class="text-rose-400/90">${d.deal_status_reason}</span>` : ''}
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
+                <button id="btn-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoupCode}', ${d.price_brl})" class="${testBtnClass}" title="Testar se o cupom e link continuam ativos na loja">
+                  ${testBtnLabel}
+                </button>
                 <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-semibold text-[11px] cursor-pointer">
                   ${d.matched_kind === 'gpu' ? 'Duelo' : 'Testar BF'}
                 </button>
@@ -3389,5 +3991,215 @@ function renderPromoRadarPanel() {
         <a href="${f.buy_url}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 text-[10px] font-semibold shrink-0">Abrir ↗</a>
       </div>
     `).join('');
+  }
+}
+
+async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice) {
+  const safeId = (postId || '').replace(/[^a-zA-Z0-9]/g, '_');
+  const btn = document.getElementById(`btn-test-${safeId}`);
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Testando...`;
+  }
+
+  try {
+    const q = new URLSearchParams({
+      url: buyUrl || '',
+      code: couponCode || '',
+      price: expectedPrice || '',
+      post_id: postId || ''
+    });
+    const resp = await fetch(`/api/test-coupon?${q.toString()}`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const res = data.result || {};
+
+    if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+    if (!PROMO_STATE.couponStatus.coupons) PROMO_STATE.couponStatus.coupons = {};
+    if (!PROMO_STATE.couponStatus.deals) PROMO_STATE.couponStatus.deals = {};
+
+    if (res.status === 'expired' || res.status === 'out_of_stock') {
+      if (couponCode) {
+        PROMO_STATE.couponStatus.coupons[couponCode.toUpperCase()] = {
+          status: 'expired',
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+      }
+      if (postId) {
+        PROMO_STATE.couponStatus.deals[postId] = {
+          status: res.status,
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+        PROMO_STATE.couponStatus.deals[postId.toLowerCase()] = PROMO_STATE.couponStatus.deals[postId];
+      }
+      if (buyUrl) {
+        PROMO_STATE.couponStatus.deals[buyUrl] = {
+          status: res.status,
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+      }
+      localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+      fetch('/api/mark-coupon-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coupon_code: couponCode || null,
+          post_id: postId || null,
+          url: buyUrl || null,
+          status: res.status,
+          reason: res.reason
+        })
+      }).catch(() => {});
+
+      if (btn) {
+        btn.disabled = false;
+        btn.className = "px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold text-[11px]";
+        btn.innerHTML = `❌ Expirado`;
+        btn.title = res.reason;
+      }
+
+      if (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals)) {
+        PROMO_STATE.lastData.matched_deals.forEach(d => {
+          if (d.post_id === postId) {
+            d.is_expired = true;
+            d.deal_status = res.status;
+            d.deal_status_reason = res.reason;
+          }
+        });
+      }
+
+      if (PROMO_STATE.rawPosts && PROMO_STATE.rawPosts.length) {
+        PROMO_STATE.lastData = buildPromoPayloadClient(PROMO_STATE.rawPosts, PROMO_STATE.channelsScanned, 48);
+      }
+      applyFlashPromosToCatalog();
+      renderPromoRadarPanel();
+      if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
+
+      if (typeof showWebToastNotification === 'function') {
+        showWebToastNotification(
+          `❌ Oferta Encerrada`,
+          `${res.reason}`
+        );
+      }
+    } else {
+      if (couponCode) {
+        PROMO_STATE.couponStatus.coupons[couponCode.toUpperCase()] = {
+          status: 'active',
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+      }
+      if (postId) {
+        PROMO_STATE.couponStatus.deals[postId] = {
+          status: 'active',
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+        PROMO_STATE.couponStatus.deals[postId.toLowerCase()] = PROMO_STATE.couponStatus.deals[postId];
+      }
+      if (buyUrl) {
+        PROMO_STATE.couponStatus.deals[buyUrl] = {
+          status: 'active',
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+      }
+      localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+      if (btn) {
+        btn.disabled = false;
+        btn.className = "px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold text-[11px]";
+        btn.innerHTML = `✅ Ativo`;
+      }
+      if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
+      if (typeof showWebToastNotification === 'function') {
+        showWebToastNotification(`✅ Oferta Ativa!`, `${res.reason}`);
+      }
+    }
+    if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
+  } catch (err) {
+    console.warn('Erro ao testar cupom:', err);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `🧪 Testar`;
+    }
+  }
+}
+
+async function testAllRadarCoupons() {
+  const btn = document.getElementById('btn-test-all-coupons');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin">⏳</span> Testando Cupons...`;
+  }
+
+  const deals = (PROMO_STATE.lastData && PROMO_STATE.lastData.matched_deals) || [];
+  const toTest = deals.slice(0, 10);
+  let tested = 0;
+  let expiredCount = 0;
+
+  for (const d of toTest) {
+    try {
+      const q = new URLSearchParams({
+        url: d.buy_url || '',
+        code: d.coupon_code || '',
+        price: d.price_brl || '',
+        post_id: d.post_id || ''
+      });
+      const resp = await fetch(`/api/test-coupon?${q.toString()}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        const res = data.result || {};
+        if (res.status === 'expired' || res.status === 'out_of_stock') {
+          expiredCount++;
+          if (d.coupon_code) {
+            PROMO_STATE.couponStatus.coupons[d.coupon_code.toUpperCase()] = {
+              status: 'expired',
+              reason: res.reason,
+              updated_at: new Date().toLocaleTimeString('pt-BR')
+            };
+          }
+          if (d.post_id) {
+            PROMO_STATE.couponStatus.deals[d.post_id] = {
+              status: res.status,
+              reason: res.reason,
+              updated_at: new Date().toLocaleTimeString('pt-BR')
+            };
+            PROMO_STATE.couponStatus.deals[d.post_id.toLowerCase()] = PROMO_STATE.couponStatus.deals[d.post_id];
+          }
+          if (d.buy_url) {
+            PROMO_STATE.couponStatus.deals[d.buy_url] = {
+              status: res.status,
+              reason: res.reason,
+              updated_at: new Date().toLocaleTimeString('pt-BR')
+            };
+          }
+        }
+      }
+    } catch (_) {}
+    tested++;
+  }
+
+  localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+  if (PROMO_STATE.rawPosts && PROMO_STATE.rawPosts.length) {
+    PROMO_STATE.lastData = buildPromoPayloadClient(PROMO_STATE.rawPosts, PROMO_STATE.channelsScanned, 48);
+  }
+  applyFlashPromosToCatalog();
+  renderPromoRadarPanel();
+
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = `<span>🧪 Testar Cupons & Links</span>`;
+  }
+
+  if (typeof showWebToastNotification === 'function') {
+    showWebToastNotification(
+      `🧪 Teste Concluído (${tested} ofertas)`,
+      expiredCount > 0
+        ? `${expiredCount} ofertas/cupons expirados foram reconfigurados para liberar novos preços!`
+        : `Todas as ofertas testadas continuam válidas e ativas nas lojas.`
+    );
   }
 }

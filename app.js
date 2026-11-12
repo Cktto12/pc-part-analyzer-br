@@ -1,6 +1,6 @@
 /**
  * GPU & Build Analyzer Pro — Frontend Engine
- * Integrates live Hardware Barato data, 180-day price history & Target Price,
+ * Integrates live hardware database, 180-day price history & Target Price,
  * Contextual Custo-Benefício (Gaming / AI with Hefty VRAM weight / Software),
  * Relational Upgrade Calculator (e.g. RTX 5070 vs RTX 5060),
  * Editable PC Builder with Power (Watts) Consistency, and FPS/LLM/Software Simulator.
@@ -13,6 +13,7 @@ let DB = {
   motherboards: [],
   psus: []
 };
+window.DB = DB;
 
 // User Context Weights
 let STATE = {
@@ -26,6 +27,7 @@ let STATE = {
   cbSortBy: 'my_cb',
   cbSortAsc: false,
   cbRelBaseSlug: 'rtx-5060',
+  comparisonScaleMode: 'relative', // 'relative' (vs Placa Base) ou 'absolute' (0 a 100% do Topo RTX 5090)
   cbChartMetric: 'benefit', // 'benefit' = Preço vs Custo-Benefício (Índice), 'benchmark' = Preço vs Raw Score
   cbColumns: {
     vram: true,
@@ -37,18 +39,358 @@ let STATE = {
   },
   monitorRes: '2560x1440',
   monitorMaxFps: 144,
+  bfRanges: {},
 
-  // Editable PC Build State (Pre-populated with user's detected Xeon E5-2680 v4 + X99-P4 + 16GB DDR4 + RTX 5070 target upgrade)
+  // Multi-Source Database State
+  activeSource: 'hardware_barato',
+
+  // Regional Market & Monetary Configuration
+  market: {
+    region_id: 'br',
+    region_name: 'Brasil',
+    country_code: 'BR',
+    flag_emoji: '🇧🇷',
+    monetary: {
+      currency_code: 'BRL',
+      currency_symbol: 'R$',
+      symbol_position: 'prefix',
+      locale: 'pt-BR',
+      decimal_separator: ',',
+      thousands_separator: '.',
+      decimal_digits: 2,
+      price_regex: "R\\$\\s*([0-9]{1,3}(?:\\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)",
+      min_valid_hardware_price: 80,
+      max_valid_hardware_price: 45000,
+      vram_step_bonus_factor: 240
+    },
+    promotion_sources: { enabled: true, channels: [] },
+    stores: []
+  },
+  availableRegions: [],
+
+  // 1. User Reference PC (Meu PC de Referência - configured in Tab 7 / Configurações)
+  refPC: {
+    cpu: { slug: 'ryzen-5-5600', name: 'AMD Ryzen 5 5600 (6C/12T)', tdp: 65, price: 650, owned: true, benchmark: 6500, socket: 'AM4' },
+    gpu: { slug: 'rtx-3060-12gb', name: 'RTX 3060 12GB', tdp: 170, price: 2199.99, owned: true },
+    mobo: { slug: 'b550m', name: 'Placa-Mãe B550M (AM4)', tdp: 35, price: 480, owned: true, socket: 'AM4', memory_type: 'DDR4' },
+    ram: { slug: 'ddr4-16gb-3200', name: '16 GB DDR4 3200 MT/s', tdp: 10, price: 240, owned: true, capacity_gb: 16, memory_type: 'DDR4' },
+    storage: { name: 'SSD NVMe M.2 1TB', tdp: 10, price: 380, owned: true },
+    cooling: { name: 'Cooler CPU + Fans', tdp: 15, price: 120, owned: true },
+    psu: { slug: 'fonte-600w', name: 'Fonte 600W 80 Plus Bronze', watts: 600, price: 320, owned: true }
+  },
+
+  // 2. Target Shopping Build (Objetivo de Compra & Montagem - manipulated in Tab 3)
   build: {
-    cpu: { slug: 'xeon-e5-2680-v4', name: 'Intel Xeon E5-2680 v4 (14C/28T)', tdp: 120, price: 120, owned: true, benchmark: 2150, socket: 'LGA2011-3' },
-    gpu: { slug: 'rtx-5070', name: 'RTX 5070 12GB', tdp: 250, price: 5103.89, owned: false },
-    mobo: { slug: 'x99-p4-lga2011', name: 'Placa-Mãe X99-P4 (LGA2011-3)', tdp: 40, price: 280, owned: true, socket: 'LGA2011-3', memory_type: 'DDR4' },
-    ram: { slug: 'ddr4-16gb-2400', name: '16 GB DDR4 2400 MT/s (Atual)', tdp: 10, price: 210, owned: true, capacity_gb: 16, memory_type: 'DDR4' },
-    storage: { name: 'SSD NVMe M.2 1TB + SATA', tdp: 12, price: 380, owned: true },
-    cooling: { name: 'Cooler CPU + 4x Fans Gabinete', tdp: 20, price: 150, owned: true },
-    psu: { slug: 'corsair-cx650-650w', name: 'Fonte 650W 80 Plus Bronze', watts: 650, price: 369.99, owned: false }
+    cpu: { slug: 'ryzen-5-5600', name: 'AMD Ryzen 5 5600 (6C/12T)', tdp: 65, price: 650, owned: true, benchmark: 6500, socket: 'AM4' },
+    gpu: { slug: 'rtx-3060-12gb', name: 'RTX 3060 12GB', tdp: 170, price: 2199.99, owned: true },
+    mobo: { slug: 'b550m', name: 'Placa-Mãe B550M (AM4)', tdp: 35, price: 480, owned: true, socket: 'AM4', memory_type: 'DDR4' },
+    ram: { slug: 'ddr4-16gb-3200', name: '16 GB DDR4 3200 MT/s', tdp: 10, price: 240, owned: true, capacity_gb: 16, memory_type: 'DDR4' },
+    storage: { name: 'SSD NVMe M.2 1TB', tdp: 10, price: 380, owned: true },
+    cooling: { name: 'Cooler CPU + Fans', tdp: 15, price: 120, owned: true },
+    psu: { slug: 'fonte-600w', name: 'Fonte 600W 80 Plus Bronze', watts: 600, price: 320, owned: true }
   }
 };
+
+function saveUserRefPrefs() {
+  try {
+    localStorage.setItem('user_reference_pc', JSON.stringify(STATE.refPC));
+  } catch (e) {}
+}
+
+function loadUserRefPrefs() {
+  try {
+    const saved = localStorage.getItem('user_reference_pc') || localStorage.getItem('user_pc_setup');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.cpu) STATE.refPC.cpu = Object.assign({}, STATE.refPC.cpu, parsed.cpu);
+        if (parsed.gpu) STATE.refPC.gpu = Object.assign({}, STATE.refPC.gpu, parsed.gpu);
+        if (parsed.mobo) STATE.refPC.mobo = Object.assign({}, STATE.refPC.mobo, parsed.mobo);
+        if (parsed.ram) STATE.refPC.ram = Object.assign({}, STATE.refPC.ram, parsed.ram);
+        if (parsed.storage) STATE.refPC.storage = Object.assign({}, STATE.refPC.storage, parsed.storage);
+        if (parsed.cooling) STATE.refPC.cooling = Object.assign({}, STATE.refPC.cooling, parsed.cooling);
+        if (parsed.psu) STATE.refPC.psu = Object.assign({}, STATE.refPC.psu, parsed.psu);
+      }
+    }
+  } catch (e) {}
+}
+loadUserRefPrefs();
+
+function saveUserBuildPrefs() {
+  try {
+    localStorage.setItem('user_target_build', JSON.stringify(STATE.build));
+  } catch (e) {}
+}
+
+function loadUserBuildPrefs() {
+  try {
+    const saved = localStorage.getItem('user_target_build') || localStorage.getItem('user_pc_build');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.cpu) STATE.build.cpu = Object.assign({}, STATE.build.cpu, parsed.cpu);
+        if (parsed.gpu) STATE.build.gpu = Object.assign({}, STATE.build.gpu, parsed.gpu);
+        if (parsed.mobo) STATE.build.mobo = Object.assign({}, STATE.build.mobo, parsed.mobo);
+        if (parsed.ram) STATE.build.ram = Object.assign({}, STATE.build.ram, parsed.ram);
+        if (parsed.storage) STATE.build.storage = Object.assign({}, STATE.build.storage, parsed.storage);
+        if (parsed.cooling) STATE.build.cooling = Object.assign({}, STATE.build.cooling, parsed.cooling);
+        if (parsed.psu) STATE.build.psu = Object.assign({}, STATE.build.psu, parsed.psu);
+      }
+    }
+  } catch (e) {}
+}
+loadUserBuildPrefs();
+
+function copyRefPCToTargetBuild() {
+  STATE.build = JSON.parse(JSON.stringify(STATE.refPC));
+  saveUserBuildPrefs();
+  renderPCBuilder();
+  if (typeof showToast === 'function') {
+    showToast('Configuração do Meu PC de Referência copiada para Objetivo de Compra!');
+  }
+}
+window.copyRefPCToTargetBuild = copyRefPCToTargetBuild;
+
+function clearTargetBuild() {
+  STATE.build = {
+    cpu: { slug: '', name: '', tdp: 0, price: 0, owned: false, benchmark: 0, socket: '' },
+    gpu: { slug: '', name: '', tdp: 0, price: 0, owned: false },
+    mobo: { slug: '', name: '', tdp: 0, price: 0, owned: false, socket: '', memory_type: '' },
+    ram: { slug: '', name: '', tdp: 0, price: 0, owned: false, capacity_gb: 0, memory_type: 'DDR4' },
+    storage: { name: '', tdp: 0, price: 0, owned: false },
+    cooling: { name: '', tdp: 0, price: 0, owned: false },
+    psu: { slug: '', name: '', watts: 0, price: 0, owned: false }
+  };
+  saveUserBuildPrefs();
+  renderPCBuilder();
+  if (typeof showToast === 'function') {
+    showToast('Objetivo de Compra limpo! Pronto para planejar do zero.');
+  }
+}
+window.clearTargetBuild = clearTargetBuild;
+
+function getFilteredMoboAndRamOptions(selectedCpuSlug, currentMoboSlug, currentRamSlug) {
+  const db = window.DB || DB;
+  const cpus = db.cpus || [];
+  const mobos = db.motherboards || [];
+  const rams = db.rams || [];
+
+  const cpu = cpus.find(c => c.slug === selectedCpuSlug) || null;
+  const cpuSocket = cpu ? ((cpu.socket || (typeof getCpuSocket === 'function' ? getCpuSocket(cpu) : '')).toUpperCase().trim()) : '';
+
+  let filteredMobos = mobos;
+  if (cpuSocket) {
+    const matches = mobos.filter(m => (m.socket || '').toUpperCase().trim() === cpuSocket);
+    if (matches.length > 0) {
+      filteredMobos = matches;
+    }
+  }
+
+  const activeMobo = filteredMobos.find(m => m.slug === currentMoboSlug) || null;
+
+  let targetRamType = '';
+  if (cpuSocket === 'AM4' || cpuSocket === 'LGA2011-3') {
+    targetRamType = 'DDR4';
+  } else if (cpuSocket === 'AM5' || cpuSocket === 'LGA1851') {
+    targetRamType = 'DDR5';
+  } else if (cpuSocket === 'LGA1700') {
+    if (activeMobo && activeMobo.memory_type) {
+      targetRamType = activeMobo.memory_type.toUpperCase();
+    }
+  }
+
+  let filteredRams = rams;
+  if (targetRamType) {
+    const memMatches = rams.filter(r => (r.memory_type || '').toUpperCase() === targetRamType);
+    if (memMatches.length > 0) {
+      filteredRams = memMatches;
+    }
+  }
+
+  return {
+    cpu,
+    cpuSocket,
+    filteredMobos,
+    targetRamType,
+    filteredRams,
+    activeMobo
+  };
+}
+window.getFilteredMoboAndRamOptions = getFilteredMoboAndRamOptions;
+
+// 1. Sub-score extremes (Decoupled from maxComp to prevent circular recursion)
+function getSubScoreExtremes() {
+  if (!window.DB || !DB.gpus || DB.gpus.length === 0) {
+    return { topGpu: null, maxGaming: 14411, maxAI: 21507, maxSoft: 28000, maxPrice: 30450, max14bToks: 175 };
+  }
+  const topGpu = DB.gpus.reduce((best, g) => ((g.gaming_score || 0) > (best.gaming_score || 0) ? g : best), DB.gpus[0]);
+  const maxGaming = Math.max(...DB.gpus.map(g => (typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(g, true) : (g.gaming_score || 0))));
+  const maxAI = Math.max(...DB.gpus.map(g => getEffectiveAIScore(g)));
+  const maxSoft = Math.max(...DB.gpus.map(g => getEffectiveEngineeringScore(g)));
+  const maxPrice = Math.max(...DB.gpus.map(g => (g.price_brl || 0)));
+  const max14bToks = Math.max(...DB.gpus.map(g => (g.llm_14b_tok_s || 5)));
+
+  return {
+    topGpu,
+    maxGaming: Math.max(1000, maxGaming),
+    maxAI: Math.max(1000, maxAI),
+    maxSoft: Math.max(1000, maxSoft),
+    maxPrice: Math.max(5000, maxPrice),
+    max14bToks: Math.max(50, max14bToks)
+  };
+}
+window.getSubScoreExtremes = getSubScoreExtremes;
+
+function getCatalogExtremes() {
+  const sub = getSubScoreExtremes();
+  const maxComp = (!window.DB || !DB.gpus || !DB.gpus.length)
+    ? 10000
+    : Math.max(...DB.gpus.map(g => getContextualCompositeScore(g)));
+  return Object.assign({}, sub, { maxComp: Math.max(1000, maxComp) });
+}
+window.getCatalogExtremes = getCatalogExtremes;
+
+function checkCpuMoboCompatibility(cpu, mobo) {
+  if (!cpu || !cpu.name || !mobo || !mobo.name) {
+    return {
+      status: 'empty',
+      flag: '—',
+      label: 'Componente Ausente',
+      badgeClass: 'bg-slate-800 text-slate-400 border border-slate-700',
+      message: 'Selecione CPU e Placa-mãe para verificar compatibilidade de socket e VRM.'
+    };
+  }
+
+  const cpuSocket = (typeof getCpuSocket === 'function' ? getCpuSocket(cpu) : (cpu.socket || '')).toUpperCase().trim();
+  const moboSocket = (mobo.socket || '').toUpperCase().trim();
+
+  // 1. Socket Compatibility Check
+  if (cpuSocket && moboSocket && cpuSocket !== moboSocket && !((cpuSocket === 'AM4' && moboSocket === 'AM4') || (cpuSocket === 'AM5' && moboSocket === 'AM5'))) {
+    return {
+      status: 'error',
+      flag: '!',
+      label: 'INCOMPATIBILIDADE DE SOCKET',
+      badgeClass: 'bg-rose-500/20 text-rose-300 border border-rose-500/50',
+      message: `O processador ${cpu.name} usa socket ${cpuSocket}, mas a placa-mãe ${mobo.name} é ${moboSocket}. Não são compatíveis fisicamente!`
+    };
+  }
+
+  // 2. VRM & Motherboard Tier Check (flag '!' alert)
+  const cpuSlug = (cpu.slug || '').toLowerCase();
+  const cpuName = (cpu.name || '').toLowerCase();
+  const moboSlug = (mobo.slug || '').toLowerCase();
+  const moboName = (mobo.name || '').toLowerCase();
+  const tdp = cpu.tdp_w || cpu.tdp || 65;
+
+  const isFlagshipIntel = /14900|13900|14700|13700|12900/.test(cpuSlug) || /i9|i7/i.test(cpuName);
+  const isHighTdpIntel = isFlagshipIntel || tdp >= 125 || /core ultra 7|core ultra 9/i.test(cpuName);
+  const isEntryIntelMobo = /h610|h510|h410|h810|b760m-k|b760m-e\b/i.test(moboSlug) || /h610|h510|h810/i.test(moboName);
+
+  const isFlagshipAmd = /7950|7900|9950|9900|5950|5900/.test(cpuSlug) || /ryzen 9/i.test(cpuName);
+  const isHighTdpAmd = isFlagshipAmd || tdp >= 105 || /7800x3d|9800x3d|7700x|9700x|5800x/i.test(cpuSlug);
+  const isEntryAmdMobo = /a620|a520|a320|b840|b450m-hdv/i.test(moboSlug) || /a620|a520|a320|b840/i.test(moboName);
+
+  if ((isHighTdpIntel && isEntryIntelMobo) || (isHighTdpAmd && isEntryAmdMobo)) {
+    const isAmd = isHighTdpAmd && isEntryAmdMobo;
+    const recTier = isAmd ? 'B650/X670/B850/X870 (AMD) com dissipador robusto nos VRMs' : 'B760/Z790 (Intel LGA1700) ou B860/Z890 (LGA1851) com dissipadores';
+    return {
+      status: 'warning',
+      flag: '!',
+      label: 'ALERTA DE VRM & THERMAL THROTTLING',
+      badgeClass: 'bg-amber-500/20 text-amber-300 border border-amber-500/50',
+      message: `O processador ${cpu.name} (consumo elevado em boost, TDP ${tdp}W+) causará superaquecimento severo nas fases de alimentação da placa de entrada ${mobo.name} (circuito VRM básico sem dissipação robusta), gerando estrangulamento térmico (thermal throttling) e perda de clock. Recomenda-se placa ${recTier}.`
+    };
+  }
+
+  const isMidHighIntel = /14600|13600|12600/.test(cpuSlug);
+  if (isMidHighIntel && isEntryIntelMobo) {
+    return {
+      status: 'caution',
+      flag: '!',
+      label: 'AVISO DE VRM',
+      badgeClass: 'bg-amber-500/15 text-amber-200 border border-amber-500/30',
+      message: `O ${cpu.name} atinge até 180W em turbo boost. Uma placa de entrada básica sem dissipador pode limitar o desempenho sustentado em jogos pesados e renderização. Recomenda-se placa B760 com dissipador nos VRMs.`
+    };
+  }
+
+  return {
+    status: 'ok',
+    flag: '✓',
+    label: 'COMPATÍVEL & VRM ADEQUADO',
+    badgeClass: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40',
+    message: `Socket ${cpuSocket || moboSocket} compatível e dimensionamento de VRM adequado para operação estável.`
+  };
+}
+window.checkCpuMoboCompatibility = checkCpuMoboCompatibility;
+
+function setComparisonScaleMode(mode) {
+  STATE.comparisonScaleMode = mode === 'absolute' ? 'absolute' : 'relative';
+  if (typeof saveUserPrefs === 'function') saveUserPrefs();
+  syncComparisonScaleControls();
+  renderActiveTab();
+}
+
+function toggleComparisonScaleMode(isAbsolute) {
+  setComparisonScaleMode(isAbsolute ? 'absolute' : 'relative');
+}
+
+function syncComparisonScaleControls() {
+  const isAbs = STATE.comparisonScaleMode === 'absolute';
+
+  // Duel segmented buttons
+  const btnRelDuel = document.getElementById('btn-scale-rel-duel');
+  const btnAbsDuel = document.getElementById('btn-scale-abs-duel');
+  if (btnRelDuel && btnAbsDuel) {
+    if (isAbs) {
+      btnRelDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
+      btnAbsDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
+    } else {
+      btnRelDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
+      btnAbsDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
+    }
+  }
+
+  // Cost-Benefit Table segmented buttons
+  const btnRelCB = document.getElementById('btn-scale-rel-cb');
+  const btnAbsCB = document.getElementById('btn-scale-abs-cb');
+  if (btnRelCB && btnAbsCB) {
+    if (isAbs) {
+      btnRelCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200';
+      btnAbsCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
+    } else {
+      btnRelCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
+      btnAbsCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200';
+    }
+  }
+
+  // Config tab buttons
+  const btnRelCfg = document.getElementById('btn-scale-rel-cfg');
+  const btnAbsCfg = document.getElementById('btn-scale-abs-cfg');
+  if (btnRelCfg && btnAbsCfg) {
+    if (isAbs) {
+      btnRelCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200';
+      btnAbsCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
+    } else {
+      btnRelCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
+      btnAbsCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200';
+    }
+  }
+
+  // Fallback for checkboxes & labels
+  const chkDuel = document.getElementById('chk-duel-scale-absolute');
+  const chkCB = document.getElementById('chk-cb-scale-absolute');
+  const lblDuel = document.getElementById('lbl-duel-scale-mode');
+  const lblCB = document.getElementById('lbl-cb-scale-mode');
+  const lblRadar = document.getElementById('lbl-radar-scale-mode');
+
+  if (chkDuel) chkDuel.checked = isAbs;
+  if (chkCB) chkCB.checked = isAbs;
+
+  const text = isAbs ? 'Escala Absoluta (vs Topo RTX 5090)' : 'Escala Relativa (vs Placa Base)';
+  if (lblDuel) lblDuel.textContent = text;
+  if (lblCB) lblCB.textContent = text;
+  if (lblRadar) lblRadar.textContent = isAbs ? 'Escala Absoluta (0 a 100% do Topo do Hardware)' : 'Escala Relativa (vs Placa Base)';
+}
 
 let chartDuelHistory = null;
 let chartCBScatter = null;
@@ -75,7 +417,9 @@ const badgeMap = {
   rose:    'bg-rose-500 text-white'
 };
 
-// Helper to render center-referenced comparative bars (Reference is 100% in middle, candidate extends right or left)
+// Render comparative dual-bars where:
+// Absolute Mode: Maximum of track (100% width) is ALWAYS the best registered value in catalog (RTX 5090).
+// Relative Mode: Base GPU is reference (100%), and Candidate GPU displays proportional difference (+XX% vs Base).
 function renderComparisonBarHTML({
   title,
   iconSvg,
@@ -84,72 +428,151 @@ function renderComparisonBarHTML({
   baseLabel,
   candLabel,
   diffPct,
-  isPrice = false
+  isPrice = false,
+  maxVal = null,
+  baseName = 'Base',
+  candName = 'Candidata'
 }) {
+  const isAbs = STATE.comparisonScaleMode === 'absolute';
+  const extremes = typeof getCatalogExtremes === 'function' ? getCatalogExtremes() : null;
+
+  // Relative difference vs Base GPU
   const diff = diffPct != null ? diffPct : (baseVal > 0 ? ((candVal / baseVal) - 1) * 100 : 0);
-  let candBarWidthPct = 50;
-  let barColor = 'bg-sky-400';
-  let badgeColor = 'text-sky-300';
-
-  if (isPrice) {
-    if (diff > 0) {
-      candBarWidthPct = Math.min(100, 50 + (diff * 0.4));
-      barColor = 'bg-amber-400';
-      badgeColor = 'text-amber-300';
-    } else {
-      candBarWidthPct = Math.max(10, 50 + (diff * 0.5));
-      barColor = 'bg-emerald-400';
-      badgeColor = 'text-emerald-300';
-    }
-  } else {
-    if (diff >= 0) {
-      candBarWidthPct = Math.min(100, 50 + Math.min(50, diff * 0.7));
-      barColor = 'bg-gradient-to-r from-sky-400 to-emerald-400';
-      badgeColor = 'text-emerald-300';
-    } else {
-      candBarWidthPct = Math.max(10, 50 * Math.max(0.2, 1 + diff / 100));
-      barColor = 'bg-rose-400';
-      badgeColor = 'text-rose-300';
-    }
-  }
-
   const sign = diff > 0 ? '+' : '';
   const diffText = `${sign}${Math.round(diff)}%`;
+  const badgeColor = isPrice
+    ? (diff <= 0 ? 'text-emerald-300' : 'text-amber-300')
+    : (diff >= 0 ? 'text-emerald-300' : 'text-rose-300');
+
+  let baseWidthPct = 50;
+  let candWidthPct = 50;
+  let baseRightLabel = '';
+  let candRightLabel = '';
+
+  if (isAbs) {
+    // 1. MODO ABSOLUTO: O teto (100% da barra) é o registro máximo absoluto do catálogo (ex: RTX 5090)
+    const ceiling = maxVal && maxVal > 0 ? maxVal : Math.max(baseVal, candVal, 1);
+    baseWidthPct = Math.min(100, Math.max(3, (baseVal / ceiling) * 100));
+    candWidthPct = Math.min(100, Math.max(3, (candVal / ceiling) * 100));
+
+    baseRightLabel = `${baseWidthPct.toFixed(0)}% do Topo`;
+    candRightLabel = `${candWidthPct.toFixed(0)}% do Topo (${diffText} vs Base)`;
+  } else {
+    // 2. MODO RELATIVO: Ancorado na placa base como referência direta (100% de si)
+    const headToHeadMax = Math.max(baseVal, candVal, 1);
+    baseWidthPct = Math.min(100, Math.max(4, (baseVal / headToHeadMax) * 100));
+    candWidthPct = Math.min(100, Math.max(4, (candVal / headToHeadMax) * 100));
+
+    baseRightLabel = '100% (Base)';
+    candRightLabel = Math.abs(diff) < 0.5 ? '100% (Igual)' : `${diffText} vs Base`;
+  }
+
+  const baseBarColor = 'bg-emerald-500';
+  const candBarColor = isPrice
+    ? (diff <= 0 ? 'bg-emerald-400' : 'bg-amber-400')
+    : (diff >= 0 ? 'bg-sky-400' : 'bg-rose-400');
 
   return `
-    <div class="space-y-1">
+    <div class="space-y-1.5 p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
       <div class="flex items-center justify-between text-xs">
         <div class="flex items-center gap-1.5 text-slate-300 font-medium">
           ${iconSvg}
-          <span>${title}</span>
+          <span class="font-bold">${title}</span>
         </div>
         <div class="flex items-center gap-2 font-mono text-[11px]">
-          <span class="text-slate-400">${baseLabel != null ? baseLabel : baseVal}</span>
+          <span class="text-emerald-400 font-semibold">${baseLabel != null ? baseLabel : baseVal}</span>
           <span class="text-slate-600">vs</span>
           <span class="font-bold ${badgeColor}">${candLabel != null ? candLabel : candVal} <span class="text-[10px] opacity-80">(${diffText})</span></span>
         </div>
       </div>
-      <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800">
-        <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Base"></div>
-        <div class="h-full rounded-full transition-all duration-300 ${barColor}" style="width: ${candBarWidthPct.toFixed(1)}%;"></div>
+
+      <div class="space-y-1 pt-0.5">
+        <!-- Barra 1: Placa Base -->
+        <div class="flex items-center gap-2 text-[10px] font-mono">
+          <span class="w-16 truncate text-slate-400 shrink-0 text-right" title="${baseName}">${baseName}</span>
+          <div class="h-2 flex-1 bg-slate-900 rounded-full relative overflow-hidden border border-slate-800/80" title="${baseName}: ${baseLabel != null ? baseLabel : baseVal} (${baseWidthPct.toFixed(0)}%)">
+            <div class="h-full rounded-full transition-all duration-300 ${baseBarColor}" style="width: ${baseWidthPct.toFixed(1)}%;"></div>
+          </div>
+          <span class="w-28 text-right text-emerald-400 font-bold shrink-0">${baseRightLabel}</span>
+        </div>
+
+        <!-- Barra 2: Candidata -->
+        <div class="flex items-center gap-2 text-[10px] font-mono">
+          <span class="w-16 truncate text-sky-300 font-bold shrink-0 text-right" title="${candName}">${candName}</span>
+          <div class="h-2 flex-1 bg-slate-900 rounded-full relative overflow-hidden border border-slate-800/80" title="${candName}: ${candLabel != null ? candLabel : candVal} (${candWidthPct.toFixed(0)}%)">
+            <div class="absolute top-0 bottom-0 w-0.5 bg-emerald-500/70 z-20 pointer-events-none" style="left: ${baseWidthPct.toFixed(1)}%;" title="Ponto da Placa Base (${baseName})"></div>
+            <div class="h-full rounded-full transition-all duration-300 ${candBarColor}" style="width: ${candWidthPct.toFixed(1)}%;"></div>
+          </div>
+          <span class="w-28 text-right font-bold ${badgeColor} shrink-0">${candRightLabel}</span>
+        </div>
       </div>
     </div>
   `;
 }
 
-// Format BRL currency
-function fmtBRL(val) {
-  if (val === null || val === undefined || isNaN(val)) return 'R$ --';
-  return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+// Format currency dynamically based on active market configuration
+function formatMoney(val, opts = {}) {
+  const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+  if (val === null || val === undefined || isNaN(val)) return `${sym} --`;
+  const loc = STATE.market?.monetary?.locale || 'pt-BR';
+  const curr = STATE.market?.monetary?.currency_code || 'BRL';
+  const digits = opts.decimals !== undefined ? opts.decimals : (STATE.market?.monetary?.decimal_digits ?? 2);
+  const pos = STATE.market?.monetary?.symbol_position || 'prefix';
+  try {
+    return Number(val).toLocaleString(loc, {
+      style: 'currency',
+      currency: curr,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  } catch (_) {
+    const formatted = Number(val).toFixed(digits);
+    return pos === 'prefix' ? `${sym} ${formatted}` : `${formatted} ${sym}`;
+  }
 }
 
-function fmtBRLShort(val) {
-  if (val === null || val === undefined || isNaN(val)) return 'R$ --';
+function formatMoneyShort(val) {
+  const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+  if (val === null || val === undefined || isNaN(val)) return `${sym} --`;
+  const loc = STATE.market?.monetary?.locale || 'pt-BR';
+  const curr = STATE.market?.monetary?.currency_code || 'BRL';
+  const pos = STATE.market?.monetary?.symbol_position || 'prefix';
   const sign = val < 0 ? '-' : '';
-  return sign + 'R$ ' + Math.round(Math.abs(val)).toLocaleString('pt-BR');
+  const absVal = Math.round(Math.abs(val));
+  try {
+    return (val < 0 ? '-' : '') + absVal.toLocaleString(loc, {
+      style: 'currency',
+      currency: curr,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  } catch (_) {
+    const formatted = absVal.toLocaleString(loc);
+    return pos === 'prefix' ? `${sign}${sym} ${formatted}` : `${sign}${formatted} ${sym}`;
+  }
 }
 
-// Compute effective Local AI Inference score of a GPU directly from token/s throughput (8B, 14B, 32B), KV-cache VRAM headroom, and memory bandwidth
+// Backward-compatible aliases for all views and features
+const fmtBRL = formatMoney;
+const fmtBRLShort = formatMoneyShort;
+window.fmtBRL = formatMoney;
+window.fmtBRLShort = formatMoneyShort;
+window.formatMoney = formatMoney;
+window.formatMoneyShort = formatMoneyShort;
+
+// Helper to detect if user platform is PCIe 3.0 (Argon Item 7)
+function isPlatformPCIe3(cpu, mobo) {
+  const cName = (cpu?.name || cpu?.slug || '').toLowerCase();
+  const mName = (mobo?.name || mobo?.slug || '').toLowerCase();
+  const socket = (cpu?.socket || mobo?.socket || '').toUpperCase();
+  if (socket.includes('2011') || socket.includes('1151') || socket.includes('1150') || socket.includes('1155')) return true;
+  if (/x99|x79|a320|a520|b450|h310|h410|b360|b365|h510/.test(mName)) return true;
+  if (/xeon|5500|4600g|5600g|5700g|3200g|3400g|i7-7|i7-6|i5-7|i5-6|i3-7|i3-6|i7-4|i5-4/.test(cName)) return true;
+  return false;
+}
+window.isPlatformPCIe3 = isPlatformPCIe3;
+
+// 2. Continuous Sigmoid VRAM Fit for Local AI Inference (No arbitrary step cliffs - Argon Drop-in)
 function getEffectiveAIScore(gpu) {
   const vram = gpu.vram_gb || 8;
   const bw = gpu.bandwidth_gbs || 256;
@@ -160,28 +583,31 @@ function getEffectiveAIScore(gpu) {
   const heft = parseFloat(STATE.vramHeft) || 1.6;
   const isNvidia = gpu.brand === 'NVIDIA';
 
-  // Local Inference Throughput Calculus:
-  // - At heft=1.0 (Light 8B): 8B token/s dominates, 8GB VRAM is fine.
-  // - At heft=1.6 (14B + AI Training + RAG KV-cache): 14B token/s (which requires >=12GB to avoid PCIe RAM offload) is heavily weighted!
-  // - At heft=2.3 (14B-32B + Multi-agent local inference): 14B & 32B token/s + CUDA/Tensor FP8/FP4 support dominate.
+  // Continuous logistic curve: 1 / (1 + e^(-k * (vram - threshold)))
+  const sigmoid = (x, mid, k = 0.65) => 1 / (1 + Math.exp(-k * (x - mid)));
+
   let infPoints = 0;
   if (heft <= 1.1) {
-    infPoints = (tok8 * 32) + (tok14 * 22) + (vram * 95) + (bw * 1.4);
+    // 8B Q4 (~5.5GB) focus: smooth transition centered at 7.5GB
+    const fitMult = 0.70 + 0.30 * sigmoid(vram, 7.5, 0.8);
+    infPoints = ((tok8 * 35) + (tok14 * 18) + (bw * 1.4)) * fitMult;
   } else if (heft <= 1.8) {
-    // 14B Q4 (~9.2GB) + 8k-16k KV-cache needs 12GB+ VRAM. On 8GB, tok14 drops to ~9 tok/s (PCIe bottleneck) vs ~58 tok/s on RTX 5070 12GB!
-    const kvCacheFitBonus = vram >= 16 ? 1850 : (vram >= 12 ? 1150 : (vram >= 10 ? 450 : -450));
-    infPoints = (tok8 * 16) + (tok14 * 58) + (tok32 * 40) + kvCacheFitBonus + (bw * 1.8) + (fp16 * 8);
+    // 14B Q4 (~9.2GB + KV cache) focus: smooth transition centered at 11.5GB
+    const fitMult = 0.65 + 0.45 * sigmoid(vram, 11.5, 0.65);
+    infPoints = ((tok8 * 14) + (tok14 * 55) + (tok32 * 35) + (bw * 1.8) + (fp16 * 8)) * fitMult;
   } else {
-    const kvCacheFitBonus = vram >= 24 ? 3800 : (vram >= 16 ? 2600 : (vram >= 12 ? 1350 : -950));
-    infPoints = (tok8 * 10) + (tok14 * 68) + (tok32 * 85) + kvCacheFitBonus + (bw * 2.2) + (fp16 * 11);
+    // 14B-32B Q4 (~19GB) focus: smooth transition centered at 15.5GB
+    const fitMult = 0.55 + 0.60 * sigmoid(vram, 15.5, 0.50);
+    infPoints = ((tok8 * 8) + (tok14 * 60) + (tok32 * 85) + (bw * 2.2) + (fp16 * 11)) * fitMult;
   }
 
-  // Ecosystem multiplier for local inference engines (TensorRT-LLM, vLLM, FlashAttention-2, llama.cpp CUDA vs ROCm/SYCL)
-  const ecoMult = isNvidia ? 1.18 : (gpu.brand === 'Intel' ? 0.92 : 0.86);
+  // Moderated ecosystem multiplier (avoids double-counting CUDA since tok_s already reflects backend speed)
+  const ecoMult = isNvidia ? 1.10 : (gpu.brand === 'Intel' ? 0.94 : 0.90);
   return Math.max(250, Math.round(infPoints * ecoMult));
 }
+window.getEffectiveAIScore = getEffectiveAIScore;
 
-// Compute effective Engineering / AI Training / Ethernet Frames / OpenDSS Score
+// 3. Engineering / AI Training / OpenDSS Score with Continuous VRAM Scaling (Argon Drop-in)
 function getEffectiveEngineeringScore(gpu) {
   const vram = gpu.vram_gb || 8;
   const bw = gpu.bandwidth_gbs || 256;
@@ -189,24 +615,20 @@ function getEffectiveEngineeringScore(gpu) {
   const bench = gpu.gaming_score || 1500;
   const heft = parseFloat(STATE.vramHeft) || 1.6;
 
-  // 1. AI Training & Simulação 3D (NVIDIA Omniverse, Isaac Sim, PhysX 5, PyTorch Neural Nets):
-  //    Requires CUDA + Tensor Cores (FP8/FP16/BF16) & >=12GB VRAM
-  // 2. Ethernet Frame / High-Speed Packet Processing (DOCA GPUNetIO, DPDK GPU, CuPy/RAPIDS cuDF ring buffers):
-  //    Depends on Memory Bandwidth (GB/s), CUDA stream throughput, and VRAM buffer size
-  // 3. OpenDSS / Power Grid Time-Series & Monte Carlo Co-Simulation (CuPy / cuSOLVER sparse matrix & AI surrogate models):
-  //    Depends on CUDA sparse solvers + FP16/FP32 compute + bandwidth
   const isNvidia = gpu.brand === 'NVIDIA';
-  const hasTensorCores = isNvidia && (gpu.arch && (gpu.arch.includes('Blackwell') || gpu.arch.includes('Ada') || gpu.arch.includes('Ampere') || gpu.arch.includes('Turing')));
-  const cudaEcoMult = isNvidia ? (hasTensorCores ? (heft >= 1.5 ? 1.50 : 1.35) : 1.15) : (gpu.brand === 'Intel' ? 0.85 : 0.65);
-  const vramTwinBonus = vram >= 16 ? 1200 : (vram >= 12 ? 750 : (vram <= 8 && heft >= 1.5 ? -300 : 150));
-  const tensorTrainBonus = hasTensorCores ? 650 : (isNvidia ? 200 : -450);
+  const hasTensorCores = isNvidia && (gpu.arch && /Blackwell|Ada|Ampere|Turing/i.test(gpu.arch));
+  const cudaEcoMult = isNvidia ? (hasTensorCores ? (heft >= 1.5 ? 1.32 : 1.22) : 1.10) : (gpu.brand === 'Intel' ? 0.88 : 0.76);
 
-  const rawEng = (bench * 0.40) + (bw * 2.8) + (fp16 * 19) + (vram * 130) + vramTwinBonus + tensorTrainBonus;
+  // Smooth VRAM capacity scaling for batch-size & sparse solver headroom
+  const vramScale = 0.75 + 0.40 * (1 / (1 + Math.exp(-0.55 * (vram - 11.5))));
+  const rawEng = ((bench * 0.40) + (bw * 2.8) + (fp16 * 19) + (vram * 110)) * vramScale;
   return Math.max(200, Math.round(rawEng * cudaEcoMult));
 }
+window.getEffectiveEngineeringScore = getEffectiveEngineeringScore;
 
-// Compute composite contextual performance score for a GPU based on user sliders
+// 4. Scale-Normalized Composite Score (1% slider weight = exactly 1% influence - Argon Drop-in)
 function getContextualCompositeScore(gpu, customWeights = null) {
+  const sub = getSubScoreExtremes();
   const wg = customWeights ? customWeights.wGaming : STATE.wGaming;
   const wa = customWeights ? customWeights.wAI : STATE.wAI;
   const ws = customWeights ? customWeights.wSoft : STATE.wSoft;
@@ -216,27 +638,73 @@ function getContextualCompositeScore(gpu, customWeights = null) {
   const aNorm = wa / totalW;
   const sNorm = ws / totalW;
 
-  const gaming = (typeof getEffectiveGamingScore === 'function') ? getEffectiveGamingScore(gpu) : (gpu.gaming_score || 1500);
-  const ai = getEffectiveAIScore(gpu);
-  const engSoft = getEffectiveEngineeringScore(gpu);
+  // Each pillar is normalized to a 0-10,000 scale against the catalog leader
+  const gamingRaw = (typeof getEffectiveGamingScore === 'function') ? getEffectiveGamingScore(gpu, true) : (gpu.gaming_score || 1500);
+  const gamingScaled = (gamingRaw / sub.maxGaming) * 10000;
+  const aiScaled = (getEffectiveAIScore(gpu) / sub.maxAI) * 10000;
+  const engScaled = (getEffectiveEngineeringScore(gpu) / sub.maxSoft) * 10000;
 
-  return gNorm * gaming + aNorm * ai + sNorm * engSoft;
+  return Math.round(gNorm * gamingScaled + aNorm * aiScaled + sNorm * engScaled);
 }
+window.getContextualCompositeScore = getContextualCompositeScore;
 
-// Recompute contextual Custo-Benefício (0-100) across all GPUs
+// 5. Linear Cost-Benefit + Forced PSU Upgrade Cost + Pareto Dominance Penalty (Argon Drop-in)
+function getForcedPsuUpgradeCost(gpu) {
+  if (!STATE.refPC || !STATE.refPC.psu || !STATE.refPC.psu.owned) return 0;
+  const userPsuWatts = STATE.refPC.psu.watts || 600;
+  const cpuTdp = (STATE.refPC.cpu && STATE.refPC.cpu.tdp) || 65;
+  const restTdp = 60; // mobo + ram + ssd + fans
+  const typicalLoad = (gpu.tdp_w || 150) + cpuTdp + restTdp;
+  const peakTransient = Math.round(typicalLoad * 1.18);
+
+  if (userPsuWatts >= peakTransient) return 0; // Current PSU handles it safely
+
+  const recWatts = Math.ceil((typicalLoad * 1.35) / 50) * 50;
+  const validPsus = (DB.psus || []).filter(p => p.watts >= recWatts && p.price_brl > 150);
+  if (!validPsus.length) return 380; // Fallback estimate
+  return Math.min(...validPsus.map(p => p.price_brl));
+}
+window.getForcedPsuUpgradeCost = getForcedPsuUpgradeCost;
+
 function enrichGPUsWithContextualMetrics() {
   if (!DB.gpus || !DB.gpus.length) return;
 
-  let maxRawRatio = 0;
+  // Step 1: Compute Composite Score and Effective Price
   DB.gpus.forEach(g => {
     const comp = getContextualCompositeScore(g);
     g._compositeScore = Math.round(comp);
     g._effectiveAI = getEffectiveAIScore(g);
-    const price = g._customPrice || g.price_brl || 99999;
-    // Slight diminishing return dampening + price efficiency
-    const rawRatio = comp / Math.pow(price, 0.92);
+    g._psuUpgradeCost = getForcedPsuUpgradeCost(g);
+    const basePrice = g._customPrice || g.price_brl || 99999;
+    g._effectiveUpgradePrice = basePrice + g._psuUpgradeCost;
+  });
+
+  // Step 2: Detect Market-Dominated Cards (Pareto Frontier Check)
+  let maxRawRatio = 0;
+  DB.gpus.forEach(g => {
+    const price = g._effectiveUpgradePrice || g.price_brl || 99999;
+    let paretoPenalty = 1.0;
+    let dominatedBy = null;
+
+    // Is there another GPU that is cheaper (or within +3% price) AND significantly faster (>+8% composite score)?
+    DB.gpus.forEach(other => {
+      if (other.slug === g.slug || other.slug === 'rx-580-8gb-ref') return;
+      const otherPrice = other._effectiveUpgradePrice || other._customPrice || other.price_brl || 99999;
+      if (otherPrice <= price * 1.03 && other._compositeScore > g._compositeScore * 1.08 && (other.vram_gb || 8) >= (g.vram_gb || 8)) {
+        const ratio = g._compositeScore / Math.max(1, other._compositeScore);
+        if (ratio < paretoPenalty) {
+          paretoPenalty = ratio;
+          dominatedBy = other.name;
+        }
+      }
+    });
+
+    g._dominatedBy = dominatedBy;
+    g._paretoPenalty = paretoPenalty;
+    // Strictly linear price division (no 0.92 exponent bias) + Pareto penalty
+    const rawRatio = (g._compositeScore / Math.max(1, price)) * Math.pow(paretoPenalty, 0.85);
     g._rawCBRatio = rawRatio;
-    // Exclude legacy reference GPU from setting the 100 ceiling
+
     if (g.slug !== 'rx-580-8gb-ref' && rawRatio > maxRawRatio) {
       maxRawRatio = rawRatio;
     }
@@ -246,42 +714,29 @@ function enrichGPUsWithContextualMetrics() {
     g._myCBScore = maxRawRatio > 0 ? Math.min(100, Math.round((g._rawCBRatio / maxRawRatio) * 100)) : 50;
   });
 }
+window.enrichGPUsWithContextualMetrics = enrichGPUsWithContextualMetrics;
 
-// Evaluate Relational Upgrade Verdict between Base GPU and Candidate GPU
+// 6. Clean Relational Upgrade Evaluator (No triple-counted VRAM, strict linear parity - Argon Drop-in)
 function evaluateRelationalUpgrade(baseGpu, candGpu, basePrice, candPrice) {
   const baseComp = getContextualCompositeScore(baseGpu);
   const candComp = getContextualCompositeScore(candGpu);
   const perfRatio = candComp / Math.max(1, baseComp);
   const perfGainPct = (perfRatio - 1) * 100;
 
-  const gScore = g => (typeof getEffectiveGamingScore === 'function') ? getEffectiveGamingScore(g) : (g.gaming_score || 1);
+  const gScore = g => (typeof getEffectiveGamingScore === 'function') ? getEffectiveGamingScore(g, true) : (g.gaming_score || 1);
   const gamingGainPct = ((gScore(candGpu) / Math.max(1, gScore(baseGpu))) - 1) * 100;
-  const aiGainPct = ((( getEffectiveAIScore(candGpu) ) / Math.max(1, getEffectiveAIScore(baseGpu))) - 1) * 100;
-  const softGainPct = (((getEffectiveEngineeringScore(candGpu)) / Math.max(1, getEffectiveEngineeringScore(baseGpu))) - 1) * 100;
+  const aiGainPct = ((getEffectiveAIScore(candGpu) / Math.max(1, getEffectiveAIScore(baseGpu))) - 1) * 100;
+  const softGainPct = ((getEffectiveEngineeringScore(candGpu) / Math.max(1, getEffectiveEngineeringScore(baseGpu))) - 1) * 100;
   const vramDiff = (candGpu.vram_gb || 8) - (baseGpu.vram_gb || 8);
 
-  const actualDelta = candPrice - basePrice;
+  const netPsuDelta = (candGpu._psuUpgradeCost || 0) - (baseGpu._psuUpgradeCost || 0);
+  const actualDelta = (candPrice - basePrice) + netPsuDelta;
 
-  // Linear parity delta: if Candidate is +64% better overall, linear parity extra is 0.64 * basePrice
+  // 1:1 Linear Parity is the true mathematical ceiling of a "Fair" upgrade
   const linearParityDelta = basePrice * (perfRatio - 1);
-
-  // VRAM tier step-up value for AI & longevity (e.g., jumping from 8GB to 12GB or 16GB avoids obsolescence)
-  const totalW = Math.max(1, STATE.wGaming + STATE.wAI + STATE.wSoft);
-  const aiWeightNorm = STATE.wAI / totalW;
-  let vramStepBonusBRL = 0;
-  if (vramDiff > 0) {
-    // Each extra 4GB over 8GB is worth tangible longevity, scaled by AI weight and VRAM heft
-    vramStepBonusBRL = (vramDiff / 4) * 240 * (0.4 + aiWeightNorm * parseFloat(STATE.vramHeft));
-  } else if (vramDiff < 0) {
-    vramStepBonusBRL = (vramDiff / 4) * 260 * (0.4 + aiWeightNorm * parseFloat(STATE.vramHeft));
-  }
-
-  // Fair Max Delta (Teto Justo): Linear Parity + VRAM longevity bonus
-  const fairMaxDelta = Math.round(Math.max(100, linearParityDelta + vramStepBonusBRL));
-  // Great Deal / Steal Threshold (Ótimo / No-Brainer): ~62% of Fair Max Delta
-  const stealDelta = Math.round(fairMaxDelta * 0.62);
-  // Stretch / Enthusiast Limit (Caro / Ágio Máximo Tolerável): ~132% of Fair Max Delta
-  const stretchMaxDelta = Math.round(fairMaxDelta * 1.32);
+  const fairMaxDelta = Math.round(Math.max(0, linearParityDelta));
+  const stealDelta = Math.round(fairMaxDelta * 0.72);       // Gain performance at <=72% of linear cost
+  const stretchMaxDelta = Math.round(fairMaxDelta * 1.22);  // Max 22% enthusiast premium over linear parity
 
   let tier = 'bad';
   let label = 'CILADA / NÃO COMPENSA HOJE';
@@ -289,60 +744,60 @@ function evaluateRelationalUpgrade(baseGpu, candGpu, basePrice, candPrice) {
   let summary = '';
 
   if (perfGainPct <= 0) {
-    if (actualDelta < 0 && Math.abs(actualDelta) >= Math.abs(linearParityDelta)) {
+    // For a weaker card to be an "ECONOMIA REAL", the discount must be at least 1.25x the % performance lost
+    const requiredSavings = Math.abs(linearParityDelta) * 1.25;
+    if (actualDelta < 0 && Math.abs(actualDelta) >= requiredSavings && vramDiff >= 0) {
       tier = 'fair';
-      label = 'ECONOMIA VÁLIDA';
+      label = 'ECONOMIA PROPORCIONAL';
       color = 'sky';
-      summary = `A ${candGpu.name} entrega ${perfGainPct.toFixed(1)}% de desempenho relativo, mas custa ${fmtBRLShort(Math.abs(actualDelta))} a menos.`;
+      summary = `A ${candGpu.name} entrega ${perfGainPct.toFixed(1)}% do desempenho relativo, mas economiza ${fmtBRLShort(Math.abs(actualDelta))} (desconto maior que a perda de performance).`;
     } else {
       tier = 'bad';
-      label = 'INFERIOR / NÃO COMPENSA';
+      label = 'DESEMPENHO MENOR';
       color = 'rose';
-      summary = `A ${candGpu.name} tem desempenho contextual menor (${perfGainPct.toFixed(1)}%) para o seu perfil de uso.`;
+      summary = `A ${candGpu.name} tem desempenho contextual menor (${perfGainPct.toFixed(1)}%) para o seu perfil.`;
     }
   } else {
-    if (actualDelta <= stealDelta) {
+    const domWarn = candGpu._dominatedBy ? ` (Atenção: superada no mercado pela ${candGpu._dominatedBy} na mesma faixa!)` : '';
+    if (actualDelta <= stealDelta && !candGpu._dominatedBy) {
       tier = 'steal';
-      label = 'PECHINCHA / COMPRA IMEDIATA';
+      label = 'PECHINCHA (COMPRA RECOMENDADA)';
       color = 'emerald';
-      summary = `Diferença de apenas ${fmtBRLShort(actualDelta)} para ganhar +${perfGainPct.toFixed(1)}% de performance ponderada (+${gamingGainPct.toFixed(0)}% Jogos, +${aiGainPct.toFixed(0)}% IA). Excelente negócio!`;
-    } else if (actualDelta <= fairMaxDelta) {
+      const psuNote = netPsuDelta > 0 ? ` (inclui +${fmtBRLShort(netPsuDelta)} de fonte obrigatória)` : (netPsuDelta < 0 ? ` (economiza ${fmtBRLShort(Math.abs(netPsuDelta))} de fonte)` : '');
+      const genNote = (candGpu.arch === 'Blackwell' && baseGpu.arch === 'Ampere') ? ' • Salto geracional (DLSS 4 MFG 4× vs Ampere puro).' : '';
+      summary = `Diferença de ${fmtBRLShort(actualDelta)}${psuNote} para salto de +${perfGainPct.toFixed(1)}% no desempenho (+${gamingGainPct.toFixed(0)}% Jogos, +${aiGainPct.toFixed(0)}% IA). Eficiência superior à placa base!${genNote}`;
+    } else if (actualDelta <= fairMaxDelta && !candGpu._dominatedBy) {
       tier = 'fair';
-      label = 'VALE O UPGRADE (PREÇO JUSTO)';
+      label = 'PREÇO JUSTO (UPGRADE VÁLIDO)';
       color = 'sky';
-      summary = `Diferença de ${fmtBRLShort(actualDelta)} está dentro do teto justo de até +${fmtBRLShort(fairMaxDelta)} pelo salto de +${perfGainPct.toFixed(1)}% (+${candGpu.vram_gb - baseGpu.vram_gb}GB VRAM).`;
+      const psuNote = netPsuDelta > 0 ? ` (inclui +${fmtBRLShort(netPsuDelta)} de fonte obrigatória)` : (netPsuDelta < 0 ? ` (economiza ${fmtBRLShort(Math.abs(netPsuDelta))} de fonte)` : '');
+      const genNote = (candGpu.arch === 'Blackwell' && baseGpu.arch === 'Ampere') ? ' • Arquitetura Blackwell com DLSS 4 MFG 4× e menor consumo térmico.' : '';
+      summary = `Diferença de ${fmtBRLShort(actualDelta)}${psuNote} dentro da paridade justa de até +${fmtBRLShort(fairMaxDelta)} pelo ganho de +${perfGainPct.toFixed(1)}% (${vramDiff >= 0 ? '+' : ''}${vramDiff}GB VRAM).${genNote}`;
     } else if (actualDelta <= stretchMaxDelta) {
       tier = 'stretch';
-      label = 'ÁGIO ALTO / ESPERE CAIR';
+      label = candGpu._dominatedBy ? `DOMINADA PELA ${candGpu._dominatedBy.toUpperCase()}` : 'PREÇO ESTICADO (AGUARDE)';
       color = 'amber';
-      summary = `Diferença atual de ${fmtBRLShort(actualDelta)} está R$ ${Math.round(actualDelta - fairMaxDelta).toLocaleString('pt-BR')} acima do preço justo (+${fmtBRLShort(fairMaxDelta)}). Só vale se fizer questão absoluta dos ${candGpu.vram_gb}GB/performance hoje.`;
+      summary = `Preço atual está ${fmtBRLShort(actualDelta - fairMaxDelta)} acima da paridade linear (+${fmtBRLShort(fairMaxDelta)}).${domWarn}`;
     } else {
       tier = 'bad';
-      label = 'PÉSSIMO CUSTO-BENEFÍCIO RELACIONAL';
+      label = 'DESPROPORCIONAL FRENTE À BASE';
       color = 'rose';
-      summary = `Pagar ${fmtBRLShort(actualDelta)} a mais (+${((actualDelta / basePrice) * 100).toFixed(0)}% no preço) por +${perfGainPct.toFixed(1)}% de ganho é desproporcional. O máximo justo seria pagar até +${fmtBRLShort(fairMaxDelta)} (ou seja, ${candGpu.name} até ${fmtBRLShort(basePrice + fairMaxDelta)}).`;
+      summary = `Pagar ${fmtBRLShort(actualDelta)} a mais (+${((actualDelta / basePrice) * 100).toFixed(0)}% no preço) por +${perfGainPct.toFixed(1)}% de ganho é desproporcional. O teto justo é +${fmtBRLShort(fairMaxDelta)} (${candGpu.name} ≤ ${fmtBRLShort(basePrice + fairMaxDelta)}).${domWarn}`;
     }
   }
 
+  const fairMaxCandPrice = Math.max(0, basePrice + fairMaxDelta - netPsuDelta);
+  const stealCandPrice = Math.max(0, basePrice + stealDelta - netPsuDelta);
+
   return {
-    perfRatio,
-    perfGainPct,
-    gamingGainPct,
-    aiGainPct,
-    softGainPct,
-    vramDiff,
-    actualDelta,
-    stealDelta,
-    fairMaxDelta,
-    stretchMaxDelta,
-    fairMaxCandPrice: basePrice + fairMaxDelta,
-    stealCandPrice: basePrice + stealDelta,
-    tier,
-    label,
-    color,
-    summary
+    perfRatio, perfGainPct, gamingGainPct, aiGainPct, softGainPct, vramDiff,
+    actualDelta, stealDelta, fairMaxDelta, stretchMaxDelta,
+    fairMaxCandPrice,
+    stealCandPrice,
+    tier, label, color, summary
   };
 }
+window.evaluateRelationalUpgrade = evaluateRelationalUpgrade;
 
 // Status Badge HTML helper for price rising / target alerts
 function getPriceStatusBadgeHTML(gpu) {
@@ -368,14 +823,15 @@ function switchTab(tabId) {
     builder: 'Meu Setup & Consumo',
     upgrades: 'Upgrades de Plataforma',
     bf: 'Black Friday & Sazonalidade',
-    sim: 'Simulador de Desempenho Real'
+    sim: 'Simulador de Desempenho Real',
+    config: 'Configurações do Sistema'
   };
   const activeTitleEl = document.getElementById('header-active-tab-title');
   if (activeTitleEl && tabTitles[tabId]) {
     activeTitleEl.textContent = tabTitles[tabId];
   }
 
-  ['versus', 'cb', 'builder', 'upgrades', 'bf', 'sim'].forEach(id => {
+  ['versus', 'cb', 'builder', 'upgrades', 'bf', 'sim', 'config'].forEach(id => {
     const sec = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`tab-btn-${id}`);
     if (!sec || !btn) return;
@@ -414,9 +870,15 @@ function closeSidebar() {
 }
 
 function toggleContextSettings() {
-  const panel = document.getElementById('context-settings-panel');
-  if (!panel) return;
-  panel.classList.toggle('hidden');
+  switchTab('config');
+  setTimeout(() => {
+    const target = document.getElementById('cfg-section-display-workloads');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('ring-2', 'ring-sky-400');
+      setTimeout(() => target.classList.remove('ring-2', 'ring-sky-400'), 1500);
+    }
+  }, 80);
 }
 
 function updateTopContextSummary() {
@@ -435,6 +897,7 @@ function renderActiveTab() {
     if (t === 'upgrades') renderUpgradeSuggestions();
     if (t === 'bf') renderBlackFridayTab();
     if (t === 'sim') renderSimulator();
+    if (t === 'config') renderConfigTab();
   } catch (e) {
     console.error('Render error on tab', t, e);
   }
@@ -530,12 +993,13 @@ function populateSelectors() {
   simASel.value = STATE.duelCandSlug;
   simBSel.value = 'rx-580-8gb-ref';
 
-  // CPU selector for the FPS simulator (detected Xeon first)
+  // CPU selector for the FPS simulator (user's configured CPU selected by default)
   const simCpuSel = document.getElementById('sim-select-cpu');
-  if (simCpuSel) {
-    const cpusSorted = [...DB.cpus].sort((a, b) => (b.is_xeon ? 1 : 0) - (a.is_xeon ? 1 : 0) || a.name.localeCompare(b.name));
-    simCpuSel.innerHTML = cpusSorted.map(c => `<option value="${c.slug}">${c.name}${c.is_xeon ? '' : ' — ' + fmtBRLShort(c.price_brl)}</option>`).join('');
-    simCpuSel.value = STATE.build.cpu.slug || 'xeon-e5-2680-v4';
+  if (simCpuSel && DB.cpus) {
+    const configuredSlug = STATE.build.cpu.slug;
+    const cpusSorted = [...DB.cpus].sort((a, b) => (a.slug === configuredSlug ? -1 : (b.slug === configuredSlug ? 1 : a.name.localeCompare(b.name))));
+    simCpuSel.innerHTML = cpusSorted.map(c => `<option value="${c.slug}">${c.name}${c.price_brl ? ' — ' + fmtBRLShort(c.price_brl) : ''}</option>`).join('');
+    simCpuSel.value = configuredSlug || (DB.cpus[0] ? DB.cpus[0].slug : '');
   }
 
   syncDuelPriceInputsFromSelection();
@@ -618,12 +1082,15 @@ function renderDuelAnalysis() {
   // ============================================================================
   // VERSUS-STYLE HEAD-TO-HEAD RATINGS & HEXAGONAL RADAR CHART
   // ============================================================================
-  const bEffGaming = baseEffGaming;
-  const cEffGaming = candEffGaming;
+  const bRawGame = baseGpu.gaming_score || 1500;
+  const cRawGame = candGpu.gaming_score || 1500;
+  const extremes = getCatalogExtremes();
+  const isAbs = STATE.comparisonScaleMode === 'absolute';
+  syncComparisonScaleControls();
 
-  // Radar Axes (0-100)
-  const bScoreGame = Math.min(100, Math.max(15, Math.round((bEffGaming / 4800) * 100)));
-  const cScoreGame = Math.min(100, Math.max(15, Math.round((cEffGaming / 4800) * 100)));
+  // Radar Axes (0-100) scaled against catalog absolute records so RTX 5090 is 100 and no premature saturation
+  const bScoreGame = Math.min(100, Math.max(5, Math.round((bRawGame / extremes.maxGaming) * 100)));
+  const cScoreGame = Math.min(100, Math.max(5, Math.round((cRawGame / extremes.maxGaming) * 100)));
 
   const getTechScore = (g) => {
     const p = typeof getGpuTechProfile === 'function' ? getGpuTechProfile(g) : {};
@@ -693,58 +1160,29 @@ function renderDuelAnalysis() {
   const bScoreTech = getTechScore(baseGpu);
   const cScoreTech = getTechScore(candGpu);
 
-  const getAIInferenceScore = (gpu) => {
-    const isNvidia = gpu.brand === 'NVIDIA';
-    const isIntel = gpu.brand === 'Intel';
-    const vram = gpu.vram_gb || 8;
-    const tok8 = gpu.llm_8b_tok_s || (isNvidia ? 40 : 15);
-    const tok14 = gpu.llm_14b_tok_s || (isNvidia ? 8 : 4);
+  // AI Score scaled against #1 in catalog (RTX 5090 = 173.6 tok/s 14B + 32GB VRAM)
+    // AI Score scaled against #1 in catalog (Respects user's vramHeft and continuous sigmoid model - Argon Item 2)
+  const bScoreAI = Math.min(100, Math.max(5, Math.round((getEffectiveAIScore(baseGpu) / extremes.maxAI) * 100)));
+  const cScoreAI = Math.min(100, Math.max(5, Math.round((getEffectiveAIScore(candGpu) / extremes.maxAI) * 100)));
 
-    // AI Hardware Acceleration Factor (Tensor Cores / XMX vs No Matrix Units)
-    let hwBonus = 0;
-    if (isNvidia) {
-      if (gpu.arch && (gpu.arch.includes('Blackwell') || gpu.slug.includes('50'))) {
-        hwBonus = 24; // 5th Gen Tensor Cores + FP4/FP8 transformer engine
-      } else if (gpu.arch && (gpu.arch.includes('Ada') || gpu.slug.includes('40'))) {
-        hwBonus = 18; // 4th Gen Tensor Cores + FP8
-      } else if (gpu.arch && (gpu.arch.includes('Ampere') || gpu.slug.includes('30'))) {
-        hwBonus = 12; // 3rd Gen Tensor Cores (BF16/TF32)
-      } else {
-        hwBonus = 6;  // Turing
-      }
-    } else if (isIntel && gpu.arch && gpu.arch.includes('Battlemage')) {
-      hwBonus = 12; // Intel XMX Matrix Engines
-    } else {
-      // Polaris RX 580 or older architectures with NO matrix accelerators
-      hwBonus = 0;
-    }
-
-    // High throughput on 8B models (Llama 3 8B, Gemma 2, Mistral 7B)
-    const speed8 = Math.min(42, (tok8 / 110) * 42);
-    // Throughput on 14B models (offloads on 8GB, fast on 12GB+)
-    const speed14 = Math.min(26, (tok14 / 65) * 26);
-    // VRAM headroom for KV cache and context window
-    const vramTier = vram >= 16 ? 12 : (vram >= 12 ? 8 : (vram >= 10 ? 4 : (vram >= 8 ? 1 : -10)));
-
-    return Math.min(100, Math.max(10, Math.round(hwBonus + speed8 + speed14 + vramTier)));
-  };
-
-  const bScoreAI = getAIInferenceScore(baseGpu);
-  const cScoreAI = getAIInferenceScore(candGpu);
-
+  // AI Training & Simulation scaled against #1 in catalog (RTX 5090 = ~28,000 pts)
   const bTrainRaw = getEffectiveEngineeringScore(baseGpu);
   const cTrainRaw = getEffectiveEngineeringScore(candGpu);
-  const bScoreTrain = Math.min(100, Math.max(15, Math.round((bTrainRaw / 5200) * 100)));
-  const cScoreTrain = Math.min(100, Math.max(15, Math.round((cTrainRaw / 5200) * 100)));
+  const bScoreTrain = Math.min(100, Math.max(5, Math.round((bTrainRaw / extremes.maxSoft) * 100)));
+  const cScoreTrain = Math.min(100, Math.max(5, Math.round((cTrainRaw / extremes.maxSoft) * 100)));
 
-  const bScoreEff = Math.min(100, Math.max(20, Math.round(((bEffGaming / Math.max(120, baseGpu.tdp_w)) / 18) * 100)));
-  const cScoreEff = Math.min(100, Math.max(20, Math.round(((cEffGaming / Math.max(120, candGpu.tdp_w)) / 18) * 100)));
+  // Eficiência Energética (FPS / Watt)
+  const maxEff = Math.max(...DB.gpus.map(g => (g.gaming_score || 1000) / Math.max(120, g.tdp_w || 150)));
+  const bScoreEff = Math.min(100, Math.max(15, Math.round(((bRawGame / Math.max(120, baseGpu.tdp_w)) / maxEff) * 100)));
+  const cScoreEff = Math.min(100, Math.max(15, Math.round(((cRawGame / Math.max(120, candGpu.tdp_w)) / maxEff) * 100)));
 
+  // Custo-Benefício do Modelo (0 a 100)
   const bScoreCB = Math.min(100, Math.max(15, baseGpu._myCBScore || 70));
   const cScoreCB = Math.min(100, Math.max(15, candGpu._myCBScore || 70));
 
-  const bOverallPerf = Math.round(0.40 * bScoreGame + 0.25 * bScoreAI + 0.20 * bScoreTrain + 0.15 * bScoreTech);
-  const cOverallPerf = Math.round(0.40 * cScoreGame + 0.25 * cScoreAI + 0.20 * cScoreTrain + 0.15 * cScoreTech);
+  // Desempenho Geral directly derived from getContextualCompositeScore (Strictly reflects user's wGaming/wAI/wSoft sliders - Argon Item 2)
+  const bOverallPerf = Math.min(100, Math.max(5, Math.round((getContextualCompositeScore(baseGpu) / extremes.maxComp) * 100)));
+  const cOverallPerf = Math.min(100, Math.max(5, Math.round((getContextualCompositeScore(candGpu) / extremes.maxComp) * 100)));
 
   const bAvgRadar = Math.round((bScoreGame + bScoreTech + bScoreAI + bScoreTrain + bScoreEff + bScoreCB) / 6);
   const cAvgRadar = Math.round((cScoreGame + cScoreTech + cScoreAI + cScoreTrain + cScoreEff + cScoreCB) / 6);
@@ -792,15 +1230,19 @@ function renderDuelAnalysis() {
   // Render Comparative Bars in Duel Block
   const versusBarsEl = document.getElementById('duel-versus-bars');
   if (versusBarsEl) {
+    const rawGamingGainPct = bRawGame > 0 ? (((cRawGame / bRawGame) - 1) * 100) : 0;
     versusBarsEl.innerHTML = [
       renderComparisonBarHTML({
-        title: 'Desempenho em Jogos (FPS Efetivo)',
+        title: 'Desempenho em Jogos (Raster / Benchmark)',
         iconSvg: SPEEDOMETER_SVG,
-        baseVal: bEffGaming,
-        candVal: cEffGaming,
-        baseLabel: `${bEffGaming} pts`,
-        candLabel: `${cEffGaming} pts`,
-        diffPct: rel.gamingGainPct
+        baseVal: bRawGame,
+        candVal: cRawGame,
+        baseLabel: `${bRawGame} pts`,
+        candLabel: `${cRawGame} pts`,
+        diffPct: rawGamingGainPct,
+        maxVal: extremes.maxGaming,
+        baseName: baseGpu.name,
+        candName: candGpu.name
       }),
       renderComparisonBarHTML({
         title: 'Inferência de IA (LLMs Locais / tok/s 14B)',
@@ -809,7 +1251,10 @@ function renderDuelAnalysis() {
         candVal: candGpu.llm_14b_tok_s || 5,
         baseLabel: `${baseGpu.llm_14b_tok_s || 5} tok/s`,
         candLabel: `${candGpu.llm_14b_tok_s || 5} tok/s`,
-        diffPct: rel.aiGainPct
+        diffPct: rel.aiGainPct,
+        maxVal: extremes.max14bToks,
+        baseName: baseGpu.name,
+        candName: candGpu.name
       }),
       renderComparisonBarHTML({
         title: 'AI Training & Engenharia',
@@ -818,7 +1263,10 @@ function renderDuelAnalysis() {
         candVal: cTrainRaw,
         baseLabel: `${bTrainRaw} pts`,
         candLabel: `${cTrainRaw} pts`,
-        diffPct: rel.softGainPct
+        diffPct: rel.softGainPct,
+        maxVal: extremes.maxSoft,
+        baseName: baseGpu.name,
+        candName: candGpu.name
       }),
       renderComparisonBarHTML({
         title: 'Investimento / Preço Hoje',
@@ -828,7 +1276,10 @@ function renderDuelAnalysis() {
         baseLabel: fmtBRLShort(basePrice),
         candLabel: fmtBRLShort(candPrice),
         diffPct: ((candPrice / Math.max(1, basePrice)) - 1) * 100,
-        isPrice: true
+        isPrice: true,
+        maxVal: extremes.maxPrice,
+        baseName: baseGpu.name,
+        candName: candGpu.name
       }),
       renderComparisonBarHTML({
         title: 'Índice de Custo-Benefício',
@@ -837,7 +1288,10 @@ function renderDuelAnalysis() {
         candVal: cScoreCB,
         baseLabel: `${bScoreCB}/100`,
         candLabel: `${cScoreCB}/100`,
-        diffPct: ((cScoreCB / Math.max(1, bScoreCB)) - 1) * 100
+        diffPct: ((cScoreCB / Math.max(1, bScoreCB)) - 1) * 100,
+        maxVal: 100,
+        baseName: baseGpu.name,
+        candName: candGpu.name
       })
     ].join('');
   }
@@ -848,36 +1302,69 @@ function renderDuelAnalysis() {
     const radarCtx = radarCanvas.getContext('2d');
     if (chartDuelRadar) chartDuelRadar.destroy();
 
+    const radarDataB = [bScoreGame, bScoreTech, bScoreAI, bScoreTrain, bScoreEff, bScoreCB];
+    const radarDataC = [cScoreGame, cScoreTech, cScoreAI, cScoreTrain, cScoreEff, cScoreCB];
+    const bAvgRadar = Math.round((bScoreGame + bScoreTech + bScoreAI + bScoreTrain + bScoreEff + bScoreCB) / 6);
+    const cAvgRadar = Math.round((cScoreGame + cScoreTech + cScoreAI + cScoreTrain + cScoreEff + cScoreCB) / 6);
+
+    const topGpu = (DB.gpus || []).find(g => (g.slug || '').includes('5090')) || (DB.gpus || []).find(g => (g.slug || '').includes('4090')) || null;
+    let topScoreEff = 50;
+    let topScoreCB = 26;
+    if (topGpu) {
+      topScoreEff = Math.min(100, Math.max(15, Math.round((((topGpu.gaming_score || 14411) / Math.max(120, topGpu.tdp_w || 575)) / maxEff) * 100)));
+      topScoreCB = Math.min(100, Math.max(15, topGpu._myCBScore || 26));
+    }
+
+    const datasets = [
+      {
+        label: `${baseGpu.name} (${bAvgRadar}/100)`,
+        data: radarDataB,
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.22)',
+        pointBackgroundColor: '#10b981',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: '#10b981',
+        borderWidth: 2,
+        pointRadius: 3
+      },
+      {
+        label: `${candGpu.name} (${cAvgRadar}/100)`,
+        data: radarDataC,
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56, 189, 248, 0.25)',
+        pointBackgroundColor: '#38bdf8',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: '#38bdf8',
+        borderWidth: 2,
+        pointRadius: 3
+      }
+    ];
+
+    if (isAbs && topGpu) {
+      const topData = [100, 100, 100, 100, topScoreEff, topScoreCB];
+      const topAvg = Math.round((100 + 100 + 100 + 100 + topScoreEff + topScoreCB) / 6);
+      datasets.push({
+        label: `${topGpu.name} (Topo 100 Absoluto Ref - ${topAvg}/100)`,
+        data: topData,
+        borderColor: '#a855f7',
+        borderDash: [5, 4],
+        backgroundColor: 'rgba(168, 85, 247, 0.08)',
+        pointBackgroundColor: '#a855f7',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: '#a855f7',
+        borderWidth: 2,
+        pointRadius: 3
+      });
+    }
+
     chartDuelRadar = new Chart(radarCtx, {
       type: 'radar',
       data: {
         labels: ['Jogos (FPS)', 'Ray Tracing / Tech', 'Inferência IA', 'Treinamento & Redes', 'Eficiência (W)', 'Custo-Benefício'],
-        datasets: [
-          {
-            label: baseGpu.name,
-            data: [bScoreGame, bScoreTech, bScoreAI, bScoreTrain, bScoreEff, bScoreCB],
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.22)',
-            pointBackgroundColor: '#10b981',
-            pointBorderColor: '#ffffff',
-            pointHoverBackgroundColor: '#ffffff',
-            pointHoverBorderColor: '#10b981',
-            borderWidth: 2,
-            pointRadius: 3
-          },
-          {
-            label: candGpu.name,
-            data: [cScoreGame, cScoreTech, cScoreAI, cScoreTrain, cScoreEff, cScoreCB],
-            borderColor: '#38bdf8',
-            backgroundColor: 'rgba(56, 189, 248, 0.25)',
-            pointBackgroundColor: '#38bdf8',
-            pointBorderColor: '#ffffff',
-            pointHoverBackgroundColor: '#ffffff',
-            pointHoverBorderColor: '#38bdf8',
-            borderWidth: 2,
-            pointRadius: 3
-          }
-        ]
+        datasets
       },
       options: {
         responsive: true,
@@ -910,6 +1397,14 @@ function renderDuelAnalysis() {
 
     const radarLegendEl = document.getElementById('duel-radar-legend');
     if (radarLegendEl) {
+      const topLegend = (isAbs && topGpu) ? `
+        <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-2">
+          <span class="w-3 h-3 rounded-full bg-purple-400 inline-block shadow-sm"></span>
+          <span class="text-purple-300 font-bold">${topGpu.name}</span>
+          <span class="text-slate-400 text-[10px]">(Topo 100 Ref)</span>
+        </div>
+      ` : '';
+
       radarLegendEl.innerHTML = `
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded-full bg-emerald-400 inline-block shadow-sm"></span>
@@ -921,6 +1416,7 @@ function renderDuelAnalysis() {
           <span class="text-white font-bold">${candGpu.name}</span>
           <span class="text-slate-400">(${cAvgRadar}/100)</span>
         </div>
+        ${topLegend}
       `;
     }
   }
@@ -959,10 +1455,11 @@ function renderDuelAnalysis() {
     </div>
   `;
 
-  // Update Thermometer Labels & Marker Position
-  document.getElementById('zone-lbl-1').textContent = `Até +${fmtBRLShort(rel.stealDelta)} (${candGpu.name} ≤ ${fmtBRLShort(basePrice + rel.stealDelta)})`;
-  document.getElementById('zone-lbl-2').textContent = `Até +${fmtBRLShort(rel.fairMaxDelta)} (${candGpu.name} ≤ ${fmtBRLShort(basePrice + rel.fairMaxDelta)})`;
-  document.getElementById('zone-lbl-3').textContent = `Até +${fmtBRLShort(rel.stretchMaxDelta)} (${candGpu.name} ≤ ${fmtBRLShort(basePrice + rel.stretchMaxDelta)})`;
+  // Update Thermometer Labels & Marker Position (Reflects true shelf price ceiling accounting for forced PSU upgrade)
+  const stretchShelfPrice = Math.max(0, basePrice + rel.stretchMaxDelta - ((candGpu._psuUpgradeCost || 0) - (baseGpu._psuUpgradeCost || 0)));
+  document.getElementById('zone-lbl-1').textContent = `Até +${fmtBRLShort(rel.stealDelta)} (${candGpu.name} ≤ ${fmtBRLShort(rel.stealCandPrice)})`;
+  document.getElementById('zone-lbl-2').textContent = `Até +${fmtBRLShort(rel.fairMaxDelta)} (${candGpu.name} ≤ ${fmtBRLShort(rel.fairMaxCandPrice)})`;
+  document.getElementById('zone-lbl-3').textContent = `Até +${fmtBRLShort(rel.stretchMaxDelta)} (${candGpu.name} ≤ ${fmtBRLShort(stretchShelfPrice)})`;
   document.getElementById('zone-lbl-4').textContent = `Acima de +${fmtBRLShort(rel.stretchMaxDelta)} (Não Compensa)`;
 
   document.getElementById('duel-thermometer-subtitle').textContent =
@@ -1219,13 +1716,35 @@ function applyCBColVisibility() {
 function renderCBTable() {
   enrichGPUsWithContextualMetrics();
   applyCBColVisibility();
+  syncComparisonScaleControls();
   const search = (document.getElementById('cb-search').value || '').toLowerCase().trim();
   const brand = document.getElementById('cb-filter-brand').value;
   const minVram = parseInt(document.getElementById('cb-filter-vram').value) || 0;
   STATE.cbRelBaseSlug = document.getElementById('cb-filter-base-rel').value || 'rtx-5060';
 
   const baseGpu = DB.gpus.find(g => g.slug === STATE.cbRelBaseSlug) || DB.gpus[0];
-  document.getElementById('th-rel-verdict').textContent = `Relação vs ${baseGpu.name}`;
+  const isAbs = STATE.comparisonScaleMode === 'absolute';
+  const extremes = getCatalogExtremes();
+
+  const thVerdict = document.getElementById('th-rel-verdict');
+  if (thVerdict) {
+    thVerdict.textContent = isAbs ? 'Escala Absoluta (vs Topo)' : `Relação vs ${baseGpu.name}`;
+  }
+
+  // Pre-calculate catalog-wide max relative deltas so no card caps out early in relative mode
+  const basePrice = (baseGpu && baseGpu.price_brl) ? baseGpu.price_brl : 2000;
+  const baseComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(baseGpu) : (baseGpu.gaming_score || 1000);
+  let maxRelPerf = 100;
+  let maxRelPrice = 1000;
+  DB.gpus.forEach(og => {
+    const ogComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(og) : (og.gaming_score || 1000);
+    const pGain = ((ogComp / Math.max(1, baseComp)) - 1) * 100;
+    if (pGain > maxRelPerf) maxRelPerf = pGain;
+    const pDelta = og.price_brl - basePrice;
+    if (pDelta > maxRelPrice) maxRelPrice = pDelta;
+  });
+  maxRelPerf = Math.max(120, maxRelPerf * 1.05);
+  maxRelPrice = Math.max(1500, maxRelPrice * 1.05);
 
   let rows = DB.gpus.filter(g => {
     if (search && !g.name.toLowerCase().includes(search) && !g.slug.toLowerCase().includes(search)) return false;
@@ -1249,12 +1768,11 @@ function renderCBTable() {
     return STATE.cbSortAsc ? (va - vb) : (vb - va);
   });
 
-  const basePrice = (baseGpu && baseGpu.price_brl) ? baseGpu.price_brl : 2000;
   const cols = STATE.cbColumns || { target: true, trend: false, hb_cb: false, rel_verdict: true, actions: true };
   const tbody = document.getElementById('cb-table-body');
   tbody.innerHTML = rows.map((g, idx) => {
     const rel = g.slug === baseGpu.slug
-      ? { label: 'PLACA BASE', color: 'slate', actualDelta: 0, perfGainPct: 0, fairMaxDelta: 0 }
+      ? { label: 'PLACA BASE', color: 'slate', actualDelta: 0, perfGainPct: 0, fairMaxDelta: 0, tier: 'base' }
       : evaluateRelationalUpgrade(baseGpu, g, baseGpu.price_brl, g.price_brl);
 
     const diffCB = g._myCBScore - (g.hb_cb_score || 0);
@@ -1275,10 +1793,120 @@ function renderCBTable() {
     </span>`;
 
     const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-[10px]">✨ ${getGpuTechProfile(g).badge}</span>` : '';
-    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px]" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs HB (${g._flashPromo.age_hours}h)</span>` : '';
+    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px]" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
     const couponBadge = g.coupon
       ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[10px] hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
       : '';
+
+    const gComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(g) : (g.gaming_score || 1000);
+
+    let verdictCellHTML = '';
+    if (isAbs) {
+      // 1. MODO ABSOLUTO: 100% = Topo do Catálogo (RTX 5090)
+      const absPerfPct = Math.min(100, Math.max(3, (gComp / extremes.maxComp) * 100));
+      const absPricePct = Math.min(100, Math.max(3, (g.price_brl / extremes.maxPrice) * 100));
+      const isBaseCard = g.slug === baseGpu.slug;
+
+      verdictCellHTML = `
+        <div class="space-y-1.5 w-56 ml-auto font-mono text-right">
+          <div class="flex items-center justify-between gap-1 text-[10px]">
+            <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${isBaseCard ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : (badgeMap[rel.color] || 'bg-slate-800 text-slate-300')}">
+              ${isBaseCard ? 'PLACA BASE' : (rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA')))}
+            </span>
+            <span class="text-[9px] text-slate-400 font-mono">Topo: ${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'}</span>
+          </div>
+
+          <!-- Bar 1: Desempenho Absoluto (vs Topo) -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-sky-400 shrink-0" title="Desempenho Absoluto">${SPEEDOMETER_SVG}</span>
+            <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho Absoluto: ${absPerfPct.toFixed(0)}% do Topo (${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'})">
+              <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300" style="width: ${absPerfPct.toFixed(1)}%;"></div>
+            </div>
+            <span class="text-[9px] font-mono text-slate-400 w-7 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
+          </div>
+
+          <!-- Bar 2: Preço Absoluto (vs Teto) -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Preço Absoluto">${MONEY_SVG}</span>
+            <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${absPricePct.toFixed(0)}% do Teto (${fmtBRLShort(extremes.maxPrice)})">
+              <div class="h-full rounded-full ${absPricePct < 25 ? 'bg-emerald-400' : (absPricePct < 50 ? 'bg-sky-400' : (absPricePct < 75 ? 'bg-amber-400' : 'bg-rose-400'))} transition-all duration-300" style="width: ${absPricePct.toFixed(1)}%;"></div>
+            </div>
+            <span class="text-[9px] font-mono text-slate-400 w-7 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
+          </div>
+
+          <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+            <span class="font-bold ${isBaseCard ? 'text-emerald-400' : (rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400')}">
+              ${isBaseCard ? '100% Base' : `${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% vs Base`}
+            </span>
+            <span class="font-bold ${absPricePct < 30 ? 'text-emerald-300' : 'text-slate-300'}">
+              ${isBaseCard ? fmtBRLShort(g.price_brl) : `${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}`}
+            </span>
+          </div>
+        </div>
+      `;
+    } else {
+      // 2. MODO RELATIVO: Referência na placa base (50% no centro, nunca corta cedo)
+      if (g.slug === baseGpu.slug) {
+        verdictCellHTML = `
+          <div class="flex flex-col items-end gap-1 font-mono">
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold">100% BASE</span>
+            <span class="text-[10px] text-slate-500">Referência</span>
+          </div>
+        `;
+      } else {
+        let perfWidth = 50;
+        if (rel.perfGainPct >= 0) {
+          perfWidth = 50 + Math.min(50, (rel.perfGainPct / maxRelPerf) * 50);
+        } else {
+          perfWidth = Math.max(5, 50 - (Math.abs(rel.perfGainPct) / 100) * 45);
+        }
+
+        let priceWidth = 50;
+        if (rel.actualDelta >= 0) {
+          priceWidth = 50 + Math.min(50, (rel.actualDelta / maxRelPrice) * 50);
+        } else {
+          priceWidth = Math.max(5, 50 - (Math.abs(rel.actualDelta) / Math.max(1, basePrice)) * 45);
+        }
+
+        verdictCellHTML = `
+          <div class="space-y-1.5 w-56 ml-auto font-mono text-right">
+            <div class="flex items-center justify-between gap-1 text-[10px]">
+              <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">
+                ${rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA'))}
+              </span>
+              <span class="text-[9px] text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
+            </div>
+
+            <!-- Bar 1: Desempenho Relativo -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-sky-400 shrink-0" title="Desempenho Relativo">${SPEEDOMETER_SVG}</span>
+              <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho: ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% vs ${baseGpu.name}">
+                <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Base"></div>
+                <div class="h-full rounded-full ${rel.perfGainPct >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'} transition-all duration-300" style="width: ${perfWidth.toFixed(1)}%;"></div>
+              </div>
+            </div>
+
+            <!-- Bar 2: Preço Relativo -->
+            <div class="flex items-center gap-1.5">
+              <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Diferença de Preço">${MONEY_SVG}</span>
+              <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)} vs ${baseGpu.name}">
+                <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="Preço Base"></div>
+                <div class="h-full rounded-full ${rel.actualDelta <= 0 ? 'bg-gradient-to-r from-emerald-500 to-emerald-300' : (rel.actualDelta <= rel.fairMaxDelta ? 'bg-sky-400' : 'bg-amber-400')} transition-all duration-300" style="width: ${priceWidth.toFixed(1)}%;"></div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+              <span class="font-bold ${rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400'}">
+                ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf
+              </span>
+              <span class="font-bold ${rel.actualDelta <= rel.fairMaxDelta ? 'text-emerald-300' : 'text-amber-300'}">
+                ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}
+              </span>
+            </div>
+          </div>
+        `;
+      }
+    }
 
     return `
       <tr class="hover:bg-slate-800/50 transition">
@@ -1295,7 +1923,7 @@ function renderCBTable() {
         </td>
         <td class="py-3 px-3 text-right font-mono">
           <span class="font-bold ${g._flashPromo ? 'text-emerald-400' : 'text-white'} text-sm block">${fmtBRL(g.price_brl)}</span>
-          ${g._flashPromo ? `<span class="text-[10px] text-slate-500 line-through block">HB: ${fmtBRLShort(g._hbPrice)}</span>` : ''}
+          ${g._flashPromo ? `<span class="text-[10px] text-slate-500 line-through block">Base: ${fmtBRLShort(g._hbPrice)}</span>` : ''}
           <a href="${g.offer_url}" target="_blank" class="text-[10px] text-sky-400 hover:underline">${g.store_name} ↗</a>
         </td>
         <td class="py-3 px-3 text-right font-mono ${cols.target ? '' : 'hidden'}">
@@ -1316,50 +1944,7 @@ function renderCBTable() {
           ${g.hb_cb_score || '--'}/100
         </td>
         <td class="py-3 px-3 text-right font-mono ${cols.rel_verdict ? '' : 'hidden'}">
-          ${g.slug === baseGpu.slug ? `
-            <div class="flex flex-col items-end gap-1 font-mono">
-              <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold">100% BASE</span>
-              <span class="text-[10px] text-slate-500">Referência</span>
-            </div>
-          ` : `
-            <div class="space-y-1.5 w-52 ml-auto font-mono text-right">
-              <!-- Top Row: Compact Badge + Small Justo Limit (No Overlap) -->
-              <div class="flex items-center justify-between gap-1 text-[10px]">
-                <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">
-                  ${rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'VALE A PENA') : (rel.tier === 'stretch' ? 'ÁGIO ALTO' : 'NÃO COMPENSA'))}
-                </span>
-                <span class="text-[9px] text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
-              </div>
-
-              <!-- Bar 1: Desempenho (Speedometer Icon Beside Bar) -->
-              <div class="flex items-center gap-1.5">
-                <span class="text-sky-400 shrink-0" title="Desempenho Relativo">${SPEEDOMETER_SVG}</span>
-                <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho: ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}%">
-                  <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-                  <div class="h-full rounded-full ${rel.perfGainPct >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${rel.perfGainPct >= 0 ? Math.min(100, 50 + Math.min(50, rel.perfGainPct * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + rel.perfGainPct / 100)).toFixed(1)}%;"></div>
-                </div>
-              </div>
-
-              <!-- Bar 2: Preço / Investimento (Money Icon Beside Bar) -->
-              <div class="flex items-center gap-1.5">
-                <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Diferença de Preço">${MONEY_SVG}</span>
-                <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}">
-                  <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-                  <div class="h-full rounded-full ${rel.actualDelta <= 0 ? 'bg-gradient-to-r from-emerald-500 to-emerald-300' : (rel.actualDelta <= rel.fairMaxDelta ? 'bg-sky-400' : 'bg-amber-400')}" style="width: ${rel.actualDelta <= 0 ? Math.max(15, 50 - Math.min(45, (Math.abs(rel.actualDelta) / Math.max(1, basePrice)) * 50)).toFixed(1) : Math.min(100, 50 + Math.min(50, (rel.actualDelta / Math.max(1, basePrice)) * 50)).toFixed(1)}%;"></div>
-                </div>
-              </div>
-
-              <!-- Bottom Row: Deltas Under Both Bars -->
-              <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
-                <span class="font-bold ${rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400'}">
-                  ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf
-                </span>
-                <span class="font-bold ${rel.actualDelta <= rel.fairMaxDelta ? 'text-emerald-300' : 'text-amber-300'}">
-                  ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}
-                </span>
-              </div>
-            </div>
-          `}
+          ${verdictCellHTML}
         </td>
         <td class="py-3 px-3 text-center ${cols.actions ? '' : 'hidden'}">
           <div class="flex items-center justify-center gap-1">
@@ -1462,85 +2047,133 @@ function selectGPUForBuild(slug) {
   switchTab('builder');
 }
 
-async function detectMyLocalPC(applyToBuild = true) {
-  const banner = document.getElementById('detected-pc-summary');
+async function detectMyLocalPC(applyToRef = false) {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   if (isStatic) {
-    if (banner) banner.textContent = 'Modo Nuvem GitHub: Edite os componentes da sua máquina nos seletores abaixo ou use presets.';
+    if (typeof showToast === 'function') showToast('Modo Nuvem GitHub: Edite e personalize os componentes da sua máquina nos seletores.');
     return;
   }
-  banner.textContent = 'Consultando hardware local via API Windows (CIM/WMI)...';
+  const banner = document.getElementById(applyToRef ? 'cfg-ref-parts-container' : 'detected-pc-summary');
+  const summaryEl = document.getElementById('detected-pc-summary');
+  if (summaryEl) summaryEl.textContent = 'Consultando hardware local via API Windows (CIM/WMI)...';
+
   try {
     const res = await fetch('/api/my-pc');
     const info = await res.json();
     if (info && info.cpu_name) {
-      const isLaptop = /H|U|P|Mobile|Iris/i.test(info.cpu_name + ' ' + (info.gpu_name || ''));
-      banner.innerHTML = `
-        <strong>CPU Local:</strong> ${info.cpu_name} (${info.cpu_cores}C/${info.cpu_threads}T) •
-        <strong>Placa-Mãe:</strong> ${info.mobo_vendor} ${info.mobo_model} •
-        <strong>RAM:</strong> ${info.ram_gb} GB (${info.ram_speed} MT/s) •
-        <strong>GPU:</strong> ${info.gpu_name}
-        ${isLaptop && !applyToBuild ? '<span class="ml-2 px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px]">Notebook detectado — mantendo preset Xeon E5-2680 v4 na Build</span>' : ''}
-      `;
-      if (applyToBuild || !isLaptop) {
-        const isXeon = /xeon/i.test(info.cpu_name);
-        const ramType = (info.ram_speed || 2400) >= 4400 ? 'DDR5' : 'DDR4';
-        STATE.build.cpu = {
-          slug: isXeon ? 'xeon-e5-2680-v4' : STATE.build.cpu.slug,
+      if (summaryEl) {
+        summaryEl.innerHTML = `
+          <strong>Processador Detectado:</strong> ${info.cpu_name} (${info.cpu_cores}C/${info.cpu_threads}T) •
+          <strong>Placa-Mãe:</strong> ${info.mobo_vendor} ${info.mobo_model} •
+          <strong>Memória RAM:</strong> ${info.ram_gb} GB (${info.ram_speed} MT/s) •
+          <strong>GPU Detectada:</strong> ${info.gpu_name}
+        `;
+      }
+
+      const ramType = (info.ram_speed || 2400) >= 4400 ? 'DDR5' : 'DDR4';
+      const matchedCpu = (DB.cpus || []).find(c => c.name && info.cpu_name && (info.cpu_name.toLowerCase().includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(info.cpu_name.toLowerCase())));
+      const matchedGpu = (DB.gpus || []).find(g => g.name && info.gpu_name && (info.gpu_name.toLowerCase().includes(g.name.toLowerCase()) || g.name.toLowerCase().includes(info.gpu_name.toLowerCase())));
+
+      const detectedObj = {
+        cpu: {
+          slug: matchedCpu ? matchedCpu.slug : 'detected-cpu',
           name: `${info.cpu_name} (${info.cpu_cores}C/${info.cpu_threads}T)`,
-          tdp: isXeon ? 120 : 95,
-          price: 150,
+          tdp: matchedCpu ? matchedCpu.tdp_w : 95,
+          price: matchedCpu ? matchedCpu.price_brl : 450,
           owned: true,
-          benchmark: isXeon ? 2150 : 6500,
-          socket: isXeon ? 'LGA2011-3' : STATE.build.cpu.socket
-        };
-        STATE.build.mobo = {
-          slug: 'x99-p4-lga2011',
+          benchmark: matchedCpu ? matchedCpu.benchmark : (info.cpu_cores >= 8 ? 6000 : 3500),
+          socket: matchedCpu ? matchedCpu.socket : 'Detectado'
+        },
+        mobo: {
+          slug: 'detected-mobo',
           name: `${info.mobo_vendor} ${info.mobo_model}`,
-          tdp: 40,
-          price: 280,
+          tdp: 35,
+          price: 350,
           owned: true,
-          socket: isXeon ? 'LGA2011-3' : STATE.build.mobo.socket,
+          socket: matchedCpu ? matchedCpu.socket : 'Detectado',
           memory_type: ramType
-        };
-        STATE.build.ram = {
-          slug: 'ddr4-16gb-2400',
-          name: `${info.ram_gb} GB ${ramType} ${info.ram_speed || 2400} MT/s`,
+        },
+        ram: {
+          slug: `detected-${info.ram_gb}gb`,
+          name: `${info.ram_gb} GB ${ramType} ${info.ram_speed || 3200} MT/s`,
           tdp: 10,
-          price: 210,
+          price: 240,
           owned: true,
           capacity_gb: info.ram_gb || 16,
           memory_type: ramType
-        };
+        },
+        gpu: matchedGpu ? {
+          slug: matchedGpu.slug,
+          name: matchedGpu.name,
+          tdp: matchedGpu.tdp_w,
+          price: matchedGpu.price_brl,
+          owned: true
+        } : {
+          slug: 'detected-gpu',
+          name: info.gpu_name || 'GPU Integrada',
+          tdp: 75,
+          price: 0,
+          owned: true
+        }
+      };
+
+      if (applyToRef === true) {
+        STATE.refPC.cpu = detectedObj.cpu;
+        STATE.refPC.mobo = detectedObj.mobo;
+        STATE.refPC.ram = detectedObj.ram;
+        STATE.refPC.gpu = detectedObj.gpu;
+        saveUserRefPrefs();
+        renderConfigTab();
+        if (typeof showToast === 'function') showToast('Hardware local aplicado ao seu PC de Referência!');
+      } else if (applyToRef === false) {
+        STATE.build.cpu = detectedObj.cpu;
+        STATE.build.mobo = detectedObj.mobo;
+        STATE.build.ram = detectedObj.ram;
+        STATE.build.gpu = detectedObj.gpu;
+        saveUserBuildPrefs();
         renderPCBuilder();
+        if (typeof showToast === 'function') showToast('Hardware local copiado para Objetivo de Compra!');
       }
+      // if applyToRef === null, only the banner summary is updated without mutating stored setup
     }
   } catch (e) {
-    banner.textContent = 'Não foi possível consultar automaticamente; edite os campos manualmente abaixo.';
+    if (summaryEl) summaryEl.textContent = 'Não foi possível consultar automaticamente; edite os campos manualmente abaixo.';
   }
 }
 
 function renderPCBuilder() {
   const container = document.getElementById('builder-parts-container');
+  const db = window.DB || DB;
+  if (!container || !db || !db.gpus || db.gpus.length === 0) return;
 
-  const gpuOptions = DB.gpus.map(g =>
-    `<option value="${g.slug}" ${STATE.build.gpu.slug === g.slug ? 'selected' : ''}>${g.name} (${g.vram_gb}GB) — ${fmtBRL(g.price_brl)} [${g.tdp_w}W]</option>`
+  const curGpu = STATE.build.gpu || {};
+  const curCpu = STATE.build.cpu || {};
+  const curMobo = STATE.build.mobo || {};
+  const curRam = STATE.build.ram || {};
+  const curPsu = STATE.build.psu || {};
+  const curStorage = STATE.build.storage || {};
+  const curCooling = STATE.build.cooling || {};
+
+  const { filteredMobos, targetRamType, filteredRams } = getFilteredMoboAndRamOptions(curCpu.slug, curMobo.slug, curRam.slug);
+
+  const gpuOptions = `<option value="" ${!curGpu.slug ? 'selected' : ''}>-- (Nenhum / Sem GPU Dedicada) --</option>` + (db.gpus || []).map(g =>
+    `<option value="${g.slug}" ${curGpu.slug === g.slug ? 'selected' : ''}>${g.name} (${g.vram_gb}GB) — ${fmtBRL(g.price_brl)} [${g.tdp_w}W]</option>`
   ).join('');
 
-  const cpuOptions = DB.cpus.map(c =>
-    `<option value="${c.slug}" ${STATE.build.cpu.slug === c.slug ? 'selected' : ''}>${c.name} (${c.socket}) — ${fmtBRL(c.price_brl)} [${c.tdp_w}W]</option>`
+  const cpuOptions = `<option value="" ${!curCpu.slug ? 'selected' : ''}>-- (Nenhum / Sem Processador) --</option>` + (db.cpus || []).map(c =>
+    `<option value="${c.slug}" ${curCpu.slug === c.slug ? 'selected' : ''}>${c.name} (${c.socket}) — ${fmtBRL(c.price_brl)} [${c.tdp_w}W]</option>`
   ).join('');
 
-  const moboOptions = DB.motherboards.map(m =>
-    `<option value="${m.slug}" ${STATE.build.mobo.slug === m.slug ? 'selected' : ''}>${m.name} (${m.socket}/${m.memory_type}) — ${fmtBRL(m.price_brl)}</option>`
+  const moboOptions = `<option value="" ${!curMobo.slug ? 'selected' : ''}>-- (Nenhum / Sem Placa-Mãe) --</option>` + filteredMobos.map(m =>
+    `<option value="${m.slug}" ${curMobo.slug === m.slug ? 'selected' : ''}>${m.name} (${m.socket}/${m.memory_type}) — ${fmtBRL(m.price_brl)}</option>`
   ).join('');
 
-  const ramOptions = DB.rams.slice(0, 45).map(r =>
-    `<option value="${r.slug}" ${STATE.build.ram.slug === r.slug ? 'selected' : ''}>${r.name} — ${fmtBRL(r.price_brl)}</option>`
+  const ramOptions = `<option value="" ${!curRam.slug ? 'selected' : ''}>-- (Nenhum / Sem Memória RAM) --</option>` + filteredRams.slice(0, 50).map(r =>
+    `<option value="${r.slug}" ${curRam.slug === r.slug ? 'selected' : ''}>${r.name} — ${fmtBRL(r.price_brl)}</option>`
   ).join('');
 
-  const psuOptions = DB.psus.slice(0, 60).map(p =>
-    `<option value="${p.slug}" ${STATE.build.psu.slug === p.slug ? 'selected' : ''}>${p.name} (${p.watts}W) — ${fmtBRL(p.price_brl)}</option>`
+  const psuOptions = `<option value="" ${!curPsu.slug ? 'selected' : ''}>-- (Nenhum / Sem Fonte) --</option>` + (db.psus || []).slice(0, 60).map(p =>
+    `<option value="${p.slug}" ${curPsu.slug === p.slug ? 'selected' : ''}>${p.name} (${p.watts}W) — ${fmtBRL(p.price_brl)}</option>`
   ).join('');
 
   container.innerHTML = `
@@ -1552,19 +2185,19 @@ function renderPCBuilder() {
       </div>
       <div class="md:col-span-5">
         <select onchange="onBuilderCatalogPick('gpu', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white mb-1">${gpuOptions}</select>
-        <input type="text" value="${STATE.build.gpu.name}" oninput="updateBuildField('gpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" placeholder="Nome customizado da GPU" />
+        <input type="text" value="${curGpu.name || ''}" oninput="updateBuildField('gpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" placeholder="Nome customizado da GPU" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">TDP / Consumo (W)</label>
-        <input type="number" value="${STATE.build.gpu.tdp}" oninput="updateBuildField('gpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
+        <input type="number" value="${curGpu.tdp || 0}" oninput="updateBuildField('gpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
-        <input type="number" value="${STATE.build.gpu.price}" oninput="updateBuildField('gpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
+        <input type="number" value="${curGpu.price || 0}" oninput="updateBuildField('gpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
         <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
-        <input type="checkbox" ${STATE.build.gpu.owned ? 'checked' : ''} onchange="updateBuildField('gpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+        <input type="checkbox" ${curGpu.owned ? 'checked' : ''} onchange="updateBuildField('gpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
 
@@ -1576,19 +2209,19 @@ function renderPCBuilder() {
       </div>
       <div class="md:col-span-5">
         <select onchange="onBuilderCatalogPick('cpu', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white mb-1">${cpuOptions}</select>
-        <input type="text" value="${STATE.build.cpu.name}" oninput="updateBuildField('cpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
+        <input type="text" value="${curCpu.name || ''}" oninput="updateBuildField('cpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">TDP / Consumo (W)</label>
-        <input type="number" value="${STATE.build.cpu.tdp}" oninput="updateBuildField('cpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
+        <input type="number" value="${curCpu.tdp || 0}" oninput="updateBuildField('cpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
-        <input type="number" value="${STATE.build.cpu.price}" oninput="updateBuildField('cpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
+        <input type="number" value="${curCpu.price || 0}" oninput="updateBuildField('cpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
         <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
-        <input type="checkbox" ${STATE.build.cpu.owned ? 'checked' : ''} onchange="updateBuildField('cpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+        <input type="checkbox" ${curCpu.owned ? 'checked' : ''} onchange="updateBuildField('cpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
 
@@ -1600,19 +2233,19 @@ function renderPCBuilder() {
       </div>
       <div class="md:col-span-5">
         <select onchange="onBuilderCatalogPick('mobo', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white mb-1">${moboOptions}</select>
-        <input type="text" value="${STATE.build.mobo.name}" oninput="updateBuildField('mobo', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
+        <input type="text" value="${curMobo.name || ''}" oninput="updateBuildField('mobo', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
-        <input type="number" value="${STATE.build.mobo.tdp}" oninput="updateBuildField('mobo', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
+        <input type="number" value="${curMobo.tdp || 0}" oninput="updateBuildField('mobo', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
-        <input type="number" value="${STATE.build.mobo.price}" oninput="updateBuildField('mobo', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
+        <input type="number" value="${curMobo.price || 0}" oninput="updateBuildField('mobo', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
         <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
-        <input type="checkbox" ${STATE.build.mobo.owned ? 'checked' : ''} onchange="updateBuildField('mobo', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+        <input type="checkbox" ${curMobo.owned ? 'checked' : ''} onchange="updateBuildField('mobo', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
 
@@ -1624,19 +2257,19 @@ function renderPCBuilder() {
       </div>
       <div class="md:col-span-5">
         <select onchange="onBuilderCatalogPick('ram', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white mb-1">${ramOptions}</select>
-        <input type="text" value="${STATE.build.ram.name}" oninput="updateBuildField('ram', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
+        <input type="text" value="${curRam.name || ''}" oninput="updateBuildField('ram', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
-        <input type="number" value="${STATE.build.ram.tdp}" oninput="updateBuildField('ram', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
+        <input type="number" value="${curRam.tdp || 0}" oninput="updateBuildField('ram', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
-        <input type="number" value="${STATE.build.ram.price}" oninput="updateBuildField('ram', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
+        <input type="number" value="${curRam.price || 0}" oninput="updateBuildField('ram', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
         <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
-        <input type="checkbox" ${STATE.build.ram.owned ? 'checked' : ''} onchange="updateBuildField('ram', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+        <input type="checkbox" ${curRam.owned ? 'checked' : ''} onchange="updateBuildField('ram', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
 
@@ -1648,19 +2281,19 @@ function renderPCBuilder() {
       </div>
       <div class="md:col-span-5">
         <select onchange="onBuilderCatalogPick('psu', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white mb-1">${psuOptions}</select>
-        <input type="text" value="${STATE.build.psu.name}" oninput="updateBuildField('psu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
+        <input type="text" value="${curPsu.name || ''}" oninput="updateBuildField('psu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-amber-300 block">Potência Fonte (W)</label>
-        <input type="number" value="${STATE.build.psu.watts}" oninput="updateBuildField('psu', 'watts', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-300" step="50" />
+        <input type="number" value="${curPsu.watts || 0}" oninput="updateBuildField('psu', 'watts', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-300" step="50" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
-        <input type="number" value="${STATE.build.psu.price}" oninput="updateBuildField('psu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
+        <input type="number" value="${curPsu.price || 0}" oninput="updateBuildField('psu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
         <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
-        <input type="checkbox" ${STATE.build.psu.owned ? 'checked' : ''} onchange="updateBuildField('psu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+        <input type="checkbox" ${curPsu.owned ? 'checked' : ''} onchange="updateBuildField('psu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
 
@@ -1671,19 +2304,19 @@ function renderPCBuilder() {
         <span class="text-xs text-slate-300 font-semibold">Restante do Setup</span>
       </div>
       <div class="md:col-span-5">
-        <input type="text" value="${STATE.build.storage.name}" oninput="updateBuildField('storage', 'name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+        <input type="text" value="${curStorage.name || ''}" oninput="updateBuildField('storage', 'name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
-        <input type="number" value="${STATE.build.storage.tdp + STATE.build.cooling.tdp}" oninput="updateBuildField('storage', 'tdp', parseFloat(this.value)||0); STATE.build.cooling.tdp=0;" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
+        <input type="number" value="${(curStorage.tdp || 0) + (curCooling.tdp || 0)}" oninput="updateBuildField('storage', 'tdp', parseFloat(this.value)||0); if (STATE.build.cooling) STATE.build.cooling.tdp=0;" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
         <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
-        <input type="number" value="${STATE.build.storage.price}" oninput="updateBuildField('storage', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
+        <input type="number" value="${curStorage.price || 0}" oninput="updateBuildField('storage', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
         <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
-        <input type="checkbox" ${STATE.build.storage.owned ? 'checked' : ''} onchange="updateBuildField('storage', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+        <input type="checkbox" ${curStorage.owned ? 'checked' : ''} onchange="updateBuildField('storage', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
   `;
@@ -1692,90 +2325,173 @@ function renderPCBuilder() {
 }
 
 function onBuilderCatalogPick(partKey, slug) {
+  if (!STATE.build) STATE.build = {};
+  if (!STATE.build[partKey]) STATE.build[partKey] = {};
+
+  if (!slug) {
+    if (partKey === 'gpu') STATE.build.gpu = { slug: '', name: '', tdp: 0, price: 0, owned: false };
+    else if (partKey === 'cpu') STATE.build.cpu = { slug: '', name: '', tdp: 0, price: 0, owned: false, benchmark: 0, socket: '' };
+    else if (partKey === 'mobo') STATE.build.mobo = { slug: '', name: '', tdp: 0, price: 0, owned: false, socket: '', memory_type: '' };
+    else if (partKey === 'ram') STATE.build.ram = { slug: '', name: '', tdp: 0, price: 0, owned: false, capacity_gb: 0, memory_type: 'DDR4' };
+    else if (partKey === 'psu') STATE.build.psu = { slug: '', name: '', watts: 0, price: 0, owned: false };
+    saveUserBuildPrefs();
+    renderPCBuilder();
+    return;
+  }
+
   if (partKey === 'gpu') {
     const g = DB.gpus.find(x => x.slug === slug);
-    if (g) STATE.build.gpu = { slug: g.slug, name: `${g.name} (${g.vram_gb}GB)`, tdp: g.tdp_w, price: g.price_brl, owned: STATE.build.gpu.owned };
+    if (g) STATE.build.gpu = { slug: g.slug, name: `${g.name} (${g.vram_gb}GB)`, tdp: g.tdp_w, price: g.price_brl, owned: STATE.build.gpu ? STATE.build.gpu.owned : true };
   } else if (partKey === 'cpu') {
     const c = DB.cpus.find(x => x.slug === slug);
     if (c) {
-      STATE.build.cpu = { slug: c.slug, name: c.name, tdp: c.tdp_w, price: c.price_brl, owned: STATE.build.cpu.owned, benchmark: c.benchmark, socket: c.socket };
+      STATE.build.cpu = { slug: c.slug, name: c.name, tdp: c.tdp_w, price: c.price_brl, owned: STATE.build.cpu ? STATE.build.cpu.owned : true, benchmark: c.benchmark, socket: c.socket };
       const simCpuSel = document.getElementById('sim-select-cpu');
       if (simCpuSel) simCpuSel.value = c.slug;
+
+      // Reconcile Mobo if socket changed
+      const cpuSock = (c.socket || '').toUpperCase().trim();
+      const curMoboSock = ((STATE.build.mobo && STATE.build.mobo.socket) || '').toUpperCase().trim();
+      const mobos = DB.motherboards || [];
+      const compatibleMobos = mobos.filter(m => (m.socket || '').toUpperCase().trim() === cpuSock);
+      if (cpuSock && curMoboSock && curMoboSock !== cpuSock && compatibleMobos.length > 0) {
+        const defaultMobo = compatibleMobos[0];
+        STATE.build.mobo = { slug: defaultMobo.slug, name: defaultMobo.name, tdp: defaultMobo.tdp_w || 35, price: defaultMobo.price_brl, owned: false, socket: defaultMobo.socket, memory_type: defaultMobo.memory_type };
+      }
+
+      // Reconcile RAM if memory standard changed (DDR4 vs DDR5)
+      let targetMem = '';
+      if (cpuSock === 'AM4' || cpuSock === 'LGA2011-3') targetMem = 'DDR4';
+      else if (cpuSock === 'AM5' || cpuSock === 'LGA1851') targetMem = 'DDR5';
+      else if (cpuSock === 'LGA1700' && STATE.build.mobo?.memory_type) targetMem = STATE.build.mobo.memory_type.toUpperCase();
+
+      if (targetMem && STATE.build.ram?.memory_type && STATE.build.ram.memory_type.toUpperCase() !== targetMem) {
+        const compatibleRams = (DB.rams || []).filter(r => (r.memory_type || '').toUpperCase() === targetMem);
+        if (compatibleRams.length > 0) {
+          const defaultRam = compatibleRams[0];
+          STATE.build.ram = { slug: defaultRam.slug, name: defaultRam.name, tdp: defaultRam.tdp_w || 10, price: defaultRam.price_brl, owned: false, capacity_gb: defaultRam.capacity_gb || 16, memory_type: defaultRam.memory_type || targetMem };
+        }
+      }
     }
   } else if (partKey === 'mobo') {
     const m = DB.motherboards.find(x => x.slug === slug);
-    if (m) STATE.build.mobo = { slug: m.slug, name: m.name, tdp: m.tdp_w, price: m.price_brl, owned: STATE.build.mobo.owned, socket: m.socket, memory_type: m.memory_type };
+    if (m) {
+      STATE.build.mobo = { slug: m.slug, name: m.name, tdp: m.tdp_w, price: m.price_brl, owned: STATE.build.mobo ? STATE.build.mobo.owned : true, socket: m.socket, memory_type: m.memory_type };
+      if (m.memory_type && STATE.build.ram?.memory_type && STATE.build.ram.memory_type.toUpperCase() !== m.memory_type.toUpperCase()) {
+        const compatibleRams = (DB.rams || []).filter(r => (r.memory_type || '').toUpperCase() === m.memory_type.toUpperCase());
+        if (compatibleRams.length > 0) {
+          const defaultRam = compatibleRams[0];
+          STATE.build.ram = { slug: defaultRam.slug, name: defaultRam.name, tdp: defaultRam.tdp_w || 10, price: defaultRam.price_brl, owned: false, capacity_gb: defaultRam.capacity_gb || 16, memory_type: defaultRam.memory_type || m.memory_type };
+        }
+      }
+    }
   } else if (partKey === 'ram') {
     const r = DB.rams.find(x => x.slug === slug);
-    if (r) STATE.build.ram = { slug: r.slug, name: r.name, tdp: r.tdp_w, price: r.price_brl, owned: STATE.build.ram.owned, capacity_gb: r.capacity_gb, memory_type: r.memory_type };
+    if (r) STATE.build.ram = { slug: r.slug, name: r.name, tdp: r.tdp_w, price: r.price_brl, owned: STATE.build.ram ? STATE.build.ram.owned : true, capacity_gb: r.capacity_gb, memory_type: r.memory_type };
   } else if (partKey === 'psu') {
     const p = DB.psus.find(x => x.slug === slug);
-    if (p) STATE.build.psu = { slug: p.slug, name: p.name, watts: p.watts, price: p.price_brl, owned: STATE.build.psu.owned };
+    if (p) STATE.build.psu = { slug: p.slug, name: p.name, watts: p.watts, price: p.price_brl, owned: STATE.build.psu ? STATE.build.psu.owned : true };
   }
+  saveUserBuildPrefs();
   renderPCBuilder();
 }
 
 function updateBuildField(partKey, field, value) {
+  if (!STATE.build[partKey]) STATE.build[partKey] = {};
   STATE.build[partKey][field] = value;
+  saveUserBuildPrefs();
   updateBuilderPowerAndDiagnostics();
 }
 
 function updateBuilderPowerAndDiagnostics() {
-  const b = STATE.build;
-  const typicalLoad = Math.round((b.gpu.tdp || 0) + (b.cpu.tdp || 0) + (b.mobo.tdp || 0) + (b.ram.tdp || 0) + (b.storage.tdp || 0) + (b.cooling.tdp || 0));
+  const b = STATE.build || {};
+  const gpu = b.gpu || {};
+  const cpu = b.cpu || {};
+  const mobo = b.mobo || {};
+  const ram = b.ram || {};
+  const storage = b.storage || {};
+  const cooling = b.cooling || {};
+  const psu = b.psu || {};
+
+  const typicalLoad = Math.round((gpu.tdp || 0) + (cpu.tdp || 0) + (mobo.tdp || 0) + (ram.tdp || 0) + (storage.tdp || 0) + (cooling.tdp || 0));
   // Modern GPUs have 15-25% transient power spikes; recommended PSU should keep typical load around ~70-75%
   const peakTransient = Math.round(typicalLoad * 1.18);
   const recommendedPSU = Math.ceil((typicalLoad * 1.35) / 50) * 50;
 
-  const psuWatts = b.psu.watts || 500;
+  const psuWatts = psu.watts || 500;
   const loadPct = Math.round((typicalLoad / Math.max(1, psuWatts)) * 100);
 
-  document.getElementById('pwr-typical-val').textContent = `${typicalLoad}W`;
-  document.getElementById('pwr-peak-val').textContent = `${peakTransient}W`;
-  document.getElementById('pwr-rec-val').textContent = `${recommendedPSU}W`;
-  document.getElementById('pwr-psu-watts').textContent = `${psuWatts}W`;
-  document.getElementById('pwr-load-pct').textContent = `${loadPct}%`;
+  const typEl = document.getElementById('pwr-typical-val');
+  const peakEl = document.getElementById('pwr-peak-val');
+  const recEl = document.getElementById('pwr-rec-val');
+  const psuEl = document.getElementById('pwr-psu-watts');
+  const loadEl = document.getElementById('pwr-load-pct');
+
+  if (typEl) typEl.textContent = `${typicalLoad}W`;
+  if (peakEl) peakEl.textContent = `${peakTransient}W`;
+  if (recEl) recEl.textContent = `${recommendedPSU}W`;
+  if (psuEl) psuEl.textContent = `${psuWatts}W`;
+  if (loadEl) loadEl.textContent = `${loadPct}%`;
 
   const bar = document.getElementById('pwr-load-bar');
   const pill = document.getElementById('power-status-pill');
   const advice = document.getElementById('pwr-advice-text');
 
-  bar.style.width = `${Math.min(100, loadPct)}%`;
-  if (psuWatts >= recommendedPSU) {
-    bar.className = 'h-full rounded-full transition-all duration-300 bg-emerald-500';
-    pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-    pill.textContent = '✅ FOLGA SEGURA';
-    advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> opera com <strong>${loadPct}% de carga típica</strong> (${typicalLoad}W), suportando com folga picos transientes de até ${peakTransient}W.`;
-  } else if (psuWatts >= peakTransient) {
-    bar.className = 'h-full rounded-full transition-all duration-300 bg-amber-500';
-    pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
-    pill.textContent = '⚠️ NO LIMITE';
-    advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> aguenta os ${typicalLoad}W, mas fica apertada para picos transientes (${peakTransient}W). Recomendamos uma fonte de <strong>${recommendedPSU}W</strong>.`;
-  } else {
-    bar.className = 'h-full rounded-full transition-all duration-300 bg-rose-600';
-    pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
-    pill.textContent = '🚨 FONTE INSUFICIENTE';
-    advice.innerHTML = `<strong>Perigo de desligamento:</strong> O consumo de pico (${peakTransient}W) supera sua fonte de ${psuWatts}W! Troque por uma fonte de pelo menos <strong>${recommendedPSU}W</strong>.`;
+  if (bar) bar.style.width = `${Math.min(100, loadPct)}%`;
+  if (pill && advice && bar) {
+    if (psuWatts >= recommendedPSU) {
+      bar.className = 'h-full rounded-full transition-all duration-300 bg-emerald-500';
+      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      pill.textContent = '✅ FOLGA SEGURA';
+      advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> opera com <strong>${loadPct}% de carga típica</strong> (${typicalLoad}W), suportando com folga picos transientes de até ${peakTransient}W.`;
+    } else if (psuWatts >= peakTransient) {
+      bar.className = 'h-full rounded-full transition-all duration-300 bg-amber-500';
+      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      pill.textContent = '⚠️ NO LIMITE';
+      advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> aguenta os ${typicalLoad}W, mas fica apertada para picos transientes (${peakTransient}W). Recomendamos uma fonte de <strong>${recommendedPSU}W</strong>.`;
+    } else {
+      bar.className = 'h-full rounded-full transition-all duration-300 bg-rose-600';
+      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      pill.textContent = '🚨 FONTE INSUFICIENTE';
+      advice.innerHTML = `<strong>Perigo de desligamento:</strong> O consumo de pico (${peakTransient}W) supera sua fonte de ${psuWatts}W! Troque por uma fonte de pelo menos <strong>${recommendedPSU}W</strong>.`;
+    }
   }
 
-  // Recommend top 3 PSUs from Hardware Barato that meet recommendedPSU
-  const recPsus = DB.psus
-    .filter(p => p.watts >= recommendedPSU && p.price_brl > 150)
-    .sort((a, b) => a.price_brl - b.price_brl)
-    .slice(0, 3);
+  // Builder Socket & VRM Compatibility Banner
+  const compatEl = document.getElementById('builder-compat-banner');
+  if (compatEl) {
+    const comp = checkCpuMoboCompatibility(cpu, mobo);
+    compatEl.innerHTML = `
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg ${comp.badgeClass}">[${comp.flag}] ${comp.label}</span>
+        <span class="text-xs text-slate-300 leading-snug">${comp.message}</span>
+      </div>
+    `;
+  }
 
-  document.getElementById('pwr-recommended-psus').innerHTML = recPsus.map(p => `
-    <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
-      <div>
-        <span class="font-semibold text-white">${p.name}</span>
-        <span class="text-[10px] font-mono text-amber-300 ml-1">(${p.watts}W)</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <span class="font-mono font-bold text-emerald-400">${fmtBRL(p.price_brl)}</span>
-        <button onclick="onBuilderCatalogPick('psu', '${p.slug}')" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 hover:bg-sky-500 hover:text-slate-950 text-[10px] font-bold cursor-pointer">Usar</button>
-      </div>
-    </div>
-  `).join('');
+  // Recommend top 3 PSUs from Database that meet recommendedPSU
+  if (DB && DB.psus) {
+    const recPsus = DB.psus
+      .filter(p => p.watts >= recommendedPSU && p.price_brl > 150)
+      .sort((a, b) => a.price_brl - b.price_brl)
+      .slice(0, 3);
+
+    const recPsuEl = document.getElementById('pwr-recommended-psus');
+    if (recPsuEl) {
+      recPsuEl.innerHTML = recPsus.map(p => `
+        <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+          <div>
+            <span class="text-xs font-bold text-white block">${p.name}</span>
+            <span class="text-[10px] font-mono text-amber-300">${p.watts}W • ${p.efficiency || '80 Plus Bronze'}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-xs font-mono font-bold text-emerald-400 block">${fmtBRL(p.price_brl)}</span>
+            ${p.offer_url ? `<a href="${p.offer_url}" target="_blank" class="text-[10px] text-sky-400 hover:underline">Ver Oferta ↗</a>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
 
   // Calculate Missing Parts & Budget
   const partsList = [
@@ -1815,23 +2531,32 @@ function updateBuilderPowerAndDiagnostics() {
   document.getElementById('builder-total-to-buy').textContent = fmtBRL(toBuyTotal);
   document.getElementById('builder-owned-summary').textContent = `Valor estimado das peças que já possui: ${fmtBRL(ownedTotal)}`;
 
-  // Compatibility & Bottleneck Diagnostics
+  // Compatibility & Bottleneck Diagnostics (Dynamic, based on user's configured PC)
   const diags = [];
   const gpuObj = DB.gpus.find(g => g.slug === b.gpu.slug) || DB.gpus[0];
-  const cpuBench = b.cpu.benchmark || 2500;
+  const cpuBench = b.cpu.benchmark || 4000;
+  const gpuScore = gpuObj ? (gpuObj.gaming_score || 3000) : 3000;
+  const isHeavyGpu = gpuScore >= 4500;
+  const isMidGpu = gpuScore >= 3200;
 
-  if (b.cpu.slug === 'xeon-e5-2680-v4' && gpuObj && gpuObj.gaming_score >= 3000) {
+  if (cpuBench < 3000 && isMidGpu) {
+    const estLimit = isHeavyGpu ? '20% a 30%' : '10% a 18%';
     diags.push(`
       <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-xs text-amber-200">
-        <strong>⚠️ Alerta de Gargalo em Jogos (1080p):</strong> Seu <strong>Xeon E5-2680 v4</strong> tem 14 núcleos ótimos para multitarefa, mas o clock single-core (2.4–3.3 GHz) e PCIe 3.0 limitam GPUs fortes como a <strong>${gpuObj.name}</strong> em ~22% no 1080p. Em <strong>1440p/4K ou IA Local (LLMs)</strong>, o gargalo cai bastante pois a carga fica na GPU!
+        <strong>⚠️ Análise de Gargalo do Processador (${b.cpu.name || 'CPU Atual'}):</strong>
+        Em resolução 1080p com alta taxa de quadros, este processador pode limitar o potencial máximo da <strong>${gpuObj.name}</strong> em aproximadamente ${estLimit}.
+        Em resoluções mais altas (<strong>1440p / 4K</strong>) ou em tarefas focadas em <strong>IA / Renderização</strong>, a demanda passa a ser quase 100% da GPU, reduzindo o impacto da CPU.
       </div>
     `);
   }
 
-  if ((b.ram.capacity_gb || 16) <= 16 && (STATE.wAI >= 25 || STATE.wSoft >= 20)) {
+  const ramCapacity = b.ram.capacity_gb || 16;
+  if (ramCapacity <= 16 && (STATE.wAI >= 25 || STATE.wSoft >= 20)) {
     diags.push(`
-      <div class="p-3 rounded-xl bg-purple-950/40 border border-purple-500/40 text-xs text-purple-200">
-        <strong>🧠 Alerta Crítico de RAM p/ AI Training, Ethernet & OpenDSS:</strong> Você está com <strong>${b.ram.capacity_gb || 16} GB de RAM</strong>. Como o seu <strong>Xeon E5-2680 v4 (14C/28T)</strong> é excelente para rodar 20+ processos paralelos de <strong>OpenDSS</strong>, captura de <strong>frames Ethernet/PCAP em ring-buffers</strong> e ambientes <strong>AI Training + Inferência Local</strong>, 16 GB vai esgotar rápido. Subir para <strong>32 GB ou 64 GB DDR4 Quad-Channel na sua X99-P4</strong> dará um salto massivo de throughput!
+      <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-xs text-sky-200">
+        <strong>🧠 Avaliação de Capacidade de Memória (${ramCapacity} GB RAM):</strong>
+        Para cargas de <strong>IA Local (LLMs 14B+)</strong>, multitarefa intensa e softwares de engenharia/produtividade, ${ramCapacity} GB podem ficar próximos do limite.
+        Um upgrade para <strong>32 GB ou mais</strong> oferece maior margem para buffers e execução paralela sem recorrer à memória virtual no disco.
       </div>
     `);
   }
@@ -2003,7 +2728,7 @@ function renderSimulatorLegacy() {
       scoreA: Math.round((getEffectiveEngineeringScore(gpuA) * 0.90) + (gpuA.fp16_tflops * 22)),
       scoreB: Math.round((getEffectiveEngineeringScore(gpuB) * 0.90) + (gpuB.fp16_tflops * 22)),
       unit: ' cenários/min',
-      note: `No seu Xeon E5-2680 v4 (14C/28T), rode 24+ processos paralelos alimentando tensores na GPU`
+      note: `Com múltiplos núcleos no seu processador (${STATE.build.cpu.name}), execute processos paralelos alimentando tensores na GPU`
     }
   ];
 
@@ -2041,21 +2766,195 @@ function renderSimulatorLegacy() {
   }).join('');
 }
 
-// Refresh Live Data from Hardware Barato via Backend API
-async function refreshHardwareBarato() {
-  const btn = document.getElementById('btn-refresh-hb');
+// ============================================================================
+// PLUGGABLE MULTI-SOURCE DATABASE MANAGEMENT
+// ============================================================================
+async function initDatabaseSources() {
+  const sel = document.getElementById('select-db-source');
+  const sidebarName = document.getElementById('sidebar-db-source-name');
+  try {
+    const res = await fetch('/api/sources');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.sources && sel) {
+        sel.innerHTML = data.sources.map(s => `
+          <option value="${s.id}" ${s.id === data.active_source ? 'selected' : ''}>
+            ${s.name.replace(' (Hardware Barato / Web)', '')}
+          </option>
+        `).join('');
+        STATE.activeSource = data.active_source;
+        const activeObj = data.sources.find(s => s.id === data.active_source);
+        if (sidebarName && activeObj) {
+          sidebarName.textContent = activeObj.name;
+        }
+      }
+    }
+  } catch (_) {
+    if (sidebarName) sidebarName.textContent = 'Database Nuvem';
+  }
+}
+
+async function changeDatabaseSource(sourceId) {
+  const status = document.getElementById('header-status');
+  if (status) status.textContent = `Alternando base de dados para: ${sourceId}...`;
+  STATE.activeSource = sourceId;
+
+  try {
+    const res = await fetch('/api/sources/select', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_id: sourceId })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const sidebarName = document.getElementById('sidebar-db-source-name');
+      if (sidebarName && data.source_name) sidebarName.textContent = data.source_name;
+    }
+  } catch (_) {}
+
+  await loadHardwareDatabase();
+}
+
+// ============================================================================
+// MARKET & REGIONAL CONFIGURATION (MONETARY, CHANNELS, STORES)
+// ============================================================================
+async function initMarketConfig() {
+  const selTop = document.getElementById('select-market-region');
+  const selSidebar = document.getElementById('select-market-region-sidebar');
+  try {
+    const res = await fetch('/api/market-config');
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.config) {
+        STATE.market = data.config;
+      }
+      if (data && data.available_regions) {
+        STATE.availableRegions = data.available_regions;
+      }
+      renderMarketRegionSelectors();
+    }
+  } catch (err) {
+    console.warn('Could not load /api/market-config, using local fallback:', err);
+  }
+}
+
+function renderMarketRegionSelectors() {
+  const selTop = document.getElementById('select-market-region');
+  const selSidebar = document.getElementById('select-market-region-sidebar');
+  const selConfig = document.getElementById('cfg-select-market-region');
+  if (!STATE.availableRegions || !STATE.availableRegions.length) return;
+
+  const currentId = STATE.market?.region_id || 'br';
+  const optionsHTML = STATE.availableRegions.map(r => `
+    <option value="${r.region_id}" ${r.region_id === currentId ? 'selected' : ''}>
+      ${r.flag_emoji || '🌐'} ${r.region_name} (${r.currency_code} - ${r.currency_symbol})
+    </option>
+  `).join('');
+
+  if (selTop) selTop.innerHTML = optionsHTML;
+  if (selSidebar) selSidebar.innerHTML = optionsHTML;
+  if (selConfig) {
+    selConfig.innerHTML = optionsHTML;
+    selConfig.value = currentId;
+  }
+
+  // Update Tab 7 Monetary Preview
+  const symEl = document.getElementById('cfg-money-sym');
+  if (symEl) symEl.textContent = STATE.market?.monetary?.currency_symbol || 'R$';
+  const codeEl = document.getElementById('cfg-money-code');
+  if (codeEl) codeEl.textContent = STATE.market?.monetary?.currency_code || 'BRL';
+  const locEl = document.getElementById('cfg-money-locale');
+  if (locEl) locEl.textContent = STATE.market?.monetary?.locale || 'pt-BR';
+}
+
+async function changeMarketRegion(regionId) {
+  if (!regionId) return;
+  const status = document.getElementById('header-status');
+  if (status) status.textContent = `Alternando mercado e moeda para ${regionId.toUpperCase()}...`;
+
+  try {
+    const res = await fetch('/api/market-config/select', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region_id: regionId })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.config) {
+        STATE.market = data.config;
+      }
+      if (data.available_regions) {
+        STATE.availableRegions = data.available_regions;
+      }
+      renderMarketRegionSelectors();
+
+      // Recalculate contextual metrics with the new currency and monetary rules
+      if (typeof computeContextualScores === 'function') computeContextualScores();
+      if (typeof renderAll === 'function') renderAll();
+      if (typeof renderDuelAnalysis === 'function') renderDuelAnalysis();
+      if (typeof renderPCBuilder === 'function') renderPCBuilder();
+      if (typeof renderCostBenefitTable === 'function') renderCostBenefitTable();
+      if (typeof renderRadarPromos === 'function') renderRadarPromos();
+      if (typeof showToast === 'function') {
+        showToast(`Região e moeda configuradas para ${STATE.market.region_name} (${STATE.market.monetary.currency_code} - ${STATE.market.monetary.currency_symbol})`);
+      }
+      if (status) status.textContent = `Região ativa: ${STATE.market.region_name} (${STATE.market.monetary.currency_code})`;
+    }
+  } catch (err) {
+    console.error('Failed to switch market region:', err);
+  }
+}
+
+async function loadHardwareDatabase() {
+  const status = document.getElementById('header-status');
+  try {
+    let res;
+    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    if (!isStatic) {
+      try {
+        res = await fetch('/api/hardware?t=' + Date.now());
+        if (!res.ok) throw new Error('api error');
+      } catch (_) {
+        res = await fetch('data/hardware_db.json?t=' + Date.now());
+      }
+    } else {
+      res = await fetch('data/hardware_db.json?t=' + Date.now());
+    }
+    DB = await res.json();
+    window.DB = DB;
+    const sourceLabel = DB.source_name || 'Database';
+    if (status) {
+      status.textContent = `Dados sincronizados da ${sourceLabel} em ${DB.updated_at} • ${DB.gpus.length} GPUs monitoradas`;
+    }
+    enrichGPUsWithContextualMetrics();
+    updateTopContextSummary();
+    populateSelectors();
+    renderActiveTab();
+    renderPCBuilder();
+  } catch (e) {
+    if (status) status.textContent = 'Erro ao carregar dados da base selecionada.';
+  }
+}
+
+// Refresh Live Data from Selected Database Source via Backend API
+async function refreshDatabase() {
+  const btn = document.getElementById('btn-refresh-db') || document.getElementById('btn-refresh-hb');
   const icon = document.getElementById('icon-refresh');
   const status = document.getElementById('header-status');
-  btn.disabled = true;
-  icon.classList.add('animate-spin');
-  status.textContent = 'Sincronizando preços e históricos ao vivo de hardwarebarato.com...';
+  if (btn) btn.disabled = true;
+  if (icon) icon.classList.add('animate-spin');
+  if (status) status.textContent = 'Sincronizando catálogo e preços ao vivo da Database...';
 
   try {
     let data = null;
     const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     if (!isStatic) {
       try {
-        const res = await fetch('/api/refresh', { method: 'POST' });
+        const res = await fetch('/api/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source_id: STATE.activeSource })
+        });
         if (res.ok) data = await res.json();
       } catch (_) {}
     }
@@ -2068,51 +2967,263 @@ async function refreshHardwareBarato() {
     }
     if (data && data.ok && data.db) {
       DB = data.db;
+      window.DB = DB;
       enrichGPUsWithContextualMetrics();
       populateSelectors();
       renderActiveTab();
-      if (data.from_static) {
-        status.textContent = `Atualizado da base Nuvem GitHub em ${DB.updated_at} (${DB.gpus.length} GPUs monitoradas)`;
-      } else {
-        status.textContent = `Atualizado ao vivo de HardwareBarato.com em ${DB.updated_at} (${DB.gpus.length} GPUs monitoradas)`;
+      renderPCBuilder();
+      const sourceLabel = DB.source_name || 'Database';
+      if (status) {
+        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at} (${DB.gpus.length} GPUs monitoradas)`;
       }
     }
   } catch (e) {
-    status.textContent = 'Erro ao atualizar ao vivo. Usando banco local.';
+    if (status) status.textContent = 'Erro ao sincronizar ao vivo. Utilizando snapshot local.';
   } finally {
-    btn.disabled = false;
-    icon.classList.remove('animate-spin');
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove('animate-spin');
   }
+}
+const refreshHardwareBarato = refreshDatabase;
+
+// ============================================================================
+// CONFIGURATION TAB & SYSTEM PREFERENCES (Meu PC, Database, Scale, Region)
+// ============================================================================
+function renderConfigRefCompatBanner() {
+  const el = document.getElementById('cfg-ref-compat-banner');
+  if (!el) return;
+  const comp = checkCpuMoboCompatibility(STATE.refPC.cpu, STATE.refPC.mobo);
+  el.innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-xs font-mono font-bold px-2.5 py-1 rounded-lg ${comp.badgeClass}">[${comp.flag}] ${comp.label}</span>
+      <span class="text-xs text-slate-300 leading-snug">${comp.message}</span>
+    </div>
+  `;
+}
+
+function renderConfigTab() {
+  const db = window.DB || DB;
+  if (!db || !db.gpus || db.gpus.length === 0) return;
+
+  const curCpu = STATE.refPC.cpu || {};
+  const curMobo = STATE.refPC.mobo || {};
+  const curRam = STATE.refPC.ram || {};
+  const curGpu = STATE.refPC.gpu || {};
+  const curPsu = STATE.refPC.psu || {};
+  const curStorage = STATE.refPC.storage || {};
+
+  const { filteredMobos, targetRamType, filteredRams } = getFilteredMoboAndRamOptions(curCpu.slug, curMobo.slug, curRam.slug);
+
+  // 1. Populate CPU options
+  const cpuSel = document.getElementById('cfg-ref-cpu-select');
+  if (cpuSel && db.cpus) {
+    cpuSel.innerHTML = `
+      <option value="" ${!curCpu.slug ? 'selected' : ''}>-- (Nenhum / Sem Processador) --</option>
+      ${db.cpus.map(c => `<option value="${c.slug}" ${curCpu.slug === c.slug ? 'selected' : ''}>${c.name} (${c.socket}) — ${fmtBRL(c.price_brl)} [${c.tdp_w}W]</option>`).join('')}
+    `;
+    const cpuNameInput = document.getElementById('cfg-ref-cpu-name');
+    const cpuTdpInput = document.getElementById('cfg-ref-cpu-tdp');
+    if (cpuNameInput) cpuNameInput.value = curCpu.name || '';
+    if (cpuTdpInput) cpuTdpInput.value = curCpu.tdp || '';
+  }
+
+  // 2. Populate GPU options
+  const gpuSel = document.getElementById('cfg-ref-gpu-select');
+  if (gpuSel && db.gpus) {
+    gpuSel.innerHTML = `
+      <option value="" ${!curGpu.slug ? 'selected' : ''}>-- (Nenhum / Sem GPU Dedicada) --</option>
+      ${db.gpus.map(g => `<option value="${g.slug}" ${curGpu.slug === g.slug ? 'selected' : ''}>${g.name} (${g.vram_gb}GB) — ${fmtBRL(g.price_brl)} [${g.tdp_w}W]</option>`).join('')}
+    `;
+    const gpuNameInput = document.getElementById('cfg-ref-gpu-name');
+    const gpuTdpInput = document.getElementById('cfg-ref-gpu-tdp');
+    if (gpuNameInput) gpuNameInput.value = curGpu.name || '';
+    if (gpuTdpInput) gpuTdpInput.value = curGpu.tdp || '';
+  }
+
+  // 3. Populate Mobo options (filtered to CPU socket!)
+  const moboSel = document.getElementById('cfg-ref-mobo-select');
+  if (moboSel) {
+    moboSel.innerHTML = `
+      <option value="" ${!curMobo.slug ? 'selected' : ''}>-- (Nenhum / Sem Placa-Mãe) --</option>
+      ${filteredMobos.map(m => `<option value="${m.slug}" ${curMobo.slug === m.slug ? 'selected' : ''}>${m.name} (${m.socket}/${m.memory_type}) — ${fmtBRL(m.price_brl)}</option>`).join('')}
+    `;
+    const moboNameInput = document.getElementById('cfg-ref-mobo-name');
+    const moboSocketInput = document.getElementById('cfg-ref-mobo-socket');
+    if (moboNameInput) moboNameInput.value = curMobo.name || '';
+    if (moboSocketInput) moboSocketInput.value = curMobo.socket || '';
+  }
+
+  // 4. Populate RAM options (filtered to standard!)
+  const ramSel = document.getElementById('cfg-ref-ram-select');
+  if (ramSel) {
+    ramSel.innerHTML = `
+      <option value="" ${!curRam.slug ? 'selected' : ''}>-- (Nenhum / Sem Memória RAM) --</option>
+      ${filteredRams.slice(0, 50).map(r => `<option value="${r.slug}" ${curRam.slug === r.slug ? 'selected' : ''}>${r.name} — ${fmtBRL(r.price_brl)}</option>`).join('')}
+    `;
+    const ramCapInput = document.getElementById('cfg-ref-ram-cap');
+    const ramTypeSel = document.getElementById('cfg-ref-ram-type');
+    if (ramCapInput) ramCapInput.value = curRam.capacity_gb || '';
+    if (ramTypeSel) ramTypeSel.value = curRam.memory_type || targetRamType || 'DDR4';
+  }
+
+  // 5. Populate PSU options
+  const psuSel = document.getElementById('cfg-ref-psu-select');
+  if (psuSel && db.psus) {
+    psuSel.innerHTML = `
+      <option value="" ${!curPsu.slug ? 'selected' : ''}>-- (Nenhum / Sem Fonte) --</option>
+      ${db.psus.slice(0, 60).map(p => `<option value="${p.slug}" ${curPsu.slug === p.slug ? 'selected' : ''}>${p.name} (${p.watts}W) — ${fmtBRL(p.price_brl)}</option>`).join('')}
+    `;
+    const psuNameInput = document.getElementById('cfg-ref-psu-name');
+    const psuWattsInput = document.getElementById('cfg-ref-psu-watts');
+    if (psuNameInput) psuNameInput.value = curPsu.name || '';
+    if (psuWattsInput) psuWattsInput.value = curPsu.watts || '';
+  }
+
+  // 6. Storage
+  const storageNameInput = document.getElementById('cfg-ref-storage-name');
+  if (storageNameInput) {
+    storageNameInput.value = curStorage.name || '';
+  }
+
+  // 7. Live Compatibility Banner in Config
+  renderConfigRefCompatBanner();
+
+  // 8. DB stats & Source selector
+  const dbSourceSel = document.getElementById('cfg-select-db-source');
+  if (dbSourceSel) {
+    dbSourceSel.value = STATE.activeSource || 'hardware_barato';
+  }
+  const statGpus = document.getElementById('cfg-stat-gpus');
+  const statCpus = document.getElementById('cfg-stat-cpus');
+  const statMobos = document.getElementById('cfg-stat-mobos');
+  if (statGpus) statGpus.textContent = (db.gpus || []).length;
+  if (statCpus) statCpus.textContent = (db.cpus || []).length;
+  if (statMobos) statMobos.textContent = (db.motherboards || []).length;
+
+  // 9. Sync Scale buttons
+  syncComparisonScaleControls();
+
+  // 10. Sync Market UI
+  if (typeof updateMarketConfigUI === 'function') updateMarketConfigUI();
+}
+
+function onCfgPartSelect(part, slug) {
+  if (!STATE.refPC) STATE.refPC = {};
+  if (!slug) {
+    if (part === 'cpu') STATE.refPC.cpu = { slug: '', name: '', tdp: 0, price: 0, owned: false, benchmark: 0, socket: '' };
+    else if (part === 'gpu') STATE.refPC.gpu = { slug: '', name: '', tdp: 0, price: 0, owned: false };
+    else if (part === 'mobo') STATE.refPC.mobo = { slug: '', name: '', tdp: 0, price: 0, owned: false, socket: '', memory_type: '' };
+    else if (part === 'ram') STATE.refPC.ram = { slug: '', name: '', tdp: 0, price: 0, owned: false, capacity_gb: 0, memory_type: 'DDR4' };
+    else if (part === 'psu') STATE.refPC.psu = { slug: '', name: '', watts: 0, price: 0, owned: false };
+  } else {
+    if (part === 'cpu') {
+      const c = DB.cpus.find(x => x.slug === slug);
+      if (c) {
+        STATE.refPC.cpu = { slug: c.slug, name: c.name, tdp: c.tdp_w, price: c.price_brl, owned: true, benchmark: c.benchmark, socket: c.socket };
+        const simCpuSel = document.getElementById('sim-select-cpu');
+        if (simCpuSel) simCpuSel.value = c.slug;
+
+        // Auto-reconcile mobo
+        const cpuSock = (c.socket || '').toUpperCase().trim();
+        const curMoboSock = ((STATE.refPC.mobo && STATE.refPC.mobo.socket) || '').toUpperCase().trim();
+        const mobos = DB.motherboards || [];
+        const compatibleMobos = mobos.filter(m => (m.socket || '').toUpperCase().trim() === cpuSock);
+        if (cpuSock && curMoboSock && curMoboSock !== cpuSock && compatibleMobos.length > 0) {
+          const defaultMobo = compatibleMobos[0];
+          STATE.refPC.mobo = { slug: defaultMobo.slug, name: defaultMobo.name, tdp: defaultMobo.tdp_w || 35, price: defaultMobo.price_brl, owned: true, socket: defaultMobo.socket, memory_type: defaultMobo.memory_type };
+        }
+
+        // Auto-reconcile RAM (DDR4 vs DDR5)
+        let targetMem = '';
+        if (cpuSock === 'AM4' || cpuSock === 'LGA2011-3') targetMem = 'DDR4';
+        else if (cpuSock === 'AM5' || cpuSock === 'LGA1851') targetMem = 'DDR5';
+        else if (cpuSock === 'LGA1700' && STATE.refPC.mobo?.memory_type) targetMem = STATE.refPC.mobo.memory_type.toUpperCase();
+
+        if (targetMem && STATE.refPC.ram?.memory_type && STATE.refPC.ram.memory_type.toUpperCase() !== targetMem) {
+          const compatibleRams = (DB.rams || []).filter(r => (r.memory_type || '').toUpperCase() === targetMem);
+          if (compatibleRams.length > 0) {
+            const defaultRam = compatibleRams[0];
+            STATE.refPC.ram = { slug: defaultRam.slug, name: defaultRam.name, tdp: defaultRam.tdp_w || 10, price: defaultRam.price_brl, owned: true, capacity_gb: defaultRam.capacity_gb || 16, memory_type: defaultRam.memory_type || targetMem };
+          }
+        }
+      }
+    } else if (part === 'gpu') {
+      const g = DB.gpus.find(x => x.slug === slug);
+      if (g) STATE.refPC.gpu = { slug: g.slug, name: `${g.name} (${g.vram_gb}GB)`, tdp: g.tdp_w, price: g.price_brl, owned: true };
+    } else if (part === 'mobo') {
+      const m = DB.motherboards.find(x => x.slug === slug);
+      if (m) {
+        STATE.refPC.mobo = { slug: m.slug, name: m.name, tdp: m.tdp_w, price: m.price_brl, owned: true, socket: m.socket, memory_type: m.memory_type };
+        if (m.memory_type && STATE.refPC.ram?.memory_type && STATE.refPC.ram.memory_type.toUpperCase() !== m.memory_type.toUpperCase()) {
+          const compatibleRams = (DB.rams || []).filter(r => (r.memory_type || '').toUpperCase() === m.memory_type.toUpperCase());
+          if (compatibleRams.length > 0) {
+            const defaultRam = compatibleRams[0];
+            STATE.refPC.ram = { slug: defaultRam.slug, name: defaultRam.name, tdp: defaultRam.tdp_w || 10, price: defaultRam.price_brl, owned: true, capacity_gb: defaultRam.capacity_gb || 16, memory_type: defaultRam.memory_type || m.memory_type };
+          }
+        }
+      }
+    } else if (part === 'ram') {
+      const r = DB.rams.find(x => x.slug === slug);
+      if (r) STATE.refPC.ram = { slug: r.slug, name: r.name, tdp: r.tdp_w, price: r.price_brl, owned: true, capacity_gb: r.capacity_gb, memory_type: r.memory_type };
+    } else if (part === 'psu') {
+      const p = DB.psus.find(x => x.slug === slug);
+      if (p) STATE.refPC.psu = { slug: p.slug, name: p.name, watts: p.watts, price: p.price_brl, owned: true };
+    }
+  }
+  saveUserRefPrefs();
+  renderConfigTab();
+}
+
+function onCfgCustomInput(part, field, value) {
+  if (!STATE.refPC[part]) STATE.refPC[part] = {};
+  STATE.refPC[part][field] = value;
+  saveUserRefPrefs();
+  if (part === 'cpu' || part === 'mobo') {
+    renderConfigRefCompatBanner();
+  }
+}
+
+function clearUserReferencePC() {
+  STATE.refPC.cpu = { slug: '', name: '', tdp: 0, price: 0, owned: false, benchmark: 0, socket: '' };
+  STATE.refPC.gpu = { slug: '', name: '', tdp: 0, price: 0, owned: false };
+  STATE.refPC.mobo = { slug: '', name: '', tdp: 0, price: 0, owned: false, socket: '', memory_type: '' };
+  STATE.refPC.ram = { slug: '', name: '', tdp: 0, price: 0, owned: false, capacity_gb: 0, memory_type: 'DDR4' };
+  STATE.refPC.psu = { slug: '', name: '', watts: 0, price: 0, owned: false };
+  STATE.refPC.storage = { name: '', tdp: 0, price: 0, owned: false };
+  STATE.refPC.cooling = { name: '', tdp: 0, price: 0, owned: false };
+  saveUserRefPrefs();
+  renderConfigTab();
+  if (typeof showToast === 'function') showToast('Meu PC de Referência limpo (todas as caixas vazias).');
+}
+
+function saveUserReferencePC() {
+  saveUserRefPrefs();
+  if (typeof saveUserPrefs === 'function') saveUserPrefs();
+  const activeTitleEl = document.getElementById('header-active-tab-title');
+  const oldTitle = activeTitleEl ? activeTitleEl.textContent : '';
+  if (activeTitleEl) activeTitleEl.textContent = '✅ Configurações Salvas com Sucesso!';
+  if (typeof showToast === 'function') showToast('Configurações do Sistema e PC de Referência salvos com sucesso!');
+  setTimeout(() => {
+    if (activeTitleEl && activeTitleEl.textContent.includes('Configurações Salvas')) {
+      activeTitleEl.textContent = oldTitle || 'Configurações do Sistema';
+    }
+  }, 2500);
 }
 
 // Initial Boot
 async function initApp() {
-  // Slider / number box handlers are wired inline in index.html
   if (typeof loadUserPrefs === 'function') loadUserPrefs();
+  loadUserRefPrefs();
+  loadUserBuildPrefs();
+  initDatabaseSources();
+  await initMarketConfig();
 
   try {
-    let res;
-    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
-    if (!isStatic) {
-      try {
-        res = await fetch('/api/hardware');
-        if (!res.ok) throw new Error('api down');
-      } catch (_) {
-        res = await fetch('data/hardware_db.json');
-      }
-    } else {
-      res = await fetch('data/hardware_db.json');
-    }
-    DB = await res.json();
-    document.getElementById('header-status').textContent =
-      `Dados sincronizados de HardwareBarato.com em ${DB.updated_at} • ${DB.gpus.length} GPUs com histórico de até 600 dias`;
+    await loadHardwareDatabase();
 
-    enrichGPUsWithContextualMetrics();
-    updateTopContextSummary();
-    populateSelectors();
     renderDuelAnalysis();
     renderPCBuilder();
-    detectMyLocalPC(false);
+    detectMyLocalPC(null);
     if (typeof scanLivePromos === 'function') scanLivePromos(false);
 
     document.addEventListener('click', (e) => {
@@ -2123,7 +3234,7 @@ async function initApp() {
       }
     });
   } catch (e) {
-    console.error('Failed to load DB:', e);
+    console.error('Failed to boot app:', e);
     document.getElementById('header-status').textContent = 'Erro ao carregar dados. Execute iniciar_app.bat para iniciar o servidor.';
   }
 }
