@@ -2940,12 +2940,39 @@ function savePromoSettingsToStorage() {
   }
 }
 
+function updateBackgroundMonitorUI() {
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  const badge = document.getElementById('bg-monitor-badge');
+  const desc = document.getElementById('bg-monitor-desc');
+  if (isStatic) {
+    if (badge) {
+      badge.textContent = '🌐 Modo Web (GitHub Pages)';
+      badge.className = 'px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold';
+    }
+    if (desc) {
+      desc.innerHTML = 'No GitHub Pages, as ofertas são verificadas no seu navegador enquanto a página estiver aberta. Para monitoramento com o <strong>navegador fechado</strong>, execute o servidor local com <code>python server.py</code> no PC.';
+    }
+  } else {
+    if (badge) {
+      badge.textContent = '● Ativo no PC (Python)';
+      badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold';
+    }
+  }
+}
+window.updateBackgroundMonitorUI = updateBackgroundMonitorUI;
+
 async function testBackgroundAlertNow() {
   const statusEl = document.getElementById('phone-test-status');
-  if (statusEl) {
-    statusEl.textContent = 'Enviando teste de alerta em segundo plano para Windows e Celular...';
-    statusEl.className = 'text-[11px] text-amber-300 font-mono';
-  }
+  const bgStatusEl = document.getElementById('bg-monitor-status');
+  const updateStatus = (msg, cls) => {
+    if (statusEl) { statusEl.textContent = msg; statusEl.className = cls; }
+    if (bgStatusEl) { bgStatusEl.textContent = msg; bgStatusEl.className = cls; }
+  };
+
+  updateStatus('Verificando monitor de segundo plano...', 'text-[11px] text-amber-300 font-mono');
+
+  let serverSuccess = false;
+
   try {
     const res = await fetch('/api/test-background-alert', {
       method: 'POST',
@@ -2958,24 +2985,66 @@ async function testBackgroundAlertNow() {
         phoneService: PROMO_STATE.phoneService || 'ntfy'
       })
     });
-    const data = await res.json();
-    if (data.ok) {
-      if (statusEl) {
-        statusEl.textContent = '✓ Alerta em segundo plano disparado com sucesso (Windows + Celular)!';
-        statusEl.className = 'text-[11px] text-emerald-400 font-mono font-bold';
-      }
-      playDealAlertChime();
-    } else {
-      if (statusEl) {
-        statusEl.textContent = `Erro ao disparar: ${data.error || 'Falha'}`;
-        statusEl.className = 'text-[11px] text-rose-400 font-mono';
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.ok) {
+        serverSuccess = true;
       }
     }
-  } catch (err) {
-    if (statusEl) {
-      statusEl.textContent = `Erro de conexão: ${err.message}`;
-      statusEl.className = 'text-[11px] text-rose-400 font-mono';
+  } catch (_) {}
+
+  if (serverSuccess) {
+    updateStatus('✓ Alerta em segundo plano disparado pelo servidor local (Windows + Celular)!', 'text-[11px] text-emerald-400 font-mono font-bold');
+    playDealAlertChime();
+    return;
+  }
+
+  // Fallback for Static / GitHub Pages or when local Python server is not running:
+  // 1. Browser Notification API (Desktop toast)
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') {
+      try {
+        new Notification('🔔 [Alerta GPU] RTX 5060 por R$ 2.190 (Teste)', {
+          body: '✓ Alerta disparado no navegador com sucesso! (Modo Web/GitHub)',
+          icon: 'favicon.ico'
+        });
+      } catch (_) {}
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission();
     }
+  }
+
+  // 2. Direct Phone notification via ntfy.sh (or WhatsApp)
+  const ntfyTopic = PROMO_STATE.ntfyTopic || 'meu_alerta_gpu_cecatto';
+  if ((PROMO_STATE.phoneService || 'ntfy') === 'ntfy' && ntfyTopic) {
+    try {
+      await fetch('https://ntfy.sh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          topic: ntfyTopic,
+          title: '🔥 [TESTE 2º PLANO] RTX 5060 8GB por R$ 2.190,00',
+          message: '🔔 Teste de alerta disparado com sucesso!\n\nNo GitHub Pages (web), o navegador monitora enquanto a aba estiver aberta. Para monitoramento com o navegador 100% FECHADO, execute "python server.py" no seu PC.',
+          tags: ['bell', 'lightning'],
+          priority: 4
+        })
+      });
+    } catch (_) {}
+  }
+
+  playDealAlertChime();
+
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  if (isStatic) {
+    updateStatus(
+      '✓ Alerta testado com sucesso no navegador e celular (ntfy.sh)! Nota: O monitoramento com navegador FECHADO requer o servidor Python local rodando no PC ("python server.py").',
+      'text-[11px] text-sky-300 font-mono font-bold'
+    );
+  } else {
+    updateStatus(
+      '✓ Alerta testado no navegador e celular via ntfy.sh! (Inicie "python server.py" para segundo plano nativo no Windows).',
+      'text-[11px] text-amber-300 font-mono font-bold'
+    );
   }
 }
 

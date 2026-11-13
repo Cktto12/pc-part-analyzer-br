@@ -3461,6 +3461,7 @@ async function initApp() {
   loadUserBuildPrefs();
   initDatabaseSources();
   await initMarketConfig();
+  if (typeof updateBackgroundMonitorUI === 'function') updateBackgroundMonitorUI();
 
   try {
     await loadHardwareDatabase();
