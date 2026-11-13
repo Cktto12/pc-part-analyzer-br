@@ -3884,8 +3884,15 @@ async function scanLivePromos(force = false) {
 
       if (!prData || !Array.isArray(prData.matched_deals)) {
         try {
-          const prRes = await fetch(`data/promos_cache_mx.json?t=` + Date.now());
+          const prRes = await fetch(`data/promos_cache_mx.json?t=` + Date.now(), { cache: 'no-store' });
           if (prRes.ok) prData = await prRes.json();
+        } catch (_) {}
+      }
+
+      if (!prData || (!Array.isArray(prData.matched_deals) && !Array.isArray(prData.recent_feed))) {
+        try {
+          const rawRes = await fetch(`https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache_mx.json?t=` + Date.now(), { cache: 'no-store' });
+          if (rawRes.ok) prData = await rawRes.json();
         } catch (_) {}
       }
 
@@ -3995,16 +4002,23 @@ async function scanLivePromos(force = false) {
 
         if (!prData || !Array.isArray(prData.matched_deals) || prData.matched_deals.length === 0) {
           const cacheUrl = regId === 'br' ? 'data/promos_cache.json' : `data/promos_cache_${regId}.json`;
-          const prRes = await fetch(cacheUrl + '?t=' + Date.now());
-          if (prRes.ok) prData = await prRes.json();
+          try {
+            const prRes = await fetch(cacheUrl + '?t=' + Date.now(), { cache: 'no-store' });
+            if (prRes.ok) prData = await prRes.json();
+          } catch (_) {}
         }
 
-        if ((!prData || !Array.isArray(prData.matched_deals) || prData.matched_deals.length === 0) && regId === 'br') {
-          const prRes = await fetch('data/promos_cache.json?t=' + Date.now());
-          if (prRes.ok) prData = await prRes.json();
+        if (!prData || (!Array.isArray(prData.matched_deals) && !Array.isArray(prData.recent_feed)) || ((prData.matched_deals || []).length === 0 && (prData.recent_feed || []).length === 0)) {
+          const rawUrl = regId === 'br'
+            ? 'https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache.json?t=' + Date.now()
+            : `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache_${regId}.json?t=` + Date.now();
+          try {
+            const rawRes = await fetch(rawUrl, { cache: 'no-store' });
+            if (rawRes.ok) prData = await rawRes.json();
+          } catch (_) {}
         }
 
-        if (prData && Array.isArray(prData.matched_deals) && prData.matched_deals.length > 0) {
+        if (prData && ((Array.isArray(prData.matched_deals) && prData.matched_deals.length > 0) || (Array.isArray(prData.recent_feed) && prData.recent_feed.length > 0))) {
           PROMO_STATE.lastData = prData;
           PROMO_STATE.channelsScanned = prData.channels_scanned || [];
           applyFlashPromosToCatalog();

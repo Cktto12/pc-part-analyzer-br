@@ -391,8 +391,14 @@ def fetch_mexico_native_promotions():
 
     # 1. Promodescuentos.com (Mexico's largest community deal & coupon platform)
     pd_urls = [
+        ("promodescuentos_gpus", "Promodescuentos GPUs", "https://www.promodescuentos.com/search?q=tarjeta+de+video"),
+        ("promodescuentos_gpus", "Promodescuentos GPUs", "https://www.promodescuentos.com/search?q=tarjeta+grafica"),
         ("promodescuentos_gpus", "Promodescuentos GPUs", "https://www.promodescuentos.com/grupo/tarjetas-graficas"),
-        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/grupo/componentes-de-pc"),
+        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/search?q=procesador"),
+        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/search?q=ryzen"),
+        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/search?q=ddr5"),
+        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/search?q=rtx"),
+        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/search?q=cyberpuerta"),
     ]
     for ch_id, ch_name, url in pd_urls:
         try:
@@ -400,20 +406,24 @@ def fetch_mexico_native_promotions():
             with urllib.request.urlopen(req, timeout=10) as resp:
                 raw_html = resp.read().decode("utf-8", errors="ignore")
 
-            for m in re.finditer(r"data-vue2='(\{\"props\":\{\"thread\":.*?)'", raw_html):
+            for m in re.finditer(r"data-vue[23]='(\{[\s\S]*?\})'\s*>", raw_html):
                 try:
-                    payload = json.loads(html.unescape(m.group(1)))
+                    payload = json.loads(m.group(1))
                     th = payload.get("props", {}).get("thread") or {}
                     tid = str(th.get("threadId") or "")
                     if not tid or tid in seen_ids or th.get("isExpired"):
                         continue
 
                     price = float(th.get("price") or 0)
-                    if price < 450 or price > 95000:
+                    if price < 350 or price > 95000:
                         continue
 
                     title = (th.get("title") or "").strip()
                     if not title:
+                        continue
+
+                    # Filter out appliances / food processors
+                    if re.search(r"\b(procesador\s*de\s*alimentos|licuadora|freidora|air\s*fryer|cafetera|silla|sill[oó]n|refrigerador|lavadora)\b", title, re.I):
                         continue
 
                     seen_ids.add(tid)
@@ -610,3 +620,65 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
         pass
 
     return payload
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Scan live hardware promotions and update promo cache")
+    parser.add_argument("--notify", action="store_true", help="Send push / toast alerts for detected deals")
+    parser.add_argument("--region", default=None, help="Target region (br or mx, default scans both)")
+    parser.add_argument("--max-age", type=float, default=24.0, help="Max age in hours")
+    parser.add_argument("--force", action="store_true", default=True, help="Force fresh scraping")
+    args = parser.parse_args()
+
+    db_br_path = os.path.join(BASE_DIR, "data", "hardware_db.json")
+    db_br = {}
+    if os.path.exists(db_br_path):
+        try:
+            with open(db_br_path, "r", encoding="utf-8") as f:
+                db_br = json.load(f)
+        except Exception:
+            pass
+
+    db_mx_path = os.path.join(BASE_DIR, "data", "hardware_db_mx.json")
+    db_mx = {}
+    if os.path.exists(db_mx_path):
+        try:
+            with open(db_mx_path, "r", encoding="utf-8") as f:
+                db_mx = json.load(f)
+        except Exception:
+            pass
+
+    regions = [args.region.lower()] if args.region else ["br", "mx"]
+
+    for reg in regions:
+        print(f"=== Scanning live promotions for region '{reg}' ===")
+        db_to_use = db_mx if reg == "mx" else db_br
+        res = scan_live_promotions(db_to_use, max_age_hours=args.max_age, region_id=reg, force=args.force)
+        print(f"[{reg.upper()}] Matched {res.get('matched_count', 0)} deals, {len(res.get('recent_feed', []))} feed items at {res.get('scanned_at')}")
+
+        # Also embed latest live_promos into the respective hardware_db file for instant offline bootstrap
+        if reg == "br" and db_br and os.path.exists(db_br_path):
+            db_br["live_promos"] = res
+            try:
+                with open(db_br_path, "w", encoding="utf-8") as f:
+                    json.dump(db_br, f, ensure_ascii=False, indent=2)
+                print(f"[BR] Successfully embedded fresh live_promos into hardware_db.json")
+            except Exception as e:
+                print(f"[BR] Warning saving embedded live_promos: {e}")
+        elif reg == "mx" and db_mx and os.path.exists(db_mx_path):
+            db_mx["live_promos"] = res
+            try:
+                with open(db_mx_path, "w", encoding="utf-8") as f:
+                    json.dump(db_mx, f, ensure_ascii=False, indent=2)
+                print(f"[MX] Successfully embedded fresh live_promos into hardware_db_mx.json")
+            except Exception as e:
+                print(f"[MX] Warning saving embedded live_promos: {e}")
+
+    if args.notify:
+        print("=== Checking alert rules and dispatching notifications ===")
+        try:
+            import server
+            server.check_and_notify_deals(force_notify=False)
+        except Exception as e:
+            print(f"Notification check warning: {e}")
+

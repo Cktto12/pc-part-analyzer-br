@@ -3134,12 +3134,19 @@ async function loadHardwareDatabase() {
     if (!res) {
       const dbFile = (targetReg === 'mx') ? 'data/hardware_db_mx.json' : 'data/hardware_db.json';
       try {
-        res = await fetch(dbFile + '?t=' + Date.now());
+        res = await fetch(dbFile + '?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok && targetReg !== 'br') {
-          res = await fetch('data/hardware_db.json?t=' + Date.now());
+          res = await fetch('data/hardware_db.json?t=' + Date.now(), { cache: 'no-store' });
         }
       } catch (_) {
-        res = await fetch('data/hardware_db.json?t=' + Date.now());
+        try {
+          const rawUrl = (targetReg === 'mx')
+            ? 'https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/hardware_db_mx.json?t=' + Date.now()
+            : 'https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/hardware_db.json?t=' + Date.now();
+          res = await fetch(rawUrl, { cache: 'no-store' });
+        } catch (__) {
+          res = await fetch('data/hardware_db.json?t=' + Date.now(), { cache: 'no-store' });
+        }
       }
     }
     DB = await res.json();
@@ -3193,12 +3200,19 @@ async function refreshDatabase() {
       const dbFile = (targetReg === 'mx') ? 'data/hardware_db_mx.json' : 'data/hardware_db.json';
       let res;
       try {
-        res = await fetch(dbFile + '?t=' + Date.now());
+        res = await fetch(dbFile + '?t=' + Date.now(), { cache: 'no-store' });
         if (!res.ok && targetReg !== 'br') {
-          res = await fetch('data/hardware_db.json?t=' + Date.now());
+          res = await fetch('data/hardware_db.json?t=' + Date.now(), { cache: 'no-store' });
         }
       } catch (_) {
-        res = await fetch('data/hardware_db.json?t=' + Date.now());
+        try {
+          const rawUrl = (targetReg === 'mx')
+            ? 'https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/hardware_db_mx.json?t=' + Date.now()
+            : 'https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/hardware_db.json?t=' + Date.now();
+          res = await fetch(rawUrl, { cache: 'no-store' });
+        } catch (__) {
+          res = await fetch('data/hardware_db.json?t=' + Date.now(), { cache: 'no-store' });
+        }
       }
       if (res && res.ok) {
         const db = await res.json();
