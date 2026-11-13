@@ -309,11 +309,17 @@ def fetch_gpu_detail(gpu_item):
 
     scores = compute_ai_and_software_scores(slug, gpu_item.get('benchmark'), spec)
 
-    # Calculate Historical Price Metrics & Target Price
+    # Ensure history is sorted chronologically (oldest -> newest) and slice from the END (most recent days)
+    history.sort(key=lambda x: x['date'])
     prices_all = [h['price'] for h in history] if history else [current_price]
-    prices_30d = [h['price'] for h in history[:30]] if history else [current_price]
-    prices_90d = [h['price'] for h in history[:90]] if history else [current_price]
-    prices_180d = [h['price'] for h in history[:180]] if history else [current_price]
+    prices_30d = [h['price'] for h in history[-30:]] if history else [current_price]
+    prices_90d = [h['price'] for h in history[-90:]] if history else [current_price]
+    prices_180d = [h['price'] for h in history[-180:]] if history else [current_price]
+
+    # Post-July 2026 structural price window (respects the 10-15% market price hike)
+    cur_year = datetime.now().year
+    post_july_prices = [h['price'] for h in history if h['date'] >= f"{cur_year}-07-01"]
+    regime_pool = post_july_prices if len(post_july_prices) >= 5 else prices_90d
 
     min_all = round(min(prices_all), 2)
     min_90d = round(min(prices_90d), 2)
@@ -321,10 +327,10 @@ def fetch_gpu_detail(gpu_item):
     avg_90d = round(statistics.mean(prices_90d), 2)
     median_180d = round(statistics.median(prices_180d), 2)
 
-    # Smart Target Price: 20th percentile of last 180 days (or halfway between 90d min and 90d average)
-    sorted_180 = sorted(prices_180d)
-    p20_idx = max(0, int(len(sorted_180) * 0.20) - 1)
-    target_price = round(sorted_180[p20_idx], 2)
+    # Smart Target Price: 20th percentile of the post-July regime window (or recent 90d window)
+    sorted_regime = sorted(regime_pool)
+    p20_idx = max(0, int(len(sorted_regime) * 0.20) - 1)
+    target_price = round(sorted_regime[p20_idx], 2)
 
     # Price trend / rising flag
     vs_avg_90d_pct = round(((current_price - avg_90d) / avg_90d) * 100, 1) if avg_90d > 0 else 0.0

@@ -307,7 +307,7 @@
               <span>Alertas Automáticos de Ofertas</span>
             </label>
             <span id="notify-active-rules-summary" class="px-2.5 py-0.5 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] font-mono text-emerald-300">
-              Gatilhos: CB ≥ 92 OU Meta BF OU −R$ 150 / −8% vs Catálogo
+              Gatilhos: CB ≥ 92 OU Meta BF OU −<span class="currency-sym">R$</span> <span id="notify-dyn-minsav">150</span> / −8% vs Catálogo
             </span>
             <span id="notify-perm-status" class="text-[11px] font-mono text-slate-400">Windows Toast + Tela + Som</span>
           </div>
@@ -359,14 +359,14 @@
                 <input type="checkbox" id="chk-trig-hb" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
               </label>
               <select id="select-notify-hb-mode" onchange="onUpdatePromoNotificationSettings()" class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2 py-1 text-xs text-white font-semibold">
-                <option value="brl_or_pct" selected>Economia ≥ R$ Mínimo OU ≥ % Mínimo vs Catálogo</option>
-                <option value="brl_only">Apenas Desconto em Reais (≥ R$ X abaixo do Catálogo)</option>
+                <option value="brl_or_pct" selected>Economia ≥ Valor Mínimo OU ≥ % Mínimo vs Catálogo</option>
+                <option value="brl_only">Apenas Desconto em Valor (≥ X abaixo do Catálogo)</option>
                 <option value="pct_only">Apenas Desconto Percentual (≥ Y% abaixo do Catálogo)</option>
-                <option value="brl_and_pct">Ambos: ≥ R$ X E ≥ Y% abaixo do Catálogo</option>
+                <option value="brl_and_pct">Ambos: ≥ Valor X E ≥ Y% abaixo do Catálogo</option>
               </select>
               <div class="grid grid-cols-2 gap-2">
                 <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-                  <span class="text-[11px] text-slate-400">Mín. R$:</span>
+                  <span class="text-[11px] text-slate-400">Mín. <span class="currency-sym">R$</span>:</span>
                   <input type="number" id="input-notify-hb-brl" value="150" min="10" max="5000" step="10" onchange="onUpdatePromoNotificationSettings()" class="w-16 bg-slate-950 border border-emerald-500/40 rounded px-1.5 py-0.5 text-xs font-mono font-bold text-emerald-300 text-right" />
                 </div>
                 <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
@@ -591,17 +591,17 @@
               <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
                 <span class="text-slate-400 block text-[10px]">Preço Atual (Editável)</span>
                 <div class="flex items-center gap-1 mt-0.5">
-                  <span class="text-slate-400 font-mono">R$</span>
+                  <span class="text-slate-400 font-mono currency-sym">R$</span>
                   <input type="number" id="duel-price-base" oninput="renderDuelAnalysis()" class="w-full bg-transparent font-mono font-bold text-emerald-400 text-sm focus:outline-none border-b border-slate-700 focus:border-emerald-400" step="50" />
                 </div>
               </div>
               <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
                 <span class="text-slate-400 block text-[10px]">Preço Alvo (Bom Momento)</span>
-                <span id="duel-target-base" class="font-mono font-bold text-sky-300 text-sm mt-0.5 block">R$ --</span>
+                <span id="duel-target-base" class="font-mono font-bold text-sky-300 text-sm mt-0.5 block">--</span>
               </div>
               <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
                 <span class="text-slate-400 block text-[10px]">Mínimo 90d / Média 90d</span>
-                <span id="duel-hist-base" class="font-mono font-semibold text-slate-200 text-xs mt-0.5 block">R$ --</span>
+                <span id="duel-hist-base" class="font-mono font-semibold text-slate-200 text-xs mt-0.5 block">--</span>
               </div>
             </div>
             <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 pt-2 border-t border-slate-800/80" id="duel-specs-base"></div>
@@ -626,17 +626,17 @@
               <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
                 <span class="text-slate-400 block text-[10px]">Preço Atual (Editável)</span>
                 <div class="flex items-center gap-1 mt-0.5">
-                  <span class="text-slate-400 font-mono">R$</span>
+                  <span class="text-slate-400 font-mono currency-sym">R$</span>
                   <input type="number" id="duel-price-cand" oninput="renderDuelAnalysis()" class="w-full bg-transparent font-mono font-bold text-sky-400 text-sm focus:outline-none border-b border-slate-700 focus:border-sky-400" step="50" />
                 </div>
               </div>
               <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
                 <span class="text-slate-400 block text-[10px]">Preço Alvo (Bom Momento)</span>
-                <span id="duel-target-cand" class="font-mono font-bold text-sky-300 text-sm mt-0.5 block">R$ --</span>
+                <span id="duel-target-cand" class="font-mono font-bold text-sky-300 text-sm mt-0.5 block">--</span>
               </div>
               <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
                 <span class="text-slate-400 block text-[10px]">Mínimo 90d / Média 90d</span>
-                <span id="duel-hist-cand" class="font-mono font-semibold text-slate-200 text-xs mt-0.5 block">R$ --</span>
+                <span id="duel-hist-cand" class="font-mono font-semibold text-slate-200 text-xs mt-0.5 block">--</span>
               </div>
             </div>
             <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 pt-2 border-t border-slate-800/80" id="duel-specs-cand"></div>
@@ -709,15 +709,15 @@
             </div>
             <!-- Zone Threshold Labels -->
             <div class="grid grid-cols-4 text-[11px] font-mono text-slate-400 mt-1.5">
-              <div id="zone-lbl-1">Até +R$ 800</div>
-              <div id="zone-lbl-2">Até +R$ 1.500 (Teto Justo)</div>
-              <div id="zone-lbl-3">Até +R$ 2.100 (Ágio Alto)</div>
-              <div id="zone-lbl-4">Acima de +R$ 2.100 (Péssimo)</div>
+              <div id="zone-lbl-1">Zona Excelente</div>
+              <div id="zone-lbl-2">Teto Justo</div>
+              <div id="zone-lbl-3">Ágio Alto</div>
+              <div id="zone-lbl-4">Péssimo</div>
             </div>
             <!-- Pointer Marker for Current Live Delta -->
             <div id="thermometer-marker" class="absolute top-0 transition-all duration-300 transform -translate-x-1/2" style="left: 50%;">
               <div class="px-2 py-0.5 rounded bg-white text-slate-950 font-mono font-extrabold text-[11px] shadow-lg whitespace-nowrap">
-                Hoje: <span id="marker-delta-val">+R$ 2.494</span>
+                Hoje: <span id="marker-delta-val">--</span>
               </div>
               <div class="w-0.5 h-6 bg-white mx-auto"></div>
             </div>
@@ -832,7 +832,7 @@
         <div class="mt-4 bg-slate-900/70 rounded-xl p-4 border border-slate-800/80">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
             <div>
-              <span id="cb-chart-title" class="text-xs font-bold text-slate-300">Mapa de Eficiência: Preço Atual (R$) vs Custo-Benefício (Índice 0–100)</span>
+              <span id="cb-chart-title" class="text-xs font-bold text-slate-300">Mapa de Eficiência: Preço Atual (<span class="currency-sym">R$</span>) vs Custo-Benefício (Índice 0–100)</span>
               <span class="text-[11px] text-slate-400 font-mono ml-2 hidden sm:inline">• Clique no ponto para enviar ao Duelo</span>
             </div>
             <!-- Chart Metric Selector (Price vs Benefit vs Benchmark) -->
@@ -966,9 +966,9 @@
             <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
               <div>
                 <span class="text-xs text-slate-400 block">Total das Peças a Comprar:</span>
-                <span class="text-[11px] text-slate-500" id="builder-owned-summary">Peças que já tenho: R$ 0</span>
+                <span class="text-[11px] text-slate-500" id="builder-owned-summary">Peças que já tenho: 0</span>
               </div>
-              <span id="builder-total-to-buy" class="text-2xl font-mono font-extrabold text-emerald-400">R$ 0,00</span>
+              <span id="builder-total-to-buy" class="text-2xl font-mono font-extrabold text-emerald-400">0</span>
             </div>
 
             <div id="builder-diagnostics-box" class="space-y-2 pt-2"></div>
@@ -1006,15 +1006,15 @@
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block" title="Deixe vazio para usar o menor preço/GB ao vivo. Útil p/ DDR4 ECC REG usada (X99) ou cotação própria.">R$/GB DDR4 (manual)</label>
+              <label class="text-[10px] font-mono uppercase text-slate-400 block" title="Deixe vazio para usar o menor preço/GB ao vivo. Útil p/ DDR4 ECC REG usada (X99) ou cotação própria."><span class="currency-sym">R$</span>/GB DDR4 (manual)</label>
               <input type="number" id="upg-override-ddr4" oninput="renderUpgradeSuggestions()" placeholder="auto" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-emerald-400" step="1" />
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block" title="Deixe vazio para usar o menor preço/GB ao vivo.">R$/GB DDR5 (manual)</label>
+              <label class="text-[10px] font-mono uppercase text-slate-400 block" title="Deixe vazio para usar o menor preço/GB ao vivo."><span class="currency-sym">R$</span>/GB DDR5 (manual)</label>
               <input type="number" id="upg-override-ddr5" oninput="renderUpgradeSuggestions()" placeholder="auto" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-sky-400" step="1" />
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">Orçamento Total (R$)</label>
+              <label class="text-[10px] font-mono uppercase text-slate-400 block">Orçamento Total (<span class="currency-sym">R$</span>)</label>
               <input type="number" id="upg-budget" oninput="renderUpgradeSuggestions()" value="7000" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-amber-400" step="100" />
             </div>
           </div>
@@ -1093,11 +1093,11 @@
 
               <div class="grid grid-cols-2 gap-2.5 text-xs">
                 <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-                  <span class="text-[10px] font-mono text-slate-400 block">Seu Preço Esperado Mín (R$)</span>
+                  <span class="text-[10px] font-mono text-slate-400 block">Seu Preço Esperado Mín (<span class="currency-sym">R$</span>)</span>
                   <input type="number" id="bf-input-min" oninput="updateBFPromoEvaluator()" class="w-full bg-transparent font-mono font-bold text-emerald-400 text-sm focus:outline-none border-b border-slate-700 mt-0.5" step="50" />
                 </div>
                 <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-                  <span class="text-[10px] font-mono text-slate-400 block">Seu Teto Máximo Aceitável (R$)</span>
+                  <span class="text-[10px] font-mono text-slate-400 block">Seu Teto Máximo Aceitável (<span class="currency-sym">R$</span>)</span>
                   <input type="number" id="bf-input-max" oninput="updateBFPromoEvaluator()" class="w-full bg-transparent font-mono font-bold text-sky-400 text-sm focus:outline-none border-b border-slate-700 mt-0.5" step="50" />
                 </div>
               </div>
@@ -1105,17 +1105,17 @@
               <!-- Coupon Simulator & Live Deal Tester -->
               <div class="bg-slate-900/90 p-3 rounded-lg border border-amber-500/30 space-y-2.5">
                 <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-mono uppercase text-amber-300 block font-bold">Simular Cupom ou Preço Live (R$):</label>
+                  <label class="text-[10px] font-mono uppercase text-amber-300 block font-bold">Simular Cupom ou Preço Live (<span class="currency-sym">R$</span>):</label>
                   <span class="text-[10px] text-slate-400 font-mono">Dedução automática</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <span class="text-[9px] font-mono uppercase text-slate-400 block">Preço Anunciado (R$)</span>
+                    <span class="text-[9px] font-mono uppercase text-slate-400 block">Preço Anunciado (<span class="currency-sym">R$</span>)</span>
                     <input type="number" id="bf-input-test-price" oninput="recalcBFCoupon()" placeholder="Ex: 3500" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono font-extrabold text-white text-xs mt-0.5" step="50" />
                   </div>
                   <div>
-                    <span class="text-[9px] font-mono uppercase text-amber-400 block">Cupom / Desconto (R$ ou %)</span>
+                    <span class="text-[9px] font-mono uppercase text-amber-400 block">Cupom / Desconto (<span class="currency-sym">R$</span> ou %)</span>
                     <input type="text" id="bf-input-coupon" oninput="recalcBFCoupon()" placeholder="Ex: 300 ou 10%" class="w-full bg-slate-950 border border-amber-500/40 rounded px-2.5 py-1.5 font-mono font-bold text-amber-300 text-xs mt-0.5" />
                   </div>
                 </div>
@@ -1141,8 +1141,8 @@
                   <p class="text-[10px] text-slate-400 font-mono mt-0.5" id="bf-target-chart-subtitle">Histórico diário com linha de meta esperada e teto aceitável</p>
                 </div>
                 <div class="flex items-center gap-2 text-[11px] font-mono">
-                  <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="bf-target-badge-min">Mín: R$ --</span>
-                  <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700" id="bf-target-badge-today">Hoje: R$ --</span>
+                  <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="bf-target-badge-min">Mín: --</span>
+                  <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700" id="bf-target-badge-today">Hoje: --</span>
                 </div>
               </div>
               <div class="h-56">
@@ -1176,7 +1176,7 @@
               </select>
               <select id="bf-chart-mode" onchange="renderBlackFridayTab()" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-white">
                 <option value="index" selected>Índice % (100 = média pré-BF 2025)</option>
-                <option value="brl">Preço absoluto (R$)</option>
+                <option value="brl" id="bf-opt-abs-price">Preço absoluto (R$)</option>
               </select>
             </div>
           </div>

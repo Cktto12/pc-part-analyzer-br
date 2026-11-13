@@ -16,31 +16,120 @@
     "max_valid_hardware_price": 45000.0,
     "vram_step_bonus_factor": 240.0,
     "default_alert_min_savings": 150.0,
-    "default_budget_ceiling": 5000.0
+    "default_budget_ceiling": 5000.0,
+    "exchange_rate_vs_brl": 1.0
   },
   "promotion_sources": {
     "enabled": true,
     "engine": "telegram_mirror",
     "channels": [
-      { "id": "ofertasadrenaline", "name": "Ofertas Adrenaline", "url": "https://t.me/s/ofertasadrenaline" },
-      { "id": "peperaiohardware",  "name": "Peperaio Hardware",  "url": "https://t.me/s/peperaiohardware" },
-      { "id": "iskandarsouza",     "name": "Iskandar Souza",     "url": "https://t.me/s/iskandarsouza" },
-      { "id": "benchpromos",       "name": "BenchPromos",       "url": "https://t.me/s/benchpromos" },
-      { "id": "kabumofertas",      "name": "KaBuM Ofertas",      "url": "https://t.me/s/kabumofertas" },
-      { "id": "nerdofertas",       "name": "Nerd Ofertas",       "url": "https://t.me/s/nerdofertas" },
-      { "id": "ofertastechbr",     "name": "Ofertas Tech BR",     "url": "https://t.me/s/ofertastechbr" }
+      {
+        "id": "ofertasadrenaline",
+        "name": "Ofertas Adrenaline",
+        "url": "https://t.me/s/ofertasadrenaline"
+      },
+      {
+        "id": "peperaiohardware",
+        "name": "Peperaio Hardware",
+        "url": "https://t.me/s/peperaiohardware"
+      },
+      {
+        "id": "iskandarsouza",
+        "name": "Iskandar Souza",
+        "url": "https://t.me/s/iskandarsouza"
+      },
+      {
+        "id": "benchpromos",
+        "name": "BenchPromos",
+        "url": "https://t.me/s/benchpromos"
+      },
+      {
+        "id": "kabumofertas",
+        "name": "KaBuM Ofertas",
+        "url": "https://t.me/s/kabumofertas"
+      },
+      {
+        "id": "nerdofertas",
+        "name": "Nerd Ofertas",
+        "url": "https://t.me/s/nerdofertas"
+      },
+      {
+        "id": "ofertastechbr",
+        "name": "Ofertas Tech BR",
+        "url": "https://t.me/s/ofertastechbr"
+      }
     ],
-    "search_keywords": ["", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "expirou", "acabou", "esgotou"],
-    "coupon_keywords": ["cupom", "código", "codigo", "desconto", "voucher", "resgate", "moedas"],
-    "cash_intent_keywords": ["por r$", "valor", "💵", "pix", "à vista", "a vista", "🔥"]
+    "search_keywords": [
+      "",
+      "RTX",
+      "5060",
+      "5070",
+      "4060",
+      "7600",
+      "RX ",
+      "Ryzen",
+      "DDR4",
+      "DDR5",
+      "expirou",
+      "acabou",
+      "esgotou"
+    ],
+    "coupon_keywords": [
+      "cupom",
+      "código",
+      "codigo",
+      "desconto",
+      "voucher",
+      "resgate",
+      "moedas"
+    ],
+    "cash_intent_keywords": [
+      "por r$",
+      "valor",
+      "💵",
+      "pix",
+      "à vista",
+      "a vista",
+      "🔥"
+    ]
   },
   "stores": [
-    { "id": "kabum", "name": "KaBuM!", "domain": "kabum.com.br", "icon": "🛒" },
-    { "id": "pichau", "name": "Pichau", "domain": "pichau.com.br", "icon": "🖥️" },
-    { "id": "terabyte", "name": "TerabyteShop", "domain": "terabyteshop.com.br", "icon": "⚡" },
-    { "id": "amazon_br", "name": "Amazon Brasil", "domain": "amazon.com.br", "icon": "📦" },
-    { "id": "mercadolivre", "name": "Mercado Livre", "domain": "mercadolivre.com.br", "icon": "🤝" },
-    { "id": "shopee_br", "name": "Shopee Brasil", "domain": "shopee.com.br", "icon": "🏷️" }
+    {
+      "id": "kabum",
+      "name": "KaBuM!",
+      "domain": "kabum.com.br",
+      "icon": "🛒"
+    },
+    {
+      "id": "pichau",
+      "name": "Pichau",
+      "domain": "pichau.com.br",
+      "icon": "🖥️"
+    },
+    {
+      "id": "terabyte",
+      "name": "TerabyteShop",
+      "domain": "terabyteshop.com.br",
+      "icon": "⚡"
+    },
+    {
+      "id": "amazon_br",
+      "name": "Amazon Brasil",
+      "domain": "amazon.com.br",
+      "icon": "📦"
+    },
+    {
+      "id": "mercadolivre",
+      "name": "Mercado Livre",
+      "domain": "mercadolivre.com.br",
+      "icon": "🤝"
+    },
+    {
+      "id": "shopee_br",
+      "name": "Shopee Brasil",
+      "domain": "shopee.com.br",
+      "icon": "🏷️"
+    }
   ],
   "database_source_settings": {
     "default_source_id": "hardware_barato",
@@ -50,7 +139,9 @@
   },
   "seasonal_events": {
     "primary_event": "Black Friday",
-    "season_months": [11],
+    "season_months": [
+      11
+    ],
     "baseline_days": 600
   }
 }

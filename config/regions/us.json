@@ -16,27 +16,97 @@
     "max_valid_hardware_price": 8000.0,
     "vram_step_bonus_factor": 45.0,
     "default_alert_min_savings": 30.0,
-    "default_budget_ceiling": 1000.0
+    "default_budget_ceiling": 1000.0,
+    "exchange_rate_vs_brl": 0.1724
   },
   "promotion_sources": {
     "enabled": true,
     "engine": "telegram_mirror",
     "channels": [
-      { "id": "buildapcsales",       "name": "BuildAPCSales",       "url": "https://t.me/s/buildapcsales" },
-      { "id": "techdeals",           "name": "Tech Deals USA",      "url": "https://t.me/s/techdeals" },
-      { "id": "pcpartpicker_deals",  "name": "PCPartPicker Deals",  "url": "https://t.me/s/pcpartpicker_deals" },
-      { "id": "hardwareswap",        "name": "Hardware Swap Feed",  "url": "https://t.me/s/hardwareswap" }
+      {
+        "id": "buildapcsales",
+        "name": "BuildAPCSales",
+        "url": "https://t.me/s/buildapcsales"
+      },
+      {
+        "id": "techdeals",
+        "name": "Tech Deals USA",
+        "url": "https://t.me/s/techdeals"
+      },
+      {
+        "id": "pcpartpicker_deals",
+        "name": "PCPartPicker Deals",
+        "url": "https://t.me/s/pcpartpicker_deals"
+      },
+      {
+        "id": "hardwareswap",
+        "name": "Hardware Swap Feed",
+        "url": "https://t.me/s/hardwareswap"
+      }
     ],
-    "search_keywords": ["", "RTX", "5060", "5070", "4060", "7600", "RX", "Ryzen", "DDR5", "NVMe"],
-    "coupon_keywords": ["promo code", "coupon", "code:", "promo:", "discount", "rebate", "voucher"],
-    "cash_intent_keywords": ["$", "deal", "price:", "lowest", "sale", "historic low", "mir", "🔥"]
+    "search_keywords": [
+      "",
+      "RTX",
+      "5060",
+      "5070",
+      "4060",
+      "7600",
+      "RX",
+      "Ryzen",
+      "DDR5",
+      "NVMe"
+    ],
+    "coupon_keywords": [
+      "promo code",
+      "coupon",
+      "code:",
+      "promo:",
+      "discount",
+      "rebate",
+      "voucher"
+    ],
+    "cash_intent_keywords": [
+      "$",
+      "deal",
+      "price:",
+      "lowest",
+      "sale",
+      "historic low",
+      "mir",
+      "🔥"
+    ]
   },
   "stores": [
-    { "id": "amazon_us",   "name": "Amazon US",     "domain": "amazon.com",       "icon": "📦" },
-    { "id": "newegg",      "name": "Newegg",        "domain": "newegg.com",       "icon": "🥚" },
-    { "id": "bestbuy",     "name": "Best Buy",      "domain": "bestbuy.com",      "icon": "🏷️" },
-    { "id": "microcenter", "name": "Micro Center",  "domain": "microcenter.com",  "icon": "🏬" },
-    { "id": "bhphoto",     "name": "B&H Photo",     "domain": "bhphotovideo.com", "icon": "📷" }
+    {
+      "id": "amazon_us",
+      "name": "Amazon US",
+      "domain": "amazon.com",
+      "icon": "📦"
+    },
+    {
+      "id": "newegg",
+      "name": "Newegg",
+      "domain": "newegg.com",
+      "icon": "🥚"
+    },
+    {
+      "id": "bestbuy",
+      "name": "Best Buy",
+      "domain": "bestbuy.com",
+      "icon": "🏷️"
+    },
+    {
+      "id": "microcenter",
+      "name": "Micro Center",
+      "domain": "microcenter.com",
+      "icon": "🏬"
+    },
+    {
+      "id": "bhphoto",
+      "name": "B&H Photo",
+      "domain": "bhphotovideo.com",
+      "icon": "📷"
+    }
   ],
   "database_source_settings": {
     "default_source_id": "local_cache",
@@ -46,7 +116,9 @@
   },
   "seasonal_events": {
     "primary_event": "Black Friday / Cyber Week",
-    "season_months": [11],
+    "season_months": [
+      11
+    ],
     "baseline_days": 600
   }
 }

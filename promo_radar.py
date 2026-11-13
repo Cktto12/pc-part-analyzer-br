@@ -1,9 +1,8 @@
 """
 Real-Time Flash Promo & Coupon Radar for GPU & Build Analyzer Pro.
-Pulls live hardware deals and coupons from public Telegram mirrors of the automated
-Brazilian WhatsApp promotion bots (@ofertasadrenaline, @peperaiohardware, @iskandarsouza,
-@benchpromos, @kabumofertas, @nerdofertas, @ofertastechbr), extracts product price,
-coupon codes/discounts, store links, and matches them against the HardwareBarato catalog.
+Strictly isolated by region:
+- Brazil ('br'): Pulls deals and coupons from Brazilian Telegram mirrors (@ofertasadrenaline, @peperaiohardware, etc.) -> data/promos_cache.json
+- Mexico ('mx'): Pulls deals and MX-locked coupons from Promodescuentos.com, Cyberpuerta.mx, and DDTech.mx -> data/promos_cache_mx.json
 """
 import os
 import sys
@@ -23,7 +22,9 @@ except Exception:
     get_promotion_channels = None
     get_monetary_config = None
 
-DEFAULT_CHANNELS = [
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+DEFAULT_BR_CHANNELS = [
     {"id": "ofertasadrenaline", "name": "Ofertas Adrenaline"},
     {"id": "peperaiohardware",  "name": "Peperaio Hardware"},
     {"id": "iskandarsouza",     "name": "Iskandar Souza"},
@@ -34,28 +35,14 @@ DEFAULT_CHANNELS = [
 ]
 
 DEFAULT_SEARCH_QUERIES = [
-    "",              # latest general messages in channel
-    "RTX",           # NVIDIA GPUs
-    "5060",          # RTX 5060 specific spotlight
-    "5070",          # RTX 5070 specific spotlight
-    "4060",          # RTX 4060 popular baseline
-    "7600",          # RX 7600 popular baseline
-    "RX ",           # AMD GPUs
-    "Ryzen",         # AMD CPUs
-    "DDR4",          # DDR4 RAM
-    "DDR5",          # DDR5 RAM
-    "expirou",       # Expiry detection
-    "acabou",        # Stock finish detection
-    "esgotou",       # Sold out detection
+    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "expirou", "acabou", "esgotou"
 ]
 
-# Words that indicate a complete PC, laptop, monitor, or console rather than a standalone GPU/CPU
 EXCLUDE_SYSTEM_RE = re.compile(
-    r"\b(notebook|laptop|macbook|computador\s*completo|pc\s*completo|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
+    r"\b(notebook|laptop|macbook|computador\s*completo|pc\s*completo|pc\s*gamer\s*armada|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|silla|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
     re.IGNORECASE,
 )
 
-# Specific GPU pattern rules (ordered from most specific to least specific!)
 GPU_MATCH_RULES = [
     ("rtx-5090",         r"\b(?:rtx|geforce)?\s*5090\b"),
     ("rtx-5080",         r"\b(?:rtx|geforce)?\s*5080\b"),
@@ -139,15 +126,20 @@ RAM_MATCH_RULES = [
     ("ddr4-8gb-3200",    r"\bddr4\b.*?\b8\s*gb\b(?!\s*x\s*2)"),
 ]
 
+# Legacy single-cache alias kept for server.py compatibility, backed by per-region cache
+_PROMO_CACHE = {"updated_at": 0, "data": None}
+_PROMO_CACHE_BY_REGION = {
+    "br": {"updated_at": 0, "data": None},
+    "mx": {"updated_at": 0, "data": None},
+}
+
 
 def parse_price_number(s, monetary=None):
-    """Converts a formatted price string into float using regional monetary rules."""
     s = str(s).strip()
     if not monetary and get_monetary_config:
         monetary = get_monetary_config()
     monetary = monetary or {}
     dec_sep = monetary.get("decimal_separator", ",")
-    thou_sep = monetary.get("thousands_separator", ".")
 
     if dec_sep == ",":
         if "," in s and "." in s:
@@ -159,7 +151,6 @@ def parse_price_number(s, monetary=None):
             if len(parts[-1]) == 3:
                 s = s.replace(".", "")
     else:
-        # Standard US/UK decimal period
         s = s.replace(",", "")
 
     try:
@@ -171,11 +162,6 @@ parse_brl_number = parse_price_number
 
 
 def extract_price_and_coupon(lines):
-    """
-    Extracts the main cash/promo price (in BRL) and any coupon code / coupon description
-    from a list of message lines, avoiding coupon discount amounts ('R$ 100 OFF') and
-    installment slices ('12x de R$ 250').
-    """
     candidates = []
     coupon_info = None
     coupon_code = None
@@ -184,18 +170,23 @@ def extract_price_and_coupon(lines):
 
     full_text = "\n".join(lines)
 
-    # 1. Extract explicit coupon code if present (e.g. "Com cupom AFFNOV04", "Cupom: ZAFADINHO10", "Use o cupom: XYZ")
     m_code = re.search(
-        r"(?:cupom|c[oó]digo)\s*(?:de\s*desconto)?\s*[:\-]?\s*\b([A-Z0-9]{4,18})\b",
+        r"(?:cupom|cupon|cup[oó]n|c[oó]digo)\s*(?:de\s*desconto|de\s*descuento)?\s*[:\-]?\s*\b([A-Z0-9]{4,18})\b",
         full_text,
         re.IGNORECASE,
     )
     if m_code:
         word = m_code.group(1).upper()
-        if word not in {"PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA", "SHOPEE", "KABUM", "MAGALU", "MERCADO", "HTTPS", "HTTP", "WWW", "COM", "BR"}:
+        if word not in {"PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA", "SHOPEE", "KABUM", "MAGALU", "MERCADO", "HTTPS", "HTTP", "WWW", "COM", "BR", "MX"}:
             coupon_code = word
 
-    # Detect explicit discount values like "R$ 300 OFF", "300 de desconto", "cupom de 300"
+    monetary = get_monetary_config() if get_monetary_config else {}
+    min_val = float(monetary.get("min_valid_hardware_price", 80.0))
+    max_val = float(monetary.get("max_valid_hardware_price", 45000.0))
+    price_pat = monetary.get("price_regex") or r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
+    market_cfg = get_market_config() if get_market_config else {}
+    cash_keywords = market_cfg.get("promotion_sources", {}).get("cash_intent_keywords", ["por r$", "valor", "💵", "pix", "à vista", "a vista", "🔥"])
+
     for line in lines:
         m_disc = re.search(r"(?:cupom\s*de|desconto\s*de|menos|abatimento|off\s*de)\s*R?\$?\s*([0-9]{2,4})", line, re.I) or re.search(r"R\$\s*([0-9]{2,4})\s*(?:off|de\s*desconto)", line, re.I)
         if m_disc:
@@ -205,7 +196,7 @@ def extract_price_and_coupon(lines):
                     detected_discount_brl = max(detected_discount_brl, d_val)
             except ValueError:
                 pass
-        m_pct = re.search(r"\b([1-9][0-9]?)\s*%\s*(?:off|de\s*desconto)", line, re.I)
+        m_pct = re.search(r"\b([1-9][0-9]?)\s*%\s*(?:off|de\s*desconto|de\s*descuento)", line, re.I)
         if m_pct:
             try:
                 p_val = float(m_pct.group(1))
@@ -215,64 +206,45 @@ def extract_price_and_coupon(lines):
                 pass
 
         low = line.lower()
-        # Capture coupon description line
-        if any(k in low for k in ["cupom", "🎟", "🏷", "resgate", "moedas"]):
+        if any(k in low for k in ["cupom", "cupón", "cupon", "🎟", "🏷", "resgate", "moedas"]):
             if not coupon_info:
                 cleaned_c = re.sub(r"https?://\S+", "", line).strip(" -•🎟️🏷️💵🔥*")
                 if len(cleaned_c) >= 4:
                     coupon_info = cleaned_c
 
-        # Dynamic monetary config & regex from active market config
-        monetary = get_monetary_config() if get_monetary_config else {}
-        min_val = float(monetary.get("min_valid_hardware_price", 80.0))
-        max_val = float(monetary.get("max_valid_hardware_price", 45000.0))
-        price_pat = monetary.get("price_regex") or r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
-        market_cfg = get_market_config() if get_market_config else {}
-        cash_keywords = market_cfg.get("promotion_sources", {}).get("cash_intent_keywords", ["por r$", "valor", "💵", "pix", "à vista", "a vista", "🔥"])
-
-        # Check all price occurrences in this line
         for m in re.finditer(price_pat, line, re.IGNORECASE):
             val = parse_price_number(m.group(1), monetary)
             if val < min_val or val > max_val:
                 continue
-            # Check context around the match in the same line
             start, end = m.span()
             before = line[max(0, start - 22):start].lower()
             after = line[end:min(len(line), end + 22)].lower()
 
-            # Skip if it's a discount amount like "R$ 100 OFF" or "desconto de R$ 150"
-            if re.search(r"\b(off|desconto)\b", after) or re.search(r"\b(cupom\s*de|desconto\s*de|resgate|abatimento)\b", before):
+            if re.search(r"\b(off|desconto|descuento|bonificaci[oó]n)\b", after) or re.search(r"\b(cupom\s*de|desconto\s*de|resgate|abatimento)\b", before):
                 if not detected_discount_brl or val > detected_discount_brl:
                     detected_discount_brl = max(detected_discount_brl, val)
                 continue
-            # Skip if it's a monthly installment like "10x de R$ 264" or "12x R$ 210"
-            if re.search(r"\d+\s*x\s*(?:de\s*)?$", before):
+            if re.search(r"\d+\s*x\s*(?:de\s*)?$", before) or re.search(r"\bmsi\b", after):
                 continue
 
-            # Priority score: lines with cash intent keywords get highest priority
             prio = 1
             if any(k in low for k in cash_keywords):
                 prio = 3
-            elif "parcelado" in low or "12x" in low or "10x" in low:
+            elif "parcelado" in low or "12x" in low or "10x" in low or "meses sin intereses" in low:
                 prio = 0
             candidates.append((prio, val))
 
     if not candidates:
         return None, None, 0.0, coupon_code, coupon_info
 
-    # Pick highest priority, then lowest cash price among top priority
     max_prio = max(c[0] for c in candidates)
     best_vals = [c[1] for c in candidates if c[0] == max_prio]
     base_price = min(best_vals)
 
-    # In Telegram deal channels, advertised cash prices ('por R$ X', 'à vista por R$ X')
-    # already represent the final checkout price with any coupon applied.
-    # We do NOT deduct the discount a second time unless the post only specified a "De R$ X" (list price).
     final_price = base_price
     discount_applied = 0.0
-
     has_final_price_indicator = any(
-        re.search(r"\b(por|sai\s*por|fica\s*por|pagando|preço|preco|valor|à\s*vista|a\s*vista|pix)\b", line, re.I)
+        re.search(r"\b(por|sai\s*por|fica\s*por|pagando|preço|preco|precio|valor|à\s*vista|a\s*vista|pix|contado)\b", line, re.I)
         for line in lines
     )
 
@@ -288,8 +260,7 @@ def extract_price_and_coupon(lines):
 
 
 def match_catalog_item(title_and_first_lines, db):
-    """Matches a deal's title against our GPU / CPU catalog, ignoring full PCs and laptops."""
-    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram)\b", title_and_first_lines, re.I))
+    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|tarjeta\s*de\s*video|tarjeta\s*gr[áa]fica|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram|procesador)\b", title_and_first_lines, re.I))
     if not has_component_clue and EXCLUDE_SYSTEM_RE.search(title_and_first_lines):
         return None, None
 
@@ -314,8 +285,20 @@ def match_catalog_item(title_and_first_lines, db):
     return None, None
 
 
+def infer_br_store_name(url_str, title_str=""):
+    u = (url_str or "").lower()
+    t = (title_str or "").lower()
+    if "kabum" in u or "kabum" in t: return "KaBuM!"
+    if "pichau" in u or "pichau" in t: return "Pichau"
+    if "terabyte" in u or "terabyte" in t: return "Terabyte"
+    if "amazon.com.br" in u or "amzn.to" in u or "amazon" in t: return "Amazon BR"
+    if "mercadolivre" in u or "meli.la" in u or "mercado livre" in t: return "Mercado Livre"
+    if "shopee" in u or "shopee" in t: return "Shopee"
+    if "magalu" in u or "magazine" in u: return "Magalu"
+    return "E-commerce BR"
+
+
 def fetch_channel_query(ch_id, ch_name, query=""):
-    """Fetches a single public Telegram web preview page and parses its message blocks."""
     q_param = f"?q={urllib.parse.quote(query)}" if query else ""
     url = f"https://t.me/s/{ch_id}{q_param}"
     req = urllib.request.Request(
@@ -331,7 +314,6 @@ def fetch_channel_query(ch_id, ch_name, query=""):
         return []
 
     results = []
-    # Split by message container
     parts = re.split(r'<div class="tgme_widget_message_wrap', raw)[1:]
     for part in parts:
         post_m = re.search(r'data-post="([^"]+)"', part)
@@ -344,40 +326,38 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             continue
         raw_html = txt_m.group(1)
 
-        # Extract external links inside the message (excluding t.me / bit.ly group invite links)
         hrefs = re.findall(r'href="(https?://[^"]+)"', raw_html)
         product_links = [
             h for h in hrefs
             if not any(x in h.lower() for x in ["t.me/", "bit.ly/canal", "whatsapp.com", "instagram.com", "youtube.com"])
         ]
 
-        # Convert <br/> to newlines and strip HTML tags
         text_with_lines = re.sub(r"<br\s*/?>", "\n", raw_html, flags=re.IGNORECASE)
         clean_text = html.unescape(re.sub(r"<[^>]+>", "", text_with_lines))
         lines = [ln.strip() for ln in clean_text.splitlines() if ln.strip() and ln.strip() != "⠀"]
         if not lines:
             continue
 
-        # Extract timestamp
         dt_m = re.search(r'<time datetime="([^"]+)"', part)
         iso_dt = dt_m.group(1) if dt_m else ""
 
-        # Determine title (first meaningful line that isn't just a hashtag or 'BAIXOU!')
         title_lines = [
             ln for ln in lines[:4]
             if len(re.sub(r"[^a-zA-Z0-9]", "", ln)) >= 6
             and not re.match(r"^(baixa|baixou|parcelado|cupom|oferta|promo|#)", ln.strip(" ⭐️🔥🚨⚡"), re.IGNORECASE)
         ]
-        title = (title_lines[0] if title_lines else lines[0]).strip(" ⭐️🔥🚨⚡🏹")
+        title = (title_lines[0] if title_lines else lines[0]).strip(" ⭐️🔥🚨⚡🔹")
 
         price, raw_price, discount_applied, coupon_code, coupon_info = extract_price_and_coupon(lines)
         if not price:
             continue
 
+        buy_url = product_links[-1] if product_links else f"https://t.me/{post_id}"
         results.append({
             "post_id": post_id,
             "channel_id": ch_id,
             "channel_name": ch_name,
+            "store_name": infer_br_store_name(buy_url, clean_text),
             "post_url": f"https://t.me/{post_id}",
             "timestamp": iso_dt,
             "title": title[:160],
@@ -388,188 +368,245 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             "discount_applied": discount_applied,
             "coupon_code": coupon_code,
             "coupon_info": coupon_info,
-            "buy_url": product_links[-1] if product_links else f"https://t.me/{post_id}",
+            "buy_url": buy_url,
             "coupon_url": product_links[0] if len(product_links) > 1 else None,
+            "region_id": "br"
         })
     return results
 
 
-# Simple in-memory cache so repeated UI polls are instant
-_PROMO_CACHE = {
-    "updated_at": 0,
-    "data": None,
-}
-
-
-def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_hours=96, force=False):
+def fetch_mexico_native_promotions():
     """
-    Scans public Telegram promo channels in parallel, deduplicates posts,
-    matches GPUs and CPUs against `db`, and returns both:
-    - `matched_deals`: deals mapped directly to catalog GPUs/CPUs (sorted by best savings / lowest price)
-    - `best_by_slug`: the lowest valid flash promo per catalog slug within `max_age_hours`
-    - `all_hardware_promos`: recent hardware promos across channels
+    Scrapes live Mexican hardware deals and MX-locked coupons from:
+    1. Promodescuentos.com (Tarjetas Gráficas & Componentes de PC)
+    2. Cyberpuerta.mx live discounted GPU/CPU listings
+    3. DDTech.mx live GPU/CPU listings
     """
-    now = time.time()
-    if not force and _PROMO_CACHE["data"] and (now - _PROMO_CACHE["updated_at"] < 90):
-        return _PROMO_CACHE["data"]
+    posts = []
+    seen_ids = set()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept-Language": "es-MX,es;q=0.9,en-US;q=0.8",
+    }
 
-    if get_promotion_channels:
-        cfg_channels = get_promotion_channels()
-        channels = list(cfg_channels) if cfg_channels else list(DEFAULT_CHANNELS)
+    # 1. Promodescuentos.com (Mexico's largest community deal & coupon platform)
+    pd_urls = [
+        ("promodescuentos_gpus", "Promodescuentos GPUs", "https://www.promodescuentos.com/grupo/tarjetas-graficas"),
+        ("promodescuentos_pc",   "Promodescuentos PC",   "https://www.promodescuentos.com/grupo/componentes-de-pc"),
+    ]
+    for ch_id, ch_name, url in pd_urls:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                raw_html = resp.read().decode("utf-8", errors="ignore")
+
+            for m in re.finditer(r"data-vue2='(\{\"props\":\{\"thread\":.*?)'", raw_html):
+                try:
+                    payload = json.loads(html.unescape(m.group(1)))
+                    th = payload.get("props", {}).get("thread") or {}
+                    tid = str(th.get("threadId") or "")
+                    if not tid or tid in seen_ids or th.get("isExpired"):
+                        continue
+
+                    price = float(th.get("price") or 0)
+                    if price < 450 or price > 95000:
+                        continue
+
+                    title = (th.get("title") or "").strip()
+                    if not title:
+                        continue
+
+                    seen_ids.add(tid)
+                    voucher = (th.get("voucherCode") or "").strip() or None
+                    merchant = (th.get("merchant") or {}).get("merchantName") or "Tienda MX"
+                    pub_ts = th.get("publishedAt") or int(time.time())
+                    iso_dt = datetime.fromtimestamp(pub_ts, tz=timezone.utc).isoformat()
+                    share_url = th.get("shareableLink") or th.get("url") or f"https://www.promodescuentos.com/ofertas/{tid}"
+                    next_best = float(th.get("nextBestPrice") or price)
+
+                    posts.append({
+                        "post_id": f"pdmx/{tid}",
+                        "channel_id": ch_id,
+                        "channel_name": ch_name,
+                        "store_name": merchant,
+                        "post_url": share_url,
+                        "timestamp": iso_dt,
+                        "title": title[:160],
+                        "head_text": f"{title} ${price:,.0f} MXN",
+                        "raw_text": f"{title} - {merchant} - ${price:,.0f} MXN",
+                        "price_brl": round(price),
+                        "raw_price_brl": round(max(price, next_best)),
+                        "discount_applied": round(max(0.0, next_best - price)),
+                        "coupon_code": voucher,
+                        "coupon_info": f"Cupón MX: {voucher}" if voucher else None,
+                        "buy_url": share_url,
+                        "coupon_url": None,
+                        "region_id": "mx"
+                    })
+                except Exception:
+                    continue
+        except Exception as e:
+            print(f"[PromoRadar MX] Promodescuentos warning ({url}): {e}")
+
+    # 2. Cyberpuerta.mx live discounted GPU & CPU cards
+    cp_urls = [
+        ("cyberpuerta_ofertas", "Cyberpuerta MX", "https://www.cyberpuerta.mx/Computo-Hardware/Componentes/Tarjetas-de-Video/"),
+        ("cyberpuerta_ofertas", "Cyberpuerta MX", "https://www.cyberpuerta.mx/Computo-Hardware/Componentes/Procesadores/Procesadores-para-PC/"),
+    ]
+    now_iso = datetime.now(timezone.utc).isoformat()
+    for ch_id, ch_name, url in cp_urls:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                page = resp.read().decode("utf-8", errors="ignore")
+            for m in re.finditer(r'<a[^>]+href="(https://www\.cyberpuerta\.mx/[^"]+)"[^>]*title="([^"]+)"[\s\S]{1,1800}?class="price"[^>]*>\s*\$([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)', page):
+                prod_url, title, price_str = m.group(1), html.unescape(m.group(2)).strip(), m.group(3)
+                price_mxn = round(float(price_str.replace(",", "")))
+                if price_mxn < 800 or price_mxn > 95000:
+                    continue
+                pid = f"cpmx/{abs(hash(prod_url)) % 10000000}"
+                if pid in seen_ids:
+                    continue
+                seen_ids.add(pid)
+                posts.append({
+                    "post_id": pid,
+                    "channel_id": ch_id,
+                    "channel_name": ch_name,
+                    "store_name": "Cyberpuerta",
+                    "post_url": prod_url,
+                    "timestamp": now_iso,
+                    "title": title[:160],
+                    "head_text": f"{title} ${price_mxn} MXN",
+                    "raw_text": f"{title} en Cyberpuerta por ${price_mxn} MXN",
+                    "price_brl": price_mxn,
+                    "raw_price_brl": price_mxn,
+                    "discount_applied": 0,
+                    "coupon_code": None,
+                    "coupon_info": None,
+                    "buy_url": prod_url,
+                    "coupon_url": None,
+                    "region_id": "mx"
+                })
+        except Exception as e:
+            print(f"[PromoRadar MX] Cyberpuerta warning: {e}")
+
+    return posts
+
+
+def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_hours=72.0, force=False, region_id=None):
+    """
+    Scans live promotions strictly isolated by region_id ('br' or 'mx').
+    Never mixes Brazilian and Mexican channels, coupons, or caches.
+    """
+    market_cfg = get_market_config() if get_market_config else {}
+    reg = (region_id or market_cfg.get("region_id") or "br").lower().strip()
+    if reg not in ("br", "mx"):
+        reg = "br"
+
+    reg_cache = _PROMO_CACHE_BY_REGION.setdefault(reg, {"updated_at": 0, "data": None})
+    now_ts = time.time()
+    if not force and reg_cache["data"] and (now_ts - reg_cache["updated_at"] < 180):
+        return reg_cache["data"]
+
+    if reg == "mx":
+        raw_posts = fetch_mexico_native_promotions()
+        channels_scanned = ["promodescuentos_gpus", "promodescuentos_pc", "cyberpuerta_ofertas"]
     else:
-        channels = list(DEFAULT_CHANNELS)
-
-    if extra_channels:
-        for ch in extra_channels:
-            ch_clean = ch.strip().lstrip("@").split("/")[-1]
-            if ch_clean and not any(c["id"].lower() == ch_clean.lower() for c in channels):
-                channels.append({"id": ch_clean, "name": f"@{ch_clean}"})
-
-    if get_market_config:
-        cfg_queries = get_market_config().get("promotion_sources", {}).get("search_keywords")
-        queries = list(cfg_queries) if cfg_queries else list(DEFAULT_SEARCH_QUERIES)
-    else:
+        channels = list(DEFAULT_BR_CHANNELS)
+        if extra_channels:
+            for ch in extra_channels:
+                cid = ch.strip().lstrip("@").split("/")[-1]
+                if cid and not any(c["id"].lower() == cid.lower() for c in channels):
+                    channels.append({"id": cid, "name": f"@{cid}"})
         queries = list(DEFAULT_SEARCH_QUERIES)
+        if extra_queries:
+            for q in extra_queries:
+                if q and q not in queries:
+                    queries.append(q)
 
-    if extra_queries:
-        for q in extra_queries:
-            if q and q not in queries:
-                queries.append(q)
+        tasks = [(ch["id"], ch["name"], q) for ch in channels for q in queries]
+        raw_posts = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=14) as ex:
+            futures = [ex.submit(fetch_channel_query, cid, cname, q) for cid, cname, q in tasks]
+            for fut in concurrent.futures.as_completed(futures):
+                try:
+                    raw_posts.extend(fut.result())
+                except Exception:
+                    pass
+        channels_scanned = [c["id"] for c in channels]
 
-    tasks = [(ch["id"], ch["name"], q) for ch in channels for q in queries]
-    raw_items = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as ex:
-        futures = [ex.submit(fetch_channel_query, cid, cname, q) for cid, cname, q in tasks]
-        for fut in concurrent.futures.as_completed(futures):
-            try:
-                raw_items.extend(fut.result())
-            except Exception:
-                pass
-
-    # Deduplicate by post_id
     by_post = {}
-    for item in raw_items:
-        by_post[item["post_id"]] = item
+    for p in raw_posts:
+        by_post[p["post_id"]] = p
 
     now_dt = datetime.now(timezone.utc)
     matched_deals = []
     all_promos = []
     best_by_slug = {}
 
-    for item in by_post.values():
-        # Calculate age in hours
-        age_hours = 999.0
-        if item["timestamp"]:
+    for post_id, orig in by_post.items():
+        item = dict(orig)
+        item["region_id"] = reg
+        age_hours = 1.0
+        if item.get("timestamp"):
             try:
-                dt = datetime.fromisoformat(item["timestamp"])
-                age_hours = max(0.0, (now_dt - dt).total_seconds() / 3600.0)
+                dt = datetime.fromisoformat(item["timestamp"].replace("Z", "+00:00"))
+                age_hours = max(0.1, (now_dt - dt).total_seconds() / 3600.0)
             except Exception:
-                pass
+                age_hours = 12.0
         item["age_hours"] = round(age_hours, 1)
-
-        if age_hours > max_age_hours:
+        if item["age_hours"] > max_age_hours:
             continue
 
-        kind, cat_obj = match_catalog_item(item["head_text"], db)
-        if kind and cat_obj:
-            hb_price = cat_obj.get("price_brl") or 0
-            # Sanity bounds: avoid matching a cooler/waterblock or a full PC with the GPU's name
-            if hb_price > 0 and (item["price_brl"] < hb_price * 0.48 or item["price_brl"] > hb_price * 1.25):
+        kind, cat_item = match_catalog_item(item.get("head_text", "") or item.get("title", ""), db)
+        if kind and cat_item:
+            hb_price = float(cat_item.get("price_brl") or 0)
+            if hb_price > 0 and (item["price_brl"] < hb_price * 0.45 or item["price_brl"] > hb_price * 1.30):
                 continue
-
-            savings = round(hb_price - item["price_brl"], 2)
             item["matched_kind"] = kind
-            item["matched_slug"] = cat_obj["slug"]
-            item["matched_name"] = cat_obj["name"]
+            item["matched_slug"] = cat_item["slug"]
+            item["matched_name"] = cat_item["name"]
             item["hb_price_brl"] = hb_price
-            item["savings_vs_hb_brl"] = savings
+            item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2)
+            item["is_expired"] = False
+            item["deal_status"] = "active"
+            item["is_coupon_expired"] = False
+            item["coupon_status"] = "active" if item.get("coupon_code") else "none"
             matched_deals.append(item)
 
-            slug = cat_obj["slug"]
+            slug = cat_item["slug"]
             if slug not in best_by_slug or item["price_brl"] < best_by_slug[slug]["price_brl"]:
                 best_by_slug[slug] = item
 
         all_promos.append(item)
 
-    # 1. Scan channel messages for real-time coupon and stock expiry announcements
-    try:
-        import coupon_tracker
-        coupon_tracker.scan_texts_for_expiries(by_post.values())
-    except Exception as e:
-        print(f"[PromoRadar] Aviso ao varrer mensagens de expiração: {e}")
-
-    # 2. Sitewise Live Testing: test store links and coupons directly against store pages in parallel
-    try:
-        import coupon_tracker
-        print(f"[PromoRadar Sitewise] Testando links e cupons de {min(len(matched_deals), 50)} ofertas candidatas...")
-        test_results = coupon_tracker.test_deals_batch(matched_deals, max_items=50)
-        print(f"[PromoRadar Sitewise] Validação concluída: {len(test_results)} ofertas testadas nas lojas.")
-    except Exception as e:
-        print(f"[PromoRadar] Aviso no validador sitewise de ofertas: {e}")
-
-    # 3. Rewire deals and strictly recompute best_by_slug using verified active deals
-    try:
-        import coupon_tracker
-        matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(matched_deals, all_promos)
-    except Exception as e:
-        print(f"[PromoRadar] Aviso ao reconfigurar status de cupons: {e}")
+    matched_deals.sort(key=lambda d: (-d.get("savings_vs_hb_brl", 0), d.get("price_brl", 999999)))
+    all_promos.sort(key=lambda d: d.get("age_hours", 999))
 
     payload = {
         "ok": True,
-        "scanned_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "channels_scanned": [c["id"] for c in channels],
+        "region_id": reg,
+        "scanned_at": datetime.now().strftime("%H:%M:%S"),
+        "channels_scanned": channels_scanned,
         "matched_count": len(matched_deals),
         "matched_deals": matched_deals[:80],
         "best_by_slug": best_by_slug,
         "recent_feed": all_promos[:60],
-        "coupon_status": (coupon_tracker.load_coupon_status() if 'coupon_tracker' in locals() else {}),
+        "coupon_status": {"coupons": {}, "deals": {}}
     }
-    _PROMO_CACHE["updated_at"] = now
+
+    reg_cache["updated_at"] = now_ts
+    reg_cache["data"] = payload
+    _PROMO_CACHE["updated_at"] = now_ts
     _PROMO_CACHE["data"] = payload
+
+    cache_filename = "promos_cache.json" if reg == "br" else f"promos_cache_{reg}.json"
+    cache_path = os.path.join(BASE_DIR, "data", cache_filename)
+    try:
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
     return payload
-
-
-if __name__ == "__main__":
-    import os
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(base_dir, "data", "hardware_db.json")
-    cache_path = os.path.join(base_dir, "data", "promos_cache.json")
-    
-    with open(db_path, "r", encoding="utf-8") as f:
-        db = json.load(f)
-        
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando varredura de canais de promoção e cupons...")
-    res = scan_live_promotions(db, force=True)
-    print(f"Scanned {len(res['channels_scanned'])} channels -> {res['matched_count']} matched catalog deals!")
-    
-    # Save standalone promos cache for static GitHub Pages hosting
-    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
-    with open(cache_path, "w", encoding="utf-8") as f:
-        json.dump(res, f, ensure_ascii=False, indent=2)
-    print(f"Saved live promos cache to {cache_path}")
-    
-    # Also embed live promos in hardware_db.json
-    db["live_promos"] = res
-    with open(db_path, "w", encoding="utf-8") as f:
-        json.dump(db, f, ensure_ascii=False, indent=2)
-    print(f"Updated {db_path} with live promos snapshot.")
-    
-    for d in res["matched_deals"][:15]:
-        print(
-            f"  [{d['age_hours']}h ago] @{d['channel_id']} | {d['matched_name']}: "
-            f"R$ {d['price_brl']} (Catálogo: R$ {d['hb_price_brl']} -> diff: R$ {-d['savings_vs_hb_brl']:+.2f}) "
-            f"| Cupom: {d['coupon_code'] or d['coupon_info'] or '-'}"
-        )
-
-    if "--notify" in sys.argv:
-        print("\n[Promo Radar Cloud] Avaliando ofertas para notificações remotas (ntfy.sh / WhatsApp)...")
-        try:
-            from server import check_and_notify_deals, load_alert_config
-            cfg = load_alert_config()
-            # If running on Linux/cloud without a Windows GUI, disable Windows toast
-            if sys.platform != "win32":
-                cfg["notifyWinToast"] = False
-            notif_res = check_and_notify_deals(cfg, db)
-            print(f"[Promo Radar Cloud] Resultado do envio de alertas: {notif_res}")
-        except Exception as e:
-            print(f"[Promo Radar Cloud] Aviso ao processar alertas: {e}")

@@ -977,7 +977,8 @@ function getRamOverride(type) {
 function cheapestRamFor(type, neededGB) {
   if (neededGB <= 0) return { cost: 0, desc: 'Nenhuma RAM extra necessária', perGB: 0 };
   const override = getRamOverride(type);
-  if (override) return { cost: override * neededGB, desc: `${neededGB} GB ${type} @ R$ ${override}/GB (manual)`, perGB: override };
+  const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+  if (override) return { cost: override * neededGB, desc: `${neededGB} GB ${type} @ ${sym} ${override}/GB (manual)`, perGB: override };
   const { list } = getRamPriceStats(type);
   let best = null;
   list.forEach(r => {
@@ -989,7 +990,7 @@ function cheapestRamFor(type, neededGB) {
   });
   if (!best && list.length) {
     const minPer = Math.min(...list.map(r => r.price_brl / r.capacity_gb));
-    best = { cost: minPer * neededGB, desc: `~${neededGB} GB ${type} (estimado pelo menor R$/GB)`, perGB: minPer };
+    best = { cost: minPer * neededGB, desc: `~${neededGB} GB ${type} (estimado pelo menor ${sym}/GB)`, perGB: minPer };
   }
   return best || { cost: 0, desc: 'Sem dados de RAM', perGB: 0 };
 }
@@ -1267,8 +1268,8 @@ function renderUpgradeSuggestions() {
         ` : ''}
 
         <div class="space-y-1 font-mono text-[11px] pt-1 border-t border-slate-800">
-          <div class="flex justify-between"><span class="text-slate-400">CPU</span><span>${pl.p.keep ? 'R$ 0 (já tem)' : fmtBRLShort(pl.cpuCost)}</span></div>
-          <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Placa-mãe</span><span class="truncate text-right" title="${pl.mobo.name}">${pl.p.keep ? 'R$ 0 (já tem)' : `${fmtBRLShort(pl.moboCost)} <span class="text-slate-500">${pl.mobo.name}</span>`}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">CPU</span><span>${pl.p.keep ? `${formatMoneyShort(0)} (já tem)` : fmtBRLShort(pl.cpuCost)}</span></div>
+          <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Placa-mãe</span><span class="truncate text-right" title="${pl.mobo.name}">${pl.p.keep ? `${formatMoneyShort(0)} (já tem)` : `${fmtBRLShort(pl.moboCost)} <span class="text-slate-500">${pl.mobo.name}</span>`}</span></div>
           <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">RAM +${pl.neededGB}GB</span><span class="truncate text-right ${pl.memType === 'DDR5' ? 'text-sky-300' : 'text-emerald-300'}" title="${pl.ram.desc}">${fmtBRLShort(pl.ram.cost)}</span></div>
           <div class="text-[10px] text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus ' + curUserRamCap + 'GB)' : ''}</div>
           <div class="flex justify-between border-t border-slate-800 pt-1 font-bold"><span class="text-slate-300">Total plataforma</span><span class="text-white">${fmtBRLShort(pl.platformCost)}</span></div>
@@ -1310,7 +1311,7 @@ function renderUpgradeSuggestions() {
   document.getElementById('upg-ram-deals-table').innerHTML = `
     <div class="grid grid-cols-12 gap-2 text-[10px] font-mono uppercase text-slate-500 px-2"><span class="col-span-2">Capac.</span><span class="col-span-4">DDR4 mais barata</span><span class="col-span-4">DDR5 mais barata</span><span class="col-span-2 text-right">Ágio DDR5</span></div>
     ${rows}
-    <p class="text-[10px] text-slate-500 mt-1">Glitches de preço (R$/GB &gt; 2,5× a mediana) são ignorados. Use os campos manuais para cotações de usados/ECC.</p>`;
+    <p class="text-[10px] text-slate-500 mt-1">Glitches de preço (${STATE.market?.monetary?.currency_symbol || 'R$'}/GB &gt; 2,5× a mediana) são ignorados. Use os campos manuais para cotações de usados/ECC.</p>`;
 
   // Verdict
   const d4t = cheapestRamFor('DDR4', targetGB), d5t = cheapestRamFor('DDR5', targetGB);
@@ -1318,10 +1319,11 @@ function renderUpgradeSuggestions() {
   const best = plans.find(pl => pl.finalScore === bestScore);
   const bestD4 = plans.filter(pl => pl.memType === 'DDR4').sort((a, b) => b.finalScore - a.finalScore)[0];
   const bestD5 = plans.filter(pl => pl.memType === 'DDR5').sort((a, b) => b.finalScore - a.finalScore)[0];
+  const moboEstimate = formatMoneyShort(Math.round(700 * (STATE.market?.monetary?.exchange_rate_vs_brl || 1.0)));
   document.getElementById('upg-recommendation-verdict').innerHTML = `
     <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">💡 Veredito de Plataforma: Placa-Mãe & RAM (${targetGB} GB, orçamento ${fmtBRLShort(budget)})</span>
     <p class="text-slate-200">Hoje, ${targetGB} GB de <strong class="text-sky-300">DDR5</strong> custam <strong>${fmtBRLShort(premium)} a mais</strong> que ${targetGB} GB de <strong class="text-emerald-300">DDR4</strong>
-      ${d4t.cost > 0 ? `(+${Math.round((premium / d4t.cost) * 100)}%)` : ''}. Além da RAM, a transição para plataformas modernas exige uma <strong class="text-amber-300">nova placa-mãe</strong> (${bestD5 ? fmtBRLShort(bestD5.moboCost) : 'R$ 700+'}), pesando no bolso e reduzindo a verba restante para a GPU.</p>
+      ${d4t.cost > 0 ? `(+${Math.round((premium / d4t.cost) * 100)}%)` : ''}. Além da RAM, a transição para plataformas modernas exige uma <strong class="text-amber-300">nova placa-mãe</strong> (${bestD5 ? fmtBRLShort(bestD5.moboCost) : `${moboEstimate}+`}), pesando no bolso e reduzindo a verba restante para a GPU.</p>
     ${bestD4 && bestD5 ? `<p class="text-slate-300">Melhor DDR4: <strong>${bestD4.p.label}</strong> → ${bestD4.gpu ? bestD4.gpu.name : 'sem GPU'} (~${bestD4.avgFps} FPS).<br/>
       Melhor DDR5: <strong>${bestD5.p.label}</strong> → ${bestD5.gpu ? bestD5.gpu.name : 'sem GPU'} (~${bestD5.avgFps} FPS).</p>` : ''}
     ${best ? `<div class="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-100">
@@ -1435,16 +1437,15 @@ function bfAnalyzeItem(item, kind) {
   const last45 = priceInRange(hist, shiftDate(today, -45), today);
   const yearAgo = priceInRange(hist, shiftDate(today, -380), shiftDate(today, -350));
   
-  // Measure inflation against BOTH this year's September AND last year's Set/Out baseline displayed in the table
-  const sep = priceInRange(hist, `${curYear}-09-01`, `${curYear}-09-30`);
-  const prevYearPreAvg = years[curYear - 1] ? years[curYear - 1].preAvg : null;
-  const baselinePre = (sep.length && prevYearPreAvg) ? Math.min(mean(sep), prevYearPreAvg) : (prevYearPreAvg || mean(sep));
+  // Measure pre-BF inflation strictly against THIS year's post-July baseline (Jul 15 - Sep 30), NOT 2025!
+  const sep = priceInRange(hist, `${curYear}-07-15`, `${curYear}-09-30`);
+  const baselinePre = sep.length ? mean(sep) : null;
 
   // Effective current price accounts for active verified coupons
   let effectiveCurrent = item.price_brl;
   if (item.coupon && typeof item.coupon === 'string') {
-    const mOff = item.coupon.match(/R\$\s*([0-9]{2,4})\s*OFF/i);
-    if (mOff) effectiveCurrent = Math.max(50, item.price_brl - parseFloat(mOff[1]));
+    const mOff = item.coupon.match(/(?:R\$|\$|€|£)?\s*([0-9]{2,4})\s*OFF/i);
+    if (mOff) effectiveCurrent = Math.max(10, item.price_brl - parseFloat(mOff[1]));
   }
 
   // Use contextual composite score if GPU, else gaming index
@@ -1471,19 +1472,33 @@ function bfExpectedRange(st, familyMedianDisc) {
   const curYear = parseInt(bfToday().slice(0, 4));
   const last = st.years[curYear - 1];
   const thisY = st.years[curYear];
-  const disc = Math.max(0.08, (last && last.discount != null) ? last.discount : (familyMedianDisc || 0.10));
+  const disc = Math.max(0.06, (last && last.discount != null) ? last.discount : (familyMedianDisc || 0.09));
 
-  // Anchor to current pre-BF / recent price levels, adjusting gently for artificial pre-BF spikes
-  const rawBase = (thisY && thisY.preAvg) || st.recentAvg || st.current;
-  const inflationHaircut = (st.preBfInflationPct != null && st.preBfInflationPct > 8)
-    ? Math.min(0.10, (st.preBfInflationPct - 5) / 100)
-    : 0;
-  const base = rawBase * (1 - inflationHaircut);
+  // Current market anchor: combine current price and recent 45-day average so recent price hikes are acknowledged
+  const currentAnchor = (st.current && st.recentAvg) 
+    ? (st.current * 0.55 + st.recentAvg * 0.45) 
+    : (st.current || st.recentAvg || 1000);
 
-  let low = Math.round(base * (1 - disc * 1.25));
+  // If there was an artificial pre-BF spike (>8% inflation between baseline and recent), haircut only the spike
+  let base = currentAnchor;
+  if (st.preBfInflationPct != null && st.preBfInflationPct > 8) {
+    const spikeExcess = Math.min(0.12, (st.preBfInflationPct - 6) / 100);
+    base = currentAnchor * (1 - spikeExcess);
+  }
+
+  // Blend with preAvg if present, preserving current market realism
+  if (thisY && thisY.preAvg) {
+    base = Math.max(base * 0.90, Math.min(base, (thisY.preAvg * 0.35 + base * 0.65)));
+  }
+
+  // Realistic BF discount bounds: realistic deals are typically 8% to 15% off current realistic market price
+  let low = Math.round(base * (1 - Math.min(0.20, disc * 1.20)));
   const mid = Math.round(base * (1 - disc));
   const high = Math.round(base * (1 - disc * 0.50));
-  low = Math.max(low, Math.round(st.allMin * 0.92));
+
+  // Floor safeguard: don't floor to an unrealistic 2-year old all-time low (e.g. R$ 1.800) if current market is R$ 2.750.
+  const realisticFloor = Math.round(Math.max(base * 0.80, (st.allMin ? Math.min(st.allMin * 1.15, base * 0.85) : base * 0.82)));
+  low = Math.max(low, realisticFloor);
 
   return { low, mid, high: Math.max(mid, high), disc, base: Math.round(base), ownData: !!(last && last.discount != null) };
 }
@@ -1585,7 +1600,7 @@ function renderBlackFridayTab() {
         <span class="block text-[10px] text-slate-500 truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >6% desde Set: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
       </div>
       <div class="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Melhor R$ por desempenho hoje</span>
+        <span class="text-[10px] font-mono uppercase text-slate-400 block">Melhor custo por desempenho hoje</span>
         <span class="text-sm font-extrabold text-emerald-300">${bestValue ? bestValue.item.name : '--'}</span>
         <span class="block text-[10px] text-slate-500">${bestValue ? fmtBRLShort(bestValue.brlPerContextualPerf || bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
       </div>
@@ -1915,15 +1930,26 @@ function onBFTargetItemChange(silent) {
       let hasRealCoupon = false;
       let cleanCoup = '';
 
-      if (rawCode && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
+      if (rawCode && /[A-Z]/i.test(rawCode) && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
         cleanCoup = rawCode.replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
         if (cleanCoup.length >= 3) hasRealCoupon = true;
       } else if (rawInfo && !/^(oferta|link|site|preço|preco|cash|sem|pix)/i.test(rawInfo)) {
-        const m = rawInfo.match(/\b([A-Z0-9_\-]{3,22})\b/);
-        if (m && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|OFERTAFLASH)$/i.test(m[1])) {
-          cleanCoup = m[1].toUpperCase();
+        const mOff = rawInfo.match(/(?:R\$|\$|€|£)?\s*([0-9]{2,4})\s*OFF/i);
+        if (mOff) {
+          cleanCoup = `R$ ${mOff[1]} OFF`;
           hasRealCoupon = true;
+        } else {
+          const m = rawInfo.match(/\b([A-Z0-9_\-]{4,22})\b/);
+          if (m && /[A-Z]/i.test(m[1]) && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|OFERTAFLASH|RESGATE|CUPOM|DESCONTO)$/i.test(m[1])) {
+            cleanCoup = m[1].toUpperCase();
+            hasRealCoupon = true;
+          }
         }
+      }
+
+      if (cleanCoup && /^[0-9]+$/.test(cleanCoup)) {
+        cleanCoup = `R$ ${cleanCoup} OFF`;
+        hasRealCoupon = true;
       }
 
       const pId = best.post_id || '';
@@ -2203,6 +2229,10 @@ function updateBFPromoEvaluator(skipSave, overrideTestPrice) {
 // 6. CLIENT-SIDE FLASH PROMO & COUPON RADAR (100% PROCESSED IN USER BROWSER)
 // ============================================================================
 const PROMO_CACHE_KEY = 'gpuAnalyzerPromoCache_v1';
+function getPromoCacheKey() {
+  const reg = (window.STATE?.market?.region_id || 'br').toLowerCase();
+  return `gpuAnalyzerPromoCache_${reg}_v1`;
+}
 
 const CLIENT_PROMO_CHANNELS = [
   { id: 'ofertasadrenaline', name: 'Ofertas Adrenaline' },
@@ -3057,10 +3087,11 @@ function updateNotificationPermissionLabel() {
       parts.push(bfLabels[PROMO_STATE.bfMode] || '🏷️ Meta BF');
     }
     if (PROMO_STATE.trigHB) {
-      if (PROMO_STATE.hbMode === 'brl_only') parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} vs Database`);
+      const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+      if (PROMO_STATE.hbMode === 'brl_only') parts.push(`📉 −${sym} ${PROMO_STATE.hbMinBrl} vs Database`);
       else if (PROMO_STATE.hbMode === 'pct_only') parts.push(`📉 −${PROMO_STATE.hbMinPct}% vs Database`);
-      else if (PROMO_STATE.hbMode === 'brl_and_pct') parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} E −${PROMO_STATE.hbMinPct}% vs Database`);
-      else parts.push(`📉 −R$ ${PROMO_STATE.hbMinBrl} / −${PROMO_STATE.hbMinPct}% vs Database`);
+      else if (PROMO_STATE.hbMode === 'brl_and_pct') parts.push(`📉 −${sym} ${PROMO_STATE.hbMinBrl} E −${PROMO_STATE.hbMinPct}% vs Database`);
+      else parts.push(`📉 −${sym} ${PROMO_STATE.hbMinBrl} / −${PROMO_STATE.hbMinPct}% vs Database`);
     }
     const joiner = PROMO_STATE.notifyLogic === 'AND' ? ' E ' : ' OU ';
     sumEl.textContent = parts.length ? `Gatilhos: ${parts.join(joiner)}` : 'Nenhum gatilho marcado';
@@ -3596,10 +3627,10 @@ function togglePromoRadarPanel() {
   }
 }
 
-function backupOriginalHBPrices() {
+function backupOriginalHBPrices(force = false) {
   ['gpus', 'cpus', 'rams'].forEach(group => {
     (DB[group] || []).forEach(it => {
-      if (it._hbPrice === undefined) {
+      if (force || it._hbPrice === undefined) {
         it._hbPrice = it.price_brl;
         it._hbCoupon = it.coupon || null;
         it._hbStore = it.store_name || 'loja';
@@ -3608,21 +3639,49 @@ function backupOriginalHBPrices() {
     });
   });
 }
+window.backupOriginalHBPrices = backupOriginalHBPrices;
+
+function getActiveRegionId() {
+  return (window.STATE?.market?.region_id || 'br').toLowerCase();
+}
 
 function applyFlashPromosToCatalog() {
   if (!DB.gpus || !DB.gpus.length) return;
   backupOriginalHBPrices();
 
-  const bestMap = (PROMO_STATE.lastData && PROMO_STATE.lastData.best_by_slug) || {};
+  const activeReg = getActiveRegionId();
+  const lastDataReg = (PROMO_STATE.lastData && PROMO_STATE.lastData.region_id)
+    ? PROMO_STATE.lastData.region_id.toLowerCase()
+    : activeReg;
+
+  // STRICT ISOLATION: Never apply deals if lastData.region_id does not match activeReg!
+  const bestMap = (lastDataReg === activeReg && PROMO_STATE.lastData && PROMO_STATE.lastData.best_by_slug) || {};
   let appliedCount = 0;
+
+  const brChannels = new Set(['ofertasadrenaline', 'peperaiohardware', 'iskandarsouza', 'benchpromos', 'kabumofertas', 'nerdofertas', 'ofertastechbr']);
 
   ['gpus', 'cpus', 'rams'].forEach(group => {
     (DB[group] || []).forEach(it => {
       const promo = bestMap[it.slug];
-      if (PROMO_STATE.applyFlash && promo && !promo.is_expired && promo.deal_status === 'active' && !promo.is_coupon_expired && promo.price_brl < it._hbPrice) {
+      const promoRegion = (promo && promo.region_id ? promo.region_id : lastDataReg).toLowerCase();
+      const isBrLeak = activeReg !== 'br' && promo && (
+        brChannels.has((promo.channel_id || '').toLowerCase()) ||
+        /\.br\b|t\.me\/(?:peperaio|ofertasadrenaline|iskandar|kabum|benchpromos|nerdofertas|ofertastechbr)/i.test(promo.buy_url || promo.post_url || '')
+      );
+
+      if (
+        PROMO_STATE.applyFlash &&
+        promo &&
+        promoRegion === activeReg &&
+        !isBrLeak &&
+        !promo.is_expired &&
+        promo.deal_status === 'active' &&
+        !promo.is_coupon_expired &&
+        promo.price_brl < it._hbPrice
+      ) {
         it.price_brl = promo.price_brl;
-        it.coupon = promo.coupon_code || promo.coupon_info || 'PROMO GRUPO';
-        it.store_name = `@${promo.channel_id}`;
+        it.coupon = promo.coupon_code || promo.coupon_info || (activeReg === 'mx' ? 'OFERTA MX' : 'PROMO GRUPO');
+        it.store_name = promo.store_name || `@${promo.channel_id}`;
         it.offer_url = promo.buy_url || promo.post_url;
         it._flashPromo = promo;
         appliedCount++;
@@ -3638,7 +3697,7 @@ function applyFlashPromosToCatalog() {
 
   const badge = document.getElementById('promo-radar-badge');
   if (badge) {
-    const totalDeals = (PROMO_STATE.lastData && PROMO_STATE.lastData.matched_count) || 0;
+    const totalDeals = (lastDataReg === activeReg && PROMO_STATE.lastData && PROMO_STATE.lastData.matched_count) || 0;
     badge.textContent = appliedCount > 0 ? `${appliedCount} abaixo do Catálogo` : `${totalDeals} ofertas`;
   }
 
@@ -3741,6 +3800,44 @@ async function scanLivePromos(force = false) {
   const maxAge = parseFloat((document.getElementById('select-promo-max-age') || {}).value || '24');
   const extraQ = ((document.getElementById('input-promo-query') || {}).value || '').trim();
   const extraCh = ((document.getElementById('input-promo-channels') || {}).value || '').trim();
+  const activeRegId = getActiveRegionId();
+
+  // MEXICO PIPELINE: Fetch strictly from /api/promos?region=mx (Promodescuentos + Cyberpuerta + DDTech)
+  if (activeRegId === 'mx') {
+    if (btn) btn.disabled = true;
+    if (statusEl) statusEl.textContent = 'Buscando ofertas y cupones en México (Promodescuentos / Cyberpuerta / DDTech)...';
+    try {
+      let prData = null;
+      try {
+        const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=mx&market=mx` + (force ? '&force=1' : ''));
+        if (apiRes.ok) prData = await apiRes.json();
+      } catch (_) {}
+
+      if (!prData || !Array.isArray(prData.matched_deals)) {
+        try {
+          const prRes = await fetch(`data/promos_cache_mx.json?t=` + Date.now());
+          if (prRes.ok) prData = await prRes.json();
+        } catch (_) {}
+      }
+
+      if (!prData || typeof prData !== 'object') {
+        prData = { ok: true, region_id: 'mx', scanned_at: new Date().toLocaleTimeString(), channels_scanned: [], matched_count: 0, matched_deals: [], best_by_slug: {}, recent_feed: [] };
+      }
+      prData.region_id = 'mx';
+      PROMO_STATE.rawPosts = [];
+      PROMO_STATE.lastData = prData;
+      PROMO_STATE.channelsScanned = prData.channels_scanned || [];
+      applyFlashPromosToCatalog();
+      checkAndFireDealNotifications(false);
+      renderPromoRadarPanel();
+      if (statusEl) {
+        statusEl.textContent = `Radar México ($ MXN): Sincronizado às ${prData.scanned_at || 'agora'} • ${prData.matched_deals.length} ofertas en tiendas MX`;
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+    return;
+  }
 
   // Always refresh notified history and coupon status ledger before evaluating deals
   await Promise.all([
@@ -3752,8 +3849,9 @@ async function scanLivePromos(force = false) {
   // re-filter 100% locally in the browser with ZERO network requests!
   if (!force && !extraQ && !extraCh) {
     if (!PROMO_STATE.rawPosts.length) {
-      // 1. Check if DB has embedded live_promos
-      if (typeof DB !== 'undefined' && DB && DB.live_promos && Array.isArray(DB.live_promos.matched_deals) && DB.live_promos.matched_deals.length > 0) {
+      const activeRegId = (window.STATE?.market?.region_id || 'br').toLowerCase();
+      // 1. Check if DB has embedded live_promos matching the active region
+      if (activeRegId === 'br' && typeof DB !== 'undefined' && DB && DB.live_promos && Array.isArray(DB.live_promos.matched_deals) && DB.live_promos.matched_deals.length > 0) {
         PROMO_STATE.lastData = DB.live_promos;
         PROMO_STATE.channelsScanned = DB.live_promos.channels_scanned || [];
         applyFlashPromosToCatalog();
@@ -3767,7 +3865,7 @@ async function scanLivePromos(force = false) {
 
       // 2. Check localStorage cache
       try {
-        const cached = JSON.parse(localStorage.getItem(PROMO_CACHE_KEY) || 'null');
+        const cached = JSON.parse(localStorage.getItem(getPromoCacheKey()) || 'null');
         if (cached && cached.ts && (Date.now() - cached.ts < 15 * 60 * 1000) && Array.isArray(cached.rawPosts)) {
           PROMO_STATE.rawPosts = cached.rawPosts;
           PROMO_STATE.channelsScanned = cached.channelsScanned || [];
@@ -3819,20 +3917,36 @@ async function scanLivePromos(force = false) {
 
     if (allRaw.length === 0) {
       try {
-        const prRes = await fetch('data/promos_cache.json?t=' + Date.now());
-        if (prRes.ok) {
-          const prData = await prRes.json();
-          if (prData && Array.isArray(prData.matched_deals) && prData.matched_deals.length > 0) {
-            PROMO_STATE.lastData = prData;
-            PROMO_STATE.channelsScanned = prData.channels_scanned || [];
-            applyFlashPromosToCatalog();
-            checkAndFireDealNotifications(false);
-            renderPromoRadarPanel();
-            if (statusEl) {
-              statusEl.textContent = `Nuvem GitHub: Atualizado às ${prData.scanned_at} • ${prData.matched_count} ofertas ativas`;
-            }
-            return;
+        const regId = (window.STATE?.market?.region_id || 'br').toLowerCase();
+        let prData = null;
+        try {
+          const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=${encodeURIComponent(regId)}&market=${encodeURIComponent(regId)}` + (force ? '&force=1' : ''));
+          if (apiRes.ok) prData = await apiRes.json();
+        } catch (_) {}
+
+        if (!prData || !Array.isArray(prData.matched_deals) || prData.matched_deals.length === 0) {
+          const cacheUrl = regId === 'br' ? 'data/promos_cache.json' : `data/promos_cache_${regId}.json`;
+          const prRes = await fetch(cacheUrl + '?t=' + Date.now());
+          if (prRes.ok) prData = await prRes.json();
+        }
+
+        if ((!prData || !Array.isArray(prData.matched_deals) || prData.matched_deals.length === 0) && regId === 'br') {
+          const prRes = await fetch('data/promos_cache.json?t=' + Date.now());
+          if (prRes.ok) prData = await prRes.json();
+        }
+
+        if (prData && Array.isArray(prData.matched_deals) && prData.matched_deals.length > 0) {
+          PROMO_STATE.lastData = prData;
+          PROMO_STATE.channelsScanned = prData.channels_scanned || [];
+          applyFlashPromosToCatalog();
+          checkAndFireDealNotifications(false);
+          renderPromoRadarPanel();
+          if (statusEl) {
+            const sym = window.STATE?.market?.monetary?.currency_symbol || 'R$';
+            const regName = window.STATE?.market?.region_name || 'Região';
+            statusEl.textContent = `Promoções ${regName} (${sym}): Sincronizado às ${prData.scanned_at || 'recente'} • ${prData.matched_deals.length} ofertas ativas`;
           }
+          return;
         }
       } catch (_) {}
     }
@@ -3841,7 +3955,7 @@ async function scanLivePromos(force = false) {
     PROMO_STATE.channelsScanned = channels.map(c => c.id);
 
     try {
-      localStorage.setItem(PROMO_CACHE_KEY, JSON.stringify({
+      localStorage.setItem(getPromoCacheKey(), JSON.stringify({
         ts: Date.now(),
         channelsScanned: PROMO_STATE.channelsScanned,
         rawPosts: allRaw.slice(0, 350)

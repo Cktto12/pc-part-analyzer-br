@@ -1595,7 +1595,7 @@ function renderDuelHistoryChart(baseGpu, candGpu) {
         y: {
           ticks: {
             color: '#94a3b8',
-            callback: v => 'R$ ' + v.toLocaleString('pt-BR')
+            callback: v => formatMoneyShort(v)
           },
           grid: { color: 'rgba(51,65,85,0.3)' }
         }
@@ -1669,11 +1669,13 @@ function setCBChartMetric(metric) {
   if (metric === 'benefit') {
     if (btnBenefit) btnBenefit.className = 'px-2.5 py-1 rounded text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-500/30';
     if (btnBench) btnBench.className = 'px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200';
-    if (title) title.textContent = 'Mapa de Eficiência: Preço Atual (R$) vs Custo-Benefício (Índice 0–100)';
+    const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+    if (title) title.textContent = `Mapa de Eficiência: Preço Atual (${sym}) vs Custo-Benefício (Índice 0–100)`;
   } else {
     if (btnBenefit) btnBenefit.className = 'px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200';
     if (btnBench) btnBench.className = 'px-2.5 py-1 rounded text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-500/30';
-    if (title) title.textContent = 'Mapa de Eficiência: Preço Atual (R$) vs Desempenho Bruto (Score Contextual)';
+    const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+    if (title) title.textContent = `Mapa de Eficiência: Preço Atual (${sym}) vs Desempenho Bruto (Score Contextual)`;
   }
   renderCBTable();
 }
@@ -2013,8 +2015,8 @@ function renderCBScatterChart(rows) {
       },
       scales: {
         x: {
-          title: { display: true, text: 'Preço Atual (R$)', color: '#94a3b8' },
-          ticks: { color: '#94a3b8', callback: v => 'R$ ' + v.toLocaleString('pt-BR') },
+          title: { display: true, text: `Preço Atual (${STATE.market?.monetary?.currency_symbol || 'R$'})`, color: '#94a3b8' },
+          ticks: { color: '#94a3b8', callback: v => formatMoneyShort(v) },
           grid: { color: 'rgba(51,65,85,0.3)' }
         },
         y: {
@@ -2192,7 +2194,7 @@ function renderPCBuilder() {
         <input type="number" value="${curGpu.tdp || 0}" oninput="updateBuildField('gpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
+        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curGpu.price || 0}" oninput="updateBuildField('gpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
@@ -2216,7 +2218,7 @@ function renderPCBuilder() {
         <input type="number" value="${curCpu.tdp || 0}" oninput="updateBuildField('cpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
+        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curCpu.price || 0}" oninput="updateBuildField('cpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
@@ -2240,7 +2242,7 @@ function renderPCBuilder() {
         <input type="number" value="${curMobo.tdp || 0}" oninput="updateBuildField('mobo', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
+        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curMobo.price || 0}" oninput="updateBuildField('mobo', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
@@ -2264,7 +2266,7 @@ function renderPCBuilder() {
         <input type="number" value="${curRam.tdp || 0}" oninput="updateBuildField('ram', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
+        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curRam.price || 0}" oninput="updateBuildField('ram', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
@@ -2288,7 +2290,7 @@ function renderPCBuilder() {
         <input type="number" value="${curPsu.watts || 0}" oninput="updateBuildField('psu', 'watts', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-300" step="50" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
+        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curPsu.price || 0}" oninput="updateBuildField('psu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
@@ -2311,7 +2313,7 @@ function renderPCBuilder() {
         <input type="number" value="${(curStorage.tdp || 0) + (curCooling.tdp || 0)}" oninput="updateBuildField('storage', 'tdp', parseFloat(this.value)||0); if (STATE.build.cooling) STATE.build.cooling.tdp=0;" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (R$)</label>
+        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curStorage.price || 0}" oninput="updateBuildField('storage', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
@@ -2819,10 +2821,17 @@ async function changeDatabaseSource(sourceId) {
 // MARKET & REGIONAL CONFIGURATION (MONETARY, CHANNELS, STORES)
 // ============================================================================
 async function initMarketConfig() {
-  const selTop = document.getElementById('select-market-region');
-  const selSidebar = document.getElementById('select-market-region-sidebar');
   try {
-    const res = await fetch('/api/market-config');
+    const savedReg = localStorage.getItem('selected_market_region');
+    if (savedReg) {
+      await fetch('/api/market-config/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ region_id: savedReg })
+      }).catch(() => {});
+    }
+
+    const res = await fetch('/api/market-config?t=' + Date.now());
     if (res.ok) {
       const data = await res.json();
       if (data && data.config) {
@@ -2832,9 +2841,37 @@ async function initMarketConfig() {
         STATE.availableRegions = data.available_regions;
       }
       renderMarketRegionSelectors();
+      updateAllCurrencyLabels();
     }
   } catch (err) {
     console.warn('Could not load /api/market-config, using local fallback:', err);
+  }
+}
+
+function updateAllCurrencyLabels() {
+  const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+  const code = STATE.market?.monetary?.currency_code || 'BRL';
+
+  document.querySelectorAll('.currency-sym').forEach(el => {
+    el.textContent = sym;
+  });
+
+  const optAbs = document.getElementById('bf-opt-abs-price');
+  if (optAbs) optAbs.textContent = `Preço absoluto (${sym})`;
+
+  const minSavEl = document.getElementById('notify-dyn-minsav');
+  if (minSavEl) {
+    minSavEl.textContent = STATE.market?.monetary?.default_alert_min_savings || 150;
+  }
+
+  const inputHbBrl = document.getElementById('input-notify-hb-brl');
+  if (inputHbBrl && STATE.market?.monetary?.default_alert_min_savings) {
+    inputHbBrl.value = STATE.market.monetary.default_alert_min_savings;
+  }
+
+  const inputUpgBudget = document.getElementById('upg-budget');
+  if (inputUpgBudget && STATE.market?.monetary?.default_budget_ceiling) {
+    inputUpgBudget.value = STATE.market.monetary.default_budget_ceiling;
   }
 }
 
@@ -2873,6 +2910,8 @@ async function changeMarketRegion(regionId) {
   if (status) status.textContent = `Alternando mercado e moeda para ${regionId.toUpperCase()}...`;
 
   try {
+    try { localStorage.setItem('selected_market_region', regionId); } catch (_) {}
+
     const res = await fetch('/api/market-config/select', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2886,23 +2925,120 @@ async function changeMarketRegion(regionId) {
       if (data.available_regions) {
         STATE.availableRegions = data.available_regions;
       }
-      renderMarketRegionSelectors();
-
-      // Recalculate contextual metrics with the new currency and monetary rules
-      if (typeof computeContextualScores === 'function') computeContextualScores();
-      if (typeof renderAll === 'function') renderAll();
-      if (typeof renderDuelAnalysis === 'function') renderDuelAnalysis();
-      if (typeof renderPCBuilder === 'function') renderPCBuilder();
-      if (typeof renderCostBenefitTable === 'function') renderCostBenefitTable();
-      if (typeof renderRadarPromos === 'function') renderRadarPromos();
-      if (typeof showToast === 'function') {
-        showToast(`Região e moeda configuradas para ${STATE.market.region_name} (${STATE.market.monetary.currency_code} - ${STATE.market.monetary.currency_symbol})`);
-      }
-      if (status) status.textContent = `Região ativa: ${STATE.market.region_name} (${STATE.market.monetary.currency_code})`;
     }
   } catch (err) {
-    console.error('Failed to switch market region:', err);
+    console.warn('Could not contact /api/market-config/select, updating local profile:', err);
+    const reg = (STATE.availableRegions || []).find(r => r.region_id === regionId);
+    if (reg) {
+      STATE.market = Object.assign({}, STATE.market, reg);
+    }
   }
+
+  // 1. Re-render regional dropdowns and monetary preview in Tab 7
+  renderMarketRegionSelectors();
+  updateAllCurrencyLabels();
+
+  // 2. Reload hardware database with regional currency conversion
+  await loadHardwareDatabase();
+
+  // 3. Reset promo radar cache and trigger new scan for this country
+  if (typeof PROMO_STATE !== 'undefined') {
+    PROMO_STATE.rawPosts = [];
+    PROMO_STATE.lastData = null;
+    PROMO_STATE.channelsScanned = [];
+    if (typeof scanLivePromos === 'function') {
+      scanLivePromos(true).catch(e => console.warn('Promo scan error on region change:', e));
+    }
+  }
+
+  // 4. Force re-render of active tab (Duelo, CB, Builder, Upgrades, BF, Sim, Config)
+  renderActiveTab();
+  if (typeof renderBlackFridayTab === 'function') renderBlackFridayTab();
+  if (typeof renderUpgradeSuggestions === 'function') renderUpgradeSuggestions();
+  if (typeof renderSimulator === 'function') renderSimulator();
+
+  const sym = STATE.market?.monetary?.currency_symbol || '$';
+  const code = STATE.market?.monetary?.currency_code || regionId.toUpperCase();
+  const regName = STATE.market?.region_name || regionId.toUpperCase();
+
+  if (typeof showToast === 'function') {
+    showToast(`Região e moeda configuradas para ${regName} (${code} - ${sym})`);
+  }
+  if (status) status.textContent = `Região ativa: ${regName} (${code} - ${sym})`;
+}
+
+function ensureDatabaseConvertedToActiveMarket(dbObj) {
+  if (!dbObj) return;
+  const targetReg = (STATE.market?.region_id || 'br').toLowerCase();
+  const rate = parseFloat(STATE.market?.monetary?.exchange_rate_vs_brl || 1.0);
+  const decimals = rate < 1 ? 100 : 1;
+  const roundCurr = v => Math.round(v * rate * decimals) / decimals;
+
+  // Check if primary prices still need conversion (e.g., static fallback or refresh)
+  const needsPrimaryConv = rate !== 1.0 && (!dbObj.exchange_rate || dbObj.exchange_rate === 1.0 || dbObj.region_id !== targetReg);
+
+  // Check if price_stats were missed by an older server.py build
+  const sampleGpu = (dbObj.gpus || [])[0];
+  const needsStatsConv = rate !== 1.0 && sampleGpu && sampleGpu.price_stats && sampleGpu.price_brl &&
+    (Math.abs(sampleGpu.price_stats.avg_90d / sampleGpu.price_brl - 1) > 0.65);
+
+  const convItem = (it, convPrimary, convStats) => {
+    if (convPrimary) {
+      if (it.price_brl) it.price_brl = roundCurr(it.price_brl);
+      if (it.regular_price_brl) it.regular_price_brl = roundCurr(it.regular_price_brl);
+      if (it.installment_price_brl) it.installment_price_brl = roundCurr(it.installment_price_brl);
+      if (it.custom_price) it.custom_price = roundCurr(it.custom_price);
+      if (Array.isArray(it.history)) {
+        it.history.forEach(h => { if (h.price) h.price = roundCurr(h.price); });
+      }
+    }
+    if ((convPrimary || convStats) && it.price_stats) {
+      ['target_price', 'min_all_time', 'min_90d', 'avg_30d', 'avg_90d', 'median_180d', 'vs_target_brl'].forEach(k => {
+        if (it.price_stats[k] != null) it.price_stats[k] = roundCurr(it.price_stats[k]);
+      });
+    }
+  };
+
+  if (needsPrimaryConv || needsStatsConv) {
+    (dbObj.gpus || []).forEach(g => convItem(g, needsPrimaryConv, needsStatsConv));
+    (dbObj.cpus || []).forEach(c => convItem(c, needsPrimaryConv, false));
+    (dbObj.motherboards || []).forEach(m => convItem(m, needsPrimaryConv, false));
+    (dbObj.rams || []).forEach(r => convItem(r, needsPrimaryConv, false));
+  }
+
+  // Always check PSUs (since server.py previously didn't convert db.psus)
+  const samplePsu = (dbObj.psus || [])[0];
+  if (rate !== 1.0 && samplePsu && samplePsu.price_brl > 180 && rate < 0.5) {
+    (dbObj.psus || []).forEach(p => convItem(p, true, false));
+  } else if (needsPrimaryConv) {
+    (dbObj.psus || []).forEach(p => convItem(p, true, false));
+  }
+
+  // Never allow Brazilian BRL live_promos to stay attached when viewing another country!
+  if (targetReg !== 'br' && dbObj.live_promos && dbObj.live_promos.region_id !== targetReg) {
+    dbObj.live_promos = null;
+  }
+
+  if (targetReg === 'mx') {
+    const scrubMxItem = it => {
+      it.coupon = null;
+      it.coupon_label = null;
+      const q = encodeURIComponent(it.name || it.slug || '');
+      if (!it.store_name || /kabum|pichau|terabyte|magalu|shopee|loja|@|peperaio|adrenaline|iskandar|benchpromos/i.test(it.store_name)) {
+        it.store_name = 'Cyberpuerta';
+      }
+      if (!it.offer_url || /\.br\b|t\.me\/|hardwarebarato/i.test(it.offer_url)) {
+        it.offer_url = `https://www.cyberpuerta.mx/index.php?cl=search&searchparam=${q}`;
+      }
+      it.href = it.offer_url;
+    };
+    ['gpus', 'cpus', 'motherboards', 'rams', 'psus'].forEach(grp => (dbObj[grp] || []).forEach(scrubMxItem));
+  }
+
+  dbObj.region_id = targetReg;
+  dbObj.exchange_rate = rate;
+  dbObj.currency_code = STATE.market?.monetary?.currency_code || 'BRL';
+  dbObj.currency_symbol = STATE.market?.monetary?.currency_symbol || 'R$';
 }
 
 async function loadHardwareDatabase() {
@@ -2921,14 +3057,22 @@ async function loadHardwareDatabase() {
       res = await fetch('data/hardware_db.json?t=' + Date.now());
     }
     DB = await res.json();
+    ensureDatabaseConvertedToActiveMarket(DB);
+
+    if (typeof backupOriginalHBPrices === 'function') {
+      backupOriginalHBPrices(true);
+    }
+
     window.DB = DB;
-    const sourceLabel = DB.source_name || 'Database';
+    const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+    const regName = STATE.market?.region_name || 'Brasil';
     if (status) {
-      status.textContent = `Dados sincronizados da ${sourceLabel} em ${DB.updated_at} • ${DB.gpus.length} GPUs monitoradas`;
+      status.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${DB.gpus.length} GPUs monitoradas`;
     }
     enrichGPUsWithContextualMetrics();
     updateTopContextSummary();
     populateSelectors();
+    updateAllCurrencyLabels();
     renderActiveTab();
     renderPCBuilder();
   } catch (e) {
@@ -2967,9 +3111,13 @@ async function refreshDatabase() {
     }
     if (data && data.ok && data.db) {
       DB = data.db;
+      ensureDatabaseConvertedToActiveMarket(DB);
       window.DB = DB;
+      if (typeof backupOriginalHBPrices === 'function') backupOriginalHBPrices(true);
       enrichGPUsWithContextualMetrics();
+      updateTopContextSummary();
       populateSelectors();
+      updateAllCurrencyLabels();
       renderActiveTab();
       renderPCBuilder();
       const sourceLabel = DB.source_name || 'Database';

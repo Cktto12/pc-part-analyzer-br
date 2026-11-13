@@ -3,8 +3,9 @@
 Coupon Tracker & Live Deal Validator for GPU & Build Analyzer Pro.
 
 Tracks coupon lifecycles, detects expiry announcements from group messages
-("expirou", "acabou", "esgotou"), directly tests store links and coupons,
+("expirou", "acabou", "esgotou", "expiró", "agotado"), directly tests store links and coupons,
 and rewires product pricing so expired coupons never block newer real promotions.
+Supports Brazilian and Mexican stores and locales.
 """
 
 import os
@@ -30,23 +31,24 @@ STOP_WORDS = {
     "PRODUTO", "AINDA", "LIVRE", "AGORA", "TUDO", "NAQUELE", "KKKKKKK",
     "CUPOMO", "BLUSINHAS", "RESGATE", "SUBSTITUEM", "APARECER", "IFP43VOM",
     "QUEM", "ESSE", "QUAL", "ONDE", "QUANDO", "MUITO", "POUCO", "GRATIS", "GRÁTIS",
-    "HTTPS", "HTTP", "WWW", "COM", "BR"
+    "HTTPS", "HTTP", "WWW", "COM", "BR", "MX", "CYBERPUERTA", "DDTECH", "PROMODESCUENTOS"
 }
 
 EXPIRY_REGEXES = [
-    # "MELIMAIS12H expirou" or "MERCADO25 acabou" or "BLACK25OFF esgotou"
-    re.compile(r"\b([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|morreu|invalido|inválido|finalizou)\b", re.IGNORECASE),
-    # "Cupom ZAFADINHO10 expirou" or "cupom 40SITETODO acabou"
-    re.compile(r"(?:cupom|c[oó]digo)\s+([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|invalido|inválido)\b", re.IGNORECASE),
-    # "expirou o cupom ZAFADINHO10" or "acabou o cupom XXX"
-    re.compile(r"(?:expirou|acabou|esgotou|encerrou|finalizou)\s+(?:o\s+)?(?:cupom\s+)?[:\-]?\s*\b([A-Z0-9]{4,22})\b", re.IGNORECASE),
+    # "MELIMAIS12H expirou" or "MERCADO25 acabou" or "BLACK25OFF esgotou" / "CYBER500 expiró"
+    re.compile(r"\b([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|morreu|invalido|inválido|finalizou|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\b", re.IGNORECASE),
+    # "Cupom ZAFADINHO10 expirou" or "cupón CYBER500 expiró"
+    re.compile(r"(?:cupom|cupón|cupon|c[oó]digo)\s+([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|invalido|inválido|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\b", re.IGNORECASE),
+    # "expirou o cupom ZAFADINHO10" or "expiró el cupón XXX"
+    re.compile(r"(?:expirou|acabou|esgotou|encerrou|finalizou|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\s+(?:o\s+|el\s+)?(?:cupom\s+|cupón\s+|cupon\s+)?[:\-]?\s*\b([A-Z0-9]{4,22})\b", re.IGNORECASE),
     # "o cupom PS5PRIME expirou"
-    re.compile(r"o\s+cupom\s+([A-Z0-9]{4,22})\s+expirou", re.IGNORECASE),
+    re.compile(r"(?:o|el)\s+(?:cupom|cupón|cupon)\s+([A-Z0-9]{4,22})\s+(?:expirou|expiró)", re.IGNORECASE),
     # "🚨 Cupom Expirou! ... Cupom: L1QU1D4B0M02"
-    re.compile(r"(?:cupom\s+expirou|cupom\s+esgotado|cupom\s+inv[aá]lido)[\s\S]{1,80}?(?:cupom|c[oó]digo)\s*[:\-]?\s*\b([A-Z0-9]{4,22})\b", re.IGNORECASE),
+    re.compile(r"(?:cupom|cupón|cupon)\s+(?:expirou|expiró|esgotado|agotado|inv[aá]lido)[\s\S]{1,80}?(?:cupom|cupón|cupon|c[oó]digo)\s*[:\-]?\s*\b([A-Z0-9]{4,22})\b", re.IGNORECASE),
 ]
 
 OOS_PATTERNS = [
+    # Brazilian Out-Of-Stock indicators
     (r"an[uú]ncio\s+pausado", "Anúncio pausado no Mercado Livre"),
     (r"publica[cç][aã]o\s+pausada", "Publicação pausada no Mercado Livre"),
     (r"este\s+produto\s+est[aá]\s+esgotado", "Produto esgotado no Mercado Livre"),
@@ -59,17 +61,37 @@ OOS_PATTERNS = [
     (r"\besgotado\b", "Esgotado na loja"),
     (r"atualmente\s+indispon[ií]vel", "Atualmente indisponível na Amazon"),
     (r"n[aã]o\s+dispon[ií]vel\s+em\s+estoque", "Não disponível em estoque"),
-    (r"produto\s+sem\s+estoque", "Produto sem estoque")
+    (r"produto\s+sem\s+estoque", "Produto sem estoque"),
+    # Mexican Out-Of-Stock indicators
+    (r"producto\s+agotado", "Producto agotado en tienda MX"),
+    (r"sin\s+existencias", "Sin existencias en tienda MX"),
+    (r"fuera\s+de\s+stock", "Fuera de stock en tienda MX"),
+    (r"no\s+disponible", "No disponible en tienda MX"),
+    (r"publicaci[óo]n\s+pausada", "Publicación pausada en Mercado Libre MX"),
+    (r"este\s+producto\s+est[áa]\s+agotado", "Producto agotado en Mercado Libre MX"),
+    (r"art[íi]culo\s+agotado", "Artículo agotado"),
+    (r"descontinuado", "Producto descontinuado"),
+    (r"av[íi]same\s+cuando\s+haya\s+stock", "Sin existencias (avísame)"),
+    (r"temporalmente\s+agotado", "Temporalmente agotado"),
+    (r"stock\s+agotado", "Stock agotado"),
 ]
 
 
-def parse_brl_str(s):
-    """Parses Brazilian monetary string into float (e.g. '3.180', '2.140,02', 'R$ 2.440')."""
+def parse_price_str(s):
+    """Parses monetary string into float for BRL and MXN (e.g. '3.180', '2.140,02', 'R$ 2.440', '$ 7,499.00')."""
     if not s:
         return None
-    s = s.strip().replace("R$", "").replace("\xa0", "").strip()
-    if "," in s:
-        s = s.replace(".", "").replace(",", ".")
+    s = s.strip().replace("R$", "").replace("MX$", "").replace("MXN", "").replace("$", "").replace("\xa0", "").strip()
+    if "," in s and "." in s:
+        # Check which separator comes last
+        if s.rfind(",") > s.rfind("."):
+            # Brazilian format: 1.234,56
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            # Mexican / US format: 1,234.56
+            s = s.replace(",", "")
+    elif "," in s:
+        s = s.replace(",", ".")
     elif "." in s and len(s.split(".")[-1]) == 3:
         s = s.replace(".", "")
     try:
@@ -78,59 +100,77 @@ def parse_brl_str(s):
     except Exception:
         return None
 
+parse_brl_str = parse_price_str
+
 
 def extract_store_price(body, final_url=""):
     """
     Extracts the current live checkout/store price from product page HTML.
-    Supports Mercado Livre (UI PDP + Andes), KaBuM, Pichau, Terabyte, Shopee, Amazon, and Schema.org.
+    Supports Mercado Livre (BR & MX), Cyberpuerta, DDTech, KaBuM, Pichau, Terabyte, Shopee, Amazon, and Schema.org.
     """
     if not body:
         return None
 
-    # 1. Mercado Livre
-    if "mercadolivre.com" in final_url:
+    # 1. Mercado Livre / Mercado Libre (BR and MX)
+    if "mercadolivre.com" in final_url or "mercadolibre.com" in final_url:
         pdp_match = re.search(r'class=[\'"][^\'"]*ui-pdp-price[^\'"]*[\'"][\s\S]{1,500}?class=[\'"][^\'"]*andes-money-amount__fraction[^\'"]*[\'"][^>]*>([\d\.]+)<', body)
         if pdp_match:
             cents_match = re.search(r'class=[\'"][^\'"]*ui-pdp-price[^\'"]*[\'"][\s\S]{1,700}?class=[\'"][^\'"]*andes-money-amount__cents[^\'"]*[\'"][^>]*>(\d{2})<', body)
             cents = ("." + cents_match.group(1)) if cents_match else ""
-            p = parse_brl_str(pdp_match.group(1) + cents)
+            p = parse_price_str(pdp_match.group(1) + cents)
             if p and p > 50:
                 return p
         fractions = re.findall(r'class=[\'"][^\'"]*andes-money-amount__fraction[^\'"]*[\'"][^>]*>([\d\.]+)<', body)
         if fractions:
-            p = parse_brl_str(fractions[0])
+            p = parse_price_str(fractions[0])
             if p and p > 50:
                 return p
 
-    # 2. Meta tags (KaBuM, Pichau, Terabyte, Amazon, Magalu)
+    # 2. Cyberpuerta & DDTech (Mexico)
+    if "cyberpuerta.mx" in final_url or "ddtech.mx" in final_url:
+        cp_match = re.search(r'class=[\'"][^\'"]*price[^\'"]*[\'"][^>]*>\s*\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)', body)
+        if cp_match:
+            p = parse_price_str(cp_match.group(1))
+            if p and p > 50:
+                return p
+
+    # 3. Meta tags (KaBuM, Pichau, Terabyte, Amazon, Magalu, Cyberpuerta)
     meta_p = re.findall(r'<meta[^>]+property=[\'"]product:price:amount[\'"][^>]+content=[\'"]([\d\.,]+)[\'"]', body, re.I)
     meta_p += re.findall(r'<meta[^>]+content=[\'"]([\d\.,]+)[\'"][^>]+property=[\'"]product:price:amount[\'"]', body, re.I)
     meta_p += re.findall(r'<meta[^>]+itemprop=[\'"]price[\'"][^>]+content=[\'"]([\d\.,]+)[\'"]', body, re.I)
     meta_p += re.findall(r'<meta[^>]+content=[\'"]([\d\.,]+)[\'"][^>]+itemprop=[\'"]price[\'"]', body, re.I)
     for m in meta_p:
-        p = parse_brl_str(m)
+        p = parse_price_str(m)
         if p and p > 50:
             return p
 
-    # 3. JSON-LD schema (offers.price)
+    # 4. JSON-LD schema (offers.price)
     json_ld = re.findall(r'<script[^>]+type=[\'"]application/ld\+json[\'"][^>]*>([\s\S]*?)</script>', body, re.I)
     for block in json_ld:
         try:
             data = json.loads(block)
             offers = data.get('offers')
             if isinstance(offers, dict) and 'price' in offers:
-                p = parse_brl_str(str(offers['price']))
+                p = parse_price_str(str(offers['price']))
                 if p and p > 50: return p
             elif isinstance(offers, list) and offers and 'price' in offers[0]:
-                p = parse_brl_str(str(offers[0]['price']))
+                p = parse_price_str(str(offers[0]['price']))
                 if p and p > 50: return p
         except Exception:
             pass
 
-    # 4. Fallback: prominent BRL regex
-    prices = re.findall(r'R\$\s*([\d\.]+(?:,\d{2})?)', body)
-    for pr in prices[:6]:
-        p = parse_brl_str(pr)
+    # 5. Promodescuentos thread price
+    if "promodescuentos.com" in final_url:
+        pd_match = re.search(r'class=[\'"][^\'"]*thread-price[^\'"]*[\'"][^>]*>\s*\$?\s*([0-9]{1,3}(?:,[0-9]{3})*)', body)
+        if pd_match:
+            p = parse_price_str(pd_match.group(1))
+            if p and p > 50:
+                return p
+
+    # 6. Fallback: prominent BRL / MXN regex
+    prices = re.findall(r'(?:R\$|MX\$|\$)\s*([\d\.,]+)', body)
+    for pr in prices[:8]:
+        p = parse_price_str(pr)
         if p and p > 50:
             return p
 
@@ -240,8 +280,8 @@ def scan_texts_for_expiries(texts_or_messages):
         clean = html.unescape(re.sub(r"<[^>]+>", " ", text))
         low = clean.lower()
 
-        # Check if the text has any expiry indicator
-        if not any(k in low for k in ["acabou", "expir", "esgot", "encerr", "finaliz", "invalido", "inválido", "morreu"]):
+        # Check if the text has any expiry indicator in Portuguese or Spanish
+        if not any(k in low for k in ["acabou", "expir", "esgot", "encerr", "finaliz", "invalido", "inválido", "morreu", "agot", "venc"]):
             continue
 
         # Extract post links referenced in message
@@ -254,7 +294,7 @@ def scan_texts_for_expiries(texts_or_messages):
                 code = m.group(1).upper()
                 if code in STOP_WORDS or len(code) < 4:
                     continue
-                reason = f"Grupo @{ch_id or 'radar'} avisou: '{clean[:80]}...'"
+                reason = f"Grupo/Canal @{ch_id or 'radar'} avisou: '{clean[:80]}...'"
                 data["coupons"][code] = {
                     "status": "expired",
                     "reason": reason,
@@ -264,20 +304,20 @@ def scan_texts_for_expiries(texts_or_messages):
                 detected["coupons"][code] = data["coupons"][code]
 
         # 2. Check if a referenced post was explicitly marked expired
-        if ref_post_id and any(k in low for k in ["acabou", "esgotou", "expirou", "encerrado", "finalizado"]):
+        if ref_post_id and any(k in low for k in ["acabou", "esgotou", "expirou", "encerrado", "finalizado", "agotado", "expiró"]):
             data["deals"][ref_post_id] = {
                 "status": "out_of_stock",
-                "reason": f"Grupo avisou término: '{clean[:80]}...'",
+                "reason": f"Canal avisou término: '{clean[:80]}...'",
                 "source": "channel_report",
                 "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             }
             detected["deals"][ref_post_id] = data["deals"][ref_post_id]
 
-        # 3. If post itself begins with [ESGOTOU], [ACABOU], [ENCERRADO]
-        if post_id and re.search(r"^\s*\[?(?:esgotou|acabou|encerrado|expirado|finalizado)\]?", clean, re.I):
+        # 3. If post itself begins with [ESGOTOU], [ACABOU], [ENCERRADO], [AGOTADO], [EXPIRÓ]
+        if post_id and re.search(r"^\s*\[?(?:esgotou|acabou|encerrado|expirado|finalizado|agotado|expiró)\]?", clean, re.I):
             data["deals"][post_id] = {
                 "status": "out_of_stock",
-                "reason": "Post editado para Esgotado/Acabou",
+                "reason": "Post editado para Esgotado / Agotado",
                 "source": "channel_report",
                 "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             }
@@ -294,9 +334,9 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
     Directly tests a deal URL, store live price, and coupon validity:
     1. Follows redirects to final merchant store.
     2. Verifies page accessibility and HTTP status.
-    3. Checks page HTML for out-of-stock / pausado indicators.
+    3. Checks page HTML for out-of-stock / pausado indicators (BR & MX).
     4. Extracts the actual live store checkout price and compares against expected promo price.
-    5. If store price went up (e.g. from R$ 2.140 to R$ 3.180), flags deal as expired.
+    5. If store price went up, flags deal as expired.
     6. If coupon is specified, checks if coupon is reported invalid or absent.
     7. Saves result in coupon_status.json and returns test summary.
     """
@@ -319,7 +359,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
             buy_url,
             headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8",
+                "Accept-Language": "pt-BR,pt;q=0.9,es-MX,es;q=0.8,en-US;q=0.7",
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
             }
         )
@@ -348,7 +388,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                             outgoing[0],
                             headers={
                                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8"
+                                "Accept-Language": "pt-BR,pt;q=0.9,es-MX,es;q=0.8"
                             }
                         )
                         with opener.open(req_out, timeout=timeout) as resp_out:
@@ -358,7 +398,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                     except Exception:
                         pass
 
-            # Check out of stock patterns
+            # Check out of stock patterns (BR and MX)
             for pat, reason_text in OOS_PATTERNS:
                 if re.search(pat, low):
                     res["valid"] = False
@@ -371,10 +411,11 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
             # Check explicit coupon invalidation inside merchant page
             if coupon_code:
                 c_low = coupon_code.lower()
-                if f"cupom {c_low} expirado" in low or f"cupom {c_low} inválido" in low or f"cupom {c_low} esgotado" in low:
+                if (f"cupom {c_low} expirado" in low or f"cupom {c_low} inválido" in low or f"cupom {c_low} esgotado" in low or
+                    f"cupón {c_low} expirado" in low or f"cupón {c_low} inválido" in low or f"cupón {c_low} agotado" in low):
                     res["valid"] = False
                     res["status"] = "expired"
-                    res["reason"] = f"Cupom {coupon_code} reportado inválido ou esgotado na loja"
+                    res["reason"] = f"Cupom/Cupón {coupon_code} reportado inválido ou esgotado na loja"
                     record_coupon_status(coupon_code, "expired", res["reason"], source="live_test")
                     return res
 
@@ -388,14 +429,14 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                     if live_price > expected_price * 1.08:
                         res["valid"] = False
                         res["status"] = "expired"
-                        res["reason"] = f"Preço na loja subiu para R$ {live_price:,.2f} (oferta de R$ {expected_price:,.2f} encerrada)"
+                        res["reason"] = f"Preço na loja subiu para {live_price:,.2f} (oferta de {expected_price:,.2f} encerrada)"
                         if post_id or buy_url:
                             record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url)
                         return res
                     else:
                         res["valid"] = True
                         res["status"] = "active"
-                        res["reason"] = f"Confirmado ativo na loja por R$ {live_price:,.2f}"
+                        res["reason"] = f"Confirmado ativo na loja por {live_price:,.2f}"
                         if post_id or buy_url:
                             record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url)
                         return res
@@ -405,7 +446,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                     if live_price > max_allowed_store_price:
                         res["valid"] = False
                         res["status"] = "expired"
-                        res["reason"] = f"Preço na loja subiu para R$ {live_price:,.2f} (incompatível com cupom {coupon_code})"
+                        res["reason"] = f"Preço na loja subiu para {live_price:,.2f} (incompatível com cupom {coupon_code})"
                         if post_id or buy_url:
                             record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url)
                         record_coupon_status(coupon_code, "expired", res["reason"], source="live_test")
@@ -413,7 +454,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                     else:
                         res["valid"] = True
                         res["status"] = "active"
-                        res["reason"] = f"Produto ativo na loja por R$ {live_price:,.2f} (cupom {coupon_code})"
+                        res["reason"] = f"Produto ativo na loja por {live_price:,.2f} (cupom {coupon_code})"
                         if post_id or buy_url:
                             record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url)
                         record_coupon_status(coupon_code, "active", res["reason"], source="live_test")
@@ -480,12 +521,12 @@ def test_deals_batch(deals, max_items=35):
         deal_id = p_id or url
         return deal_id, r
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
         futures = [ex.submit(_worker, d) for d in to_test]
         for fut in concurrent.futures.as_completed(futures):
             try:
-                deal_id, r = fut.result()
-                results[deal_id] = r
+                deal_id, res = fut.result()
+                results[deal_id] = res
             except Exception:
                 pass
 
@@ -494,82 +535,53 @@ def test_deals_batch(deals, max_items=35):
 
 def rewire_deals_and_best_by_slug(matched_deals, all_promos=None):
     """
-    Crucial rewiring logic:
-    1. Crosses all deals with the persistent coupon_status registry.
-    2. If a deal's coupon is expired:
-       - Sets `coupon_status = 'expired'`
-       - Rewires `price_brl` back to `raw_price_brl` (revokes the dead coupon discount).
-       - Flags `coupon_discount_revoked = True`.
-    3. If a deal is out_of_stock or expired:
-       - Sets `is_expired = True`.
-    4. Recomputes `best_by_slug`:
-       - STRICTLY EXCLUDES any deal that is expired or out_of_stock!
-       - Ensures that a dead promo or expired coupon NEVER shadows newer legitimate promotions!
+    Overlays verified live test statuses onto deals list and recomputes best_by_slug so
+    that expired offers/coupons never block newer, valid deals.
     """
-    status_data = load_coupon_status()
-    coupon_map = status_data.get("coupons", {})
-    deal_map = status_data.get("deals", {})
+    status_db = load_coupon_status()
+    coupons = status_db.get("coupons", {})
+    deals_map = status_db.get("deals", {})
 
-    rewired_deals = []
-    best_by_slug = {}
-
+    rewired = []
     for d in matched_deals:
         item = dict(d)
-        post_id = item.get("post_id", "")
-        coupon = (item.get("coupon_code") or "").strip().upper()
+        p_id = item.get("post_id", "")
+        c_code = (item.get("coupon_code") or "").strip().upper()
+        b_url = item.get("buy_url", "")
 
-        # Check deal-level status (case-insensitive post_id and buy_url)
-        buy_url = item.get("buy_url", "")
-        deal_info = deal_map.get(post_id) or deal_map.get(post_id.lower()) or (deal_map.get(buy_url) if buy_url else None)
-        if deal_info and deal_info.get("status") in ("expired", "out_of_stock"):
-            item["is_expired"] = True
-            item["deal_status"] = deal_info.get("status")
-            item["deal_status_reason"] = deal_info.get("reason")
-        else:
-            item["is_expired"] = False
-            item["deal_status"] = "active"
+        deal_st = deals_map.get(p_id) or deals_map.get(p_id.lower()) or deals_map.get(b_url)
+        coup_st = coupons.get(c_code) if c_code else None
+
+        # Check post-level status
+        if deal_st:
+            item["deal_status"] = deal_st.get("status", "active")
+            item["deal_status_reason"] = deal_st.get("reason", "")
+            if deal_st.get("status") in ("expired", "out_of_stock"):
+                item["is_expired"] = True
 
         # Check coupon-level status
-        if coupon and coupon in coupon_map:
-            c_info = coupon_map[coupon]
-            item["coupon_status"] = c_info.get("status", "untested")
-            item["coupon_status_reason"] = c_info.get("reason", "")
-            if c_info.get("status") == "expired":
+        if coup_st:
+            item["coupon_status"] = coup_st.get("status", "active")
+            item["coupon_status_reason"] = coup_st.get("reason", "")
+            if coup_st.get("status") == "expired":
                 item["is_coupon_expired"] = True
-                # REWIRE PRICING: Revoke the dead coupon discount!
-                raw_price = item.get("raw_price_brl")
-                disc = item.get("discount_applied", 0)
-                if raw_price and raw_price > item["price_brl"]:
-                    item["price_brl"] = raw_price
-                    item["coupon_discount_revoked"] = True
-                elif disc > 0:
-                    item["price_brl"] = round(item["price_brl"] + disc, 2)
-                    item["coupon_discount_revoked"] = True
-                # Recompute savings vs catalog
-                hb_price = item.get("hb_price_brl", 0)
-                if hb_price > 0:
-                    item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2)
-        else:
-            item["coupon_status"] = "untested" if coupon else "none"
-            item["is_coupon_expired"] = False
 
-        # Only allow active, non-expired deals to be candidates for best_by_slug
-        slug = item.get("matched_slug")
-        if slug and not item.get("is_expired") and item.get("deal_status") == "active" and not item.get("is_coupon_expired"):
-            if slug not in best_by_slug or item["price_brl"] < best_by_slug[slug]["price_brl"]:
-                best_by_slug[slug] = item
+        rewired.append(item)
 
-        rewired_deals.append(item)
+    # Recompute best_by_slug strictly using non-expired, active deals
+    best_by_slug = {}
+    for d in rewired:
+        slug = d.get("matched_slug")
+        if not slug:
+            continue
+        if d.get("is_expired") or d.get("is_coupon_expired"):
+            continue
+        if d.get("deal_status") in ("expired", "out_of_stock"):
+            continue
+        if d.get("coupon_status") == "expired":
+            continue
 
-    # Sort rewired deals by age, active first, best savings
-    rewired_deals.sort(
-        key=lambda x: (
-            x.get("is_expired", False),
-            x.get("is_coupon_expired", False),
-            x.get("age_hours", 0) > 24,
-            -x.get("savings_vs_hb_brl", 0),
-            x.get("price_brl", 999999),
-        )
-    )
+        if slug not in best_by_slug or d.get("price_brl", 999999) < best_by_slug[slug].get("price_brl", 999999):
+            best_by_slug[slug] = d
 
-    return rewired_deals, best_by_slug
+    return rewired, best_by_slug

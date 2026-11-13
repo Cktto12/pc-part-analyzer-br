@@ -8,6 +8,7 @@ from typing import Dict, List, Any, Optional
 from .base_source import BaseHardwareSource
 from .hardware_barato_source import HardwareBaratoSource
 from .local_cache_source import LocalCacheSource
+from .mexico_cyberpuerta_source import MexicoCyberpuertaSource
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ACTIVE_SOURCE_FILE = os.path.join(BASE_DIR, "data", "active_source.json")
@@ -15,6 +16,7 @@ ACTIVE_SOURCE_FILE = os.path.join(BASE_DIR, "data", "active_source.json")
 # Registered provider instances
 REGISTRY: Dict[str, BaseHardwareSource] = {
     "hardware_barato": HardwareBaratoSource(),
+    "cyberpuerta_mlm_mx": MexicoCyberpuertaSource(),
     "local_cache": LocalCacheSource(),
 }
 

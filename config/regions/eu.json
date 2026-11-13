@@ -16,26 +16,90 @@
     "max_valid_hardware_price": 7500.0,
     "vram_step_bonus_factor": 42.0,
     "default_alert_min_savings": 25.0,
-    "default_budget_ceiling": 950.0
+    "default_budget_ceiling": 950.0,
+    "exchange_rate_vs_brl": 0.1586
   },
   "promotion_sources": {
     "enabled": true,
     "engine": "telegram_mirror",
     "channels": [
-      { "id": "mydealz_electronics", "name": "MyDealz Hardware", "url": "https://t.me/s/mydealz_electronics" },
-      { "id": "dealabs_informatique", "name": "Dealabs Hardware", "url": "https://t.me/s/dealabs_informatique" },
-      { "id": "hardware_angebote_de", "name": "Hardware Angebote DE", "url": "https://t.me/s/hardware_angebote_de" }
+      {
+        "id": "mydealz_electronics",
+        "name": "MyDealz Hardware",
+        "url": "https://t.me/s/mydealz_electronics"
+      },
+      {
+        "id": "dealabs_informatique",
+        "name": "Dealabs Hardware",
+        "url": "https://t.me/s/dealabs_informatique"
+      },
+      {
+        "id": "hardware_angebote_de",
+        "name": "Hardware Angebote DE",
+        "url": "https://t.me/s/hardware_angebote_de"
+      }
     ],
-    "search_keywords": ["", "RTX", "5060", "5070", "4060", "7600", "RX", "Ryzen", "DDR5"],
-    "coupon_keywords": ["gutschein", "gutscheincode", "rabatt", "code promo", "remise", "coupon", "code:"],
-    "cash_intent_keywords": ["€", "preis", "deal", "bestpreis", "tiefpreis", "spar", "🔥"]
+    "search_keywords": [
+      "",
+      "RTX",
+      "5060",
+      "5070",
+      "4060",
+      "7600",
+      "RX",
+      "Ryzen",
+      "DDR5"
+    ],
+    "coupon_keywords": [
+      "gutschein",
+      "gutscheincode",
+      "rabatt",
+      "code promo",
+      "remise",
+      "coupon",
+      "code:"
+    ],
+    "cash_intent_keywords": [
+      "€",
+      "preis",
+      "deal",
+      "bestpreis",
+      "tiefpreis",
+      "spar",
+      "🔥"
+    ]
   },
   "stores": [
-    { "id": "mindfactory", "name": "Mindfactory", "domain": "mindfactory.de", "icon": "⚙️" },
-    { "id": "amazon_de",   "name": "Amazon DE",   "domain": "amazon.de",      "icon": "📦" },
-    { "id": "caseking",    "name": "Caseking",    "domain": "caseking.de",    "icon": "👑" },
-    { "id": "notebooksbilliger", "name": "NBB",   "domain": "notebooksbilliger.de", "icon": "💻" },
-    { "id": "alternate",   "name": "Alternate",  "domain": "alternate.de",   "icon": "⚡" }
+    {
+      "id": "mindfactory",
+      "name": "Mindfactory",
+      "domain": "mindfactory.de",
+      "icon": "⚙️"
+    },
+    {
+      "id": "amazon_de",
+      "name": "Amazon DE",
+      "domain": "amazon.de",
+      "icon": "📦"
+    },
+    {
+      "id": "caseking",
+      "name": "Caseking",
+      "domain": "caseking.de",
+      "icon": "👑"
+    },
+    {
+      "id": "notebooksbilliger",
+      "name": "NBB",
+      "domain": "notebooksbilliger.de",
+      "icon": "💻"
+    },
+    {
+      "id": "alternate",
+      "name": "Alternate",
+      "domain": "alternate.de",
+      "icon": "⚡"
+    }
   ],
   "database_source_settings": {
     "default_source_id": "local_cache",
@@ -45,7 +109,9 @@
   },
   "seasonal_events": {
     "primary_event": "Black Friday / Cyber Week",
-    "season_months": [11],
+    "season_months": [
+      11
+    ],
     "baseline_days": 600
   }
 }

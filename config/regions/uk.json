@@ -16,25 +16,83 @@
     "max_valid_hardware_price": 6500.0,
     "vram_step_bonus_factor": 35.0,
     "default_alert_min_savings": 20.0,
-    "default_budget_ceiling": 800.0
+    "default_budget_ceiling": 800.0,
+    "exchange_rate_vs_brl": 0.1345
   },
   "promotion_sources": {
     "enabled": true,
     "engine": "telegram_mirror",
     "channels": [
-      { "id": "hotukdeals_tech", "name": "HotUKDeals Tech", "url": "https://t.me/s/hotukdeals_tech" },
-      { "id": "uk_pc_deals",     "name": "UK PC Hardware",  "url": "https://t.me/s/uk_pc_deals" }
+      {
+        "id": "hotukdeals_tech",
+        "name": "HotUKDeals Tech",
+        "url": "https://t.me/s/hotukdeals_tech"
+      },
+      {
+        "id": "uk_pc_deals",
+        "name": "UK PC Hardware",
+        "url": "https://t.me/s/uk_pc_deals"
+      }
     ],
-    "search_keywords": ["", "RTX", "5060", "5070", "4060", "7600", "RX", "Ryzen", "DDR5"],
-    "coupon_keywords": ["voucher code", "promo code", "discount code", "coupon", "code:"],
-    "cash_intent_keywords": ["£", "deal", "price:", "lowest", "sale", "historic low", "🔥"]
+    "search_keywords": [
+      "",
+      "RTX",
+      "5060",
+      "5070",
+      "4060",
+      "7600",
+      "RX",
+      "Ryzen",
+      "DDR5"
+    ],
+    "coupon_keywords": [
+      "voucher code",
+      "promo code",
+      "discount code",
+      "coupon",
+      "code:"
+    ],
+    "cash_intent_keywords": [
+      "£",
+      "deal",
+      "price:",
+      "lowest",
+      "sale",
+      "historic low",
+      "🔥"
+    ]
   },
   "stores": [
-    { "id": "overclockers", "name": "Overclockers UK", "domain": "overclockers.co.uk", "icon": "🚀" },
-    { "id": "scan_uk",      "name": "Scan Computers", "domain": "scan.co.uk",         "icon": "🖥️" },
-    { "id": "amazon_uk",    "name": "Amazon UK",        "domain": "amazon.co.uk",       "icon": "📦" },
-    { "id": "ebuyer",       "name": "Ebuyer",           "domain": "ebuyer.com",         "icon": "🛒" },
-    { "id": "currys",       "name": "Currys PC World",  "domain": "currys.co.uk",       "icon": "🔌" }
+    {
+      "id": "overclockers",
+      "name": "Overclockers UK",
+      "domain": "overclockers.co.uk",
+      "icon": "🚀"
+    },
+    {
+      "id": "scan_uk",
+      "name": "Scan Computers",
+      "domain": "scan.co.uk",
+      "icon": "🖥️"
+    },
+    {
+      "id": "amazon_uk",
+      "name": "Amazon UK",
+      "domain": "amazon.co.uk",
+      "icon": "📦"
+    },
+    {
+      "id": "ebuyer",
+      "name": "Ebuyer",
+      "domain": "ebuyer.com",
+      "icon": "🛒"
+    },
+    {
+      "id": "currys",
+      "name": "Currys PC World",
+      "domain": "currys.co.uk",
+      "icon": "🔌"
+    }
   ],
   "database_source_settings": {
     "default_source_id": "local_cache",
@@ -44,7 +102,10 @@
   },
   "seasonal_events": {
     "primary_event": "Black Friday / Boxing Day",
-    "season_months": [11, 12],
+    "season_months": [
+      11,
+      12
+    ],
     "baseline_days": 600
   }
 }

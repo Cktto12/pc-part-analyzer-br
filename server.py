@@ -22,6 +22,7 @@ from xml.sax.saxutils import escape as xml_escape
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, quote
 import urllib.request
+import re
 import sources
 import config
 
@@ -278,11 +279,27 @@ def save_alert_config(cfg):
     with open(ALERT_CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
-def load_notified_history():
+def get_active_region_id():
+    return (config.get_market_config().get("region_id") or "br").lower()
+
+def get_db_path(reg_id=None):
+    reg = (reg_id or get_active_region_id()).lower()
+    return os.path.join(BASE_DIR, "data", "hardware_db.json" if reg == "br" else f"hardware_db_{reg}.json")
+
+def get_promos_cache_path(reg_id=None):
+    reg = (reg_id or get_active_region_id()).lower()
+    return os.path.join(BASE_DIR, "data", "promos_cache.json" if reg == "br" else f"promos_cache_{reg}.json")
+
+def get_notified_history_path(reg_id=None):
+    reg = (reg_id or get_active_region_id()).lower()
+    return os.path.join(BASE_DIR, "data", "notified_history.json" if reg == "br" else f"notified_history_{reg}.json")
+
+def load_notified_history(reg_id=None):
     """Loads notified deals history, pruning items older than 48 hours."""
-    if os.path.exists(NOTIFIED_HISTORY_PATH):
+    fpath = get_notified_history_path(reg_id)
+    if os.path.exists(fpath):
         try:
-            with open(NOTIFIED_HISTORY_PATH, "r", encoding="utf-8") as f:
+            with open(fpath, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 now = time.time()
                 return {k: v for k, v in data.items() if now - v < 172800}
@@ -290,54 +307,55 @@ def load_notified_history():
             pass
     return {}
 
-def save_notified_history(history):
-    os.makedirs(os.path.dirname(NOTIFIED_HISTORY_PATH), exist_ok=True)
+def save_notified_history(history, reg_id=None):
+    fpath = get_notified_history_path(reg_id)
+    os.makedirs(os.path.dirname(fpath), exist_ok=True)
     try:
-        with open(NOTIFIED_HISTORY_PATH, "w", encoding="utf-8") as f:
+        with open(fpath, "w", encoding="utf-8") as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
     except Exception:
         pass
 
 def format_deal_notification(d, reasons_list=None, coup_code=None):
-    """Formats an emoji-rich, highly readable push alert matching the user's preferred format."""
+    """Formats a region-aware push alert using the active region's currency symbol and formatting."""
     price = d.get("price_brl", 0)
     name = d.get("matched_name") or d.get("title", "Hardware")
     coup = (coup_code or d.get("coupon_code") or d.get("coupon_info") or "").strip()
     coupon_tag = f" (c/ Cupom: {coup})" if coup else ""
-    title = f"🔥 {name} por R$ {price:,.2f}{coupon_tag}"
+    fmt_p = config.format_currency(price, short=False)
+    title = f"🔥 {name} por {fmt_p}{coupon_tag}"
 
     reasons_line = " • ".join(reasons_list) if reasons_list else "🔥 Oferta Detectada"
-    coupon_line = f"\n🎟️ Cupom Necessário: {coup}" if coup else ""
+    coupon_line = f"\n🎟️ Cupom: {coup}" if coup else ""
 
     savings_brl = d.get("savings_vs_hb_brl", 0)
     hb_price = d.get("hb_price_brl", 0)
-    diff_line = f"\n📉 Economia vs Ref: -R$ {savings_brl:,.2f} (Ref: R$ {hb_price:,.2f})" if savings_brl > 0 else ""
-    channel_line = f"\n📢 Canal: @{d.get('channel_id', 'radar')}"
+    diff_line = f"\n📉 Economia vs Ref: -{config.format_currency(savings_brl, short=True)} (Ref: {config.format_currency(hb_price, short=True)})" if savings_brl > 0 else ""
+    store_or_ch = d.get("store_name") or f"@{d.get('channel_id', 'radar')}"
+    channel_line = f"\n📢 Fonte: {store_or_ch}"
     deal_title = (d.get("title") or "").strip()[:140]
 
     message = f"{reasons_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
     url = d.get("buy_url") or d.get("post_url") or ""
     line1 = f"{reasons_line}{' | Cupom: ' + coup if coup else ''}"
-    line2 = f"Canal @{d.get('channel_id', 'radar')} — {deal_title[:80]}"
+    line2 = f"{store_or_ch} — {deal_title[:80]}"
     return title, message, line1, line2, url
 
 def check_and_notify_deals(cfg=None, db=None, force_notify=False):
     """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts."""
+    reg_id = get_active_region_id()
     if cfg is None:
         cfg = load_alert_config()
     if not cfg.get("notifyEnabled", True) and not force_notify:
         return {"notified": 0, "status": "disabled"}
 
     if db is None:
-        if not os.path.exists(DB_PATH):
-            return {"notified": 0, "status": "no_db"}
-        with open(DB_PATH, "r", encoding="utf-8") as f:
-            db = json.load(f)
+        db = convert_db_to_active_region()
 
     from promo_radar import scan_live_promotions
-    res = scan_live_promotions(db, max_age_hours=24)
+    res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id)
     matched = res.get("matched_deals", [])
-    history = load_notified_history()
+    history = load_notified_history(reg_id)
     notified_count = 0
 
     min_cb = int(cfg.get("notifyMinCB", 92))
@@ -362,7 +380,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
         for tgt in targets:
             if tgt.get("slug") == matched_slug and price <= tgt.get("max_price", 0):
                 qualifies = True
-                reasons.append(f"🎯 Meta Atingida (≤ R$ {tgt['max_price']:,.2f})")
+                reasons.append(f"🎯 Meta Atingida (≤ {config.format_currency(tgt['max_price'])})")
                 break
 
         # 2. Check high CB or pechincha
@@ -381,7 +399,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
         savings_pct = (savings_brl / max(1, hb_price)) * 100 if hb_price > 0 else 0
         if trig_hb and (savings_brl >= hb_brl or savings_pct >= hb_pct):
             qualifies = True
-            reasons.append(f"📉 −R$ {savings_brl:,.0f} (−{savings_pct:.0f}%) vs Database")
+            reasons.append(f"📉 −{config.format_currency(savings_brl, short=True)} (−{savings_pct:.0f}%) vs Database")
 
         if qualifies:
             title, message, line1, line2, url = format_deal_notification(d, reasons)
@@ -426,9 +444,10 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
     return {"notified": notified_count, "total_matched": len(matched)}
 
 def run_sitewise_coupon_validator():
-    """Runs a continuous sitewise validation of links and coupons in data/promos_cache.json and updates the DB."""
+    """Runs a continuous sitewise validation of links and coupons in regional promos_cache and updates the regional DB."""
     try:
-        cache_path = os.path.join(BASE_DIR, "data", "promos_cache.json")
+        reg_id = get_active_region_id()
+        cache_path = get_promos_cache_path(reg_id)
         if not os.path.exists(cache_path):
             return
         with open(cache_path, "r", encoding="utf-8") as f:
@@ -448,14 +467,15 @@ def run_sitewise_coupon_validator():
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        if os.path.exists(DB_PATH):
-            with open(DB_PATH, "r", encoding="utf-8") as f:
+        target_db_path = get_db_path(reg_id)
+        if os.path.exists(target_db_path):
+            with open(target_db_path, "r", encoding="utf-8") as f:
                 db = json.load(f)
             db["live_promos"] = data
-            with open(DB_PATH, "w", encoding="utf-8") as f:
+            with open(target_db_path, "w", encoding="utf-8") as f:
                 json.dump(db, f, ensure_ascii=False, indent=2)
 
-        print(f"[Sitewise Validator] {len(results)} ofertas/cupons verificados na base em segundo plano.")
+        print(f"[Sitewise Validator ({reg_id.upper()})] {len(results)} ofertas/cupons verificados na base em segundo plano.")
     except Exception as e:
         print(f"[Sitewise Validator Erro] {e}")
 
@@ -476,6 +496,158 @@ def background_promo_monitor_thread():
             print(f"[Background Monitor Erro] {e}")
             interval_mins = 10
         time.sleep(interval_mins * 60)
+
+def fetch_cyberpuerta_live_gpu_prices():
+    """Scrapes live MXN GPU prices and direct .mx product links from Cyberpuerta.mx."""
+    urls = [
+        "https://www.cyberpuerta.mx/Computo-Hardware/Componentes/Tarjetas-de-Video/",
+        "https://www.cyberpuerta.mx/Tarjetas-de-Video-Gigabyte/",
+        "https://www.cyberpuerta.mx/Tarjetas-de-Video-AMD-Radeon/"
+    ]
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    from promo_radar import GPU_MATCH_RULES
+    found = {}
+
+    for url in urls:
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                page = resp.read().decode("utf-8", errors="ignore")
+            # Match product blocks with title, href, and MXN price
+            for m in re.finditer(r'<a[^>]+href="(https://www\.cyberpuerta\.mx/[^"]+)"[^>]*title="([^"]+)"[\s\S]{1,1800}?class="price"[^>]*>\s*\$([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)', page):
+                prod_url, title, price_str = m.group(1), m.group(2), m.group(3)
+                price_mxn = float(price_str.replace(",", ""))
+                if price_mxn < 1500 or price_mxn > 95000:
+                    continue
+                for slug, pat in GPU_MATCH_RULES:
+                    if re.search(pat, title, re.IGNORECASE):
+                        if slug not in found or price_mxn < found[slug]["price"]:
+                            found[slug] = {
+                                "price": round(price_mxn),
+                                "url": prod_url,
+                                "title": title.strip(),
+                                "store": "Cyberpuerta"
+                            }
+                        break
+        except Exception as e:
+            print(f"[Mexico Scraper] Warning on {url}: {e}")
+    return found
+
+def localize_item_for_mexico(it, rate, live_mx_map=None):
+    """Converts fallback prices to MXN, applies live Cyberpuerta.mx prices if found, and strips 100% of Brazilian stores/coupons/links."""
+    def conv_val(v):
+        if v is None or not isinstance(v, (int, float)):
+            return v
+        return int(round(v * rate))
+
+    for k in ("price_brl", "regular_price_brl", "installment_price_brl", "custom_price"):
+        if k in it and it[k]:
+            it[k] = conv_val(it[k])
+    if "price_stats" in it and isinstance(it["price_stats"], dict):
+        ps = it["price_stats"]
+        for pk in ("target_price", "min_all_time", "min_90d", "avg_30d", "avg_90d", "median_180d", "vs_target_brl"):
+            if pk in ps and ps[pk] is not None:
+                ps[pk] = conv_val(ps[pk])
+    if "history" in it and isinstance(it["history"], list):
+        for h in it["history"]:
+            if "price" in h and h["price"]:
+                h["price"] = conv_val(h["price"])
+            h["store"] = "Cyberpuerta / Amazon MX"
+
+    # Strip region-locked Brazilian coupons and links completely!
+    it["coupon"] = None
+    it["coupon_label"] = None
+    slug = it.get("slug", "")
+    q_name = quote(it.get("name", slug))
+
+    if live_mx_map and slug in live_mx_map:
+        mx_hit = live_mx_map[slug]
+        it["price_brl"] = mx_hit["price"]
+        it["regular_price_brl"] = mx_hit["price"]
+        it["store_name"] = mx_hit["store"]
+        it["offer_url"] = mx_hit["url"]
+        it["offer_title"] = mx_hit["title"]
+        it["href"] = mx_hit["url"]
+        today_str = time.strftime("%Y-%m-%d")
+        if "history" in it and isinstance(it["history"], list):
+            if not it["history"] or it["history"][-1].get("date") != today_str:
+                it["history"].append({"date": today_str, "price": mx_hit["price"], "store": mx_hit["store"]})
+    elif slug == "rx-580-8gb-ref":
+        it["store_name"] = "Mercado Libre MX"
+        it["offer_url"] = f"https://listado.mercadolibre.com.mx/{q_name}"
+        it["href"] = it["offer_url"]
+    else:
+        it["store_name"] = "Cyberpuerta"
+        it["offer_url"] = f"https://www.cyberpuerta.mx/index.php?cl=search&searchparam={q_name}"
+        it["href"] = it["offer_url"]
+
+def convert_db_to_active_region(raw_db=None, force_refresh=False):
+    """Returns a strictly isolated regional database with zero cross-region store/coupon/link leakage."""
+    market_cfg = config.get_market_config()
+    active_region = (market_cfg.get("region_id") or "br").lower()
+    rate = float(market_cfg.get("monetary", {}).get("exchange_rate_vs_brl", 1.0))
+    curr_code = market_cfg.get("monetary", {}).get("currency_code", "BRL")
+    curr_sym = market_cfg.get("monetary", {}).get("currency_symbol", "R$")
+
+    reg_db_path = get_db_path(active_region)
+    if active_region == "mx" and not force_refresh and os.path.exists(reg_db_path):
+        try:
+            with open(reg_db_path, "r", encoding="utf-8") as f:
+                db = json.load(f)
+            db["region_id"] = "mx"
+            db["currency_code"] = curr_code
+            db["currency_symbol"] = curr_sym
+            db["exchange_rate"] = rate
+            return db
+        except Exception:
+            pass
+
+    if raw_db is None:
+        br_path = get_db_path("br")
+        if os.path.exists(br_path):
+            with open(br_path, "r", encoding="utf-8") as f:
+                raw_db = json.load(f)
+        else:
+            raw_db = sources.sync_active_source(br_path)
+
+    db = json.loads(json.dumps(raw_db))
+
+    if active_region == "mx":
+        live_mx_gpus = fetch_cyberpuerta_live_gpu_prices()
+        for group in ("gpus", "cpus", "motherboards", "rams", "psus"):
+            for item in db.get(group, []):
+                localize_item_for_mexico(item, rate, live_mx_gpus if group == "gpus" else None)
+
+        # Attach ONLY Mexican promos_cache_mx.json (never Brazilian live_promos!)
+        mx_promo_path = get_promos_cache_path("mx")
+        if os.path.exists(mx_promo_path):
+            try:
+                with open(mx_promo_path, "r", encoding="utf-8") as f:
+                    db["live_promos"] = json.load(f)
+            except Exception:
+                db["live_promos"] = None
+        else:
+            db["live_promos"] = None
+
+        db["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        db["source_id"] = "cyberpuerta_mlm_mx"
+        db["source_name"] = "Cyberpuerta & Mercado Libre MX"
+        db["source"] = "https://www.cyberpuerta.mx/"
+        try:
+            with open(reg_db_path, "w", encoding="utf-8") as f:
+                json.dump(db, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+    else:
+        active = sources.get_active_source()
+        db["source_id"] = active.source_id
+        db["source_name"] = active.source_name
+
+    db["region_id"] = active_region
+    db["currency_code"] = curr_code
+    db["currency_symbol"] = curr_sym
+    db["exchange_rate"] = rate
+    return db
 
 class AppRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -506,15 +678,9 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 "active_source": sources.get_active_source_id()
             })
         elif parsed.path == "/api/hardware":
-            if not os.path.exists(DB_PATH):
-                db = sources.sync_active_source(DB_PATH)
-                return self.send_json(db)
-            with open(DB_PATH, "r", encoding="utf-8") as f:
-                db = json.load(f)
-            active = sources.get_active_source()
-            db["source_id"] = active.source_id
-            db["source_name"] = active.source_name
-            return self.send_json(db)
+            qs = parse_qs(parsed.query)
+            force = qs.get("force", ["0"])[0] == "1"
+            return self.send_json(convert_db_to_active_region(force_refresh=force))
         elif parsed.path == "/api/my-pc":
             return self.send_json(detect_local_pc())
         elif parsed.path == "/api/tg-raw":
@@ -548,8 +714,23 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 max_age = float(qs.get("max_age", ["72"])[0])
                 extra_q = [q.strip() for q in qs.get("q", []) if q.strip()]
                 extra_ch = [c.strip() for c in qs.get("channels", [""])[0].split(",") if c.strip()]
-                with open(DB_PATH, "r", encoding="utf-8") as f:
-                    db = json.load(f)
+                
+                market_cfg = config.get_market_config()
+                reg_id = qs.get("region", qs.get("market", [market_cfg.get("region_id", "br")]))[0].lower()
+                
+                reg_cache_file = os.path.join(BASE_DIR, "data", f"promos_cache_{reg_id}.json")
+                if not os.path.exists(reg_cache_file) and reg_id == "br":
+                    reg_cache_file = os.path.join(BASE_DIR, "data", "promos_cache.json")
+                
+                if not force and os.path.exists(reg_cache_file):
+                    try:
+                        with open(reg_cache_file, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                            return self.send_json(data)
+                    except Exception:
+                        pass
+                
+                db = convert_db_to_active_region()
                 from promo_radar import scan_live_promotions
                 data = scan_live_promotions(
                     db,
@@ -557,6 +738,7 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                     extra_channels=extra_ch,
                     max_age_hours=max_age,
                     force=force,
+                    region_id=reg_id
                 )
                 return self.send_json(data)
             except Exception as e:
@@ -564,7 +746,7 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
         elif parsed.path == "/api/alert-config":
             return self.send_json(load_alert_config())
         elif parsed.path == "/api/alert-history":
-            return self.send_json(load_notified_history())
+            return self.send_json(load_notified_history(get_active_region_id()))
         elif parsed.path == "/api/test-coupon":
             try:
                 qs = parse_qs(parsed.query)
@@ -690,8 +872,11 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 sid = body.get("source_id") or parse_qs(parsed.query).get("source", [None])[0]
                 if sid:
                     sources.set_active_source(sid)
-                db = sources.sync_active_source(DB_PATH)
-                return self.send_json({"ok": True, "db": db})
+                active_reg = get_active_region_id()
+                if active_reg == "mx":
+                    return self.send_json({"ok": True, "db": convert_db_to_active_region(force_refresh=True)})
+                raw_db = sources.sync_active_source(get_db_path("br"))
+                return self.send_json({"ok": True, "db": convert_db_to_active_region(raw_db, force_refresh=True)})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
         elif parsed.path == "/api/win-notify":

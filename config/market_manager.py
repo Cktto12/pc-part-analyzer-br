@@ -11,54 +11,36 @@ from typing import Dict, Any, List, Optional
 CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 REGIONS_DIR = os.path.join(CONFIG_DIR, "regions")
 ACTIVE_CONFIG_PATH = os.path.join(CONFIG_DIR, "market_config.json")
+ALLOWED_REGIONS = ("br", "mx")
 
 # In-memory cache for fast lookups
 _CACHED_CONFIG: Optional[Dict[str, Any]] = None
 
 def get_market_config(force_reload: bool = False) -> Dict[str, Any]:
-    """Returns the currently active market configuration dictionary."""
+    """Returns the currently active market configuration dictionary (restricted to br and mx)."""
     global _CACHED_CONFIG
     if not force_reload and _CACHED_CONFIG is not None:
-        return _CACHED_CONFIG
+        if _CACHED_CONFIG.get("region_id") in ALLOWED_REGIONS:
+            return _CACHED_CONFIG
 
     if os.path.exists(ACTIVE_CONFIG_PATH):
         try:
             with open(ACTIVE_CONFIG_PATH, "r", encoding="utf-8") as f:
-                _CACHED_CONFIG = json.load(f)
-                return _CACHED_CONFIG
+                cfg = json.load(f)
+                if cfg.get("region_id") in ALLOWED_REGIONS:
+                    _CACHED_CONFIG = cfg
+                    return _CACHED_CONFIG
         except Exception:
             pass
 
-    # Fallback to Brazil profile
+    # If active config was set to a shut-down region (us/uk/eu), reset automatically to Brazil ('br')
     br_path = os.path.join(REGIONS_DIR, "br.json")
     if os.path.exists(br_path):
         with open(br_path, "r", encoding="utf-8") as f:
             _CACHED_CONFIG = json.load(f)
             save_market_config(_CACHED_CONFIG)
             return _CACHED_CONFIG
-
-    # Minimal default fallback
-    _CACHED_CONFIG = {
-        "region_id": "br",
-        "region_name": "Brasil",
-        "country_code": "BR",
-        "flag_emoji": "🇧🇷",
-        "monetary": {
-            "currency_code": "BRL",
-            "currency_symbol": "R$",
-            "symbol_position": "prefix",
-            "locale": "pt-BR",
-            "decimal_separator": ",",
-            "thousands_separator": ".",
-            "decimal_digits": 2,
-            "min_valid_hardware_price": 80.0,
-            "max_valid_hardware_price": 45000.0,
-            "vram_step_bonus_factor": 240.0
-        },
-        "promotion_sources": {"enabled": True, "channels": []},
-        "stores": []
-    }
-    return _CACHED_CONFIG
+    return _CACHED_CONFIG or {}
 
 
 def save_market_config(cfg: Dict[str, Any]) -> bool:
@@ -76,44 +58,44 @@ def save_market_config(cfg: Dict[str, Any]) -> bool:
 
 
 def list_available_regions() -> List[Dict[str, Any]]:
-    """Scans config/regions/ and returns metadata for each available country profile."""
+    """Exposes ONLY Brasil ('br') and México ('mx'). US, UK, and EU are kept shut and undisclosed."""
     regions = []
     if not os.path.exists(REGIONS_DIR):
         return regions
 
-    for fname in sorted(os.listdir(REGIONS_DIR)):
-        if fname.endswith(".json") and fname != "template.json":
-            fpath = os.path.join(REGIONS_DIR, fname)
-            try:
-                with open(fpath, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    monetary = data.get("monetary", {})
-                    regions.append({
-                        "region_id": data.get("region_id", fname.replace(".json", "")),
-                        "region_name": data.get("region_name", fname),
-                        "country_code": data.get("country_code", ""),
-                        "flag_emoji": data.get("flag_emoji", "🌐"),
-                        "currency_code": monetary.get("currency_code", "BRL"),
-                        "currency_symbol": monetary.get("currency_symbol", "R$"),
-                        "locale": monetary.get("locale", "pt-BR"),
-                        "store_count": len(data.get("stores", [])),
-                        "channel_count": len(data.get("promotion_sources", {}).get("channels", []))
-                    })
-            except Exception:
-                continue
+    for reg_id in ALLOWED_REGIONS:
+        fpath = os.path.join(REGIONS_DIR, f"{reg_id}.json")
+        if not os.path.exists(fpath):
+            continue
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                monetary = data.get("monetary", {})
+                regions.append({
+                    "region_id": data.get("region_id", reg_id),
+                    "region_name": data.get("region_name", reg_id.upper()),
+                    "country_code": data.get("country_code", reg_id.upper()),
+                    "flag_emoji": data.get("flag_emoji", "🌐"),
+                    "currency_code": monetary.get("currency_code", "BRL"),
+                    "currency_symbol": monetary.get("currency_symbol", "R$"),
+                    "locale": monetary.get("locale", "pt-BR"),
+                    "store_count": len(data.get("stores", [])),
+                    "channel_count": len(data.get("promotion_sources", {}).get("channels", []))
+                })
+        except Exception:
+            continue
     return regions
 
 
 def set_active_region(region_id: str) -> bool:
-    """
-    Slots in a specific regional profile by loading config/regions/{region_id}.json
-    and writing it as the active market_config.json.
-    """
+    """Activates only allowed regions ('br' or 'mx'). Rejects shut-down regions."""
     global _CACHED_CONFIG
+    region_id = (region_id or "").lower().strip()
+    if region_id not in ALLOWED_REGIONS:
+        return False
     target_file = os.path.join(REGIONS_DIR, f"{region_id}.json")
     if not os.path.exists(target_file):
         return False
-
     try:
         with open(target_file, "r", encoding="utf-8") as f:
             profile = json.load(f)
