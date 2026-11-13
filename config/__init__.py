@@ -1,5 +1,6 @@
 """Config package for market and regional profiles."""
 from .market_manager import (
+    ALLOWED_REGIONS,
     get_market_config,
     save_market_config,
     list_available_regions,
@@ -11,6 +12,7 @@ from .market_manager import (
 )
 
 __all__ = [
+    "ALLOWED_REGIONS",
     "get_market_config",
     "save_market_config",
     "list_available_regions",

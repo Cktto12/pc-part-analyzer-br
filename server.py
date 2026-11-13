@@ -633,6 +633,10 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
         db["source_id"] = "cyberpuerta_mlm_mx"
         db["source_name"] = "Cyberpuerta & Mercado Libre MX"
         db["source"] = "https://www.cyberpuerta.mx/"
+        db["region_id"] = active_region
+        db["currency_code"] = curr_code
+        db["currency_symbol"] = curr_sym
+        db["exchange_rate"] = rate
         try:
             with open(reg_db_path, "w", encoding="utf-8") as f:
                 json.dump(db, f, ensure_ascii=False, indent=2)
@@ -642,11 +646,11 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
         active = sources.get_active_source()
         db["source_id"] = active.source_id
         db["source_name"] = active.source_name
+        db["region_id"] = active_region
+        db["currency_code"] = curr_code
+        db["currency_symbol"] = curr_sym
+        db["exchange_rate"] = rate
 
-    db["region_id"] = active_region
-    db["currency_code"] = curr_code
-    db["currency_symbol"] = curr_sym
-    db["exchange_rate"] = rate
     return db
 
 class AppRequestHandler(SimpleHTTPRequestHandler):
@@ -680,6 +684,9 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
         elif parsed.path == "/api/hardware":
             qs = parse_qs(parsed.query)
             force = qs.get("force", ["0"])[0] == "1"
+            req_reg = (qs.get("region", [""])[0] or qs.get("market", [""])[0]).lower().strip()
+            if req_reg and req_reg in config.ALLOWED_REGIONS:
+                config.set_active_region(req_reg)
             return self.send_json(convert_db_to_active_region(force_refresh=force))
         elif parsed.path == "/api/my-pc":
             return self.send_json(detect_local_pc())
@@ -872,6 +879,9 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 sid = body.get("source_id") or parse_qs(parsed.query).get("source", [None])[0]
                 if sid:
                     sources.set_active_source(sid)
+                req_reg = (body.get("region_id") or body.get("region") or parse_qs(parsed.query).get("region", [""])[0]).lower().strip()
+                if req_reg and req_reg in config.ALLOWED_REGIONS:
+                    config.set_active_region(req_reg)
                 active_reg = get_active_region_id()
                 if active_reg == "mx":
                     return self.send_json({"ok": True, "db": convert_db_to_active_region(force_refresh=True)})

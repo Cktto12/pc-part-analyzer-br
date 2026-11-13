@@ -2820,32 +2820,103 @@ async function changeDatabaseSource(sourceId) {
 // ============================================================================
 // MARKET & REGIONAL CONFIGURATION (MONETARY, CHANNELS, STORES)
 // ============================================================================
-async function initMarketConfig() {
-  try {
-    const savedReg = localStorage.getItem('selected_market_region');
-    if (savedReg) {
-      await fetch('/api/market-config/select', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ region_id: savedReg })
-      }).catch(() => {});
+const FALLBACK_AVAILABLE_REGIONS = [
+  { region_id: 'br', region_name: 'Brasil', currency_code: 'BRL', currency_symbol: 'R$', flag_emoji: '🇧🇷' },
+  { region_id: 'mx', region_name: 'México', currency_code: 'MXN', currency_symbol: '$', flag_emoji: '🇲🇽' }
+];
+
+const STATIC_REGIONAL_DEFAULTS = {
+  br: {
+    region_id: 'br',
+    region_name: 'Brasil',
+    country_code: 'BR',
+    flag_emoji: '🇧🇷',
+    monetary: {
+      currency_code: 'BRL',
+      currency_symbol: 'R$',
+      symbol_position: 'prefix',
+      locale: 'pt-BR',
+      decimal_separator: ',',
+      thousands_separator: '.',
+      decimal_digits: 2,
+      price_regex: "R\\$\\s*([0-9]{1,3}(?:\\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)",
+      min_valid_hardware_price: 80,
+      max_valid_hardware_price: 45000,
+      vram_step_bonus_factor: 240,
+      default_alert_min_savings: 150,
+      default_budget_ceiling: 7000,
+      exchange_rate_vs_brl: 1.0
     }
+  },
+  mx: {
+    region_id: 'mx',
+    region_name: 'México',
+    country_code: 'MX',
+    flag_emoji: '🇲🇽',
+    monetary: {
+      currency_code: 'MXN',
+      currency_symbol: '$',
+      symbol_position: 'prefix',
+      locale: 'es-MX',
+      decimal_separator: '.',
+      thousands_separator: ',',
+      decimal_digits: 0,
+      price_regex: "(?:MX\\$|MXN|\\$)\\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\\.[0-9]{1,2})?|[0-9]{4,6}(?:\\.[0-9]{1,2})?)",
+      min_valid_hardware_price: 450,
+      max_valid_hardware_price: 95000,
+      vram_step_bonus_factor: 850,
+      default_alert_min_savings: 600,
+      default_budget_ceiling: 25000,
+      exchange_rate_vs_brl: 3.48
+    }
+  }
+};
+
+async function initMarketConfig() {
+  STATE.availableRegions = FALLBACK_AVAILABLE_REGIONS;
+  const rawSaved = (localStorage.getItem('selected_market_region') || 'br').toLowerCase().trim();
+  const savedReg = (rawSaved === 'mx') ? 'mx' : 'br';
+
+  let loaded = false;
+  // 1. Try server endpoint if backend is active
+  try {
+    await fetch('/api/market-config/select', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ region_id: savedReg })
+    }).catch(() => {});
 
     const res = await fetch('/api/market-config?t=' + Date.now());
     if (res.ok) {
       const data = await res.json();
       if (data && data.config) {
         STATE.market = data.config;
+        loaded = true;
       }
-      if (data && data.available_regions) {
-        STATE.availableRegions = data.available_regions;
+      if (data && data.available_regions && data.available_regions.length) {
+        STATE.availableRegions = data.available_regions.filter(r => r.region_id === 'br' || r.region_id === 'mx');
       }
-      renderMarketRegionSelectors();
-      updateAllCurrencyLabels();
     }
-  } catch (err) {
-    console.warn('Could not load /api/market-config, using local fallback:', err);
+  } catch (_) {}
+
+  // 2. Static / GitHub Pages fallback: fetch static config/regions/<savedReg>.json
+  if (!loaded) {
+    try {
+      const res = await fetch(`config/regions/${savedReg}.json?t=` + Date.now());
+      if (res.ok) {
+        STATE.market = await res.json();
+        loaded = true;
+      }
+    } catch (_) {}
   }
+
+  // 3. Absolute fallback: use STATIC_REGIONAL_DEFAULTS
+  if (!loaded || !STATE.market || STATE.market.region_id !== savedReg) {
+    STATE.market = JSON.parse(JSON.stringify(STATIC_REGIONAL_DEFAULTS[savedReg] || STATIC_REGIONAL_DEFAULTS.br));
+  }
+
+  renderMarketRegionSelectors();
+  updateAllCurrencyLabels();
 }
 
 function updateAllCurrencyLabels() {
@@ -2879,9 +2950,11 @@ function renderMarketRegionSelectors() {
   const selTop = document.getElementById('select-market-region');
   const selSidebar = document.getElementById('select-market-region-sidebar');
   const selConfig = document.getElementById('cfg-select-market-region');
-  if (!STATE.availableRegions || !STATE.availableRegions.length) return;
+  if (!STATE.availableRegions || !STATE.availableRegions.length) {
+    STATE.availableRegions = FALLBACK_AVAILABLE_REGIONS;
+  }
 
-  const currentId = STATE.market?.region_id || 'br';
+  const currentId = (STATE.market?.region_id || localStorage.getItem('selected_market_region') || 'br').toLowerCase();
   const optionsHTML = STATE.availableRegions.map(r => `
     <option value="${r.region_id}" ${r.region_id === currentId ? 'selected' : ''}>
       ${r.flag_emoji || '🌐'} ${r.region_name} (${r.currency_code} - ${r.currency_symbol})
@@ -2897,21 +2970,26 @@ function renderMarketRegionSelectors() {
 
   // Update Tab 7 Monetary Preview
   const symEl = document.getElementById('cfg-money-sym');
-  if (symEl) symEl.textContent = STATE.market?.monetary?.currency_symbol || 'R$';
+  if (symEl) symEl.textContent = STATE.market?.monetary?.currency_symbol || (currentId === 'mx' ? '$' : 'R$');
   const codeEl = document.getElementById('cfg-money-code');
-  if (codeEl) codeEl.textContent = STATE.market?.monetary?.currency_code || 'BRL';
+  if (codeEl) codeEl.textContent = STATE.market?.monetary?.currency_code || (currentId === 'mx' ? 'MXN' : 'BRL');
   const locEl = document.getElementById('cfg-money-locale');
-  if (locEl) locEl.textContent = STATE.market?.monetary?.locale || 'pt-BR';
+  if (locEl) locEl.textContent = STATE.market?.monetary?.locale || (currentId === 'mx' ? 'es-MX' : 'pt-BR');
 }
 
 async function changeMarketRegion(regionId) {
   if (!regionId) return;
+  regionId = regionId.toLowerCase().trim();
+  if (regionId !== 'br' && regionId !== 'mx') regionId = 'br';
+
   const status = document.getElementById('header-status');
   if (status) status.textContent = `Alternando mercado e moeda para ${regionId.toUpperCase()}...`;
 
-  try {
-    try { localStorage.setItem('selected_market_region', regionId); } catch (_) {}
+  try { localStorage.setItem('selected_market_region', regionId); } catch (_) {}
 
+  let serverUpdated = false;
+  // 1. Try server API if backend exists
+  try {
     const res = await fetch('/api/market-config/select', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2919,18 +2997,27 @@ async function changeMarketRegion(regionId) {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.config) {
+      if (data && data.config) {
         STATE.market = data.config;
+        serverUpdated = true;
       }
-      if (data.available_regions) {
-        STATE.availableRegions = data.available_regions;
+      if (data && data.available_regions && data.available_regions.length) {
+        STATE.availableRegions = data.available_regions.filter(r => r.region_id === 'br' || r.region_id === 'mx');
       }
     }
-  } catch (err) {
-    console.warn('Could not contact /api/market-config/select, updating local profile:', err);
-    const reg = (STATE.availableRegions || []).find(r => r.region_id === regionId);
-    if (reg) {
-      STATE.market = Object.assign({}, STATE.market, reg);
+  } catch (_) {}
+
+  // 2. Static / GitHub Pages fallback: load config/regions/<regionId>.json
+  if (!serverUpdated) {
+    try {
+      const res = await fetch(`config/regions/${regionId}.json?t=` + Date.now());
+      if (res.ok) {
+        STATE.market = await res.json();
+      } else {
+        throw new Error('fetch error');
+      }
+    } catch (_) {
+      STATE.market = JSON.parse(JSON.stringify(STATIC_REGIONAL_DEFAULTS[regionId] || STATIC_REGIONAL_DEFAULTS.br));
     }
   }
 
@@ -2957,9 +3044,9 @@ async function changeMarketRegion(regionId) {
   if (typeof renderUpgradeSuggestions === 'function') renderUpgradeSuggestions();
   if (typeof renderSimulator === 'function') renderSimulator();
 
-  const sym = STATE.market?.monetary?.currency_symbol || '$';
-  const code = STATE.market?.monetary?.currency_code || regionId.toUpperCase();
-  const regName = STATE.market?.region_name || regionId.toUpperCase();
+  const sym = STATE.market?.monetary?.currency_symbol || (regionId === 'mx' ? '$' : 'R$');
+  const code = STATE.market?.monetary?.currency_code || (regionId === 'mx' ? 'MXN' : 'BRL');
+  const regName = STATE.market?.region_name || (regionId === 'mx' ? 'México' : 'Brasil');
 
   if (typeof showToast === 'function') {
     showToast(`Região e moeda configuradas para ${regName} (${code} - ${sym})`);
@@ -2969,56 +3056,40 @@ async function changeMarketRegion(regionId) {
 
 function ensureDatabaseConvertedToActiveMarket(dbObj) {
   if (!dbObj) return;
-  const targetReg = (STATE.market?.region_id || 'br').toLowerCase();
-  const rate = parseFloat(STATE.market?.monetary?.exchange_rate_vs_brl || 1.0);
+  const targetReg = (STATE.market?.region_id || localStorage.getItem('selected_market_region') || 'br').toLowerCase();
+  const rate = parseFloat(STATE.market?.monetary?.exchange_rate_vs_brl || (targetReg === 'mx' ? 3.48 : 1.0));
   const decimals = rate < 1 ? 100 : 1;
   const roundCurr = v => Math.round(v * rate * decimals) / decimals;
 
-  // Check if primary prices still need conversion (e.g., static fallback or refresh)
-  const needsPrimaryConv = rate !== 1.0 && (!dbObj.exchange_rate || dbObj.exchange_rate === 1.0 || dbObj.region_id !== targetReg);
+  // Has this database ALREADY been localized/converted for the target region?
+  const alreadyLocalized = (dbObj.region_id === targetReg && (dbObj.exchange_rate === rate || targetReg === 'mx'));
 
-  // Check if price_stats were missed by an older server.py build
-  const sampleGpu = (dbObj.gpus || [])[0];
-  const needsStatsConv = rate !== 1.0 && sampleGpu && sampleGpu.price_stats && sampleGpu.price_brl &&
-    (Math.abs(sampleGpu.price_stats.avg_90d / sampleGpu.price_brl - 1) > 0.65);
-
-  const convItem = (it, convPrimary, convStats) => {
-    if (convPrimary) {
-      if (it.price_brl) it.price_brl = roundCurr(it.price_brl);
-      if (it.regular_price_brl) it.regular_price_brl = roundCurr(it.regular_price_brl);
-      if (it.installment_price_brl) it.installment_price_brl = roundCurr(it.installment_price_brl);
-      if (it.custom_price) it.custom_price = roundCurr(it.custom_price);
-      if (Array.isArray(it.history)) {
-        it.history.forEach(h => { if (h.price) h.price = roundCurr(h.price); });
-      }
+  if (!alreadyLocalized) {
+    // If we loaded the base Brazilian database but target is Mexico (or another country):
+    if (targetReg !== 'br') {
+      const convItem = (it) => {
+        if (it.price_brl) it.price_brl = roundCurr(it.price_brl);
+        if (it.regular_price_brl) it.regular_price_brl = roundCurr(it.regular_price_brl);
+        if (it.installment_price_brl) it.installment_price_brl = roundCurr(it.installment_price_brl);
+        if (it.custom_price) it.custom_price = roundCurr(it.custom_price);
+        if (Array.isArray(it.history)) {
+          it.history.forEach(h => { if (h.price) h.price = roundCurr(h.price); });
+        }
+        if (it.price_stats) {
+          ['target_price', 'min_all_time', 'min_90d', 'avg_30d', 'avg_90d', 'median_180d', 'vs_target_brl'].forEach(k => {
+            if (it.price_stats[k] != null) it.price_stats[k] = roundCurr(it.price_stats[k]);
+          });
+        }
+      };
+      (dbObj.gpus || []).forEach(convItem);
+      (dbObj.cpus || []).forEach(convItem);
+      (dbObj.motherboards || []).forEach(convItem);
+      (dbObj.rams || []).forEach(convItem);
+      (dbObj.psus || []).forEach(convItem);
     }
-    if ((convPrimary || convStats) && it.price_stats) {
-      ['target_price', 'min_all_time', 'min_90d', 'avg_30d', 'avg_90d', 'median_180d', 'vs_target_brl'].forEach(k => {
-        if (it.price_stats[k] != null) it.price_stats[k] = roundCurr(it.price_stats[k]);
-      });
-    }
-  };
-
-  if (needsPrimaryConv || needsStatsConv) {
-    (dbObj.gpus || []).forEach(g => convItem(g, needsPrimaryConv, needsStatsConv));
-    (dbObj.cpus || []).forEach(c => convItem(c, needsPrimaryConv, false));
-    (dbObj.motherboards || []).forEach(m => convItem(m, needsPrimaryConv, false));
-    (dbObj.rams || []).forEach(r => convItem(r, needsPrimaryConv, false));
   }
 
-  // Always check PSUs (since server.py previously didn't convert db.psus)
-  const samplePsu = (dbObj.psus || [])[0];
-  if (rate !== 1.0 && samplePsu && samplePsu.price_brl > 180 && rate < 0.5) {
-    (dbObj.psus || []).forEach(p => convItem(p, true, false));
-  } else if (needsPrimaryConv) {
-    (dbObj.psus || []).forEach(p => convItem(p, true, false));
-  }
-
-  // Never allow Brazilian BRL live_promos to stay attached when viewing another country!
-  if (targetReg !== 'br' && dbObj.live_promos && dbObj.live_promos.region_id !== targetReg) {
-    dbObj.live_promos = null;
-  }
-
+  // Scrub Mexican stores and links if target is mx
   if (targetReg === 'mx') {
     const scrubMxItem = it => {
       it.coupon = null;
@@ -3035,26 +3106,41 @@ function ensureDatabaseConvertedToActiveMarket(dbObj) {
     ['gpus', 'cpus', 'motherboards', 'rams', 'psus'].forEach(grp => (dbObj[grp] || []).forEach(scrubMxItem));
   }
 
+  // Wipe Brazilian live promos if not viewing Brazil
+  if (targetReg !== 'br' && dbObj.live_promos && dbObj.live_promos.region_id !== targetReg) {
+    dbObj.live_promos = null;
+  }
+
   dbObj.region_id = targetReg;
   dbObj.exchange_rate = rate;
-  dbObj.currency_code = STATE.market?.monetary?.currency_code || 'BRL';
-  dbObj.currency_symbol = STATE.market?.monetary?.currency_symbol || 'R$';
+  dbObj.currency_code = STATE.market?.monetary?.currency_code || (targetReg === 'mx' ? 'MXN' : 'BRL');
+  dbObj.currency_symbol = STATE.market?.monetary?.currency_symbol || (targetReg === 'mx' ? '$' : 'R$');
 }
 
 async function loadHardwareDatabase() {
   const status = document.getElementById('header-status');
+  const targetReg = (STATE.market?.region_id || localStorage.getItem('selected_market_region') || 'br').toLowerCase();
   try {
-    let res;
+    let res = null;
     const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     if (!isStatic) {
       try {
-        res = await fetch('/api/hardware?t=' + Date.now());
-        if (!res.ok) throw new Error('api error');
+        res = await fetch(`/api/hardware?region=${encodeURIComponent(targetReg)}&t=` + Date.now());
+        if (!res.ok) res = null;
+      } catch (_) {
+        res = null;
+      }
+    }
+    if (!res) {
+      const dbFile = (targetReg === 'mx') ? 'data/hardware_db_mx.json' : 'data/hardware_db.json';
+      try {
+        res = await fetch(dbFile + '?t=' + Date.now());
+        if (!res.ok && targetReg !== 'br') {
+          res = await fetch('data/hardware_db.json?t=' + Date.now());
+        }
       } catch (_) {
         res = await fetch('data/hardware_db.json?t=' + Date.now());
       }
-    } else {
-      res = await fetch('data/hardware_db.json?t=' + Date.now());
     }
     DB = await res.json();
     ensureDatabaseConvertedToActiveMarket(DB);
@@ -3064,8 +3150,8 @@ async function loadHardwareDatabase() {
     }
 
     window.DB = DB;
-    const sym = STATE.market?.monetary?.currency_symbol || 'R$';
-    const regName = STATE.market?.region_name || 'Brasil';
+    const sym = STATE.market?.monetary?.currency_symbol || (targetReg === 'mx' ? '$' : 'R$');
+    const regName = STATE.market?.region_name || (targetReg === 'mx' ? 'México' : 'Brasil');
     if (status) {
       status.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${DB.gpus.length} GPUs monitoradas`;
     }
@@ -3085,6 +3171,7 @@ async function refreshDatabase() {
   const btn = document.getElementById('btn-refresh-db') || document.getElementById('btn-refresh-hb');
   const icon = document.getElementById('icon-refresh');
   const status = document.getElementById('header-status');
+  const targetReg = (STATE.market?.region_id || localStorage.getItem('selected_market_region') || 'br').toLowerCase();
   if (btn) btn.disabled = true;
   if (icon) icon.classList.add('animate-spin');
   if (status) status.textContent = 'Sincronizando catálogo e preços ao vivo da Database...';
@@ -3097,14 +3184,23 @@ async function refreshDatabase() {
         const res = await fetch('/api/refresh', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source_id: STATE.activeSource })
+          body: JSON.stringify({ source_id: STATE.activeSource, region_id: targetReg })
         });
         if (res.ok) data = await res.json();
       } catch (_) {}
     }
     if (!data || !data.ok) {
-      const res = await fetch('data/hardware_db.json?t=' + Date.now());
-      if (res.ok) {
+      const dbFile = (targetReg === 'mx') ? 'data/hardware_db_mx.json' : 'data/hardware_db.json';
+      let res;
+      try {
+        res = await fetch(dbFile + '?t=' + Date.now());
+        if (!res.ok && targetReg !== 'br') {
+          res = await fetch('data/hardware_db.json?t=' + Date.now());
+        }
+      } catch (_) {
+        res = await fetch('data/hardware_db.json?t=' + Date.now());
+      }
+      if (res && res.ok) {
         const db = await res.json();
         data = { ok: true, db, from_static: true };
       }
@@ -3120,9 +3216,9 @@ async function refreshDatabase() {
       updateAllCurrencyLabels();
       renderActiveTab();
       renderPCBuilder();
-      const sourceLabel = DB.source_name || 'Database';
+      const sourceLabel = DB.source_name || (targetReg === 'mx' ? 'Cyberpuerta & DDTech MX' : 'Hardware Barato');
       if (status) {
-        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at} (${DB.gpus.length} GPUs monitoradas)`;
+        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at || 'agora'} (${DB.gpus.length} GPUs monitoradas)`;
       }
     }
   } catch (e) {
