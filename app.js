@@ -1148,13 +1148,27 @@ function getCpuContextualCompositeScore(cpu, customWeights = null) {
   const ws = customWeights ? customWeights.wSoft : (STATE.wSoft !== undefined ? STATE.wSoft : 15);
   const totalW = Math.max(1, wg + wws + wa + ws);
 
+  const s = cpu._specs || getCpuSpecs(cpu);
   const game = getCpuGamingScore(cpu);
   const work = getCpuWorkstationScore(cpu);
   const ai = getCpuAIScore(cpu);
 
   // Soft/Engineering on CPU is aligned with Workstation and multi-threaded throughput
-  const composite = (wg * game + wws * work + wa * ai + ws * work) / totalW;
-  return Math.round(composite * 100);
+  const rawComposite = (wg * game + wws * work + wa * ai + ws * work) / totalW;
+
+  // Responsiveness Factor: IPC & Clock Frequency weight
+  // Ancient Broadwell/Haswell cores at ~2.5 GHz feel sluggish in daily use and compilation responsiveness.
+  // Modern baseline single-core IPC benchmark is ~82 (Ryzen 5 5600 / i5-12400F).
+  const singleIPC = s.singleBench || 60;
+  const ipcFreqMultiplier = Math.pow(Math.max(0.40, singleIPC / 82), 0.65);
+
+  // Platform Risk / Obsolescence: Ancient server chips (LGA2011-3 / X99) have high failure rates, 
+  // high idle consumption, DDR3/early DDR4 speeds, and lack modern PCIe 4.0/5.0 lanes.
+  const isLegacyServer = (s.socket === 'LGA2011-3' || /xeon|2680|2670|2690/i.test(cpu.slug) || /xeon/i.test(cpu.name));
+  const platformMultiplier = isLegacyServer ? 0.72 : 1.0;
+
+  const adjustedScore = rawComposite * ipcFreqMultiplier * platformMultiplier;
+  return Math.round(adjustedScore * 100);
 }
 window.getCpuContextualCompositeScore = getCpuContextualCompositeScore;
 
@@ -1233,6 +1247,14 @@ function getCpuPlatformMigrationCost(candCpu, baseCpu) {
 window.getCpuPlatformMigrationCost = getCpuPlatformMigrationCost;
 
 // 7. Contextual CPU Enrichment (Scores, Platform Mode, Pareto Dominance, and CB Ratios)
+STATE.excludeXeons = true;
+function toggleExcludeXeons(checked) {
+  STATE.excludeXeons = !!checked;
+  enrichCPUsWithContextualMetrics();
+  renderCpuCBTable();
+}
+window.toggleExcludeXeons = toggleExcludeXeons;
+
 function enrichCPUsWithContextualMetrics() {
   if (!DB.cpus || !DB.cpus.length) return;
 
@@ -1259,6 +1281,8 @@ function enrichCPUsWithContextualMetrics() {
   // Step 2: Pareto dominance and CB score
   let maxRawRatio = 0;
   DB.cpus.forEach(c => {
+    const s = c._specs || getCpuSpecs(c);
+    const isLegacyServer = (s.socket === 'LGA2011-3' || /xeon|2680|2670|2690/i.test(c.slug) || /xeon/i.test(c.name));
     const price = c._effectiveUpgradePrice || c.price_brl || 99999;
     let paretoPenalty = 1.0;
     let dominatedBy = null;
@@ -1277,7 +1301,10 @@ function enrichCPUsWithContextualMetrics() {
 
     c._dominatedBy = dominatedBy;
     c._paretoPenalty = paretoPenalty;
-    const rawRatio = (c._compositeScore / Math.max(1, price)) * Math.pow(paretoPenalty, 0.85);
+
+    // Amortize platform investment overhead (~R$ 250-350) so sub-R$ 150 legacy parts don't distort CB index to infinity
+    const amortizedPrice = price + (isLegacyServer ? 350 : 250);
+    const rawRatio = (c._compositeScore / amortizedPrice) * Math.pow(paretoPenalty, 0.85);
     c._rawCBRatio = rawRatio;
     if (rawRatio > maxRawRatio) maxRawRatio = rawRatio;
   });
@@ -1538,15 +1565,9 @@ function setMainContext(ctx) {
     if (tBf) tBf.textContent = 'Black Friday GPUs';
   }
 
-  // If in Black Friday tab, automatically adjust selected family to match context
-  const bfSel = document.getElementById('bf-select-family');
-  if (bfSel) {
-    const curVal = bfSel.value;
-    if (STATE.context === 'cpu' && curVal.startsWith('gpu_')) {
-      bfSel.value = 'cpu_high';
-    } else if (STATE.context === 'gpu' && curVal.startsWith('cpu_')) {
-      bfSel.value = 'gpu_cross_tiers';
-    }
+  // Strictly update Black Friday family selector options according to active context
+  if (typeof updateBFFamilySelectorOptions === 'function') {
+    updateBFFamilySelectorOptions();
   }
 
   renderActiveTab();
@@ -1656,7 +1677,7 @@ function onWeightSliderInput(evt) {
 }
 window.onWeightSliderInput = onWeightSliderInput;
 
-// Workstation Sub-Profile Config Handler
+// Workstation Sub-Profile Config Handler with Proportional Auto-Balancing to 100%
 function onWorkstationProfileInput(key, rawVal) {
   let v = parseInt(rawVal, 10);
   if (isNaN(v)) return;
@@ -1665,12 +1686,42 @@ function onWorkstationProfileInput(key, rawVal) {
   if (!STATE.workstationProfile) {
     STATE.workstationProfile = { rendering: 40, editing: 30, compilation: 30 };
   }
-  STATE.workstationProfile[key] = v;
 
-  const sld = document.getElementById(`slider-ws-${key}`);
-  if (sld) sld.value = v;
-  const num = document.getElementById(`num-ws-${key}`);
-  if (num && document.activeElement !== num) num.value = v;
+  const cur = {
+    rendering: STATE.workstationProfile.rendering || 33,
+    editing: STATE.workstationProfile.editing || 33,
+    compilation: STATE.workstationProfile.compilation || 34
+  };
+
+  const keys = ['rendering', 'editing', 'compilation'];
+  const others = keys.filter(k => k !== key);
+  const othersSum = (cur[others[0]] || 0) + (cur[others[1]] || 0);
+  const rest = 100 - v;
+
+  const next = {};
+  next[key] = v;
+
+  if (othersSum === 0) {
+    next[others[0]] = Math.floor(rest / 2);
+    next[others[1]] = Math.max(0, rest - next[others[0]]);
+  } else {
+    const val0 = Math.round(rest * (cur[others[0]] / othersSum));
+    next[others[0]] = val0;
+    next[others[1]] = Math.max(0, rest - val0);
+  }
+
+  STATE.workstationProfile = next;
+
+  // Sync inputs
+  keys.forEach(k => {
+    const sld = document.getElementById(`slider-ws-${k}`);
+    if (sld) sld.value = next[k];
+    const num = document.getElementById(`num-ws-${k}`);
+    if (num && document.activeElement !== num) num.value = next[k];
+  });
+
+  const sumEl = document.getElementById('ws-profile-sum-indicator');
+  if (sumEl) sumEl.textContent = 'Auto-Balance: 100%';
 
   try {
     localStorage.setItem('gca_ws_profile', JSON.stringify(STATE.workstationProfile));
@@ -1681,6 +1732,34 @@ function onWorkstationProfileInput(key, rawVal) {
   renderActiveTab();
 }
 window.onWorkstationProfileInput = onWorkstationProfileInput;
+
+function setWorkstationPreset(preset) {
+  let profile = { rendering: 34, editing: 33, compilation: 33 };
+  if (preset === 'render') profile = { rendering: 70, editing: 15, compilation: 15 };
+  else if (preset === 'editing') profile = { rendering: 15, editing: 70, compilation: 15 };
+  else if (preset === 'compilation') profile = { rendering: 15, editing: 15, compilation: 70 };
+  else if (preset === 'balanced') profile = { rendering: 34, editing: 33, compilation: 33 };
+
+  STATE.workstationProfile = profile;
+  ['rendering', 'editing', 'compilation'].forEach(k => {
+    const sld = document.getElementById(`slider-ws-${k}`);
+    if (sld) sld.value = profile[k];
+    const num = document.getElementById(`num-ws-${k}`);
+    if (num) num.value = profile[k];
+  });
+
+  const sumEl = document.getElementById('ws-profile-sum-indicator');
+  if (sumEl) sumEl.textContent = 'Auto-Balance: 100%';
+
+  try {
+    localStorage.setItem('gca_ws_profile', JSON.stringify(STATE.workstationProfile));
+  } catch (_) {}
+
+  enrichGPUsWithContextualMetrics();
+  if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+  renderActiveTab();
+}
+window.setWorkstationPreset = setWorkstationPreset;
 
 // Backwards-compatible aliases
 function onWorkloadSlidersChange(evt) { onWeightSliderInput(evt); }
@@ -3684,6 +3763,18 @@ function renderCpuCBTable() {
   }
   if (brandFilter !== 'ALL') {
     rows = rows.filter(c => (c._specs?.brand || '').toUpperCase() === brandFilter.toUpperCase());
+  }
+
+  // Exclude Xeons / ancient server chips if checkbox is checked
+  const xeonChk = document.getElementById('cpu-cb-exclude-xeon');
+  const excludeXeon = xeonChk ? xeonChk.checked : (STATE.excludeXeons !== false);
+  STATE.excludeXeons = excludeXeon;
+  if (excludeXeon) {
+    rows = rows.filter(c => {
+      const s = c._specs || getCpuSpecs(c);
+      const isXeon = (s.socket === 'LGA2011-3' || /xeon|2680|2670|2690/i.test(c.slug) || /xeon/i.test(c.name));
+      return !isXeon;
+    });
   }
 
   // Sorting

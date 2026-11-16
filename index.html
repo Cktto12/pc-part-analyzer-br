@@ -1129,6 +1129,12 @@
                 📦 Kit Plataforma (CPU+Mobo+RAM)
               </button>
             </div>
+
+            <!-- Exclude Xeons / Server Checkbox -->
+            <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-amber-500/40 text-[11px] font-mono text-amber-300 cursor-pointer select-none hover:border-amber-400 transition" title="Ocultar processadores de servidor antigos (Xeon LGA2011-3/X99) do ranking e cálculo de custo-benefício">
+              <input type="checkbox" id="cpu-cb-exclude-xeon" onchange="toggleExcludeXeons(this.checked)" checked class="rounded border-amber-500/50 bg-slate-950 text-amber-500 focus:ring-0">
+              <span>Ocultar Xeons / X99</span>
+            </label>
           </div>
         </div>
 
@@ -1363,7 +1369,25 @@
             <button onclick="toggleBFSummary()" id="bf-btn-toggle-summary" class="bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 transition cursor-pointer">
               Estatísticas Multi-Anos
             </button>
+            <button onclick="toggleBFCustomModelsDrawer()" id="bf-btn-toggle-custom" class="bg-slate-900 border border-sky-500/40 hover:border-sky-400 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 transition cursor-pointer font-semibold" title="Escolha exatamente quais modelos devem aparecer no gráfico e na análise">
+              ⚙️ Escolher Modelos
+            </button>
           </div>
+        </div>
+
+        <!-- Collapsible Custom Models Selector Drawer -->
+        <div id="bf-custom-models-drawer" class="hidden mt-3 p-4 rounded-xl bg-slate-900/90 border border-sky-500/40 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>🛠️ Personalizar Modelos Exibidos na Black Friday</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="selectAllBFModels(true)" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono hover:bg-sky-500/30 cursor-pointer">Marcar Todos</button>
+              <button type="button" onclick="selectAllBFModels(false)" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-mono hover:bg-slate-700 cursor-pointer">Desmarcar</button>
+              <button type="button" onclick="toggleBFCustomModelsDrawer()" class="text-xs text-slate-400 hover:text-white cursor-pointer">✕ Fechar</button>
+            </div>
+          </div>
+          <div id="bf-custom-models-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-56 overflow-y-auto pr-1"></div>
         </div>
 
         <!-- Multi-Year Historical Black Friday Reference Cards (Configurable/Collapsible) -->
@@ -1387,6 +1411,13 @@
                 <select id="bf-target-item" onchange="onBFTargetItemChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"></select>
                 <!-- Dynamic Hardware Info Pill (RAM, VRAM, Arch) -->
                 <div id="bf-target-info-pill" class="mt-2 flex flex-wrap items-center gap-2"></div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-[11px] text-slate-300 font-semibold">Defina sua Faixa de Alvo:</span>
+                <button type="button" onclick="syncBFTargetRangeToExpected()" title="Ajustar automaticamente para a faixa estatística da BF" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold cursor-pointer transition">
+                  ↺ Sincronizar com Faixa BF
+                </button>
               </div>
 
               <div class="grid grid-cols-2 gap-2.5 text-xs">
@@ -1559,9 +1590,9 @@
             <!-- Mode & Upscaling -->
             <div class="flex items-center gap-2">
               <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
-                <option value="both" selected>Comparar: Gargalo de CPU vs Pura</option>
-                <option value="pure">Apenas GPU Pura (0% Gargalo)</option>
-                <option value="cpu">Apenas com Gargalo de CPU</option>
+                <option value="both" selected>GPU + CPU (Setup Completo)</option>
+                <option value="gpu">Apenas GPU (Gráficos Puros)</option>
+                <option value="cpu">Apenas CPU (Processamento Puro)</option>
               </select>
               <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-800 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300">
                 <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
@@ -1578,6 +1609,25 @@
 
         <!-- VERSUS / RTINGS DIRECT HEAD-TO-HEAD HERO CARDS (4 Cards: Jogos, Workstation, IA Local, Equilíbrio) -->
         <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-5"></div>
+
+        <!-- RADAR / HEXAGON SYSTEM CAPABILITIES COMPARISON (Setup A vs Setup B) -->
+        <div id="sim-radar-hexagon-container" class="mt-5 glass-elevated rounded-2xl p-5 border border-sky-500/30 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+            <div>
+              <span class="text-[10px] font-mono uppercase text-sky-400 font-bold">Radar Hexagonal de Capacidades</span>
+              <h3 class="text-sm font-bold text-white mt-0.5">Comparativo Multidimensional: Setup A (Azul) vs Setup B (Verde)</h3>
+            </div>
+            <div id="sim-radar-winner-badge" class="flex items-center gap-2"></div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-7 flex justify-center items-center">
+              <div class="w-full max-w-[440px] h-[320px] relative">
+                <canvas id="chart-sim-radar"></canvas>
+              </div>
+            </div>
+            <div id="sim-radar-metrics-breakdown" class="lg:col-span-5 space-y-2 text-xs font-mono"></div>
+          </div>
+        </div>
 
         <!-- DEDICATED WORKSTATION & PRODUTIVIDADE COMPARISON PANEL (Render 3D, Edição 4K, Compilação de Código, Simulação Física) -->
         <div id="sim-workstation-panel" class="mt-5 glass-elevated rounded-2xl p-5 border border-amber-500/30 shadow-lg space-y-4"></div>
@@ -1936,12 +1986,23 @@
 
               <!-- Workstation Sub-Profile Config Panel -->
               <div class="mt-3 p-3 rounded-lg bg-slate-900/90 border border-amber-500/20 space-y-2.5">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
                   <div class="flex items-center gap-2">
                     <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Perfil Workstation</span>
                     <span class="text-[11px] text-slate-300 font-semibold">Distribuição de Cargas Profissionais</span>
                   </div>
-                  <span class="text-[10px] font-mono text-slate-400">Impacta Cinebench, Blender, Edição e Compilação</span>
+                  <div class="flex items-center gap-1.5">
+                    <span id="ws-profile-sum-indicator" class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">Auto-Balance: 100%</span>
+                  </div>
+                </div>
+
+                <!-- Presets for Workstation Sub-Profile -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span class="text-[10px] font-mono text-slate-400">Presets:</span>
+                  <button type="button" onclick="setWorkstationPreset('balanced')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-mono transition cursor-pointer">⚖️ Equilibrado (33%)</button>
+                  <button type="button" onclick="setWorkstationPreset('render')" class="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-mono transition cursor-pointer">🎨 3D Render (70%)</button>
+                  <button type="button" onclick="setWorkstationPreset('editing')" class="px-2 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-[10px] font-mono transition cursor-pointer">🎬 Edição 4K (70%)</button>
+                  <button type="button" onclick="setWorkstationPreset('compilation')" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-mono transition cursor-pointer">⚙️ Dev / Código (70%)</button>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
