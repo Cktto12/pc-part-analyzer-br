@@ -90,6 +90,7 @@ let STATE = {
     psu: { slug: 'fonte-600w', name: 'Fonte 600W 80 Plus Bronze', watts: 600, price: 320, owned: true }
   }
 };
+window.STATE = STATE;
 
 function saveUserRefPrefs() {
   try {
@@ -3033,6 +3034,13 @@ async function changeMarketRegion(regionId) {
     PROMO_STATE.rawPosts = [];
     PROMO_STATE.lastData = null;
     PROMO_STATE.channelsScanned = [];
+    PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+    PROMO_STATE.notifiedKeys = new Set();
+    const ctnActive = document.getElementById('bf-active-coupons-container');
+    if (ctnActive) {
+      ctnActive.innerHTML = '';
+      ctnActive.className = 'hidden';
+    }
     if (typeof scanLivePromos === 'function') {
       scanLivePromos(true).catch(e => console.warn('Promo scan error on region change:', e));
     }
@@ -3094,6 +3102,8 @@ function ensureDatabaseConvertedToActiveMarket(dbObj) {
     const scrubMxItem = it => {
       it.coupon = null;
       it.coupon_label = null;
+      it._hbCoupon = null;
+      it._flashPromo = null;
       const q = encodeURIComponent(it.name || it.slug || '');
       if (!it.store_name || /kabum|pichau|terabyte|magalu|shopee|loja|@|peperaio|adrenaline|iskandar|benchpromos/i.test(it.store_name)) {
         it.store_name = 'Cyberpuerta';

@@ -2,6 +2,7 @@
 from .market_manager import (
     ALLOWED_REGIONS,
     get_market_config,
+    get_region_config,
     save_market_config,
     list_available_regions,
     set_active_region,
@@ -14,6 +15,7 @@ from .market_manager import (
 __all__ = [
     "ALLOWED_REGIONS",
     "get_market_config",
+    "get_region_config",
     "save_market_config",
     "list_available_regions",
     "set_active_region",

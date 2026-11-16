@@ -107,26 +107,47 @@ def set_active_region(region_id: str) -> bool:
         return False
 
 
-def get_monetary_config() -> Dict[str, Any]:
-    """Returns the monetary section of the active configuration."""
+def get_region_config(region_id: Optional[str] = None) -> Dict[str, Any]:
+    """Returns the market configuration dictionary for a given region ('br' or 'mx')."""
+    reg = (region_id or "").lower().strip()
+    if not reg or reg not in ALLOWED_REGIONS:
+        return get_market_config()
+    target_file = os.path.join(REGIONS_DIR, f"{reg}.json")
+    if os.path.exists(target_file):
+        try:
+            with open(target_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return get_market_config()
+
+
+def get_monetary_config(region_id: Optional[str] = None) -> Dict[str, Any]:
+    """Returns the monetary section of the active or specified configuration."""
+    if region_id:
+        return get_region_config(region_id).get("monetary", {})
     return get_market_config().get("monetary", {})
 
 
-def get_promotion_channels() -> List[Dict[str, Any]]:
-    """Returns the promo channels configured for the active region."""
+def get_promotion_channels(region_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Returns the promo channels configured for the active or specified region."""
+    if region_id:
+        return get_region_config(region_id).get("promotion_sources", {}).get("channels", [])
     return get_market_config().get("promotion_sources", {}).get("channels", [])
 
 
-def get_stores() -> List[Dict[str, Any]]:
-    """Returns the retail stores monitored for the active region."""
+def get_stores(region_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Returns the retail stores monitored for the active or specified region."""
+    if region_id:
+        return get_region_config(region_id).get("stores", [])
     return get_market_config().get("stores", [])
 
 
-def format_currency(val: float, short: bool = False) -> str:
-    """Formats a monetary value using the active regional monetary rules."""
+def format_currency(val: float, short: bool = False, region_id: Optional[str] = None) -> str:
+    """Formats a monetary value using the active or specified regional monetary rules."""
     if val is None:
         return "--"
-    mon = get_monetary_config()
+    mon = get_monetary_config(region_id)
     sym = mon.get("currency_symbol", "R$")
     dec_sep = mon.get("decimal_separator", ",")
     thou_sep = mon.get("thousands_separator", ".")

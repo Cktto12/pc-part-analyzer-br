@@ -242,15 +242,54 @@ def send_phone_alert_email(smtp_cfg, title, body_text, url=""):
     except Exception as e:
         return {"ok": False, "error": str(e), "service": "email"}
 
-def load_alert_config():
-    """Loads alert preferences and target items from alert_config.json."""
-    if os.path.exists(ALERT_CONFIG_PATH):
+def get_alert_config_path(reg_id=None):
+    reg = (reg_id or get_active_region_id()).lower()
+    return os.path.join(BASE_DIR, "data", "alert_config.json" if reg == "br" else f"alert_config_{reg}.json")
+
+def load_alert_config(reg_id=None):
+    """Loads alert preferences and target items from alert_config[_<reg>].json."""
+    reg = (reg_id or get_active_region_id()).lower()
+    fpath = get_alert_config_path(reg)
+    if os.path.exists(fpath):
         try:
-            with open(ALERT_CONFIG_PATH, "r", encoding="utf-8") as f:
+            with open(fpath, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
-    return {
+
+    base_cfg = {}
+    if os.path.exists(ALERT_CONFIG_PATH):
+        try:
+            with open(ALERT_CONFIG_PATH, "r", encoding="utf-8") as f:
+                base_cfg = json.load(f)
+        except Exception:
+            pass
+
+    if reg == "mx":
+        return {
+            "notifyEnabled": base_cfg.get("notifyEnabled", True),
+            "intervalMins": base_cfg.get("intervalMins", 10),
+            "notifyWinToast": base_cfg.get("notifyWinToast", True),
+            "notifyPhone": base_cfg.get("notifyPhone", True),
+            "phoneService": base_cfg.get("phoneService", "ntfy"),
+            "ntfyTopic": base_cfg.get("ntfyTopic", "meu_alerta_gpu_cecatto"),
+            "ntfyRing": base_cfg.get("ntfyRing", False),
+            "ntfyPriority": base_cfg.get("ntfyPriority", "default"),
+            "trigCB": True,
+            "notifyMinCB": 90,
+            "trigBF": True,
+            "bfMode": "user_or_low",
+            "trigHB": True,
+            "hbMinBrl": 600,
+            "hbMinPct": 8,
+            "notifyLogic": "OR",
+            "custom_targets": [
+                {"slug": "rtx-5060", "name": "RTX 5060", "max_price": 8500},
+                {"slug": "rtx-5070", "name": "RTX 5070", "max_price": 14000},
+                {"slug": "rtx-4060", "name": "RTX 4060", "max_price": 6800}
+            ]
+        }
+    return base_cfg or {
         "notifyEnabled": True,
         "intervalMins": 10,
         "notifyWinToast": True,
@@ -273,10 +312,12 @@ def load_alert_config():
         ]
     }
 
-def save_alert_config(cfg):
-    """Saves alert preferences to alert_config.json."""
-    os.makedirs(os.path.dirname(ALERT_CONFIG_PATH), exist_ok=True)
-    with open(ALERT_CONFIG_PATH, "w", encoding="utf-8") as f:
+def save_alert_config(cfg, reg_id=None):
+    """Saves alert preferences to alert_config[_<reg>].json."""
+    reg = (reg_id or cfg.get("region_id") or get_active_region_id()).lower()
+    fpath = get_alert_config_path(reg)
+    os.makedirs(os.path.dirname(fpath), exist_ok=True)
+    with open(fpath, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
 
 def get_active_region_id():
@@ -316,41 +357,54 @@ def save_notified_history(history, reg_id=None):
     except Exception:
         pass
 
-def format_deal_notification(d, reasons_list=None, coup_code=None):
+def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=None):
     """Formats a region-aware push alert using the active region's currency symbol and formatting."""
+    reg = (region_id or d.get("region_id") or get_active_region_id()).lower()
     price = d.get("price_brl", 0)
     name = d.get("matched_name") or d.get("title", "Hardware")
     coup = (coup_code or d.get("coupon_code") or d.get("coupon_info") or "").strip()
-    coupon_tag = f" (c/ Cupom: {coup})" if coup else ""
-    fmt_p = config.format_currency(price, short=False)
-    title = f"🔥 {name} por {fmt_p}{coupon_tag}"
+    coupon_word = "Cupón" if reg == "mx" else "Cupom"
+    coupon_tag = f" (c/ {coupon_word}: {coup})" if coup else ""
+    fmt_p = config.format_currency(price, short=False, region_id=reg)
+    prefix = "[MX] 🇲🇽 " if reg == "mx" else "🔥 "
+    title = f"{prefix}{name} por {fmt_p}{coupon_tag}"
 
-    reasons_line = " • ".join(reasons_list) if reasons_list else "🔥 Oferta Detectada"
-    coupon_line = f"\n🎟️ Cupom: {coup}" if coup else ""
+    reasons_line = " • ".join(reasons_list) if reasons_list else ("🔥 Oferta Detectada" if reg == "br" else "🔥 Oferta en México")
+    coupon_line = f"\n🎟️ {coupon_word}: {coup}" if coup else ""
 
     savings_brl = d.get("savings_vs_hb_brl", 0)
     hb_price = d.get("hb_price_brl", 0)
-    diff_line = f"\n📉 Economia vs Ref: -{config.format_currency(savings_brl, short=True)} (Ref: {config.format_currency(hb_price, short=True)})" if savings_brl > 0 else ""
+    ref_word = "Ahorro vs Ref" if reg == "mx" else "Economia vs Ref"
+    diff_line = f"\n📉 {ref_word}: -{config.format_currency(savings_brl, short=True, region_id=reg)} (Ref: {config.format_currency(hb_price, short=True, region_id=reg)})" if savings_brl > 0 else ""
     store_or_ch = d.get("store_name") or f"@{d.get('channel_id', 'radar')}"
-    channel_line = f"\n📢 Fonte: {store_or_ch}"
+    channel_word = "Fuente" if reg == "mx" else "Fonte"
+    channel_line = f"\n📢 {channel_word}: {store_or_ch}"
     deal_title = (d.get("title") or "").strip()[:140]
 
     message = f"{reasons_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
     url = d.get("buy_url") or d.get("post_url") or ""
-    line1 = f"{reasons_line}{' | Cupom: ' + coup if coup else ''}"
+    line1 = f"{reasons_line}{' | ' + coupon_word + ': ' + coup if coup else ''}"
     line2 = f"{store_or_ch} — {deal_title[:80]}"
     return title, message, line1, line2, url
 
-def check_and_notify_deals(cfg=None, db=None, force_notify=False):
-    """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts."""
-    reg_id = get_active_region_id()
+def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None):
+    """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts with strict regional isolation."""
+    reg_id = (region_id or (cfg.get("region_id") if cfg else None) or get_active_region_id()).lower()
     if cfg is None:
-        cfg = load_alert_config()
+        cfg = load_alert_config(reg_id)
     if not cfg.get("notifyEnabled", True) and not force_notify:
-        return {"notified": 0, "status": "disabled"}
+        return {"notified": 0, "status": "disabled", "region_id": reg_id}
 
     if db is None:
-        db = convert_db_to_active_region()
+        db = convert_db_to_active_region(force_refresh=False)
+        if db.get("region_id") != reg_id:
+            reg_db_path = get_db_path(reg_id)
+            if os.path.exists(reg_db_path):
+                try:
+                    with open(reg_db_path, "r", encoding="utf-8") as f:
+                        db = json.load(f)
+                except Exception:
+                    pass
 
     from promo_radar import scan_live_promotions
     res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id)
@@ -358,14 +412,29 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
     history = load_notified_history(reg_id)
     notified_count = 0
 
-    min_cb = int(cfg.get("notifyMinCB", 92))
-    hb_brl = float(cfg.get("hbMinBrl", 150))
+    br_channels = {"ofertasadrenaline", "peperaiohardware", "iskandarsouza", "benchpromos", "kabumofertas", "nerdofertas", "ofertastechbr"}
+
+    min_cb = int(cfg.get("notifyMinCB", 90 if reg_id == "mx" else 92))
+    hb_brl = float(cfg.get("hbMinBrl", 600 if reg_id == "mx" else 150))
     hb_pct = float(cfg.get("hbMinPct", 8))
     trig_cb = bool(cfg.get("trigCB", True))
     trig_hb = bool(cfg.get("trigHB", True))
     targets = cfg.get("custom_targets", [])
 
     for d in matched:
+        # STRICT REGIONAL ISOLATION CHECK
+        d_reg = (d.get("region_id") or reg_id).lower()
+        if d_reg != reg_id:
+            continue
+        if reg_id == "mx":
+            ch_id = (d.get("channel_id") or "").lower()
+            url_str = (d.get("buy_url") or d.get("post_url") or "").lower()
+            if ch_id in br_channels or ".br" in url_str or "t.me/" in url_str:
+                continue
+        elif reg_id == "br":
+            if d.get("region_id") == "mx":
+                continue
+
         post_id = d.get("post_id") or f"{d.get('channel_id')}_{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
         price_key = f"{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
         if not force_notify and (post_id in history or price_key in history):
@@ -380,7 +449,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
         for tgt in targets:
             if tgt.get("slug") == matched_slug and price <= tgt.get("max_price", 0):
                 qualifies = True
-                reasons.append(f"🎯 Meta Atingida (≤ {config.format_currency(tgt['max_price'])})")
+                reasons.append(f"🎯 Meta Atingida (≤ {config.format_currency(tgt['max_price'], region_id=reg_id)})")
                 break
 
         # 2. Check high CB or pechincha
@@ -391,7 +460,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
             if cb > 0:
                 reasons.append(f"🏆 CB {cb}/100")
             if is_pech:
-                reasons.append("🔥 PECHINCHA")
+                reasons.append("🔥 PECHINCHA" if reg_id == "br" else "🔥 GANGA / OFERTÓN")
 
         # 3. Check savings vs Catalog / Base Database
         savings_brl = d.get("savings_vs_hb_brl", 0)
@@ -399,10 +468,10 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
         savings_pct = (savings_brl / max(1, hb_price)) * 100 if hb_price > 0 else 0
         if trig_hb and (savings_brl >= hb_brl or savings_pct >= hb_pct):
             qualifies = True
-            reasons.append(f"📉 −{config.format_currency(savings_brl, short=True)} (−{savings_pct:.0f}%) vs Database")
+            reasons.append(f"📉 −{config.format_currency(savings_brl, short=True, region_id=reg_id)} (−{savings_pct:.0f}%) vs Database")
 
         if qualifies:
-            title, message, line1, line2, url = format_deal_notification(d, reasons)
+            title, message, line1, line2, url = format_deal_notification(d, reasons, region_id=reg_id)
 
             # 1. Native Windows Toast Notification (Runs in background even if site is closed!)
             if cfg.get("notifyWinToast", True):
@@ -440,14 +509,14 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False):
             if force_notify:
                 break
 
-    save_notified_history(history)
-    return {"notified": notified_count, "total_matched": len(matched)}
+    save_notified_history(history, reg_id)
+    return {"notified": notified_count, "total_matched": len(matched), "region_id": reg_id}
 
-def run_sitewise_coupon_validator():
+def run_sitewise_coupon_validator(reg_id=None):
     """Runs a continuous sitewise validation of links and coupons in regional promos_cache and updates the regional DB."""
     try:
-        reg_id = get_active_region_id()
-        cache_path = get_promos_cache_path(reg_id)
+        reg = (reg_id or get_active_region_id()).lower()
+        cache_path = get_promos_cache_path(reg)
         if not os.path.exists(cache_path):
             return
         with open(cache_path, "r", encoding="utf-8") as f:
@@ -457,17 +526,17 @@ def run_sitewise_coupon_validator():
             return
 
         import coupon_tracker
-        results = coupon_tracker.test_deals_batch(deals, max_items=50)
-        rewired, best_slug = coupon_tracker.rewire_deals_and_best_by_slug(deals, data.get("recent_feed", []))
+        results = coupon_tracker.test_deals_batch(deals, max_items=50, reg_id=reg)
+        rewired, best_slug = coupon_tracker.rewire_deals_and_best_by_slug(deals, data.get("recent_feed", []), reg_id=reg)
         data["matched_deals"] = rewired
         data["best_by_slug"] = best_slug
-        data["coupon_status"] = coupon_tracker.load_coupon_status()
+        data["coupon_status"] = coupon_tracker.load_coupon_status(reg)
         data["last_sitewise_test_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
 
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        target_db_path = get_db_path(reg_id)
+        target_db_path = get_db_path(reg)
         if os.path.exists(target_db_path):
             with open(target_db_path, "r", encoding="utf-8") as f:
                 db = json.load(f)
@@ -475,8 +544,9 @@ def run_sitewise_coupon_validator():
             with open(target_db_path, "w", encoding="utf-8") as f:
                 json.dump(db, f, ensure_ascii=False, indent=2)
 
-        print(f"[Sitewise Validator ({reg_id.upper()})] {len(results)} ofertas/cupons verificados na base em segundo plano.")
+        print(f"[Sitewise Validator ({reg.upper()})] {len(results)} ofertas/cupons verificados na base em segundo plano.")
     except Exception as e:
+        print(f"[Sitewise Validator Erro ({reg_id})] {e}")
         print(f"[Sitewise Validator Erro] {e}")
 
 def background_promo_monitor_thread():
@@ -913,10 +983,13 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 url = body.get("url", "")
                 post_id = body.get("post_id") or body.get("deal_id")
                 force = bool(body.get("force", False))
+                reg_id = str(body.get("region") or get_active_region()).lower().strip()
+                if reg_id not in ("br", "mx"):
+                    reg_id = "br"
 
                 # Deduplication check: prevent duplicate notifications across browser & background monitor
                 if post_id and not force:
-                    history = load_notified_history()
+                    history = load_notified_history(reg_id)
                     if post_id in history:
                         return self.send_json({"ok": True, "skipped": True, "reason": "already_notified"})
 
@@ -937,9 +1010,9 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
 
                 # Persist post_id to notified history on success
                 if post_id and res.get("ok"):
-                    history = load_notified_history()
+                    history = load_notified_history(reg_id)
                     history[post_id] = time.time()
-                    save_notified_history(history)
+                    save_notified_history(history, reg_id)
 
                 return self.send_json(res)
             except Exception as e:
@@ -1059,5 +1132,34 @@ def parse_args():
     return host, port, should_open
 
 if __name__ == "__main__":
+    if "--cron-once" in sys.argv:
+        print("[Cloud Cron] Iniciando varredura automatizada 24/7 de promoções e alertas...")
+        reg_arg = None
+        for i, a in enumerate(sys.argv):
+            if a == "--region" and i + 1 < len(sys.argv):
+                reg_arg = sys.argv[i + 1].lower()
+
+        regions_to_scan = [reg_arg] if reg_arg in ("br", "mx") else ["br", "mx"]
+
+        for reg in regions_to_scan:
+            print(f"[Cloud Cron] Processando região: {reg.upper()}")
+            cfg = load_alert_config(reg)
+            cfg["notifyEnabled"] = True
+            cfg["notifyWinToast"] = False  # Headless Linux no GitHub Actions runner
+            cfg["notifyPhone"] = True
+
+            # 1. Dispara alertas de celular para esta região
+            res = check_and_notify_deals(cfg=cfg, force_notify=False, region_id=reg)
+            print(f"[Cloud Cron ({reg.upper()})] Alertas disparados: {res.get('notified', 0)}")
+
+            # 2. Executa validação de links e cupons sitewise para esta região
+            try:
+                run_sitewise_coupon_validator(reg_id=reg)
+            except Exception as e:
+                print(f"[Cloud Cron ({reg.upper()}) Sitewise Erro] {e}")
+
+        print("[Cloud Cron] Concluído com sucesso!")
+        sys.exit(0)
+
     bind_host, bind_port, should_open = parse_args()
     run_server(bind_host, bind_port, open_browser=should_open)

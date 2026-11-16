@@ -1906,8 +1906,23 @@ function onBFTargetItemChange(silent) {
   // Check if Promo Radar has an active coupon / flash deal for this target item
   const ctnActive = document.getElementById('bf-active-coupons-container');
   if (ctnActive) {
-    const allMatchingDeals = (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals)) 
-      ? PROMO_STATE.lastData.matched_deals.filter(d => d.matched_slug === slug) 
+    const activeReg = getActiveRegionId();
+    const lastDataReg = (PROMO_STATE.lastData && PROMO_STATE.lastData.region_id) ? PROMO_STATE.lastData.region_id.toLowerCase() : activeReg;
+    const brChannels = new Set(['ofertasadrenaline', 'peperaiohardware', 'iskandarsouza', 'benchpromos', 'kabumofertas', 'nerdofertas', 'ofertastechbr']);
+
+    const allMatchingDeals = (PROMO_STATE.lastData && lastDataReg === activeReg && Array.isArray(PROMO_STATE.lastData.matched_deals)) 
+      ? PROMO_STATE.lastData.matched_deals.filter(d => {
+          if (d.matched_slug !== slug) return false;
+          const dReg = (d.region_id || lastDataReg).toLowerCase();
+          if (dReg !== activeReg) return false;
+          if (activeReg === 'mx') {
+            const isBr = brChannels.has((d.channel_id || '').toLowerCase()) || /\.br\b|t\.me\//i.test(d.buy_url || d.post_url || '');
+            if (isBr) return false;
+          } else if (activeReg === 'br') {
+            if (dReg === 'mx') return false;
+          }
+          return true;
+        }) 
       : [];
     const activeDeals = allMatchingDeals.filter(d => {
       const pId = d.post_id || '';
@@ -1925,22 +1940,24 @@ function onBFTargetItemChange(silent) {
     const best = activeDeals.length > 0 ? activeDeals[0] : null;
 
     if (best) {
+      ctnActive.classList.remove('hidden');
+      const currSym = window.STATE?.market?.monetary?.currency_symbol || (activeReg === 'mx' ? '$' : 'R$');
       const rawCode = (best.coupon_code || '').trim();
       const rawInfo = (best.coupon_info || '').trim();
       let hasRealCoupon = false;
       let cleanCoup = '';
 
-      if (rawCode && /[A-Z]/i.test(rawCode) && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
+      if (rawCode && /[A-Z]/i.test(rawCode) && !/^(HTTPS?|WWW|COM|BR|MX|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
         cleanCoup = rawCode.replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
         if (cleanCoup.length >= 3) hasRealCoupon = true;
       } else if (rawInfo && !/^(oferta|link|site|preço|preco|cash|sem|pix)/i.test(rawInfo)) {
         const mOff = rawInfo.match(/(?:R\$|\$|€|£)?\s*([0-9]{2,4})\s*OFF/i);
         if (mOff) {
-          cleanCoup = `R$ ${mOff[1]} OFF`;
+          cleanCoup = `${currSym} ${mOff[1]} OFF`;
           hasRealCoupon = true;
         } else {
           const m = rawInfo.match(/\b([A-Z0-9_\-]{4,22})\b/);
-          if (m && /[A-Z]/i.test(m[1]) && !/^(HTTPS?|WWW|COM|BR|OFERTA|PROMO|LINK|NULL|OFERTAFLASH|RESGATE|CUPOM|DESCONTO)$/i.test(m[1])) {
+          if (m && /[A-Z]/i.test(m[1]) && !/^(HTTPS?|WWW|COM|BR|MX|OFERTA|PROMO|LINK|NULL|OFERTAFLASH|RESGATE|CUPOM|DESCONTO)$/i.test(m[1])) {
             cleanCoup = m[1].toUpperCase();
             hasRealCoupon = true;
           }
@@ -1948,7 +1965,7 @@ function onBFTargetItemChange(silent) {
       }
 
       if (cleanCoup && /^[0-9]+$/.test(cleanCoup)) {
-        cleanCoup = `R$ ${cleanCoup} OFF`;
+        cleanCoup = `${currSym} ${cleanCoup} OFF`;
         hasRealCoupon = true;
       }
 
@@ -1962,29 +1979,29 @@ function onBFTargetItemChange(silent) {
 
       let freshBadge = '';
       if (isExpired) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ OFERTA ENCERRADA NA LOJA</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
       } else if (isWorking) {
-        freshBadge = '<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold">✅ CONFIRMADO ATIVO NA LOJA</span>';
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO ATIVO NA LOJA'}</span>`;
       } else if (best.age_hours <= 2) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 Fresco (${best.age_hours}h atrás)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
       } else if (best.age_hours <= 8) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">🟡 Moderado (${best.age_hours}h atrás)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">🟡 ${activeReg === 'mx' ? 'Moderado' : 'Moderado'} (${best.age_hours}h)</span>`;
       } else {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">🔴 Risco de Expirado (${best.age_hours}h atrás)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">🔴 ${activeReg === 'mx' ? 'Riesgo de Expirado' : 'Risco de Expirado'} (${best.age_hours}h)</span>`;
       }
 
       let titleHtml = '';
       if (hasRealCoupon) {
         titleHtml = `
-          <span class="font-mono text-amber-300 font-bold">🎟️ Cupom Detectado:</span>
+          <span class="font-mono text-amber-300 font-bold">🎟️ ${activeReg === 'mx' ? 'Cupón Detectado' : 'Cupom Detectado'}:</span>
           <span class="text-white font-mono font-bold ${isExpired ? 'line-through text-slate-400' : ''}">${cleanCoup}</span>
-          <span class="text-emerald-400 font-mono font-bold">(${fmtBRL(best.price_brl)})</span>
+          <span class="text-emerald-400 font-mono font-bold">(${formatMoney(best.price_brl)})</span>
         `;
       } else {
         titleHtml = `
-          <span class="font-mono text-emerald-400 font-bold">⚡ Oferta Direta (Sem Cupom):</span>
-          <span class="text-white font-mono font-bold">${fmtBRL(best.price_brl)}</span>
-          <span class="text-slate-400 font-mono text-[10px]">(Preço à vista no link)</span>
+          <span class="font-mono text-emerald-400 font-bold">⚡ ${activeReg === 'mx' ? 'Oferta Directa (Sin Cupón)' : 'Oferta Direta (Sem Cupom)'}:</span>
+          <span class="text-white font-mono font-bold">${formatMoney(best.price_brl)}</span>
+          <span class="text-slate-400 font-mono text-[10px]">(${activeReg === 'mx' ? 'Precio de contado en enlace' : 'Preço à vista no link'})</span>
         `;
       }
 
@@ -1996,46 +2013,47 @@ function onBFTargetItemChange(silent) {
             ${freshBadge}
           </div>
           <div class="flex items-center gap-1 flex-wrap">
-            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testa se o link e o cupom continuam ativos na loja automaticamente">
-              <span>🧪 Testar</span>
+            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testar status">
+              <span>🧪 ${activeReg === 'mx' ? 'Probar' : 'Testar'}</span>
             </button>
             ${hasRealCoupon ? `
-              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer" title="Copia o cupom e abre a loja">
-                📋 Copiar Cupom
+              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer" title="Copiar cupom">
+                📋 ${activeReg === 'mx' ? 'Copiar Cupón' : 'Copiar Cupom'}
               </button>
             ` : ''}
-            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Abrir link da oferta na loja">
-              ↗ Abrir Loja
+            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Abrir loja">
+              ↗ ${activeReg === 'mx' ? 'Abrir Tienda' : 'Abrir Loja'}
             </a>
-            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[11px] font-bold hover:bg-amber-300 transition cursor-pointer" title="Aplica este preço no simulador de Black Friday">
-              ⚡ Simular Preço
+            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[11px] font-bold hover:bg-amber-300 transition cursor-pointer" title="Simular preço">
+              ⚡ ${activeReg === 'mx' ? 'Simular Precio' : 'Simular Preço'}
             </button>
           </div>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
-          <span>Canal: @${best.channel_id} • há ${best.age_hours}h • Loja: ${best.store_name || 'E-commerce'} • Modelo: ${(best.title || '').slice(0, 55)}</span>
+          <span>${activeReg === 'mx' ? 'Fuente' : 'Canal'}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${activeReg === 'mx' ? 'Tienda' : 'Loja'}: ${best.store_name || (activeReg === 'mx' ? 'Cyberpuerta' : 'E-commerce')} • Modelo: ${(best.title || '').slice(0, 55)}</span>
           <div class="flex items-center gap-1">
-            <span class="text-slate-400 text-[10px]">Funcionou no carrinho?</span>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isWorking ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer" title="Marcar como confirmado ativo">👍 Sim</button>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer" title="Marcar como expirado">👎 Expirou</button>
-            ${(isWorking || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar avaliação">↺ Limpar</button>` : ''}
+            <span class="text-slate-400 text-[10px]">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isWorking ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
+            ${(isWorking || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
           </div>
         </div>
       `;
     } else {
       const latestExpired = allMatchingDeals.length > 0 ? allMatchingDeals[0] : null;
       if (latestExpired) {
+        ctnActive.classList.remove('hidden');
         ctnActive.className = 'p-3 rounded-lg bg-rose-950/20 border border-rose-500/30 flex flex-col gap-1 text-xs';
         ctnActive.innerHTML = `
           <div class="flex items-center justify-between gap-1.5 flex-wrap">
-            <span class="font-mono text-rose-300 font-bold">❌ Nenhuma promoção ativa no momento</span>
-            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-[10px]">Última oferta de ${fmtBRL(latestExpired.price_brl)} encerrada</span>
+            <span class="font-mono text-rose-300 font-bold">❌ ${activeReg === 'mx' ? 'Ninguna promoción activa en México' : 'Nenhuma promoção ativa no momento'}</span>
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-[10px]">${activeReg === 'mx' ? 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' terminada' : 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' encerrada'}</span>
           </div>
-          <div class="text-[11px] text-slate-400 font-mono">Preço mantido no catálogo oficial: ${fmtBRL(st.current)}. Simule cupons abaixo.</div>
+          <div class="text-[11px] text-slate-400 font-mono">${activeReg === 'mx' ? 'Precio de referencia en México: ' + formatMoney(st.current) : 'Preço mantido no catálogo oficial: ' + formatMoney(st.current)}.</div>
         `;
       } else {
-        ctnActive.className = 'hidden';
         ctnActive.innerHTML = '';
+        ctnActive.classList.add('hidden');
       }
     }
   }
@@ -2229,9 +2247,96 @@ function updateBFPromoEvaluator(skipSave, overrideTestPrice) {
 // 6. CLIENT-SIDE FLASH PROMO & COUPON RADAR (100% PROCESSED IN USER BROWSER)
 // ============================================================================
 const PROMO_CACHE_KEY = 'gpuAnalyzerPromoCache_v1';
+function getActiveRegionId() {
+  const regFromState = (typeof STATE !== 'undefined' && STATE?.market?.region_id) ||
+                       (typeof window !== 'undefined' && window.STATE?.market?.region_id);
+  if (regFromState) return String(regFromState).toLowerCase().trim();
+  try {
+    const saved = localStorage.getItem('selected_market_region');
+    if (saved && (saved === 'mx' || saved === 'br')) return saved;
+  } catch (_) {}
+  return 'br';
+}
+
 function getPromoCacheKey() {
-  const reg = (window.STATE?.market?.region_id || 'br').toLowerCase();
+  const reg = getActiveRegionId();
   return `gpuAnalyzerPromoCache_${reg}_v1`;
+}
+
+function getCouponStatusCacheKey() {
+  const reg = getActiveRegionId();
+  return `gpuAnalyzerCouponStatus_${reg}_v1`;
+}
+
+function getNotifiedStorageKey() {
+  const reg = getActiveRegionId();
+  return `gpuAnalyzerNotifiedDeals_${reg}_v2`;
+}
+
+let _bgKeepAliveCtx = null;
+let _bgKeepAliveOsc = null;
+
+function enableMobileBackgroundKeepAlive(enable) {
+  try {
+    if (!enable) {
+      if (_bgKeepAliveOsc) {
+        try { _bgKeepAliveOsc.stop(); _bgKeepAliveOsc.disconnect(); } catch (_) {}
+        _bgKeepAliveOsc = null;
+      }
+      if (_bgKeepAliveCtx) {
+        try { _bgKeepAliveCtx.close(); } catch (_) {}
+        _bgKeepAliveCtx = null;
+      }
+      return;
+    }
+    if (_bgKeepAliveCtx) return; // Already active
+
+    // 1. Silent 1Hz sub-audible oscillator at 0.0001 gain keeps mobile browser tab alive in background
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      _bgKeepAliveCtx = new AudioCtx();
+      _bgKeepAliveOsc = _bgKeepAliveCtx.createOscillator();
+      const gain = _bgKeepAliveCtx.createGain();
+      _bgKeepAliveOsc.frequency.value = 1;
+      gain.gain.value = 0.0001; // Effectively silent
+      _bgKeepAliveOsc.connect(gain);
+      gain.connect(_bgKeepAliveCtx.destination);
+      _bgKeepAliveOsc.start();
+    }
+
+    // 2. Hold a navigator.locks lock so Chrome's Tab Freezer marks the tab as busy
+    if (navigator.locks && navigator.locks.request) {
+      navigator.locks.request('gpu_radar_bg_lock', () => new Promise(() => {}));
+    }
+  } catch (e) {
+    console.warn('Keep-alive init warning:', e);
+  }
+}
+
+async function fetchTelegramChannelHTML(chId, query) {
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  if (!isStatic) {
+    try {
+      const r = await fetch(`/api/tg-raw?ch=${encodeURIComponent(chId)}&q=${encodeURIComponent(query)}`);
+      if (r.ok) return await r.text();
+    } catch (_) {}
+  }
+  // Static GitHub Pages fallback: fetch Telegram mirror directly via CORS proxy
+  const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(tgUrl)}`
+  ];
+  for (const pUrl of proxies) {
+    try {
+      const r = await fetch(pUrl, { cache: 'no-store' });
+      if (r.ok) {
+        const txt = await r.text();
+        if (txt && txt.includes('tgme_widget_message')) return txt;
+      }
+    } catch (_) {}
+  }
+  return '';
 }
 
 const CLIENT_PROMO_CHANNELS = [
@@ -2247,15 +2352,32 @@ const CLIENT_PROMO_CHANNELS = [
 const CLIENT_PROMO_QUERIES = ['', 'RTX', '5060', '5070', '4060', '7600', 'RX ', 'Ryzen', 'DDR4', 'DDR5', 'expirou', 'acabou', 'esgotou'];
 
 function getClientPromoChannels() {
-  if (window.STATE?.market?.promotion_sources?.channels?.length) {
-    return window.STATE.market.promotion_sources.channels;
+  const sources = (typeof STATE !== 'undefined' && STATE?.market?.promotion_sources) ||
+                  (typeof window !== 'undefined' && window.STATE?.market?.promotion_sources);
+  if (sources?.channels?.length) {
+    return sources.channels;
+  }
+  const reg = getActiveRegionId();
+  if (reg === 'mx') {
+    return [
+      { id: 'promodescuentos_gpus', name: 'Promodescuentos Tarjetas Gráficas' },
+      { id: 'promodescuentos_pc',   name: 'Promodescuentos Componentes PC' },
+      { id: 'cyberpuerta_ofertas',  name: 'Cyberpuerta Ofertas MX' },
+      { id: 'ddtech_ofertas',       name: 'DDTech Promociones MX' }
+    ];
   }
   return CLIENT_PROMO_CHANNELS;
 }
 
 function getClientPromoQueries() {
-  if (window.STATE?.market?.promotion_sources?.search_keywords?.length) {
-    return window.STATE.market.promotion_sources.search_keywords;
+  const sources = (typeof STATE !== 'undefined' && STATE?.market?.promotion_sources) ||
+                  (typeof window !== 'undefined' && window.STATE?.market?.promotion_sources);
+  if (sources?.search_keywords?.length) {
+    return sources.search_keywords;
+  }
+  const reg = getActiveRegionId();
+  if (reg === 'mx') {
+    return ['', 'RTX', '5060', '5070', '4060', '7600', 'RX', 'Ryzen', 'DDR4', 'DDR5', 'agotado', 'expiró'];
   }
   return CLIENT_PROMO_QUERIES;
 }
@@ -2558,7 +2680,7 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
 
   // 2. Overlay any client-side tests from localStorage, BUT NEVER let a stale local 'active' status overwrite a server 'expired'/'out_of_stock' status!
   try {
-    const local = JSON.parse(localStorage.getItem('gpuAnalyzerCouponStatus_v1') || '{}');
+    const local = JSON.parse(localStorage.getItem(getCouponStatusCacheKey()) || '{}');
     if (local.coupons) {
       Object.keys(local.coupons).forEach(k => {
         const cur = PROMO_STATE.couponStatus.coupons[k];
@@ -2760,29 +2882,31 @@ let PROMO_STATE = {
   notifiedKeys: new Set()
 };
 
-const NOTIFIED_STORAGE_KEY = 'gpuAnalyzerNotifiedDeals_v2';
-
 function loadPersistedNotifiedKeys() {
   try {
-    const local = JSON.parse(localStorage.getItem(NOTIFIED_STORAGE_KEY) || '[]');
+    const key = getNotifiedStorageKey();
+    const local = JSON.parse(localStorage.getItem(key) || '[]');
     if (Array.isArray(local)) local.forEach(k => PROMO_STATE.notifiedKeys.add(k));
 
-    const sess = JSON.parse(sessionStorage.getItem('gpuAnalyzerNotifiedDeals_v1') || '[]');
+    const sess = JSON.parse(sessionStorage.getItem(key) || '[]');
     if (Array.isArray(sess)) sess.forEach(k => PROMO_STATE.notifiedKeys.add(k));
   } catch (_) {}
 }
 
 function persistNotifiedKeys() {
   try {
+    const key = getNotifiedStorageKey();
     const list = [...PROMO_STATE.notifiedKeys].slice(-400);
-    localStorage.setItem(NOTIFIED_STORAGE_KEY, JSON.stringify(list));
-    sessionStorage.setItem('gpuAnalyzerNotifiedDeals_v1', JSON.stringify(list.slice(-100)));
+    localStorage.setItem(key, JSON.stringify(list));
+    sessionStorage.setItem(key, JSON.stringify(list.slice(-100)));
   } catch (_) {}
 }
 
 async function syncNotifiedHistoryFromServer() {
   try {
-    const res = await fetch('data/notified_history.json?t=' + Date.now());
+    const regId = getActiveRegionId();
+    const staticFile = regId === 'mx' ? 'data/notified_history_mx.json' : 'data/notified_history.json';
+    const res = await fetch(`${staticFile}?t=` + Date.now());
     if (res.ok) {
       const hist = await res.json();
       if (hist && typeof hist === 'object') {
@@ -2795,9 +2919,10 @@ async function syncNotifiedHistoryFromServer() {
 
 async function syncCouponStatusFromServer() {
   try {
+    const regId = getActiveRegionId();
     let statusObj = null;
     try {
-      const res = await fetch('/api/coupon-status?t=' + Date.now());
+      const res = await fetch(`/api/coupon-status?region=${encodeURIComponent(regId)}&t=` + Date.now());
       if (res.ok) {
         const d = await res.json();
         statusObj = d.status || d;
@@ -2805,7 +2930,8 @@ async function syncCouponStatusFromServer() {
     } catch (_) {}
     if (!statusObj) {
       try {
-        const resStatic = await fetch('data/coupon_status.json?t=' + Date.now());
+        const staticFile = regId === 'mx' ? 'data/coupon_status_mx.json' : 'data/coupon_status.json';
+        const resStatic = await fetch(`${staticFile}?t=` + Date.now());
         if (resStatic.ok) statusObj = await resStatic.json();
       } catch (_) {}
     }
@@ -2816,7 +2942,7 @@ async function syncCouponStatusFromServer() {
       if (statusObj.coupons) Object.assign(PROMO_STATE.couponStatus.coupons, statusObj.coupons);
       if (statusObj.deals) Object.assign(PROMO_STATE.couponStatus.deals, statusObj.deals);
       try {
-        localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+        localStorage.setItem(getCouponStatusCacheKey(), JSON.stringify(PROMO_STATE.couponStatus));
       } catch (_) {}
     }
   } catch (_) {}
@@ -3215,6 +3341,12 @@ function playDealAlertChime() {
 function evaluateDealsForAlerts() {
   if (!PROMO_STATE.lastData || !Array.isArray(PROMO_STATE.lastData.matched_deals)) return [];
   const minCB = PROMO_STATE.notifyMinCB || 92;
+  const activeReg = getActiveRegionId();
+  const lastDataReg = (PROMO_STATE.lastData && PROMO_STATE.lastData.region_id)
+    ? PROMO_STATE.lastData.region_id.toLowerCase()
+    : activeReg;
+
+  const brChannels = new Set(['ofertasadrenaline', 'peperaiohardware', 'iskandarsouza', 'benchpromos', 'kabumofertas', 'nerdofertas', 'ofertastechbr']);
 
   // Compute maximum composite/price ratio with default/current weights to also evaluate non-active flash deals
   let maxGpuRawRatio = 0;
@@ -3226,6 +3358,15 @@ function evaluateDealsForAlerts() {
 
   const qualifying = [];
   PROMO_STATE.lastData.matched_deals.forEach(d => {
+    const dReg = (d.region_id || lastDataReg).toLowerCase();
+    if (dReg !== activeReg) return;
+    if (activeReg === 'mx') {
+      const ch = (d.channel_id || '').toLowerCase().replace(/^@/, '');
+      if (brChannels.has(ch)) return;
+      const bUrl = (d.buy_url || '').toLowerCase();
+      if (bUrl.includes('.br') || bUrl.includes('kabum') || bUrl.includes('terabyte') || bUrl.includes('pichau')) return;
+    }
+
     let cbScore = null;
     let hitCB = false;
     let hitBF = false;
@@ -3264,16 +3405,16 @@ function evaluateDealsForAlerts() {
       const mode = PROMO_STATE.bfMode || 'user_or_low';
       if (d.price_brl <= st.allMin * 1.01) {
         hitBF = true;
-        reasons.push(`🔥 Mín. Histórico (${fmtBRLShort(st.allMin)})`);
+        reasons.push(activeReg === 'mx' ? `🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})` : `🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})`);
       } else if (mode === 'user_or_low' && d.price_brl <= Math.max(exp.low, userMin)) {
         hitBF = true;
-        reasons.push(`🏷️ Meta Pechincha BF (≤ ${fmtBRLShort(Math.max(exp.low, userMin))})`);
+        reasons.push(activeReg === 'mx' ? `🏷️ Meta Ganga BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})` : `🏷️ Meta Pechincha BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})`);
       } else if (mode === 'bf_mid' && d.price_brl <= exp.mid) {
         hitBF = true;
-        reasons.push(`🏷️ Média Esperada BF (≤ ${fmtBRLShort(exp.mid)})`);
+        reasons.push(activeReg === 'mx' ? `🏷️ Promedio Esperado BF (≤ ${formatMoneyShort(exp.mid)})` : `🏷️ Média Esperada BF (≤ ${formatMoneyShort(exp.mid)})`);
       } else if (mode === 'bf_high' && d.price_brl <= Math.max(exp.high, userMax)) {
         hitBF = true;
-        reasons.push(`🏷️ Dentro da Faixa BF (≤ ${fmtBRLShort(Math.max(exp.high, userMax))})`);
+        reasons.push(activeReg === 'mx' ? `🏷️ Rango BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})` : `🏷️ Dentro da Faixa BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})`);
       }
     }
 
@@ -3290,7 +3431,9 @@ function evaluateDealsForAlerts() {
     else hitHB = passBrl || passPct;
 
     if (hitHB && d.savings_vs_hb_brl > 0) {
-      reasons.push(`📉 −${fmtBRLShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Database`);
+      reasons.push(activeReg === 'mx'
+        ? `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Catálogo`
+        : `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Database`);
     }
 
     d.cb_score = cbScore;
@@ -3427,19 +3570,21 @@ function firePhoneNotification(deal) {
   const reasons = (deal.alert_reasons || []).join(' • ');
   const couponTxt = (deal.coupon_code || deal.coupon_info) ? `\n🎟️ Cupom Necessário: ${deal.coupon_code || deal.coupon_info}` : '';
   const couponTag = (deal.coupon_code || deal.coupon_info) ? ` (c/ Cupom: ${deal.coupon_code || deal.coupon_info})` : '';
-  const hbDiffTxt = deal.hb_price_brl > deal.price_brl ? `\n📉 Economia vs Ref: -${fmtBRL(deal.savings_vs_hb_brl)} (Ref: ${fmtBRL(deal.hb_price_brl)})` : '';
-  const title = `🔥 ${deal.matched_name} por ${fmtBRL(deal.price_brl)}${couponTag}`;
+  const hbDiffTxt = deal.hb_price_brl > deal.price_brl ? `\n📉 Economia vs Ref: -${formatMoney(deal.savings_vs_hb_brl)} (Ref: ${formatMoney(deal.hb_price_brl)})` : '';
+  const title = `🔥 ${deal.matched_name} por ${formatMoney(deal.price_brl)}${couponTag}`;
   const message = `${reasons}${couponTxt}${hbDiffTxt}\n📢 Canal: @${deal.channel_id}\n${deal.title}`;
   const url = deal.buy_url && deal.buy_url.startsWith('http') ? deal.buy_url : (deal.post_url || '');
 
   const postId = deal.post_id || `${deal.channel_id}_${deal.matched_slug}_${Math.round(deal.price_brl)}`;
+  const regId = getActiveRegionId();
 
   const payload = {
     channel: PROMO_STATE.phoneService || 'ntfy',
     title,
     message,
     url,
-    post_id: postId
+    post_id: postId,
+    region: regId
   };
 
   if (PROMO_STATE.phoneService === 'ntfy') {
@@ -3500,14 +3645,27 @@ async function testPhoneAlertNow() {
   const statusEl = document.getElementById('phone-test-status');
   if (statusEl) statusEl.textContent = 'Enviando teste para o celular...';
 
-  const sampleDeal = {
+  const activeReg = getActiveRegionId();
+  const sampleDeal = activeReg === 'mx' ? {
+    matched_kind: 'gpu',
+    matched_slug: 'rtx-5060',
+    matched_name: 'RTX 5060 8GB (Prueba Celular)',
+    price_brl: 6434,
+    hb_price_brl: 7513,
+    savings_vs_hb_brl: 1079,
+    alert_reasons: ['🏆 CB 95/100', '🔥 GANGA', `−${formatMoney(1079)} vs Catálogo`],
+    coupon_code: 'MX10',
+    channel_id: 'promos_gamer_mexico',
+    title: 'Tarjeta de Video GeForce RTX 5060 con cupón de descuento en México!',
+    buy_url: 'https://www.cyberpuerta.mx/'
+  } : {
     matched_kind: 'gpu',
     matched_slug: 'rtx-5060',
     matched_name: 'RTX 5060 8GB (Teste Celular)',
     price_brl: 1849,
     hb_price_brl: 2159,
     savings_vs_hb_brl: 310,
-    alert_reasons: ['🏆 CB 95/100', '🔥 PECHINCHA', '−R$ 310 vs Database'],
+    alert_reasons: ['🏆 CB 95/100', '🔥 PECHINCHA', `−${formatMoney(310)} vs Database`],
     coupon_code: 'PC10',
     channel_id: 'ofertasadrenaline',
     title: 'Placa de Vídeo GeForce RTX 5060 com cupom de desconto nos grupos!',
@@ -3520,10 +3678,15 @@ async function testPhoneAlertNow() {
   try {
     const payload = {
       channel: PROMO_STATE.phoneService || 'ntfy',
-      title: `🔥 [TESTE] ${sampleDeal.matched_name} por ${fmtBRL(sampleDeal.price_brl)} (c/ Cupom: PC10)`,
-      message: `🔔 Teste de disparo no celular bem-sucedido!\n\n🏆 CB 95/100 • PECHINCHA\n🎟️ Cupom Necessário: PC10\n📉 Economia: -R$ 310,00 vs Catálogo\n📢 Canal: @ofertasadrenaline\n\nRecebida como notificação comum (respeitando o modo Não Perturbe e volume padrão).`,
-      url: 'https://t.me/s/ofertasadrenaline',
-      force: true
+      title: activeReg === 'mx'
+        ? `🔥 [PRUEBA] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (c/ Cupón: MX10)`
+        : `🔥 [TESTE] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (c/ Cupom: PC10)`,
+      message: activeReg === 'mx'
+        ? `🔔 ¡Prueba de notificación móvil exitosa!\n\n🏆 CB 95/100 • GANGA\n🎟️ Cupón: MX10\n📉 Ahorro: -${formatMoney(1079)} vs Catálogo\n📢 Canal: @promos_gamer_mexico\n\nRecibida en celular respetando modo No Molestar.`
+        : `🔔 Teste de disparo no celular bem-sucedido!\n\n🏆 CB 95/100 • PECHINCHA\n🎟️ Cupom Necessário: PC10\n📉 Economia: -${formatMoney(310)} vs Catálogo\n📢 Canal: @ofertasadrenaline\n\nRecebida como notificação comum (respeitando o modo Não Perturbe e volume padrão).`,
+      url: sampleDeal.buy_url,
+      force: true,
+      region: activeReg
     };
 
     if (PROMO_STATE.phoneService === 'ntfy') {
@@ -3634,8 +3797,24 @@ function checkAndFireDealNotifications(forceTest = false) {
       document.title = `🔥 (${newAlerts.length}) PECHINCHA! | Build & GPU Analyzer Pro`;
     }
   } else if (forceTest) {
+    const activeReg = getActiveRegionId();
     // If user clicked "Testar Alerta" and no new unnotified deal existed, show the best qualifying deal or a demo alert
-    const sample = qualifying[0] || {
+    const sample = qualifying[0] || (activeReg === 'mx' ? {
+      matched_kind: 'gpu',
+      matched_slug: 'rtx-5060',
+      matched_name: 'GeForce RTX 5060 8GB (Prueba México)',
+      price_brl: 6434,
+      hb_price_brl: 7513,
+      savings_vs_hb_brl: 1079,
+      cb_score: 95,
+      is_high_cb: true,
+      is_pechincha: true,
+      alert_reasons: [`🏆 CB 95/100`, `🔥 −${formatMoneyShort(1079)} vs Catálogo`],
+      coupon_code: 'MX10',
+      channel_id: 'promos_gamer_mexico',
+      title: 'Prueba de Notificación: Tarjeta de Video RTX 5060 con cupón en México!',
+      buy_url: 'https://www.cyberpuerta.mx/'
+    } : {
       matched_kind: 'gpu',
       matched_slug: 'rtx-5060',
       matched_name: 'GeForce RTX 5060 8GB (Teste)',
@@ -3645,12 +3824,12 @@ function checkAndFireDealNotifications(forceTest = false) {
       cb_score: 95,
       is_high_cb: true,
       is_pechincha: true,
-      alert_reasons: [`🏆 CB 95/100`, `🔥 −R$ 310 vs Database`],
+      alert_reasons: [`🏆 CB 95/100`, `🔥 −${formatMoneyShort(310)} vs Database`],
       coupon_code: 'PC10',
       channel_id: 'ofertasadrenaline',
       title: 'Teste de Notificação: Placa de Vídeo RTX 5060 com cupom relâmpago nos grupos!',
       buy_url: 'https://t.me/s/ofertasadrenaline'
-    };
+    });
     playDealAlertChime();
     showDealToastNotification(sample);
     fireWindowsNativeNotification(sample);
@@ -3709,10 +3888,6 @@ function backupOriginalHBPrices(force = false) {
   });
 }
 window.backupOriginalHBPrices = backupOriginalHBPrices;
-
-function getActiveRegionId() {
-  return (window.STATE?.market?.region_id || 'br').toLowerCase();
-}
 
 function applyFlashPromosToCatalog() {
   if (!DB.gpus || !DB.gpus.length) return;
@@ -3829,6 +4004,7 @@ function onTogglePromoAutoRefresh() {
   }
   savePromoSettingsToStorage();
   schedulePromoAutoSyncTimer();
+  enableMobileBackgroundKeepAlive(PROMO_STATE.autoSyncEnabled);
 }
 
 function onChangePromoSyncInterval() {
@@ -3871,6 +4047,12 @@ async function scanLivePromos(force = false) {
   const extraCh = ((document.getElementById('input-promo-channels') || {}).value || '').trim();
   const activeRegId = getActiveRegionId();
 
+  // Always refresh notified history and coupon status ledger before evaluating deals
+  await Promise.all([
+    syncNotifiedHistoryFromServer(),
+    syncCouponStatusFromServer()
+  ]);
+
   // MEXICO PIPELINE: Fetch strictly from /api/promos?region=mx (Promodescuentos + Cyberpuerta + DDTech)
   if (activeRegId === 'mx') {
     if (btn) btn.disabled = true;
@@ -3905,6 +4087,7 @@ async function scanLivePromos(force = false) {
       PROMO_STATE.channelsScanned = prData.channels_scanned || [];
       applyFlashPromosToCatalog();
       checkAndFireDealNotifications(false);
+      updateBFPromoEvaluator(true);
       renderPromoRadarPanel();
       if (statusEl) {
         statusEl.textContent = `Radar México ($ MXN): Sincronizado às ${prData.scanned_at || 'agora'} • ${prData.matched_deals.length} ofertas en tiendas MX`;
@@ -3914,12 +4097,6 @@ async function scanLivePromos(force = false) {
     }
     return;
   }
-
-  // Always refresh notified history and coupon status ledger before evaluating deals
-  await Promise.all([
-    syncNotifiedHistoryFromServer(),
-    syncCouponStatusFromServer()
-  ]);
 
   // If only changing the time-window filter and we already have rawPosts in memory or localStorage (<15 min old),
   // re-filter 100% locally in the browser with ZERO network requests!
@@ -3980,8 +4157,7 @@ async function scanLivePromos(force = false) {
     channels.forEach(ch => {
       queries.forEach(q => {
         tasks.push(
-          fetch(`/api/tg-raw?ch=${encodeURIComponent(ch.id)}&q=${encodeURIComponent(q)}`)
-            .then(r => (r.ok ? r.text() : ''))
+          fetchTelegramChannelHTML(ch.id, q)
             .then(htmlStr => (htmlStr ? parseTelegramHTMLInBrowser(htmlStr, ch.id, ch.name) : []))
             .catch(() => [])
         );

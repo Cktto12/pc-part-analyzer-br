@@ -23,6 +23,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATUS_FILE = os.path.join(BASE_DIR, "data", "coupon_status.json")
 _STATUS_LOCK = threading.Lock()
 
+def get_status_file(reg_id=None):
+    reg = (reg_id or "br").lower().strip()
+    return os.path.join(BASE_DIR, "data", "coupon_status.json" if reg == "br" else f"coupon_status_{reg}.json")
+
 # Non-coupon words that can follow or precede 'expirou'/'acabou'
 STOP_WORDS = {
     "PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA",
@@ -177,10 +181,11 @@ def extract_store_price(body, final_url=""):
     return None
 
 
-def _load_coupon_status_unlocked():
-    if os.path.exists(STATUS_FILE):
+def _load_coupon_status_unlocked(reg_id=None):
+    fpath = get_status_file(reg_id)
+    if os.path.exists(fpath):
         try:
-            with open(STATUS_FILE, "r", encoding="utf-8") as f:
+            with open(fpath, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict):
                     if "coupons" not in data:
@@ -193,29 +198,30 @@ def _load_coupon_status_unlocked():
     return {"coupons": {}, "deals": {}, "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")}
 
 
-def _save_coupon_status_unlocked(data):
+def _save_coupon_status_unlocked(data, reg_id=None):
+    fpath = get_status_file(reg_id)
     try:
-        os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)
+        os.makedirs(os.path.dirname(fpath), exist_ok=True)
         data["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        with open(STATUS_FILE, "w", encoding="utf-8") as f:
+        with open(fpath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"[CouponTracker] Erro ao salvar status: {e}")
+        print(f"[CouponTracker ({reg_id or 'br'})] Erro ao salvar status: {e}")
 
 
-def load_coupon_status():
+def load_coupon_status(reg_id=None):
     """Loads persistent coupon and deal status from JSON file (thread-safe)."""
     with _STATUS_LOCK:
-        return _load_coupon_status_unlocked()
+        return _load_coupon_status_unlocked(reg_id)
 
 
-def save_coupon_status(data):
+def save_coupon_status(data, reg_id=None):
     """Saves persistent coupon and deal status to JSON file (thread-safe)."""
     with _STATUS_LOCK:
-        _save_coupon_status_unlocked(data)
+        _save_coupon_status_unlocked(data, reg_id)
 
 
-def record_coupon_status(coupon_code, status, reason, source="channel_report"):
+def record_coupon_status(coupon_code, status, reason, source="channel_report", reg_id=None):
     """Records or updates a coupon's status in the persistent store (thread-safe)."""
     if not coupon_code:
         return
@@ -224,23 +230,23 @@ def record_coupon_status(coupon_code, status, reason, source="channel_report"):
         return
 
     with _STATUS_LOCK:
-        data = _load_coupon_status_unlocked()
+        data = _load_coupon_status_unlocked(reg_id)
         data["coupons"][code] = {
             "status": status,  # "expired", "active", "out_of_stock"
             "reason": reason,
             "source": source,
             "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
-        _save_coupon_status_unlocked(data)
+        _save_coupon_status_unlocked(data, reg_id)
         return data["coupons"][code]
 
 
-def record_deal_status(post_id, status, reason, source="live_test", url=None):
+def record_deal_status(post_id, status, reason, source="live_test", url=None, reg_id=None):
     """Records or updates a specific deal/post status in the persistent store under post_id, lower-case post_id, and url (thread-safe)."""
     if not post_id and not url:
         return
     with _STATUS_LOCK:
-        data = _load_coupon_status_unlocked()
+        data = _load_coupon_status_unlocked(reg_id)
         entry = {
             "status": status,
             "reason": reason,
@@ -252,7 +258,7 @@ def record_deal_status(post_id, status, reason, source="live_test", url=None):
             data["deals"][post_id.lower()] = entry
         if url:
             data["deals"][url] = entry
-        _save_coupon_status_unlocked(data)
+        _save_coupon_status_unlocked(data, reg_id)
         return entry
 
 
@@ -329,7 +335,7 @@ def scan_texts_for_expiries(texts_or_messages):
     return detected
 
 
-def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, timeout=8, post_id=None):
+def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, timeout=8, post_id=None, reg_id=None):
     """
     Directly tests a deal URL, store live price, and coupon validity:
     1. Follows redirects to final merchant store.
@@ -373,7 +379,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                 res["status"] = "expired"
                 res["reason"] = f"Página da loja retornou erro HTTP {code} (link expirado)"
                 if coupon_code:
-                    record_coupon_status(coupon_code, "expired", res["reason"], source="live_test")
+                    record_coupon_status(coupon_code, "expired", res["reason"], source="live_test", reg_id=reg_id)
                 return res
 
             body = resp.read().decode("utf-8", errors="ignore")
@@ -405,7 +411,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                     res["status"] = "out_of_stock"
                     res["reason"] = reason_text
                     if coupon_code:
-                        record_coupon_status(coupon_code, "expired", f"{reason_text} ({coupon_code})", source="live_test")
+                        record_coupon_status(coupon_code, "expired", f"{reason_text} ({coupon_code})", source="live_test", reg_id=reg_id)
                     return res
 
             # Check explicit coupon invalidation inside merchant page
@@ -416,7 +422,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                     res["valid"] = False
                     res["status"] = "expired"
                     res["reason"] = f"Cupom/Cupón {coupon_code} reportado inválido ou esgotado na loja"
-                    record_coupon_status(coupon_code, "expired", res["reason"], source="live_test")
+                    record_coupon_status(coupon_code, "expired", res["reason"], source="live_test", reg_id=reg_id)
                     return res
 
             # Extract current store checkout price
@@ -431,14 +437,14 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                         res["status"] = "expired"
                         res["reason"] = f"Preço na loja subiu para {live_price:,.2f} (oferta de {expected_price:,.2f} encerrada)"
                         if post_id or buy_url:
-                            record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url)
+                            record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url, reg_id=reg_id)
                         return res
                     else:
                         res["valid"] = True
                         res["status"] = "active"
                         res["reason"] = f"Confirmado ativo na loja por {live_price:,.2f}"
                         if post_id or buy_url:
-                            record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url)
+                            record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url, reg_id=reg_id)
                         return res
                 else:
                     # Offer with coupon: check if store price is compatible with coupon deduction
@@ -448,25 +454,25 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
                         res["status"] = "expired"
                         res["reason"] = f"Preço na loja subiu para {live_price:,.2f} (incompatível com cupom {coupon_code})"
                         if post_id or buy_url:
-                            record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url)
-                        record_coupon_status(coupon_code, "expired", res["reason"], source="live_test")
+                            record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url, reg_id=reg_id)
+                        record_coupon_status(coupon_code, "expired", res["reason"], source="live_test", reg_id=reg_id)
                         return res
                     else:
                         res["valid"] = True
                         res["status"] = "active"
                         res["reason"] = f"Produto ativo na loja por {live_price:,.2f} (cupom {coupon_code})"
                         if post_id or buy_url:
-                            record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url)
-                        record_coupon_status(coupon_code, "active", res["reason"], source="live_test")
+                            record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url, reg_id=reg_id)
+                        record_coupon_status(coupon_code, "active", res["reason"], source="live_test", reg_id=reg_id)
                         return res
 
             res["valid"] = True
             res["status"] = "active"
             res["reason"] = "Produto em estoque e página ativa"
             if coupon_code:
-                record_coupon_status(coupon_code, "active", "Confirmado ativo na loja", source="live_test")
+                record_coupon_status(coupon_code, "active", "Confirmado ativo na loja", source="live_test", reg_id=reg_id)
             if post_id or buy_url:
-                record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url)
+                record_deal_status(post_id, "active", res["reason"], source="live_test", url=buy_url, reg_id=reg_id)
             return res
 
     except urllib.error.HTTPError as he:
@@ -475,9 +481,9 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
             res["status"] = "expired"
             res["reason"] = f"Página não encontrada na loja (HTTP {he.code})"
             if coupon_code:
-                record_coupon_status(coupon_code, "expired", res["reason"], source="live_test")
+                record_coupon_status(coupon_code, "expired", res["reason"], source="live_test", reg_id=reg_id)
             if post_id or buy_url:
-                record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url)
+                record_deal_status(post_id, "expired", res["reason"], source="live_test", url=buy_url, reg_id=reg_id)
         else:
             res["valid"] = True
             res["status"] = "untested"
@@ -490,7 +496,7 @@ def test_deal_url_and_coupon(buy_url, coupon_code=None, expected_price=None, tim
         return res
 
 
-def test_deals_batch(deals, max_items=35):
+def test_deals_batch(deals, max_items=35, reg_id=None):
     """
     Tests URLs, live store prices, and coupons for candidate deals concurrently.
     Prioritizes:
@@ -517,7 +523,7 @@ def test_deals_batch(deals, max_items=35):
         coup = deal.get("coupon_code")
         exp_price = deal.get("price_brl")
         p_id = deal.get("post_id")
-        r = test_deal_url_and_coupon(url, coupon_code=coup, expected_price=exp_price, post_id=p_id)
+        r = test_deal_url_and_coupon(url, coupon_code=coup, expected_price=exp_price, post_id=p_id, reg_id=reg_id)
         deal_id = p_id or url
         return deal_id, r
 
@@ -533,12 +539,12 @@ def test_deals_batch(deals, max_items=35):
     return results
 
 
-def rewire_deals_and_best_by_slug(matched_deals, all_promos=None):
+def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None):
     """
     Overlays verified live test statuses onto deals list and recomputes best_by_slug so
     that expired offers/coupons never block newer, valid deals.
     """
-    status_db = load_coupon_status()
+    status_db = load_coupon_status(reg_id)
     coupons = status_db.get("coupons", {})
     deals_map = status_db.get("deals", {})
 

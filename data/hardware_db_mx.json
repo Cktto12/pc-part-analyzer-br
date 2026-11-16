@@ -182585,7 +182585,7 @@
   "live_promos": {
     "ok": true,
     "region_id": "mx",
-    "scanned_at": "09:19:08",
+    "scanned_at": "08:26:43",
     "channels_scanned": [
       "promodescuentos_gpus",
       "promodescuentos_pc",
@@ -182611,7 +182611,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 4.7,
+        "age_hours": 6.9,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-5600x",
         "matched_name": "Ryzen 5 5600X",
@@ -182620,7 +182620,8 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "none"
+        "coupon_status": "none",
+        "deal_status_reason": "Produto em estoque e página ativa"
       }
     ],
     "best_by_slug": {
@@ -182642,7 +182643,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 4.7,
+        "age_hours": 6.9,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-5600x",
         "matched_name": "Ryzen 5 5600X",
@@ -182651,7 +182652,8 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "none"
+        "coupon_status": "none",
+        "deal_status_reason": "Produto em estoque e página ativa"
       }
     },
     "recent_feed": [
@@ -182673,7 +182675,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 4.7,
+        "age_hours": 6.9,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-5600x",
         "matched_name": "Ryzen 5 5600X",
@@ -182702,13 +182704,28 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210299",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 6.0
+        "age_hours": 8.2
       }
     ],
     "coupon_status": {
       "coupons": {},
-      "deals": {}
-    }
+      "deals": {
+        "pdmx/1210338": {
+          "status": "active",
+          "reason": "Produto em estoque e página ativa",
+          "source": "live_test",
+          "updated_at": "2026-11-16 08:28:35"
+        },
+        "https://www.promodescuentos.com/share-deal/1210338": {
+          "status": "active",
+          "reason": "Produto em estoque e página ativa",
+          "source": "live_test",
+          "updated_at": "2026-11-16 08:28:35"
+        }
+      },
+      "updated_at": "2026-11-16 08:28:35"
+    },
+    "last_sitewise_test_at": "2026-11-16 08:28:35"
   },
   "region_id": "mx",
   "currency_code": "MXN",
