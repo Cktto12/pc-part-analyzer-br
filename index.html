@@ -874,6 +874,9 @@
         <!-- PLATFORM MIGRATION COST & COMPATIBILITY BOX -->
         <div id="cpu-duel-platform-box" class="mt-5 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2"></div>
 
+        <!-- MULTI-CORE PERFORMANCE & CORE/THREAD/SMT ARCHITECTURE DEEP-DIVE -->
+        <div id="cpu-duel-cores-architecture-box" class="mt-5 glass-elevated rounded-2xl p-5 border border-purple-500/30 shadow-lg space-y-4"></div>
+
         <!-- VERSUS HEAD-TO-HEAD CPU SCORECARD -->
         <div id="cpu-duel-versus-block" class="mt-5 glass-elevated rounded-2xl p-5 border border-emerald-500/30 shadow-lg">
           <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
@@ -1517,39 +1520,67 @@
               Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.
             </p>
           </div>
-          <!-- Controls: GPU A vs GPU B + CPU Mode Toggle + Upscaling -->
+          <!-- Controls: Setup A (GPU A + CPU A) vs Setup B (GPU B + CPU B) + Upscaling & Modes -->
           <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-sky-400 font-bold">GPU A:</span>
-              <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white"></select>
+            <!-- Setup A Group (Sky) -->
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-sky-950/40 border border-sky-500/40">
+              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-extrabold uppercase">Setup A</span>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">GPU:</span>
+                <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">CPU:</span>
+                <select id="sim-select-cpu-a" onchange="onSimCpuChange(this.value, 'a')" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-emerald-400 font-bold">GPU B:</span>
-              <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white"></select>
+
+            <!-- Swap Button -->
+            <button type="button" onclick="swapSimulatorSetups()" title="Inverter Setup A e Setup B" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer text-xs font-bold">
+              ⇄
+            </button>
+
+            <!-- Setup B Group (Emerald) -->
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-extrabold uppercase">Setup B</span>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">GPU:</span>
+                <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">CPU:</span>
+                <select id="sim-select-cpu-b" onchange="onSimCpuChange(this.value, 'b')" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-amber-400 font-bold">CPU:</span>
-              <select id="sim-select-cpu" onchange="onSimCpuChange(this.value)" class="bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white"></select>
+
+            <!-- Hidden legacy CPU selector to maintain backwards compatibility -->
+            <select id="sim-select-cpu" class="hidden"></select>
+
+            <!-- Mode & Upscaling -->
+            <div class="flex items-center gap-2">
+              <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
+                <option value="both" selected>Comparar: Gargalo de CPU vs Pura</option>
+                <option value="pure">Apenas GPU Pura (0% Gargalo)</option>
+                <option value="cpu">Apenas com Gargalo de CPU</option>
+              </select>
+              <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-800 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300">
+                <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
+                <option value="sr">Só Upscaling Qualidade (DLSS / FSR)</option>
+                <option value="native">Raster Nativo Puro (Sem DLSS / Sem FG)</option>
+                <option value="max_fg">Máximo Bruto (DLSS 4 + MFG 4×)</option>
+              </select>
             </div>
-            <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
-              <option value="both" selected>Comparar: GPU Pura (Sem CPU) vs Com CPU</option>
-              <option value="pure">Apenas GPU Pura (0% Gargalo de CPU)</option>
-              <option value="cpu">Apenas Considerando CPU Selecionado</option>
-            </select>
-            <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-800 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300">
-              <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
-              <option value="sr">Só Upscaling Qualidade (DLSS / FSR)</option>
-              <option value="native">Raster Nativo Puro (Sem DLSS / Sem FG)</option>
-              <option value="max_fg">Máximo Bruto (DLSS 4 + MFG 4×)</option>
-            </select>
           </div>
         </div>
 
         <!-- XEON / LEGACY ARCHITECTURE ENGINE WARNING BANNER -->
         <div id="sim-xeon-warning-banner" class="mt-4"></div>
 
-        <!-- VERSUS / RTINGS DIRECT HEAD-TO-HEAD HERO CARDS -->
-        <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5"></div>
+        <!-- VERSUS / RTINGS DIRECT HEAD-TO-HEAD HERO CARDS (4 Cards: Jogos, Workstation, IA Local, Equilíbrio) -->
+        <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-5"></div>
+
+        <!-- DEDICATED WORKSTATION & PRODUTIVIDADE COMPARISON PANEL (Render 3D, Edição 4K, Compilação de Código, Simulação Física) -->
+        <div id="sim-workstation-panel" class="mt-5 glass-elevated rounded-2xl p-5 border border-amber-500/30 shadow-lg space-y-4"></div>
 
         <!-- COLLAPSIBLE: SINGLE GAME DEEP-DIVE INSPECTOR & RELEVANT GAMES FILTER -->
         <details class="mt-5 bg-slate-900/70 rounded-2xl border border-slate-800 p-4 transition-all">

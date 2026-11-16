@@ -219,10 +219,15 @@ function getCpuGamingIndex(cpu) {
   return Math.max(40, Math.min(80, Math.round(30 + b / 250)));
 }
 
-function getSimCpu() {
-  const sel = document.getElementById('sim-select-cpu');
-  const slug = (sel && sel.value) || (STATE.build && STATE.build.cpu && STATE.build.cpu.slug) || (DB.cpus[0] ? DB.cpus[0].slug : '');
-  return DB.cpus.find(c => c.slug === slug) || DB.cpus[0];
+function getSimCpu(setupKey = 'a') {
+  if (setupKey === 'b') {
+    const selB = document.getElementById('sim-select-cpu-b');
+    const slugB = (selB && selB.value) || STATE.simCpuBSlug || 'ryzen-7-7800x3d';
+    return (DB.cpus || []).find(c => c.slug === slugB) || (DB.cpus || [])[1] || (DB.cpus || [])[0];
+  }
+  const selA = document.getElementById('sim-select-cpu-a') || document.getElementById('sim-select-cpu');
+  const slugA = (selA && selA.value) || STATE.simCpuASlug || (STATE.build && STATE.build.cpu && STATE.build.cpu.slug) || 'ryzen-5-5600';
+  return (DB.cpus || []).find(c => c.slug === slugA) || (DB.cpus || [])[0];
 }
 
 // ============================================================================
@@ -545,8 +550,15 @@ function getEffectiveGamingScore(gpu, uncapped = false) {
 // ============================================================================
 // 3. SIMULATOR TAB (overrides app.js renderSimulator)
 // ============================================================================
-function onSimCpuChange(slug) {
-  STATE.simCpuSlug = slug;
+function onSimCpuChange(slug, setupKey = 'a') {
+  if (setupKey === 'b') {
+    STATE.simCpuBSlug = slug;
+  } else {
+    STATE.simCpuASlug = slug;
+    STATE.simCpuSlug = slug;
+    const legacySel = document.getElementById('sim-select-cpu');
+    if (legacySel) legacySel.value = slug;
+  }
   renderSimulator();
 }
 
@@ -707,10 +719,176 @@ function toggleXeonDetails() {
   renderSimulatorResultsOnly();
 }
 
+// 3.5. DEDICATED WORKSTATION & PRODUTIVIDADE COMPARISON (Setup A vs Setup B)
+function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
+  const panel = document.getElementById('sim-workstation-panel');
+  if (!panel) return;
+
+  const sA = cpuA._specs || (typeof getCpuSpecs === 'function' ? getCpuSpecs(cpuA) : { cores: 6, threads: 12, multiBench: 5675, tdp: 65, ddr: 'DDR4' });
+  const sB = cpuB._specs || (typeof getCpuSpecs === 'function' ? getCpuSpecs(cpuB) : { cores: 8, threads: 16, multiBench: 7980, tdp: 120, ddr: 'DDR5' });
+
+  // 1. 3D Rendering (Blender Cycles Classroom - time in seconds, lower is better)
+  const optixA = gpuA.brand === 'NVIDIA' ? 16 : 8;
+  const optixB = gpuB.brand === 'NVIDIA' ? 16 : 8;
+  const renderPwrA = (gpuA.fp16_tflops * optixA) + (sA.multiBench * 0.8);
+  const renderPwrB = (gpuB.fp16_tflops * optixB) + (sB.multiBench * 0.8);
+  const blenderSecA = Math.round(Math.max(6, 52000 / Math.max(100, renderPwrA)));
+  const blenderSecB = Math.round(Math.max(6, 52000 / Math.max(100, renderPwrB)));
+  const blenderGain = Math.round(((blenderSecB / Math.max(1, blenderSecA)) - 1) * 100);
+
+  // 2. 4K Video Editing & Export (Premiere Pro / DaVinci Resolve - 10 min 4K timeline in seconds, lower is better)
+  const isDualEncA = /rtx-50|4070|4080|4090/i.test(gpuA.slug);
+  const isDualEncB = /rtx-50|4070|4080|4090/i.test(gpuB.slug);
+  const encPwrA = isDualEncA ? 120 : (gpuA.brand === 'NVIDIA' ? 80 : 65);
+  const encPwrB = isDualEncB ? 120 : (gpuB.brand === 'NVIDIA' ? 80 : 65);
+  const vidPwrA = (gpuA.bandwidth_gbs * 0.15) + encPwrA + (sA.multiBench * 0.02);
+  const vidPwrB = (gpuB.bandwidth_gbs * 0.15) + encPwrB + (sB.multiBench * 0.02);
+  const exportSecA = Math.round(Math.max(20, 20000 / Math.max(50, vidPwrA)));
+  const exportSecB = Math.round(Math.max(20, 20000 / Math.max(50, vidPwrB)));
+  const exportGain = Math.round(((exportSecB / Math.max(1, exportSecA)) - 1) * 100);
+
+  // 3. Code Compilation & Development (Rust / C++ / Docker - throughput in kLOC/s & clean build time in seconds)
+  const klocA = Math.round((sA.threads * 4.5) + (sA.multiBench / 170));
+  const klocB = Math.round((sB.threads * 4.5) + (sB.multiBench / 170));
+  const buildSecA = Math.round(Math.max(8, 2500 / Math.max(1, klocA)));
+  const buildSecB = Math.round(Math.max(8, 2500 / Math.max(1, klocB)));
+  const buildGain = Math.round(((klocA / Math.max(1, klocB)) - 1) * 100);
+
+  // 4. Hybrid AI & Technical Simulation (OpenDSS Monte Carlo / Matrizes Elétricas & 14B Q4 offload)
+  const tokA = gpuA.llm_14b_tok_s || 30;
+  const tokB = gpuB.llm_14b_tok_s || 20;
+  const scnMinA = Math.round((gpuA.fp16_tflops * 18) + (sA.multiBench * 0.25));
+  const scnMinB = Math.round((gpuB.fp16_tflops * 18) + (sB.multiBench * 0.25));
+  const scnGain = Math.round(((scnMinA / Math.max(1, scnMinB)) - 1) * 100);
+
+  panel.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold tracking-wider">WORKSTATION & PRODUTIVIDADE</span>
+        <h3 class="text-base font-bold text-white">Comparativo de Produtividade: Setup A vs Setup B</h3>
+      </div>
+      <div class="flex items-center gap-2 text-xs font-mono">
+        <span class="text-sky-300">Setup A (${gpuA.name} + ${cpuA.name})</span>
+        <span class="text-slate-500">vs</span>
+        <span class="text-emerald-300">Setup B (${gpuB.name} + ${cpuB.name})</span>
+      </div>
+    </div>
+
+    <!-- 4 Workstation Comparison Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
+      <!-- 1. 3D Rendering (Blender Cycles) -->
+      <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span>🎨 Render 3D (Blender)</span>
+          </span>
+          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${blenderGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+            ${blenderGain >= 0 ? 'Setup A ' + blenderGain + '% +rápido' : 'Setup B +' + Math.abs(blenderGain) + '% +rápido'}
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400">Cycles Classroom 1080p c/ OptiX/HIP + CPU Tile Assist:</p>
+        <div class="space-y-1.5 pt-1 font-mono text-xs">
+          <div class="flex justify-between items-center">
+            <span class="text-sky-300 truncate">Setup A:</span>
+            <span class="font-bold text-white">${blenderSecA}s <span class="text-[10px] text-slate-400">(${gpuA.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-emerald-300 truncate">Setup B:</span>
+            <span class="font-bold text-white">${blenderSecB}s <span class="text-[10px] text-slate-400">(${gpuB.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
+          </div>
+        </div>
+        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+          Cinebench Multi: <strong>${sA.multiBench} pts</strong> (A) vs <strong>${sB.multiBench} pts</strong> (B)
+        </div>
+      </div>
+
+      <!-- 2. 4K Video Editing (Premiere / Resolve) -->
+      <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span>🎬 Edição & Export 4K</span>
+          </span>
+          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${exportGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+            ${exportGain >= 0 ? 'Setup A ' + exportGain + '% +rápido' : 'Setup B +' + Math.abs(exportGain) + '% +rápido'}
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400">Exportação de timeline 10 min 4K H.264/HEVC/ProRes:</p>
+        <div class="space-y-1.5 pt-1 font-mono text-xs">
+          <div class="flex justify-between items-center">
+            <span class="text-sky-300 truncate">Setup A:</span>
+            <span class="font-bold text-white">${exportSecA}s <span class="text-[10px] text-slate-400">(${isDualEncA ? 'Dual NVENC' : 'Single Enc'})</span></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-emerald-300 truncate">Setup B:</span>
+            <span class="font-bold text-white">${exportSecB}s <span class="text-[10px] text-slate-400">(${isDualEncB ? 'Dual NVENC' : 'Single Enc'})</span></span>
+          </div>
+        </div>
+        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+          Timeline Fluida: ${sA.cores}C/${sA.threads}T (A) vs ${sB.cores}C/${sB.threads}T (B)
+        </div>
+      </div>
+
+      <!-- 3. Code Compilation (Rust / C++ / Docker) -->
+      <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span>⚙️ Compilação & Dev</span>
+          </span>
+          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${buildGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+            ${buildGain >= 0 ? 'Setup A +' + buildGain + '%' : 'Setup B +' + Math.abs(buildGain) + '%'}
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400">Vazão do compilador Rust/C++ em linhas de código:</p>
+        <div class="space-y-1.5 pt-1 font-mono text-xs">
+          <div class="flex justify-between items-center">
+            <span class="text-sky-300 truncate">Setup A:</span>
+            <span class="font-bold text-white">${klocA} kLOC/s <span class="text-[10px] text-slate-400">(build: ${buildSecA}s)</span></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-emerald-300 truncate">Setup B:</span>
+            <span class="font-bold text-white">${klocB} kLOC/s <span class="text-[10px] text-slate-400">(build: ${buildSecB}s)</span></span>
+          </div>
+        </div>
+        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+          Workers paralelos: <strong>-j ${sA.threads}</strong> (A) vs <strong>-j ${sB.threads}</strong> (B)
+        </div>
+      </div>
+
+      <!-- 4. Hybrid AI & Simulation (OpenDSS / Monte Carlo) -->
+      <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-white flex items-center gap-1.5">
+            <span>⚡ Simulação Técnica & IA</span>
+          </span>
+          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${scnGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+            ${scnGain >= 0 ? 'Setup A +' + scnGain + '%' : 'Setup B +' + Math.abs(scnGain) + '%'}
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400">Matrizes esparsas OpenDSS / Monte Carlo & 14B Q4:</p>
+        <div class="space-y-1.5 pt-1 font-mono text-xs">
+          <div class="flex justify-between items-center">
+            <span class="text-sky-300 truncate">Setup A:</span>
+            <span class="font-bold text-white">${scnMinA} c/min <span class="text-[10px] text-slate-400">(${tokA} tok/s)</span></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-emerald-300 truncate">Setup B:</span>
+            <span class="font-bold text-white">${scnMinB} c/min <span class="text-[10px] text-slate-400">(${tokB} tok/s)</span></span>
+          </div>
+        </div>
+        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+          VRAM + Memória: ${gpuA.vram_gb}GB + ${sA.ddr} vs ${gpuB.vram_gb}GB + ${sB.ddr}
+        </div>
+      </div>
+    </div>
+  `;
+}
+window.renderSimulatorWorkstationComparison = renderSimulatorWorkstationComparison;
+
 function renderSimulatorResultsOnly() {
   const gpuA = DB.gpus.find(g => g.slug === document.getElementById('sim-select-gpu-a').value) || DB.gpus[0];
   const gpuB = DB.gpus.find(g => g.slug === document.getElementById('sim-select-gpu-b').value) || DB.gpus[1];
-  const cpu = getSimCpu();
+  const cpuA = getSimCpu('a');
+  const cpuB = getSimCpu('b');
   const mode = document.getElementById('sim-select-cpu-mode').value || 'both';
   const dlssMode = (document.getElementById('sim-select-upscale') || {}).value || STATE.dlssMode || 'perceived';
   const cap = STATE.monitorMaxFps >= 999 ? 999 : STATE.monitorMaxFps;
@@ -719,36 +897,42 @@ function renderSimulatorResultsOnly() {
   document.getElementById('sim-focus-res-label').textContent = getMonitorLabel();
 
   // Sleek, compact Architecture & DLSS Notice Bar
-  const xeonWarn = getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB);
+  const xeonWarnA = getCpuArchitectureAdviceHTML(cpuA, gpuA, gpuB);
+  const xeonWarnB = getCpuArchitectureAdviceHTML(cpuB, gpuB, gpuA);
   const adviceBanner = document.getElementById('sim-cpu-advice-banner') || document.getElementById('sim-xeon-warning-banner');
   if (adviceBanner) adviceBanner.innerHTML = `
     <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-      <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold">CONFIG ATIVA</span>
-        <span class="text-white font-medium">${cpu.name} • Monitor ${getMonitorLabel()} (${cap} Hz)</span>
-        <span class="text-slate-400 hidden sm:inline">• Modo: ${dlssMode === 'perceived' ? 'Realista (DLSS 4 + Latência)' : dlssMode}</span>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold">SETUP A: ${gpuA.name} + ${cpuA.name}</span>
+        <span class="text-slate-500">|</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">SETUP B: ${gpuB.name} + ${cpuB.name}</span>
+        <span class="text-slate-400 hidden sm:inline">• Monitor ${getMonitorLabel()} (${cap} Hz) • ${dlssMode === 'perceived' ? 'Realista DLSS 4' : dlssMode}</span>
       </div>
       <button onclick="toggleXeonDetails()" id="btn-toggle-xeon-details" class="text-xs text-sky-400 hover:text-sky-300 underline cursor-pointer">
-        ${STATE.showXeonDetails ? 'Ocultar Detalhes Técnicos ▲' : 'Ver Detalhes do Processador & DLSS 4 ▼'}
+        ${STATE.showXeonDetails ? 'Ocultar Detalhes Técnicos ▲' : 'Ver Detalhes dos Processadores & DLSS 4 ▼'}
       </button>
     </div>
     <div id="sim-xeon-details-box" class="${STATE.showXeonDetails ? '' : 'hidden'} mt-2 space-y-2">
-      ${xeonWarn}
+      ${xeonWarnA}
+      ${xeonWarnB !== xeonWarnA ? xeonWarnB : ''}
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
         ✨ <strong>DLSS 4 + Multi-Frame Generation (MFG 3×/4×):</strong> A série <strong>RTX 50 (Blackwell)</strong> gera até 4× quadros via Transformer diretamente na GPU após a fila de renderização do processador, aliviando o teto de FPS da CPU para preencher monitores de alta taxa de atualização.
       </div>
     </div>`;
 
-  document.getElementById('sim-cpu-factor-badge').textContent = `CPU: índice ${getCpuGamingIndex(cpu)}/100`;
+  const badgeEl = document.getElementById('sim-cpu-factor-badge');
+  if (badgeEl) {
+    badgeEl.textContent = `A: ${getCpuGamingIndex(cpuA)}/100 • B: ${getCpuGamingIndex(cpuB)}/100`;
+  }
 
   // Focus game card
   const focus = STATE.games.find(g => g.id === STATE.focusGameId) || STATE.games[0];
   if (focus) {
-    const a = estimateFps(gpuA, cpu, focus, opts);
-    const b = estimateFps(gpuB, cpu, focus, opts);
-    const row = (gpu, r, color) => {
+    const a = estimateFps(gpuA, cpuA, focus, opts);
+    const b = estimateFps(gpuB, cpuB, focus, opts);
+    const row = (gpu, cpu, r, color, setupLabel) => {
       const shown = mode === 'pure' ? r.pure : r.withCpu;
-      const limitedBy = r.cpuCap < r.nativePure ? `<span class="text-amber-300">Gargalo Base CPU (−${r.cpuLossPct}%)</span>` : `<span class="text-emerald-300">Limitado pela GPU</span>`;
+      const limitedBy = r.cpuCap < r.nativePure ? `<span class="text-amber-300">Gargalo ${cpu.name} (−${r.cpuLossPct}%)</span>` : `<span class="text-emerald-300">Limitado pela GPU</span>`;
       const visible = Math.min(shown, cap);
       const fgBadge = r.canUseFG
         ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[9px]">${r.tech.badge} (${r.activeFgMult}× ativo)</span>`
@@ -758,7 +942,8 @@ function renderSimulatorResultsOnly() {
         <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
           <div class="flex flex-wrap justify-between items-center gap-1">
             <div class="flex items-center gap-1.5">
-              <span class="font-bold ${color} text-xs">${gpu.name}</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 ${color}">${setupLabel}</span>
+              <span class="font-bold text-white text-xs">${gpu.name} + ${cpu.name}</span>
               ${fgBadge}
             </div>
             ${mode !== 'pure' ? `<span class="text-[10px]">${limitedBy}</span>` : ''}
@@ -785,119 +970,155 @@ function renderSimulatorResultsOnly() {
     };
     document.getElementById('sim-focus-game-card').innerHTML = `
       <div class="space-y-2">
-        ${row(gpuA, a, 'text-sky-300')}
-        ${row(gpuB, b, 'text-emerald-300')}
-        <p class="text-[10px] text-slate-500">Teto de CPU (quadros reais) neste jogo com ${cpu.name}: ~${a.cpuCap} FPS${a.calibrated ? ' • 📏 calibrado com seu FPS medido' : ''}. Quadros extras via FG/MFG passam acima desse teto.</p>
+        ${row(gpuA, cpuA, a, 'text-sky-300', 'Setup A')}
+        ${row(gpuB, cpuB, b, 'text-emerald-300', 'Setup B')}
+        <p class="text-[10px] text-slate-500">Teto CPU: ${cpuA.name} (~${a.cpuCap} FPS) vs ${cpuB.name} (~${b.cpuCap} FPS). Quadros extras via FG/MFG multiplicam acima desse limite.</p>
       </div>`;
   }
 
   // Averages across relevant games
   const games = getRelevantGames();
-  const avg = (gpu, key) => Math.round(games.reduce((s, g) => s + estimateFps(gpu, cpu, g, opts)[key], 0) / Math.max(1, games.length));
-  const avgVisible = (gpu, key) => Math.round(games.reduce((s, g) => s + Math.min(cap, estimateFps(gpu, cpu, g, opts)[key]), 0) / Math.max(1, games.length));
-  const aPure = avg(gpuA, 'pure'), aCpu = avg(gpuA, 'withCpu'), bPure = avg(gpuB, 'pure'), bCpu = avg(gpuB, 'withCpu');
-  const aDisp = avg(gpuA, 'displayedWithCpu'), bDisp = avg(gpuB, 'displayedWithCpu');
+  const avg = (gpu, cpuArg, key) => Math.round(games.reduce((s, g) => s + estimateFps(gpu, cpuArg, g, opts)[key], 0) / Math.max(1, games.length));
+  const avgVisible = (gpu, cpuArg, key) => Math.round(games.reduce((s, g) => s + Math.min(cap, estimateFps(gpu, cpuArg, g, opts)[key]), 0) / Math.max(1, games.length));
+  const aPure = avg(gpuA, cpuA, 'pure'), aCpu = avg(gpuA, cpuA, 'withCpu');
+  const bPure = avg(gpuB, cpuB, 'pure'), bCpu = avg(gpuB, cpuB, 'withCpu');
+  const aDisp = avg(gpuA, cpuA, 'displayedWithCpu'), bDisp = avg(gpuB, cpuB, 'displayedWithCpu');
   const lossA = Math.round((1 - aCpu / Math.max(1, aPure)) * 100);
+  const lossB = Math.round((1 - bCpu / Math.max(1, bPure)) * 100);
   const techA = getGpuTechProfile(gpuA), techB = getGpuTechProfile(gpuB);
 
-  // 1. VERSUS / RTINGS HEAD-TO-HEAD HERO CARDS
+  // 1. VERSUS / RTINGS HEAD-TO-HEAD HERO CARDS (4 Cards: Jogos, Workstation, IA Local, Equilíbrio)
   const heroEl = document.getElementById('sim-versus-hero-cards');
   if (heroEl) {
     const gameGain = bCpu > 0 ? Math.round((aCpu / bCpu - 1) * 100) : 0;
     const aiA = typeof getEffectiveAIScore === 'function' ? getEffectiveAIScore(gpuA) : (gpuA.llm_14b_tok_s || 30);
     const aiB = typeof getEffectiveAIScore === 'function' ? getEffectiveAIScore(gpuB) : (gpuB.llm_14b_tok_s || 20);
     const aiGain = aiB > 0 ? Math.round((aiA / aiB - 1) * 100) : 0;
-    const trainA = typeof getEffectiveEngineeringScore === 'function' ? getEffectiveEngineeringScore(gpuA) : 3000;
-    const trainB = typeof getEffectiveEngineeringScore === 'function' ? getEffectiveEngineeringScore(gpuB) : 2000;
-    const trainGain = trainB > 0 ? Math.round((trainA / trainB - 1) * 100) : 0;
+
+    // Combined Workstation Score
+    const sA = cpuA._specs || (typeof getCpuSpecs === 'function' ? getCpuSpecs(cpuA) : { multiBench: 5675 });
+    const sB = cpuB._specs || (typeof getCpuSpecs === 'function' ? getCpuSpecs(cpuB) : { multiBench: 7980 });
+    const wsA = Math.round((gpuA.fp16_tflops * (gpuA.brand === 'NVIDIA' ? 15 : 8)) + (sA.multiBench * 0.5));
+    const wsB = Math.round((gpuB.fp16_tflops * (gpuB.brand === 'NVIDIA' ? 15 : 8)) + (sB.multiBench * 0.5));
+    const wsGain = wsB > 0 ? Math.round((wsA / wsB - 1) * 100) : 0;
+
+    const synA = Math.max(50, 100 - lossA);
+    const synB = Math.max(50, 100 - lossB);
 
     const speedometerSvg = `<svg class="w-5 h-5 text-emerald-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M2 12h2M16 12a4 4 0 1 1-8 0M14 10l3-3M4 18a10 10 0 0 1 16 0"/></svg>`;
+    const briefSvg = `<svg class="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
     const robotSvg = `<svg class="w-5 h-5 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01M9 11V9a3 3 0 0 1 6 0v2"/></svg>`;
-    const circuitSvg = `<svg class="w-5 h-5 text-amber-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>`;
+    const scaleSvg = `<svg class="w-5 h-5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 9l9-6 9 6M6 14l-3-5h6l-3 5zm12 0l-3-5h6l-3 5z"/></svg>`;
 
     heroEl.innerHTML = `
-      <!-- Scorecard 1: Games -->
+      <!-- Card 1: Jogos FPS -->
       <div class="glass-elevated rounded-2xl p-4 border border-emerald-500/30 flex flex-col justify-between shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             ${speedometerSvg}
             <span class="text-xs font-mono uppercase text-emerald-400 font-bold">Desempenho em Jogos</span>
           </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">${aCpu >= bCpu ? gpuA.name : gpuB.name} +rápida</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">${aCpu >= bCpu ? 'Setup A' : 'Setup B'} +rápido</span>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
           <span class="text-3xl font-mono font-black ${gameGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${gameGain >= 0 ? '+' : ''}${gameGain}%</span>
           <span class="text-xs text-slate-300 font-mono">(${aCpu} FPS vs ${bCpu} FPS médios)</span>
         </div>
         <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Referência Base"></div>
+          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
           <div class="h-full rounded-full ${gameGain >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${gameGain >= 0 ? Math.min(100, 50 + Math.min(50, gameGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + gameGain / 100)).toFixed(1)}%;"></div>
         </div>
         <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">${gpuA.name}: ${aCpu} FPS</span>
+          <span class="text-sky-300 truncate">A: ${gpuA.name} + ${cpuA.name}</span>
           <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">${gpuB.name}: ${bCpu} FPS</span>
+          <span class="text-emerald-300 truncate">B: ${gpuB.name} + ${cpuB.name}</span>
         </div>
       </div>
 
-      <!-- Scorecard 2: Running AI -->
-      <div class="glass-elevated rounded-2xl p-4 border border-slate-800 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${robotSvg}
-            <span class="text-xs font-mono uppercase text-sky-400 font-bold">Executar IA (Inferência)</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 font-bold">${gpuA.vram_gb >= gpuB.vram_gb ? gpuA.name : gpuB.name} +capacidade</span>
-        </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${aiGain >= 0 ? 'text-sky-400' : 'text-rose-400'}">${aiGain >= 0 ? '+' : ''}${aiGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(14B: ${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s)</span>
-        </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Referência Base"></div>
-          <div class="h-full rounded-full ${aiGain >= 0 ? 'bg-gradient-to-r from-sky-500 to-emerald-400' : 'bg-rose-400'}" style="width: ${aiGain >= 0 ? Math.min(100, 50 + Math.min(50, aiGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + aiGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">${gpuA.name}: ${gpuA.vram_gb}GB</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">${gpuB.name}: ${gpuB.vram_gb}GB</span>
-        </div>
-      </div>
-
-      <!-- Scorecard 3: AI Training -->
+      <!-- Card 2: Workstation & Produtividade -->
       <div class="glass-elevated rounded-2xl p-4 border border-amber-500/30 flex flex-col justify-between shadow-sm">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
-            ${circuitSvg}
-            <span class="text-xs font-mono uppercase text-amber-400 font-bold">AI Training & Engenharia</span>
+            ${briefSvg}
+            <span class="text-xs font-mono uppercase text-amber-400 font-bold">Workstation</span>
           </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">${trainGain >= 0 ? gpuA.name : gpuB.name} +rápida</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">${wsGain >= 0 ? 'Setup A' : 'Setup B'} +produtivo</span>
         </div>
         <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${trainGain >= 0 ? 'text-amber-400' : 'text-rose-400'}">${trainGain >= 0 ? '+' : ''}${trainGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(Throughput CUDA / FP16)</span>
+          <span class="text-3xl font-mono font-black ${wsGain >= 0 ? 'text-amber-400' : 'text-rose-400'}">${wsGain >= 0 ? '+' : ''}${wsGain}%</span>
+          <span class="text-xs text-slate-300 font-mono">(Render + Edição + Dev)</span>
         </div>
         <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Referência Base"></div>
-          <div class="h-full rounded-full ${trainGain >= 0 ? 'bg-gradient-to-r from-amber-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${trainGain >= 0 ? Math.min(100, 50 + Math.min(50, trainGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + trainGain / 100)).toFixed(1)}%;"></div>
+          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
+          <div class="h-full rounded-full ${wsGain >= 0 ? 'bg-gradient-to-r from-amber-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${wsGain >= 0 ? Math.min(100, 50 + Math.min(50, wsGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + wsGain / 100)).toFixed(1)}%;"></div>
         </div>
         <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">${gpuA.name}: ${trainA} pts</span>
+          <span class="text-sky-300 truncate">A: ${wsA} pts</span>
           <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">${gpuB.name}: ${trainB} pts</span>
+          <span class="text-emerald-300 truncate">B: ${wsB} pts</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Running AI -->
+      <div class="glass-elevated rounded-2xl p-4 border border-purple-500/30 flex flex-col justify-between shadow-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            ${robotSvg}
+            <span class="text-xs font-mono uppercase text-purple-400 font-bold">Executar IA (Inferência)</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">${gpuA.vram_gb >= gpuB.vram_gb ? 'Setup A' : 'Setup B'} +VRAM</span>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-mono font-black ${aiGain >= 0 ? 'text-purple-400' : 'text-rose-400'}">${aiGain >= 0 ? '+' : ''}${aiGain}%</span>
+          <span class="text-xs text-slate-300 font-mono">(14B: ${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s)</span>
+        </div>
+        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
+          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
+          <div class="h-full rounded-full ${aiGain >= 0 ? 'bg-gradient-to-r from-purple-400 to-sky-400' : 'bg-rose-400'}" style="width: ${aiGain >= 0 ? Math.min(100, 50 + Math.min(50, aiGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + aiGain / 100)).toFixed(1)}%;"></div>
+        </div>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+          <span class="text-sky-300 truncate">A: ${gpuA.vram_gb}GB</span>
+          <span class="text-slate-500">vs</span>
+          <span class="text-emerald-300 truncate">B: ${gpuB.vram_gb}GB</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Setup Sinergia & Equilíbrio -->
+      <div class="glass-elevated rounded-2xl p-4 border border-sky-500/30 flex flex-col justify-between shadow-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            ${scaleSvg}
+            <span class="text-xs font-mono uppercase text-sky-400 font-bold">Equilíbrio do Setup</span>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">${synA >= synB ? 'Setup A' : 'Setup B'} +harmônico</span>
+        </div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="text-3xl font-mono font-black text-sky-300">${synA}%</span>
+          <span class="text-xs text-slate-300 font-mono">(Sinergia A vs ${synB}% em B)</span>
+        </div>
+        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
+          <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400" style="width: ${synA}%;"></div>
+        </div>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
+          <span class="text-sky-300 truncate">Gargalo A: -${lossA}%</span>
+          <span class="text-slate-500">|</span>
+          <span class="text-emerald-300 truncate">Gargalo B: -${lossB}%</span>
         </div>
       </div>
     `;
   }
 
+  // Render Workstation Comparison Panel
+  renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB);
+
   document.getElementById('sim-average-fps-summary').innerHTML = `
-    <div><span class="text-slate-400">Média (${games.length} jogos) •</span> <strong class="text-sky-300">${gpuA.name} (${techA.shortBadge})</strong>:
+    <div><span class="text-slate-400">Média (${games.length} jogos) •</span> <strong class="text-sky-300">Setup A: ${gpuA.name} + ${cpuA.name}</strong>:
       <span class="font-mono text-white">${aPure}</span> pura → <span class="font-mono text-amber-300">${aCpu}</span> c/ CPU
-      (<span class="font-mono text-emerald-300">${aDisp} FPS na tela c/ FG</span> • <span class="font-mono text-sky-300">${avgVisible(gpuA, mode === 'pure' ? 'pure' : 'withCpu')}</span> úteis no monitor)</div>
-    <div><strong class="text-emerald-300">${gpuB.name} (${techB.shortBadge})</strong>:
+      (<span class="font-mono text-emerald-300">${aDisp} FPS na tela c/ FG</span> • <span class="font-mono text-sky-300">${avgVisible(gpuA, cpuA, mode === 'pure' ? 'pure' : 'withCpu')}</span> úteis no monitor)</div>
+    <div><strong class="text-emerald-300">Setup B: ${gpuB.name} + ${cpuB.name}</strong>:
       <span class="font-mono text-white">${bPure}</span> → <span class="font-mono text-amber-300">${bCpu}</span> (<span class="font-mono text-emerald-300">${bDisp} c/ FG</span>)</div>
-    <div class="w-full text-[11px] ${lossA >= 15 ? 'text-amber-300' : 'text-slate-400'}">
-      Ganho no modo selecionado (${dlssMode === 'perceived' ? 'Percebido DLSS 4 + MFG' : dlssMode === 'max_fg' ? 'FPS Bruto c/ MFG' : dlssMode === 'sr' ? 'Upscaling SR' : 'Nativo'}):
+    <div class="w-full text-[11px] ${lossA >= 15 || lossB >= 15 ? 'text-amber-300' : 'text-slate-400'}">
+      Comparativo no modo (${dlssMode === 'perceived' ? 'Realista DLSS 4 + Latência' : dlssMode}):
       <strong>${bCpu > 0 ? (aCpu >= bCpu ? '+' : '') + Math.round((aCpu / bCpu - 1) * 100) : '--'}%</strong> com CPU
       (vs ${bPure > 0 ? (aPure >= bPure ? '+' : '') + Math.round((aPure / bPure - 1) * 100) : '--'}% sem gargalo de CPU).
     </div>`;
@@ -905,22 +1126,22 @@ function renderSimulatorResultsOnly() {
   // Per-game bars with clean speedometer icon and %
   const speedometerSvgSmall = `<svg class="w-3.5 h-3.5 text-emerald-400 inline-block mr-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M2 12h2M16 12a4 4 0 1 1-8 0M14 10l3-3M4 18a10 10 0 0 1 16 0"/></svg>`;
   document.getElementById('sim-games-list').innerHTML = games.map(gm => {
-    const a = estimateFps(gpuA, cpu, gm, opts);
-    const b = estimateFps(gpuB, cpu, gm, opts);
+    const a = estimateFps(gpuA, cpuA, gm, opts);
+    const b = estimateFps(gpuB, cpuB, gm, opts);
     const maxF = Math.max(a.pure, b.pure, a.displayedWithCpu, b.displayedWithCpu, cap < 999 ? cap : 0, 60) * 1.05;
     const gainKey = mode === 'pure' ? 'pure' : 'withCpu';
     const gain = Math.round((a[gainKey] / Math.max(1, b[gainKey]) - 1) * 100);
     const rows = [];
     if (mode !== 'cpu') {
-      rows.push(fpsBarRow(`${gpuA.name} (pura)`, 'text-sky-300', 'bg-sky-400', a.pure, maxF, true, cap));
-      rows.push(fpsBarRow(`${gpuB.name} (pura)`, 'text-emerald-300', 'bg-emerald-500', b.pure, maxF, false, cap));
+      rows.push(fpsBarRow(`Setup A: ${gpuA.name} (pura)`, 'text-sky-300', 'bg-sky-400', a.pure, maxF, true, cap));
+      rows.push(fpsBarRow(`Setup B: ${gpuB.name} (pura)`, 'text-emerald-300', 'bg-emerald-500', b.pure, maxF, false, cap));
     }
     if (mode !== 'pure') {
-      rows.push(fpsBarRow(`${gpuA.name} + CPU`, 'text-sky-200', 'bg-amber-400', a.withCpu, maxF, true, cap));
-      rows.push(fpsBarRow(`${gpuB.name} + CPU`, 'text-emerald-200', 'bg-amber-600', b.withCpu, maxF, false, cap));
+      rows.push(fpsBarRow(`Setup A: ${gpuA.name} + ${cpuA.name}`, 'text-sky-200', 'bg-amber-400', a.withCpu, maxF, true, cap));
+      rows.push(fpsBarRow(`Setup B: ${gpuB.name} + ${cpuB.name}`, 'text-emerald-200', 'bg-amber-600', b.withCpu, maxF, false, cap));
     }
     const fgNote = (a.canUseFG || b.canUseFG)
-      ? `<div class="text-[10px] text-emerald-300/90 font-mono">✨ Na tela c/ FG/MFG: ${gpuA.name} ${a.displayedWithCpu} FPS (${a.activeFgMult}×, ~${a.latencyMs}ms) vs ${gpuB.name} ${b.displayedWithCpu} FPS (${b.activeFgMult}×, ~${b.latencyMs}ms)</div>`
+      ? `<div class="text-[10px] text-emerald-300/90 font-mono">✨ Na tela c/ FG/MFG: Setup A ${a.displayedWithCpu} FPS (${a.activeFgMult}×, ~${a.latencyMs}ms) vs Setup B ${b.displayedWithCpu} FPS (${b.activeFgMult}×, ~${b.latencyMs}ms)</div>`
       : '';
     return `
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
@@ -930,7 +1151,7 @@ function renderSimulatorResultsOnly() {
         </div>
         <div class="space-y-1 text-[11px] font-mono">${rows.join('')}</div>
         ${fgNote}
-        ${mode !== 'pure' && a.cpuCap < a.nativePure ? `<div class="text-[10px] text-amber-300/90">CPU limita quadros reais a ~${a.cpuCap} FPS (FG/MFG multiplica acima disso)</div>` : ''}
+        ${mode !== 'pure' && (a.cpuCap < a.nativePure || b.cpuCap < b.nativePure) ? `<div class="text-[10px] text-amber-300/90">Gargalo de CPU: Setup A limita em ~${a.cpuCap} FPS • Setup B limita em ~${b.cpuCap} FPS</div>` : ''}
       </div>`;
   }).join('') + (cap < 999 ? `<p class="text-[10px] text-slate-500">Linha branca = limite do monitor (${cap} Hz).</p>` : '');
 }

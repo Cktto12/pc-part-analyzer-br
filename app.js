@@ -855,31 +855,202 @@ window.evaluateRelationalUpgrade = evaluateRelationalUpgrade;
 // CPU SCORING, WORKSTATION SUB-PROFILES, AND PLATFORM MIGRATION COST ENGINE
 // ============================================================================
 
-// 1. CPU Specs Extractor (Cores, Threads, Socket, DDR, TDP, Brand)
+// 1. CPU Specs & Architecture Extractor (Cores, Threads, P/E-cores, SMT/HT, Cache, Node, Benchmarks)
 function getCpuSpecs(cpu) {
-  if (!cpu) return { cores: 6, threads: 12, socket: 'AM4', ddr: 'DDR4', brand: 'AMD', tdp: 65, isX3D: false };
+  if (!cpu) return {
+    cores: 6, threads: 12, pCores: 6, eCores: 0, socket: 'AM4', ddr: 'DDR4', brand: 'AMD', tdp: 65, isX3D: false,
+    archName: 'Zen 3', smtType: 'AMD SMT 2-Way (2T/C)', smtGainPct: 28, l3CacheMB: 32, nodeNm: 'TSMC 7nm',
+    multiBench: 5675, singleBench: 84, speedupRatio: '9.8', scorePerCore: 946, scorePerWatt: '87.3'
+  };
   const name = cpu.name || '';
   const slug = (cpu.slug || '').toLowerCase();
 
   let cores = 6;
   let threads = 12;
-  const ctMatch = name.match(/(\d+)\s*[cC]\s*\/\s*(\d+)\s*[tT]/i);
-  if (ctMatch) {
-    cores = parseInt(ctMatch[1], 10);
-    threads = parseInt(ctMatch[2], 10);
-  } else {
-    if (/9950x|7950x|13900|14900|285k/i.test(slug)) { cores = 16; threads = 32; if (/13900|14900|285k/i.test(slug)) { cores = 24; threads = 32; } }
-    else if (/7900x|9900x/i.test(slug)) { cores = 12; threads = 24; }
-    else if (/9800x3d|7800x3d|5800x3d|5700x3d|5700x|7700|9700/i.test(slug)) { cores = 8; threads = 16; }
-    else if (/14700|13700|265k/i.test(slug)) { cores = 20; threads = 28; }
-    else if (/14600|13600|245k/i.test(slug)) { cores = 14; threads = 20; }
-    else if (/14400|13400/i.test(slug)) { cores = 10; threads = 16; }
-    else if (/12400|5600|7600|9600|7500/i.test(slug)) { cores = 6; threads = 12; }
-    else if (/5500|4500|3600/i.test(slug)) { cores = 6; threads = 12; }
-    else if (/12100|14100|3300/i.test(slug)) { cores = 4; threads = 8; }
-    else if (/2680/i.test(slug)) { cores = 14; threads = 28; }
+  let pCores = 6;
+  let eCores = 0;
+  let archName = 'Zen 3';
+  let smtType = 'AMD SMT 2-Way (2T/C)';
+  let smtGainPct = 28;
+  let l3CacheMB = 32;
+  let nodeNm = 'TSMC 7nm';
+  let singleBench = 84;
+
+  const isX3D = /x3d/i.test(slug) || /x3d/i.test(name);
+
+  // Intel Arrow Lake Core Ultra 200 (LGA1851, No Hyper-Threading on P-Cores)
+  if (/285k|285\b/i.test(slug)) {
+    cores = 24; threads = 24; pCores = 8; eCores = 16;
+    archName = 'Lion Cove + Skymont (Arrow Lake)';
+    smtType = 'Nativo 1T/C (Sem Hyper-Threading)';
+    smtGainPct = 0; l3CacheMB = 36; nodeNm = 'TSMC 3nm N3B'; singleBench = 144;
+  } else if (/265k|265\b/i.test(slug)) {
+    cores = 20; threads = 20; pCores = 8; eCores = 12;
+    archName = 'Lion Cove + Skymont (Arrow Lake)';
+    smtType = 'Nativo 1T/C (Sem Hyper-Threading)';
+    smtGainPct = 0; l3CacheMB = 30; nodeNm = 'TSMC 3nm N3B'; singleBench = 142;
+  } else if (/245k|245\b|250k/i.test(slug)) {
+    cores = 14; threads = 14; pCores = 6; eCores = 8;
+    archName = 'Lion Cove + Skymont (Arrow Lake)';
+    smtType = 'Nativo 1T/C (Sem Hyper-Threading)';
+    smtGainPct = 0; l3CacheMB = 24; nodeNm = 'TSMC 3nm N3B'; singleBench = 138;
+  } else if (/225/i.test(slug)) {
+    cores = 10; threads = 10; pCores = 6; eCores = 4;
+    archName = 'Lion Cove + Skymont (Arrow Lake)';
+    smtType = 'Nativo 1T/C (Sem Hyper-Threading)';
+    smtGainPct = 0; l3CacheMB = 20; nodeNm = 'TSMC 3nm N3B'; singleBench = 130;
+  }
+  // Intel 13th / 14th Gen Raptor Lake (LGA1700, P-Cores c/ HT + E-Cores 1T)
+  else if (/14900|13900/i.test(slug)) {
+    cores = 24; threads = 32; pCores = 8; eCores = 16;
+    archName = 'Raptor Cove + Gracemont (Intel Hybrid)';
+    smtType = 'Intel HT nos P-Cores (16T) + E-Cores (16T)';
+    smtGainPct = 25; l3CacheMB = 36; nodeNm = 'Intel 7 (10nm)'; singleBench = 140;
+  } else if (/14700/i.test(slug)) {
+    cores = 20; threads = 28; pCores = 8; eCores = 12;
+    archName = 'Raptor Cove + Gracemont (Intel Hybrid)';
+    smtType = 'Intel HT nos P-Cores (16T) + E-Cores (12T)';
+    smtGainPct = 25; l3CacheMB = 33; nodeNm = 'Intel 7 (10nm)'; singleBench = 136;
+  } else if (/13700|12900/i.test(slug)) {
+    cores = 16; threads = 24; pCores = 8; eCores = 8;
+    archName = 'Raptor/Golden Cove + Gracemont';
+    smtType = 'Intel HT nos P-Cores (16T) + E-Cores (8T)';
+    smtGainPct = 25; l3CacheMB = 30; nodeNm = 'Intel 7 (10nm)'; singleBench = 132;
+  } else if (/14600|13600/i.test(slug)) {
+    cores = 14; threads = 20; pCores = 6; eCores = 8;
+    archName = 'Raptor Cove + Gracemont (Intel Hybrid)';
+    smtType = 'Intel HT nos P-Cores (12T) + E-Cores (8T)';
+    smtGainPct = 26; l3CacheMB = 24; nodeNm = 'Intel 7 (10nm)'; singleBench = 132;
+  } else if (/12700/i.test(slug)) {
+    cores = 12; threads = 20; pCores = 8; eCores = 4;
+    archName = 'Golden Cove + Gracemont (Intel Hybrid)';
+    smtType = 'Intel HT nos P-Cores (16T) + E-Cores (4T)';
+    smtGainPct = 26; l3CacheMB = 25; nodeNm = 'Intel 7 (10nm)'; singleBench = 124;
+  } else if (/12600/i.test(slug)) {
+    cores = 10; threads = 16; pCores = 6; eCores = 4;
+    archName = 'Golden Cove + Gracemont (Intel Hybrid)';
+    smtType = 'Intel HT nos P-Cores (12T) + E-Cores (4T)';
+    smtGainPct = 26; l3CacheMB = 20; nodeNm = 'Intel 7 (10nm)'; singleBench = 120;
+  } else if (/14400|13400/i.test(slug)) {
+    cores = 10; threads = 16; pCores = 6; eCores = 4;
+    archName = 'Raptor/Alder Cove + Gracemont';
+    smtType = 'Intel HT nos P-Cores (12T) + E-Cores (4T)';
+    smtGainPct = 25; l3CacheMB = 20; nodeNm = 'Intel 7 (10nm)'; singleBench = 112;
+  } else if (/12400/i.test(slug)) {
+    cores = 6; threads = 12; pCores = 6; eCores = 0;
+    archName = 'Golden Cove (Intel Pure Performance)';
+    smtType = 'Intel Hyper-Threading (2T/C)';
+    smtGainPct = 28; l3CacheMB = 18; nodeNm = 'Intel 7 (10nm)'; singleBench = 104;
+  } else if (/12100|14100/i.test(slug)) {
+    cores = 4; threads = 8; pCores = 4; eCores = 0;
+    archName = 'Golden Cove (Intel Pure Performance)';
+    smtType = 'Intel Hyper-Threading (2T/C)';
+    smtGainPct = 28; l3CacheMB = 12; nodeNm = 'Intel 7 (10nm)'; singleBench = 98;
+  }
+  // AMD Threadripper HEDT
+  else if (/threadripper/i.test(slug)) {
+    if (/7995|5995|7980/i.test(slug)) { cores = 64; threads = 128; }
+    else if (/7970|3970/i.test(slug)) { cores = 32; threads = 64; }
+    else if (/7960|7965|3960/i.test(slug)) { cores = 24; threads = 48; }
+    else { cores = 32; threads = 64; }
+    pCores = cores; eCores = 0;
+    archName = 'Zen HEDT Multi-Die';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 32; l3CacheMB = 128; nodeNm = 'TSMC 5nm/7nm'; singleBench = 125;
+  }
+  // AMD Ryzen 9000 Zen 5
+  else if (/9950/i.test(slug)) {
+    cores = 16; threads = 32; pCores = 16; eCores = 0;
+    archName = isX3D ? 'Zen 5 + 3D V-Cache (Dual CCD)' : 'Zen 5 (Dual CCD 2x8C)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 30; l3CacheMB = isX3D ? 128 : 64; nodeNm = 'TSMC 4nm N4P'; singleBench = 142;
+  } else if (/9900/i.test(slug)) {
+    cores = 12; threads = 24; pCores = 12; eCores = 0;
+    archName = isX3D ? 'Zen 5 + 3D V-Cache (Dual CCD)' : 'Zen 5 (Dual CCD 2x6C)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 30; l3CacheMB = isX3D ? 128 : 64; nodeNm = 'TSMC 4nm N4P'; singleBench = 140;
+  } else if (/9800x3d|9850x3d/i.test(slug)) {
+    cores = 8; threads = 16; pCores = 8; eCores = 0;
+    archName = 'Zen 5 + 2nd Gen 3D V-Cache';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 96; nodeNm = 'TSMC 4nm N4P'; singleBench = 138;
+  } else if (/9700/i.test(slug)) {
+    cores = 8; threads = 16; pCores = 8; eCores = 0;
+    archName = 'Zen 5 (Single CCD)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 32; nodeNm = 'TSMC 4nm N4P'; singleBench = 136;
+  } else if (/9600/i.test(slug)) {
+    cores = 6; threads = 12; pCores = 6; eCores = 0;
+    archName = 'Zen 5 (Single CCD)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 32; nodeNm = 'TSMC 4nm N4P'; singleBench = 134;
+  }
+  // AMD Ryzen 7000 Zen 4
+  else if (/7950/i.test(slug)) {
+    cores = 16; threads = 32; pCores = 16; eCores = 0;
+    archName = isX3D ? 'Zen 4 + 3D V-Cache (Dual CCD)' : 'Zen 4 (Dual CCD 2x8C)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 30; l3CacheMB = isX3D ? 128 : 64; nodeNm = 'TSMC 5nm'; singleBench = 128;
+  } else if (/7900/i.test(slug)) {
+    cores = 12; threads = 24; pCores = 12; eCores = 0;
+    archName = isX3D ? 'Zen 4 + 3D V-Cache (Dual CCD)' : 'Zen 4 (Dual CCD 2x6C)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 30; l3CacheMB = isX3D ? 128 : 64; nodeNm = 'TSMC 5nm'; singleBench = 126;
+  } else if (/7800x3d/i.test(slug)) {
+    cores = 8; threads = 16; pCores = 8; eCores = 0;
+    archName = 'Zen 4 + 3D V-Cache';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 96; nodeNm = 'TSMC 5nm'; singleBench = 114;
+  } else if (/7700|8700/i.test(slug)) {
+    cores = 8; threads = 16; pCores = 8; eCores = 0;
+    archName = 'Zen 4 (Single CCD)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 32; nodeNm = 'TSMC 5nm'; singleBench = 118;
+  } else if (/7600x3d/i.test(slug)) {
+    cores = 6; threads = 12; pCores = 6; eCores = 0;
+    archName = 'Zen 4 + 3D V-Cache';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 96; nodeNm = 'TSMC 5nm'; singleBench = 110;
+  } else if (/7600|7500|7400|8600|8500|8400/i.test(slug)) {
+    cores = 6; threads = 12; pCores = 6; eCores = 0;
+    archName = 'Zen 4 (Single CCD)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = /7600|7500/i.test(slug) ? 32 : 16; nodeNm = 'TSMC 5nm/4nm'; singleBench = 112;
+  }
+  // AMD Ryzen 5000 Zen 3
+  else if (/5950/i.test(slug)) {
+    cores = 16; threads = 32; pCores = 16; eCores = 0;
+    archName = 'Zen 3 (Dual CCD 2x8C)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 64; nodeNm = 'TSMC 7nm'; singleBench = 92;
+  } else if (/5900/i.test(slug)) {
+    cores = 12; threads = 24; pCores = 12; eCores = 0;
+    archName = 'Zen 3 (Dual CCD 2x6C)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 64; nodeNm = 'TSMC 7nm'; singleBench = 90;
+  } else if (/5800x3d|5700x3d/i.test(slug)) {
+    cores = 8; threads = 16; pCores = 8; eCores = 0;
+    archName = 'Zen 3 + 3D V-Cache';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = 96; nodeNm = 'TSMC 7nm'; singleBench = 82;
+  } else if (/5800|5700/i.test(slug)) {
+    cores = 8; threads = 16; pCores = 8; eCores = 0;
+    archName = 'Zen 3 (Single CCD)';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = /5700x\b|5800x\b/i.test(slug) ? 32 : 16; nodeNm = 'TSMC 7nm'; singleBench = 88;
+  } else if (/5600|5500/i.test(slug)) {
+    cores = 6; threads = 12; pCores = 6; eCores = 0;
+    archName = 'Zen 3';
+    smtType = 'AMD SMT 2-Way (2T/C)';
+    smtGainPct = 28; l3CacheMB = /5600x\b|ryzen-5-5600\b/i.test(slug) ? 32 : 16; nodeNm = 'TSMC 7nm'; singleBench = 84;
+  } else if (/xeon|2680/i.test(slug)) {
+    cores = 14; threads = 28; pCores = 14; eCores = 0;
+    archName = 'Broadwell-EP (LGA2011-3)';
+    smtType = 'Intel Hyper-Threading (2T/C)';
+    smtGainPct = 25; l3CacheMB = 35; nodeNm = 'Intel 14nm'; singleBench = 38;
   }
 
+  // Socket
   let socket = cpu.socket || 'AM4';
   if (!cpu.socket) {
     if (/7\d00|9\d00|8\d00/i.test(slug)) socket = 'AM5';
@@ -887,14 +1058,22 @@ function getCpuSpecs(cpu) {
     else if (/12\d00|13\d00|14\d00/i.test(slug)) socket = 'LGA1700';
     else if (/2\d\dk/i.test(slug)) socket = 'LGA1851';
     else if (/xeon|2680/i.test(slug)) socket = 'LGA2011-3';
+    else if (/threadripper/i.test(slug)) socket = 'sTR5';
   }
 
-  const ddr = cpu.ddr || (socket === 'AM5' || socket === 'LGA1851' ? 'DDR5' : (socket === 'LGA1700' ? 'DDR4/DDR5' : 'DDR4'));
-  const brand = (/ryzen|amd/i.test(name) || /ryzen|amd/i.test(slug)) ? 'AMD' : 'Intel';
-  const tdp = cpu.tdp_w || (cores >= 12 ? 170 : (cores >= 8 ? 105 : 65));
-  const isX3D = /x3d/i.test(slug) || /x3d/i.test(name);
+  const ddr = cpu.ddr || (socket === 'AM5' || socket === 'LGA1851' || socket === 'sTR5' ? 'DDR5' : (socket === 'LGA1700' ? 'DDR4/DDR5' : 'DDR4'));
+  const brand = (/ryzen|amd|threadripper/i.test(name) || /ryzen|amd|threadripper/i.test(slug)) ? 'AMD' : 'Intel';
+  const tdp = cpu.tdp_w || (cores >= 16 ? 170 : (cores >= 8 ? 105 : 65));
+  const multiBench = cpu.benchmark || (cores * 900);
+  const speedupRatio = (multiBench / Math.max(1, singleBench * 45)).toFixed(1);
+  const scorePerCore = Math.round(multiBench / Math.max(1, cores));
+  const scorePerWatt = (multiBench / Math.max(1, tdp)).toFixed(1);
 
-  return { cores, threads, socket, ddr, brand, tdp, isX3D };
+  return {
+    cores, threads, pCores, eCores, socket, ddr, brand, tdp, isX3D,
+    archName, smtType, smtGainPct, l3CacheMB, nodeNm,
+    multiBench, singleBench, speedupRatio, scorePerCore, scorePerWatt
+  };
 }
 window.getCpuSpecs = getCpuSpecs;
 
@@ -1567,15 +1746,53 @@ function populateSelectors() {
     }
   }
 
-  // CPU selector for the FPS simulator (user's configured CPU selected by default)
+  // CPU selectors for the Simulator: Setup A (CPU A) and Setup B (CPU B)
+  const simCpuASel = document.getElementById('sim-select-cpu-a');
+  const simCpuBSel = document.getElementById('sim-select-cpu-b');
   const simCpuSel = document.getElementById('sim-select-cpu');
-  if (simCpuSel && DB.cpus && DB.cpus.length) {
-    const configuredSlug = STATE.build?.cpu?.slug || 'ryzen-5-5600';
-    const cpusSorted = [...DB.cpus].sort((a, b) => (a.slug === configuredSlug ? -1 : (b.slug === configuredSlug ? 1 : a.name.localeCompare(b.name))));
-    simCpuSel.innerHTML = cpusSorted.map(c => `<option value="${c.slug}">${c.name}${c.price_brl ? ' — ' + fmtBRLShort(c.price_brl) : ''}</option>`).join('');
-    simCpuSel.value = configuredSlug || (DB.cpus[0] ? DB.cpus[0].slug : '');
+  if (DB.cpus && DB.cpus.length) {
+    const defaultASlug = STATE.simCpuASlug || STATE.build?.cpu?.slug || 'ryzen-5-5600';
+    const defaultBSlug = STATE.simCpuBSlug || 'ryzen-7-7800x3d';
+    const cpusSorted = [...DB.cpus].sort((a, b) => a.name.localeCompare(b.name));
+    const cpusHTML = cpusSorted.map(c => `<option value="${c.slug}">${c.name}${c.price_brl ? ' — ' + fmtBRLShort(c.price_brl) : ''}</option>`).join('');
+
+    if (simCpuASel) {
+      simCpuASel.innerHTML = cpusHTML;
+      simCpuASel.value = (DB.cpus.some(c => c.slug === defaultASlug) ? defaultASlug : DB.cpus[0].slug);
+    }
+    if (simCpuBSel) {
+      simCpuBSel.innerHTML = cpusHTML;
+      simCpuBSel.value = (DB.cpus.some(c => c.slug === defaultBSlug) ? defaultBSlug : (DB.cpus[1] || DB.cpus[0]).slug);
+    }
+    if (simCpuSel) {
+      simCpuSel.innerHTML = cpusHTML;
+      simCpuSel.value = defaultASlug;
+    }
   }
 }
+
+function swapSimulatorSetups() {
+  const gpuASel = document.getElementById('sim-select-gpu-a');
+  const gpuBSel = document.getElementById('sim-select-gpu-b');
+  const cpuASel = document.getElementById('sim-select-cpu-a');
+  const cpuBSel = document.getElementById('sim-select-cpu-b');
+  if (gpuASel && gpuBSel) {
+    const tmpGpu = gpuASel.value;
+    gpuASel.value = gpuBSel.value;
+    gpuBSel.value = tmpGpu;
+  }
+  if (cpuASel && cpuBSel) {
+    const tmpCpu = cpuASel.value;
+    cpuASel.value = cpuBSel.value;
+    cpuBSel.value = tmpCpu;
+    STATE.simCpuASlug = cpuASel.value;
+    STATE.simCpuBSlug = cpuBSel.value;
+  }
+  if (typeof renderSimulator === 'function') {
+    renderSimulator();
+  }
+}
+window.swapSimulatorSetups = swapSimulatorSetups;
 
 function setDuelPair(candSlug, baseSlug) {
   STATE.duelCandSlug = candSlug;
@@ -2489,6 +2706,181 @@ function renderCpuDuelAlternatives(baseCpu, candCpu) {
   }
 }
 
+// 8.5. Multi-Core Performance & Architecture Deep-Dive Renderer
+function renderCpuArchitectureComparison(baseCpu, candCpu) {
+  const container = document.getElementById('cpu-duel-cores-architecture-box');
+  if (!container) return;
+
+  const b = baseCpu._specs || getCpuSpecs(baseCpu);
+  const c = candCpu._specs || getCpuSpecs(candCpu);
+
+  const multiGain = Math.round(((c.multiBench / Math.max(1, b.multiBench)) - 1) * 100);
+  const singleGain = Math.round(((c.singleBench / Math.max(1, b.singleBench)) - 1) * 100);
+  const coreGain = Math.round(((c.cores / Math.max(1, b.cores)) - 1) * 100);
+  const threadGain = Math.round(((c.threads / Math.max(1, b.threads)) - 1) * 100);
+  const effGain = Math.round(((parseFloat(c.scorePerWatt) / Math.max(0.1, parseFloat(b.scorePerWatt))) - 1) * 100);
+
+  const renderChipTopology = (cpu, s, isBase) => {
+    const color = isBase ? 'emerald' : 'sky';
+    const border = isBase ? 'border-emerald-500/40' : 'border-sky-500/40';
+    const bgBadge = isBase ? 'bg-emerald-500/20 text-emerald-300' : 'bg-sky-500/20 text-sky-300';
+    const hybridBadge = s.eCores > 0
+      ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">Híbrido: ${s.pCores}P + ${s.eCores}E</span>`
+      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] font-bold">${s.cores} Núcleos Uniformes</span>`;
+
+    return `
+      <div class="rounded-xl p-4 bg-slate-900/90 border ${border} space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div>
+            <span class="text-[10px] font-mono uppercase text-${color}-400 font-bold block">${isBase ? 'CPU BASE (REFERÊNCIA)' : 'CPU CANDIDATO (UPGRADE)'}</span>
+            <h4 class="text-sm font-bold text-white">${cpu.name}</h4>
+          </div>
+          <div class="text-right">
+            <span class="px-2 py-0.5 rounded ${bgBadge} font-mono text-[11px] font-bold">${s.socket} • ${s.ddr}</span>
+            <span class="block text-[10px] text-slate-400 font-mono mt-0.5">${s.nodeNm}</span>
+          </div>
+        </div>
+
+        <!-- Big Core & Thread Count -->
+        <div class="grid grid-cols-2 gap-2 text-center">
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+            <span class="block text-[10px] uppercase font-mono text-slate-400">Núcleos Físicos</span>
+            <span class="text-xl font-mono font-black text-white">${s.cores} Cores</span>
+            <div class="mt-1">${hybridBadge}</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+            <span class="block text-[10px] uppercase font-mono text-slate-400">Threads Lógicas</span>
+            <span class="text-xl font-mono font-black text-${color}-400">${s.threads} Threads</span>
+            <span class="block text-[10px] font-mono text-slate-400 mt-1">${(s.threads / s.cores).toFixed(1)}T / Núcleo</span>
+          </div>
+        </div>
+
+        <!-- SMT / Hyper-Threading Details -->
+        <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800 space-y-1 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-[11px] font-medium">Topologia / Microarquitetura:</span>
+            <span class="font-mono font-bold text-slate-200 text-[11px]">${s.archName}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-[11px] font-medium">Tecnologia Multithread:</span>
+            <span class="font-mono font-bold text-slate-200 text-[11px]">${s.smtType}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-[11px] font-medium">Ganho de Vazão SMT/HT:</span>
+            <span class="font-mono font-bold text-emerald-400 text-[11px]">${s.smtGainPct > 0 ? '+' + s.smtGainPct + '% vazão paralela' : 'Nativo 1:1 (Zero Contenção)'}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-[11px] font-medium">Subsistema Cache L3:</span>
+            <span class="font-mono font-bold ${s.isX3D ? 'text-purple-300' : 'text-slate-200'} text-[11px]">${s.l3CacheMB} MB ${s.isX3D ? '🔥 (3D V-Cache)' : ''}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  container.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold tracking-wider">ARQUITETURA & MULTI-CORE</span>
+        <h3 class="text-base font-bold text-white">Topologia de Núcleos, Threads e Escalabilidade Multi-Core</h3>
+      </div>
+      <span class="text-xs text-slate-400 font-mono">Cores Físicos vs Threads • SMT / Hyper-Threading • Eficiência por Watt</span>
+    </div>
+
+    <!-- 1. Side-by-side Topology Comparison -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      ${renderChipTopology(baseCpu, b, true)}
+      ${renderChipTopology(candCpu, c, false)}
+    </div>
+
+    <!-- 2. Multi-Core Benchmark & Speedup Indicators -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+      <!-- Card 1: Multi-Core Score -->
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+        <span class="text-[10px] uppercase font-mono text-slate-400 block">Cinebench Multi-Core</span>
+        <span class="text-lg font-mono font-black text-white mt-0.5 block">${c.multiBench.toLocaleString()} pts</span>
+        <span class="text-[11px] font-mono font-bold ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${multiGain >= 0 ? '+' : ''}${multiGain}% vs base</span>
+      </div>
+
+      <!-- Card 2: Single-Core IPC -->
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+        <span class="text-[10px] uppercase font-mono text-slate-400 block">Single-Core & IPC</span>
+        <span class="text-lg font-mono font-black text-white mt-0.5 block">${c.singleBench} pts</span>
+        <span class="text-[11px] font-mono font-bold ${singleGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${singleGain >= 0 ? '+' : ''}${singleGain}% vs base</span>
+      </div>
+
+      <!-- Card 3: Multi-Threading Speedup -->
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+        <span class="text-[10px] uppercase font-mono text-slate-400 block">Escalabilidade Paralela</span>
+        <span class="text-lg font-mono font-black text-sky-300 mt-0.5 block">${c.speedupRatio}×</span>
+        <span class="text-[10px] font-mono text-slate-400">vs ${b.speedupRatio}× na base</span>
+      </div>
+
+      <!-- Card 4: Score per Core -->
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+        <span class="text-[10px] uppercase font-mono text-slate-400 block">Pontos por Núcleo</span>
+        <span class="text-lg font-mono font-black text-amber-300 mt-0.5 block">${c.scorePerCore} pts/core</span>
+        <span class="text-[10px] font-mono text-slate-400">Base: ${b.scorePerCore} pts/c</span>
+      </div>
+
+      <!-- Card 5: Efficiency per Watt -->
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
+        <span class="text-[10px] uppercase font-mono text-slate-400 block">Eficiência Multithread</span>
+        <span class="text-lg font-mono font-black text-emerald-400 mt-0.5 block">${c.scorePerWatt} pts/W</span>
+        <span class="text-[11px] font-mono font-bold ${effGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${effGain >= 0 ? '+' : ''}${effGain}% vs base</span>
+      </div>
+    </div>
+
+    <!-- 3. Workstation Real-World Practical Impact -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+      <!-- 3D Render -->
+      <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+        <div class="flex items-center justify-between text-xs font-bold text-white">
+          <span>🎨 Render 3D (Blender)</span>
+          <span class="font-mono ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${multiGain >= 0 ? '-' + Math.round(multiGain / (1 + multiGain / 100)) + '% tempo' : '+tempo'}</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-snug">
+          Com <strong>${c.threads} threads</strong>, a renderização divide a imagem em mais tiles paralelos, reduzindo a fila de exportação.
+        </p>
+      </div>
+
+      <!-- Code Compilation -->
+      <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+        <div class="flex items-center justify-between text-xs font-bold text-white">
+          <span>⚙️ Compilação (Rust/C++)</span>
+          <span class="font-mono text-sky-300 font-bold">${c.threads} workers (-j ${c.threads})</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-snug">
+          Compiladores modernos escalam linearmente com threads. Ganho de até <strong>${Math.round(threadGain)}%</strong> em builds limpos.
+        </p>
+      </div>
+
+      <!-- Video Editing -->
+      <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+        <div class="flex items-center justify-between text-xs font-bold text-white">
+          <span>🎬 Edição 4K (Premiere/DaVinci)</span>
+          <span class="font-mono text-amber-300 font-bold">Timeline Fluida</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-snug">
+          Decodificação em tempo real de H.264/HEVC 10-bit e efeitos pesados sem perder quadros durante a pré-visualização.
+        </p>
+      </div>
+
+      <!-- Frame Pacing & Background Tasks -->
+      <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
+        <div class="flex items-center justify-between text-xs font-bold text-white">
+          <span>🛡️ Frame Pacing & 1% Lows</span>
+          <span class="font-mono text-purple-300 font-bold">Zero Stutter</span>
+        </div>
+        <p class="text-[11px] text-slate-400 leading-snug">
+          Núcleos sobressalentes absorvem Discord, OBS e navegador sem disputar ciclos com o jogo em execução.
+        </p>
+      </div>
+    </div>
+  `;
+}
+window.renderCpuArchitectureComparison = renderCpuArchitectureComparison;
+
 // 9. Main CPU Duel Renderer
 function renderCpuDuelAnalysis() {
   enrichCPUsWithContextualMetrics();
@@ -2588,6 +2980,11 @@ function renderCpuDuelAnalysis() {
         </div>
       `;
     }
+  }
+
+  // Multi-Core Performance & Architecture Deep-Dive Breakdown
+  if (typeof renderCpuArchitectureComparison === 'function') {
+    renderCpuArchitectureComparison(baseCpu, candCpu);
   }
 
   // Versus Ratings
