@@ -2863,6 +2863,13 @@ let PROMO_STATE = {
   hbMinPct: 8,
   notifyLogic: 'OR',     // 'OR' | 'AND'
   notifyKind: 'all',     // 'all' | 'gpu' | 'cpu_gpu'
+  notifyCategories: {
+    gpu: true,
+    cpu: true,
+    psu: true,
+    mobo: true,
+    ram: true
+  },
   notifyWinToast: true,
   notifyWinPopup: false,
   notifyWebToast: true,
@@ -2966,8 +2973,21 @@ try {
     ['bfMode', 'hbMode', 'notifyLogic', 'notifyKind', 'phoneService', 'ntfyTopic', 'ntfyPriority', 'waNumber', 'waApikey', 'emailHost', 'emailUser', 'emailPass', 'emailRecipient'].forEach(k => {
       if (typeof savedCfg[k] === 'string' && savedCfg[k] !== undefined) PROMO_STATE[k] = savedCfg[k];
     });
+    if (savedCfg.notifyCategories && typeof savedCfg.notifyCategories === 'object') {
+      PROMO_STATE.notifyCategories = Object.assign({}, PROMO_STATE.notifyCategories, savedCfg.notifyCategories);
+    }
   }
 } catch (_) {}
+
+function syncPromoCategoryCheckboxesFromState() {
+  if (!PROMO_STATE.notifyCategories) return;
+  ['gpu', 'cpu', 'psu', 'mobo', 'ram'].forEach(cat => {
+    const el = document.getElementById(`chk-notify-prod-${cat}`);
+    if (el && PROMO_STATE.notifyCategories[cat] !== undefined) {
+      el.checked = !!PROMO_STATE.notifyCategories[cat];
+    }
+  });
+}
 
 function togglePromoNotifyConfigMenu() {
   PROMO_STATE.configMenuOpen = !PROMO_STATE.configMenuOpen;
@@ -3015,6 +3035,7 @@ function savePromoSettingsToStorage() {
       hbMinPct: PROMO_STATE.hbMinPct,
       notifyLogic: PROMO_STATE.notifyLogic,
       notifyKind: PROMO_STATE.notifyKind,
+      notifyCategories: PROMO_STATE.notifyCategories,
       notifyWinToast: PROMO_STATE.notifyWinToast,
       notifyWinPopup: PROMO_STATE.notifyWinPopup,
       notifyWebToast: PROMO_STATE.notifyWebToast,
@@ -3216,6 +3237,7 @@ function syncPromoControlsFromState() {
   setVal('input-phone-email-recipient', PROMO_STATE.emailRecipient);
 
   updateNotificationPermissionLabel();
+  syncPromoCategoryCheckboxesFromState();
   if (PROMO_STATE.autoSyncEnabled) {
     schedulePromoAutoSyncTimer();
   }
@@ -3238,6 +3260,13 @@ function onUpdatePromoNotificationSettings() {
   PROMO_STATE.hbMinPct = Math.max(1, parseFloat(getVal('input-notify-hb-pct', '8')) || 8);
   PROMO_STATE.notifyLogic = getVal('select-notify-logic', 'OR');
   PROMO_STATE.notifyKind = getVal('select-notify-kind', 'all');
+  PROMO_STATE.notifyCategories = {
+    gpu: getChk('chk-notify-prod-gpu', true),
+    cpu: getChk('chk-notify-prod-cpu', true),
+    psu: getChk('chk-notify-prod-psu', true),
+    mobo: getChk('chk-notify-prod-mobo', true),
+    ram: getChk('chk-notify-prod-ram', true)
+  };
   PROMO_STATE.notifyWinToast = getChk('chk-notify-win-toast', true);
   PROMO_STATE.notifyWinPopup = getChk('chk-notify-win-popup', false);
   PROMO_STATE.notifyWebToast = getChk('chk-notify-web-toast', true);
@@ -3442,8 +3471,13 @@ function evaluateDealsForAlerts() {
     d.alert_reasons = reasons;
 
     // Filter by item category
-    if (PROMO_STATE.notifyKind === 'gpu' && d.matched_kind !== 'gpu') return;
-    if (PROMO_STATE.notifyKind === 'cpu_gpu' && d.matched_kind !== 'gpu' && d.matched_kind !== 'cpu') return;
+    if (PROMO_STATE.notifyCategories) {
+      const kind = d.matched_kind || 'gpu';
+      if (PROMO_STATE.notifyCategories[kind] === false) return;
+    } else {
+      if (PROMO_STATE.notifyKind === 'gpu' && d.matched_kind !== 'gpu') return;
+      if (PROMO_STATE.notifyKind === 'cpu_gpu' && d.matched_kind !== 'gpu' && d.matched_kind !== 'cpu') return;
+    }
 
     // Combine active triggers with OR / AND logic
     const activeResults = [];
@@ -4022,10 +4056,22 @@ function onChangePromoSyncInterval() {
 
 function sendPromoToDuelOrBF(kind, slug, price) {
   if (kind === 'gpu') {
+    if (typeof setMainContext === 'function') setMainContext('gpu');
     STATE.duelCandSlug = slug;
-    document.getElementById('duel-select-cand').value = slug;
-    syncDuelPriceInputsFromSelection();
-    document.getElementById('duel-price-cand').value = price;
+    const sel = document.getElementById('duel-select-cand');
+    if (sel) sel.value = slug;
+    if (typeof syncDuelPriceInputsFromSelection === 'function') syncDuelPriceInputsFromSelection();
+    const pInp = document.getElementById('duel-price-cand');
+    if (pInp) pInp.value = price;
+    switchTab('versus');
+  } else if (kind === 'cpu') {
+    if (typeof setMainContext === 'function') setMainContext('cpu');
+    STATE.cpuDuelCandSlug = slug;
+    const sel = document.getElementById('cpu-duel-select-cand');
+    if (sel) sel.value = slug;
+    if (typeof syncCpuDuelPriceInputsFromSelection === 'function') syncCpuDuelPriceInputsFromSelection();
+    const pInp = document.getElementById('cpu-duel-price-cand');
+    if (pInp) pInp.value = price;
     switchTab('versus');
   } else {
     switchTab('bf');
@@ -4033,7 +4079,8 @@ function sendPromoToDuelOrBF(kind, slug, price) {
     if (sel) {
       sel.value = slug;
       onBFTargetItemChange();
-      document.getElementById('bf-input-test-price').value = price;
+      const pInp = document.getElementById('bf-input-test-price');
+      if (pInp) pInp.value = price;
       updateBFPromoEvaluator(true);
     }
   }
