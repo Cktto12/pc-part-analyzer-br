@@ -1,7 +1,7 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "11:37:58",
+  "scanned_at": "12:56:30",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -27,7 +27,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 15.1,
+      "age_hours": 16.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -36,7 +36,9 @@
       "is_expired": false,
       "deal_status": "active",
       "is_coupon_expired": false,
-      "coupon_status": "active"
+      "coupon_status": "active",
+      "deal_status_reason": "Produto em estoque e página ativa",
+      "coupon_status_reason": "Confirmado ativo na loja"
     },
     {
       "post_id": "pdmx/1210494",
@@ -56,7 +58,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210494",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 20.0,
+      "age_hours": 21.3,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-9600x",
       "matched_name": "Ryzen 5 9600X",
@@ -65,7 +67,8 @@
       "is_expired": false,
       "deal_status": "active",
       "is_coupon_expired": false,
-      "coupon_status": "none"
+      "coupon_status": "none",
+      "deal_status_reason": "Produto em estoque e página ativa"
     }
   ],
   "best_by_slug": {
@@ -87,7 +90,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 15.1,
+      "age_hours": 16.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -96,7 +99,9 @@
       "is_expired": false,
       "deal_status": "active",
       "is_coupon_expired": false,
-      "coupon_status": "active"
+      "coupon_status": "active",
+      "deal_status_reason": "Produto em estoque e página ativa",
+      "coupon_status_reason": "Confirmado ativo na loja"
     },
     "ryzen-5-9600x": {
       "post_id": "pdmx/1210494",
@@ -116,7 +121,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210494",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 20.0,
+      "age_hours": 21.3,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-9600x",
       "matched_name": "Ryzen 5 9600X",
@@ -125,7 +130,8 @@
       "is_expired": false,
       "deal_status": "active",
       "is_coupon_expired": false,
-      "coupon_status": "none"
+      "coupon_status": "none",
+      "deal_status_reason": "Produto em estoque e página ativa"
     }
   },
   "recent_feed": [
@@ -147,7 +153,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210910",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 6.4
+      "age_hours": 7.7
     },
     {
       "post_id": "pdmx/1210777",
@@ -167,7 +173,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210777",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 10.4
+      "age_hours": 11.8
     },
     {
       "post_id": "pdmx/1210642",
@@ -187,7 +193,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210642",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 14.9
+      "age_hours": 16.2
     },
     {
       "post_id": "pdmx/1210639",
@@ -207,7 +213,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 15.1,
+      "age_hours": 16.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -236,7 +242,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210629",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 15.4
+      "age_hours": 16.7
     },
     {
       "post_id": "pdmx/1210494",
@@ -256,7 +262,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210494",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 20.0,
+      "age_hours": 21.3,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-9600x",
       "matched_name": "Ryzen 5 9600X",
@@ -285,11 +291,57 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210448",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 21.3
+      "age_hours": 22.6
     }
   ],
   "coupon_status": {
-    "coupons": {},
-    "deals": {}
-  }
+    "coupons": {
+      "ALIMX5": {
+        "status": "active",
+        "reason": "Confirmado ativo na loja",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      }
+    },
+    "deals": {
+      "pdmx/1210338": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 03:58:21"
+      },
+      "https://www.promodescuentos.com/share-deal/1210338": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 03:58:21"
+      },
+      "pdmx/1210494": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "https://www.promodescuentos.com/share-deal/1210494": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "pdmx/1210639": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "https://www.promodescuentos.com/share-deal/1210639": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      }
+    },
+    "updated_at": "2026-11-17 12:56:31"
+  },
+  "last_sitewise_test_at": "2026-11-17 12:56:31"
 }
