@@ -182585,7 +182585,7 @@
   "live_promos": {
     "ok": true,
     "region_id": "mx",
-    "scanned_at": "21:14:40",
+    "scanned_at": "02:51:07",
     "channels_scanned": [
       "promodescuentos_gpus",
       "promodescuentos_pc",
@@ -182611,7 +182611,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 0.7,
+        "age_hours": 6.3,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-7-5700x",
         "matched_name": "Ryzen 7 5700X",
@@ -182620,9 +182620,7 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "active",
-        "deal_status_reason": "Produto em estoque e página ativa",
-        "coupon_status_reason": "Confirmado ativo na loja"
+        "coupon_status": "active"
       },
       {
         "post_id": "pdmx/1210338",
@@ -182642,7 +182640,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 16.6,
+        "age_hours": 22.3,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-5600x",
         "matched_name": "Ryzen 5 5600X",
@@ -182651,8 +182649,7 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "none",
-        "deal_status_reason": "Produto em estoque e página ativa"
+        "coupon_status": "none"
       },
       {
         "post_id": "pdmx/1210494",
@@ -182672,7 +182669,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210494",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 5.6,
+        "age_hours": 11.2,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-9600x",
         "matched_name": "Ryzen 5 9600X",
@@ -182681,8 +182678,7 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "none",
-        "deal_status_reason": "Produto em estoque e página ativa"
+        "coupon_status": "none"
       }
     ],
     "best_by_slug": {
@@ -182704,7 +182700,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 0.7,
+        "age_hours": 6.3,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-7-5700x",
         "matched_name": "Ryzen 7 5700X",
@@ -182713,39 +182709,7 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "active",
-        "deal_status_reason": "Produto em estoque e página ativa",
-        "coupon_status_reason": "Confirmado ativo na loja"
-      },
-      "ryzen-5-5600x": {
-        "post_id": "pdmx/1210338",
-        "channel_id": "promodescuentos_pc",
-        "channel_name": "Promodescuentos PC",
-        "store_name": "Amazon",
-        "post_url": "https://www.promodescuentos.com/share-deal/1210338",
-        "timestamp": "2026-11-16T04:35:43+00:00",
-        "title": "Amazon: AMD - Procesador RYZEN 5 5600X,",
-        "head_text": "Amazon: AMD - Procesador RYZEN 5 5600X, $2,660 MXN",
-        "raw_text": "Amazon: AMD - Procesador RYZEN 5 5600X, - Amazon - $2,660 MXN",
-        "price_brl": 2660,
-        "raw_price_brl": 3299,
-        "discount_applied": 639,
-        "coupon_code": null,
-        "coupon_info": null,
-        "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
-        "coupon_url": null,
-        "region_id": "mx",
-        "age_hours": 16.6,
-        "matched_kind": "cpu",
-        "matched_slug": "ryzen-5-5600x",
-        "matched_name": "Ryzen 5 5600X",
-        "hb_price_brl": 3579.0,
-        "savings_vs_hb_brl": 919.0,
-        "is_expired": false,
-        "deal_status": "active",
-        "is_coupon_expired": false,
-        "coupon_status": "none",
-        "deal_status_reason": "Produto em estoque e página ativa"
+        "coupon_status": "active"
       },
       "ryzen-5-9600x": {
         "post_id": "pdmx/1210494",
@@ -182765,7 +182729,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210494",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 5.6,
+        "age_hours": 11.2,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-9600x",
         "matched_name": "Ryzen 5 9600X",
@@ -182774,11 +182738,59 @@
         "is_expired": false,
         "deal_status": "active",
         "is_coupon_expired": false,
-        "coupon_status": "none",
-        "deal_status_reason": "Produto em estoque e página ativa"
+        "coupon_status": "none"
+      },
+      "ryzen-5-5600x": {
+        "post_id": "pdmx/1210338",
+        "channel_id": "promodescuentos_pc",
+        "channel_name": "Promodescuentos PC",
+        "store_name": "Amazon",
+        "post_url": "https://www.promodescuentos.com/share-deal/1210338",
+        "timestamp": "2026-11-16T04:35:43+00:00",
+        "title": "Amazon: AMD - Procesador RYZEN 5 5600X,",
+        "head_text": "Amazon: AMD - Procesador RYZEN 5 5600X, $2,660 MXN",
+        "raw_text": "Amazon: AMD - Procesador RYZEN 5 5600X, - Amazon - $2,660 MXN",
+        "price_brl": 2660,
+        "raw_price_brl": 3299,
+        "discount_applied": 639,
+        "coupon_code": null,
+        "coupon_info": null,
+        "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
+        "coupon_url": null,
+        "region_id": "mx",
+        "age_hours": 22.3,
+        "matched_kind": "cpu",
+        "matched_slug": "ryzen-5-5600x",
+        "matched_name": "Ryzen 5 5600X",
+        "hb_price_brl": 3579.0,
+        "savings_vs_hb_brl": 919.0,
+        "is_expired": false,
+        "deal_status": "active",
+        "is_coupon_expired": false,
+        "coupon_status": "none"
       }
     },
     "recent_feed": [
+      {
+        "post_id": "pdmx/1210777",
+        "channel_id": "promodescuentos_pc",
+        "channel_name": "Promodescuentos PC",
+        "store_name": "Sam's Club",
+        "post_url": "https://www.promodescuentos.com/share-deal/1210777",
+        "timestamp": "2026-11-17T01:11:22+00:00",
+        "title": "Sam's Club: Laptop Gamer TUF con Grafica RTX 4050 y Ryzen 7",
+        "head_text": "Sam's Club: Laptop Gamer TUF con Grafica RTX 4050 y Ryzen 7 $14,999 MXN",
+        "raw_text": "Sam's Club: Laptop Gamer TUF con Grafica RTX 4050 y Ryzen 7 - Sam's Club - $14,999 MXN",
+        "price_brl": 14999,
+        "raw_price_brl": 26999,
+        "discount_applied": 12000,
+        "coupon_code": null,
+        "coupon_info": null,
+        "buy_url": "https://www.promodescuentos.com/share-deal/1210777",
+        "coupon_url": null,
+        "region_id": "mx",
+        "age_hours": 1.7
+      },
       {
         "post_id": "pdmx/1210642",
         "channel_id": "promodescuentos_pc",
@@ -182797,7 +182809,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210642",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 0.5
+        "age_hours": 6.1
       },
       {
         "post_id": "pdmx/1210639",
@@ -182817,7 +182829,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 0.7,
+        "age_hours": 6.3,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-7-5700x",
         "matched_name": "Ryzen 7 5700X",
@@ -182846,27 +182858,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210629",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 1.0
-      },
-      {
-        "post_id": "pdmx/1210616",
-        "channel_id": "promodescuentos_pc",
-        "channel_name": "Promodescuentos PC",
-        "store_name": "Sam's Club",
-        "post_url": "https://www.promodescuentos.com/share-deal/1210616",
-        "timestamp": "2026-11-16T19:44:45+00:00",
-        "title": "Sam's Club: Laptop Lenovo IdeaPad Slim 3 AMD Ryzen 7 16 GB 512 GB SSD Oled 2k se llega al precio con 18 MSI con 20% con BBVA",
-        "head_text": "Sam's Club: Laptop Lenovo IdeaPad Slim 3 AMD Ryzen 7 16 GB 512 GB SSD Oled 2k se llega al precio con 18 MSI con 20% con BBVA $11,456 MXN",
-        "raw_text": "Sam's Club: Laptop Lenovo IdeaPad Slim 3 AMD Ryzen 7 16 GB 512 GB SSD Oled 2k se llega al precio con 18 MSI con 20% con BBVA - Sam's Club - $11,456 MXN",
-        "price_brl": 11456,
-        "raw_price_brl": 14321,
-        "discount_applied": 2865,
-        "coupon_code": null,
-        "coupon_info": null,
-        "buy_url": "https://www.promodescuentos.com/share-deal/1210616",
-        "coupon_url": null,
-        "region_id": "mx",
-        "age_hours": 1.5
+        "age_hours": 6.6
       },
       {
         "post_id": "pdmx/1210494",
@@ -182886,7 +182878,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210494",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 5.6,
+        "age_hours": 11.2,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-9600x",
         "matched_name": "Ryzen 5 9600X",
@@ -182915,7 +182907,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210448",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 6.9
+        "age_hours": 12.5
       },
       {
         "post_id": "pdmx/1210338",
@@ -182935,7 +182927,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210338",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 16.6,
+        "age_hours": 22.3,
         "matched_kind": "cpu",
         "matched_slug": "ryzen-5-5600x",
         "matched_name": "Ryzen 5 5600X",
@@ -182964,59 +182956,13 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1210299",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 18.0
+        "age_hours": 23.6
       }
     ],
     "coupon_status": {
-      "coupons": {
-        "ALIMX5": {
-          "status": "active",
-          "reason": "Confirmado ativo na loja",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        }
-      },
-      "deals": {
-        "pdmx/1210338": {
-          "status": "active",
-          "reason": "Produto em estoque e página ativa",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        },
-        "https://www.promodescuentos.com/share-deal/1210338": {
-          "status": "active",
-          "reason": "Produto em estoque e página ativa",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        },
-        "pdmx/1210494": {
-          "status": "active",
-          "reason": "Produto em estoque e página ativa",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        },
-        "https://www.promodescuentos.com/share-deal/1210494": {
-          "status": "active",
-          "reason": "Produto em estoque e página ativa",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        },
-        "pdmx/1210639": {
-          "status": "active",
-          "reason": "Produto em estoque e página ativa",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        },
-        "https://www.promodescuentos.com/share-deal/1210639": {
-          "status": "active",
-          "reason": "Produto em estoque e página ativa",
-          "source": "live_test",
-          "updated_at": "2026-11-16 21:14:42"
-        }
-      },
-      "updated_at": "2026-11-16 21:14:42"
-    },
-    "last_sitewise_test_at": "2026-11-16 21:14:42"
+      "coupons": {},
+      "deals": {}
+    }
   },
   "region_id": "mx",
   "currency_code": "MXN",
