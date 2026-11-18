@@ -3024,13 +3024,22 @@ function getActiveRegionId() {
 
 function getPromoCacheKey() {
   const reg = getActiveRegionId();
-  return `gpuAnalyzerPromoCache_${reg}_v1`;
+  return `gpuAnalyzerPromoCache_${reg}_v2`;
 }
 
 function getCouponStatusCacheKey() {
   const reg = getActiveRegionId();
-  return `gpuAnalyzerCouponStatus_${reg}_v1`;
+  return `gpuAnalyzerCouponStatus_${reg}_v2`;
 }
+
+// Purge obsolete v1 caches to prevent stale unverified deals
+try {
+  ['br', 'mx'].forEach(r => {
+    localStorage.removeItem(`gpuAnalyzerPromoCache_${r}_v1`);
+    localStorage.removeItem(`gpuAnalyzerCouponStatus_${r}_v1`);
+  });
+  localStorage.removeItem('gpuAnalyzerCouponStatus_v1');
+} catch (_) {}
 
 function getNotifiedStorageKey() {
   const reg = getActiveRegionId();
@@ -3362,13 +3371,16 @@ function extractPriceAndCouponClient(lines) {
     discountApplied = Math.round((rawPrice - basePrice) * 100) / 100;
   }
 
+  const isConditionalVoucher = /\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b/i.test(fullText);
+
   return {
     price: Math.round(finalPrice * 100) / 100,
     rawPrice: Math.round(rawPrice * 100) / 100,
     discountApplied,
     couponCode,
     couponInfo,
-    requiresCoupon: Boolean(requiresCoupon || couponCode || couponInfo || discountApplied > 0)
+    isConditionalVoucher,
+    requiresCoupon: Boolean(requiresCoupon || couponCode || couponInfo || discountApplied > 0 || isConditionalVoucher)
   };
 }
 
@@ -3427,7 +3439,7 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
       ln => ln.replace(/[^a-zA-Z0-9]/g, '').length >= 6 && !/^(baixa|baixou|parcelado|cupom|oferta|promo|#)/i.test(ln.replace(/^[ ⭐️🔥🚨⚡]+/, ''))
     );
     const title = (titleCand || lines[0]).replace(/^[ ⭐️🔥🚨⚡🏹]+/, '').slice(0, 160);
-    const { price, rawPrice, discountApplied, couponCode, couponInfo, requiresCoupon } = extractPriceAndCouponClient(lines);
+    const { price, rawPrice, discountApplied, couponCode, couponInfo, isConditionalVoucher, requiresCoupon } = extractPriceAndCouponClient(lines);
     if (!price) return;
 
     const buyUrl = links.length ? links[links.length - 1] : `https://t.me/${postId}`;
@@ -3456,6 +3468,7 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
       discount_applied: discountApplied,
       coupon_code: couponCode,
       coupon_info: couponInfo,
+      is_conditional_voucher: Boolean(isConditionalVoucher),
       requires_coupon: Boolean(requiresCoupon),
       store_name: storeName,
       buy_url: buyUrl,
@@ -3540,7 +3553,7 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
   });
 
   try {
-    localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+    localStorage.setItem(getCouponStatusCacheKey(), JSON.stringify(PROMO_STATE.couponStatus));
   } catch (_) {}
 
   const nowMs = Date.now();
@@ -3568,8 +3581,10 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
       item.hb_price_brl = hbPrice;
       item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
 
+      const isCondVoucher = Boolean(item.is_conditional_voucher || /\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b/i.test((item.head_text || '') + ' ' + (item.raw_text || '')));
+      item.is_conditional_voucher = isCondVoucher;
       const couponCode = (item.coupon_code || '').toUpperCase();
-      const reqCoupon = Boolean(item.requires_coupon || couponCode || item.coupon_info || item.discount_applied > 0);
+      const reqCoupon = Boolean(item.requires_coupon || couponCode || item.coupon_info || item.discount_applied > 0 || isCondVoucher);
       item.requires_coupon = reqCoupon;
       item.promo_price_brl = item.promo_price_brl || item.price_brl;
       const pId = item.post_id || '';
@@ -3657,6 +3672,7 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
         item.stock_verified === true &&
         !item.is_coupon_expired &&
         (!item.requires_coupon || item.coupon_status === 'verified') &&
+        (!item.is_conditional_voucher || item.coupon_status === 'verified') &&
         (hbPrice <= 0 || item.price_brl < hbPrice)
       ) {
         if (!bestBySlug[slug] || item.price_brl < bestBySlug[slug].price_brl) {
@@ -4821,11 +4837,10 @@ function applyFlashPromosToCatalog() {
         /\.br\b|t\.me\/(?:peperaio|ofertasadrenaline|iskandar|kabum|benchpromos|nerdofertas|ofertastechbr)/i.test(promo.buy_url || promo.post_url || '')
       );
 
-      const requiresCoup = Boolean(promo && (promo.requires_coupon || promo.coupon_code || promo.coupon_info));
+      const requiresCoup = Boolean(promo && (promo.requires_coupon || promo.coupon_code || promo.coupon_info || promo.is_conditional_voucher));
       const isCoupVerified = Boolean(promo && promo.coupon_status === 'verified');
       const isStockVerified = Boolean(promo && promo.stock_verified === true);
-
-      if (
+      const isDirectActive = Boolean(
         PROMO_STATE.applyFlash &&
         promo &&
         promoRegion === activeReg &&
@@ -4834,21 +4849,32 @@ function applyFlashPromosToCatalog() {
         promo.deal_status === 'active' &&
         isStockVerified &&
         !promo.is_coupon_expired &&
-        (!requiresCoup || isCoupVerified) &&
+        !requiresCoup &&
         promo.price_brl < it._hbPrice
-      ) {
+      );
+
+      if (isDirectActive) {
         it.price_brl = promo.price_brl;
         it.coupon = promo.coupon_code || promo.coupon_info || (activeReg === 'mx' ? 'OFERTA MX' : 'OFERTA DIRETA');
         it.store_name = promo.store_name || `@${promo.channel_id}`;
         it.offer_url = promo.buy_url || promo.post_url;
         it._flashPromo = promo;
+        it._couponPromo = null;
         appliedCount++;
       } else {
-        it.price_brl = it._hbPrice;
+        const storeCashPrice = (promo && isStockVerified && promo.live_store_price_brl && promo.live_store_price_brl < it._hbPrice)
+          ? promo.live_store_price_brl
+          : it._hbPrice;
+        it.price_brl = storeCashPrice;
         it.coupon = it._hbCoupon;
-        it.store_name = it._hbStore;
-        it.offer_url = it._hbUrl;
+        it.store_name = (storeCashPrice < it._hbPrice && promo && promo.store_name) ? promo.store_name : it._hbStore;
+        it.offer_url = (storeCashPrice < it._hbPrice && promo && promo.buy_url) ? promo.buy_url : it._hbUrl;
         it._flashPromo = null;
+        if (promo && !promo.is_expired && !promo.is_coupon_expired && (isCoupVerified || promo.deal_status === 'unverified_coupon')) {
+          it._couponPromo = promo;
+        } else {
+          it._couponPromo = null;
+        }
       }
     });
   });

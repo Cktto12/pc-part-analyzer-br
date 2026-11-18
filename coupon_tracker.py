@@ -170,13 +170,23 @@ def fetch_hb_live_slug_info(kind, slug):
         by_store = {}
         active_coupons = {}
 
+        active_coupons_details = {}
         for c in coupons:
             if c.get("archivedAt") is not None:
                 continue
             st = (c.get("storeName") or "").lower().strip()
             code = (c.get("code") or "").upper().strip()
+            min_val = c.get("minPrice") or c.get("min_price") or c.get("minSpend") or c.get("minValue")
+            min_spend = (float(min_val) / 100.0) if (isinstance(min_val, (int, float)) and min_val > 0) else None
+            desc = (c.get("description") or c.get("title") or "").strip()
             if st and code:
                 active_coupons.setdefault(st, set()).add(code)
+                active_coupons_details.setdefault(st, {})[code] = {
+                    "min_spend": min_spend,
+                    "desc": desc,
+                    "discount": c.get("discount"),
+                    "discount_type": c.get("discountType")
+                }
 
         for o in offers:
             st = (o.get("storeName") or "").lower().strip()
@@ -206,6 +216,7 @@ def fetch_hb_live_slug_info(kind, slug):
             "kind": kind,
             "by_store": by_store,
             "active_coupons": {k: list(v) for k, v in active_coupons.items()},
+            "active_coupons_details": active_coupons_details,
             "total_offers": len(offers)
         }
         with _HB_CACHE_LOCK:
@@ -266,17 +277,64 @@ def extract_store_price_and_availability(body, final_url=""):
             if valid_pwd:
                 return round(valid_pwd[0], 2), True, page_coupons
 
-    # 2. Shopee (100% client-rendered SPA shell -> do not guess price/stock from empty HTML)
+    # 2. Pichau (Next.js __NEXT_DATA__ and HTML Pix price & stock verification)
+    if "pichau.com.br" in u_low:
+        # Check out-of-stock indicators
+        if re.search(r'indispon[íi]vel|produto\s*esgotado|avise-me\s*quando\s*chegar|"inStock"\s*:\s*false|"available"\s*:\s*false', body, re.I):
+            return None, False, page_coupons
+        m_nd_p = re.search(r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>', body)
+        if m_nd_p:
+            s_p = m_nd_p.group(1)
+            if re.search(r'"inStock"\s*:\s*false|"available"\s*:\s*false', s_p):
+                return None, False, page_coupons
+            pix_m = re.findall(r'"(?:pixPrice|finalPrice|price)"\s*:\s*([0-9]+(?:\.[0-9]+)?)', s_p)
+            valid_pix = [float(x) for x in pix_m if float(x) > 50]
+            if valid_pix:
+                return round(min(valid_pix), 2), True, page_coupons
+        # Fallback HTML Pix price
+        pix_html = re.search(r'(?:à\s*vista|no\s*Pix)[^<]{0,100}?(?:R\$|\$)\s*([0-9\.,]+)', body, re.I)
+        if pix_html:
+            p = parse_price_str(pix_html.group(1))
+            if p and p > 50:
+                return p, True, page_coupons
+
+    # 3. Terabyte (valVista cash/Pix price & explicit stock checks)
+    if "terabyteshop.com.br" in u_low:
+        if re.search(r'id=[\'"]btn-comprar-esgotado[\'"]|class=[\'"][^\'"]*tit-indisponivel[^\'"]*[\'"]|Produto\s*Indispon[íi]vel|avise-me\s*quando\s*chegar', body, re.I):
+            return None, False, page_coupons
+        tb_vista = re.search(r'id=[\'"]valVista[\'"][^>]*>\s*R?\$?\s*([0-9\.,]+)', body, re.I)
+        if not tb_vista:
+            tb_vista = re.search(r'class=[\'"][^\'"]*val-prod[^\'"]*[\'"][^>]*>\s*R?\$?\s*([0-9\.,]+)', body, re.I)
+        if tb_vista:
+            p = parse_price_str(tb_vista.group(1))
+            if p and p > 50:
+                return p, True, page_coupons
+
+    # 4. Amazon BR (priceToPay / apexPriceToPay cash price & stock check)
+    if "amazon.com.br" in u_low or "amzn.to" in u_low:
+        if re.search(r'Não temos previsão de quando este produto estará novamente em estoque|Atualmente indisponível|Disponibilidade:\s*Não disponível', body, re.I):
+            return None, False, page_coupons
+        az_m = re.search(r'class=[\'"][^\'"]*(?:priceToPay|apexPriceToPay)[^\'"]*[\'"][\s\S]{1,300}?class=[\'"]a-offscreen[\'"][^>]*>\s*R?\$?\s*([0-9\.,]+)', body, re.I)
+        if az_m:
+            p = parse_price_str(az_m.group(1))
+            if p and p > 50:
+                return p, True, page_coupons
+
+    # 5. Shopee (100% client-rendered SPA shell -> do not guess price/stock from empty HTML)
     if "shopee.com" in u_low or "s.shopee" in u_low:
         return None, None, page_coupons
 
-    # 3. Mercado Livre /social/ affiliate feed -> not a single product page
+    # 6. Mercado Livre /social/ affiliate feed -> not a single product page
     if ("mercadolivre.com" in u_low or "mercadolibre.com" in u_low) and "/social/" in u_low:
         return None, None, page_coupons
 
-    # 4. Mercado Livre / Mercado Libre direct product page
+    # 7. Mercado Livre / Mercado Libre direct product page (Cash price, ignore previous old price)
     if "mercadolivre.com" in u_low or "mercadolibre.com" in u_low:
-        pdp_match = re.search(r'class=[\'"][^\'"]*ui-pdp-price[^\'"]*[\'"][\s\S]{1,500}?class=[\'"][^\'"]*andes-money-amount__fraction[^\'"]*[\'"][^>]*>([\d\.]+)<', body)
+        if re.search(r'class=[\'"][^\'"]*ui-pdp-buybox__quantity__unavailable[^\'"]*[\'"]|Estoque esgotado|O vendedor pausou o anúncio', body, re.I):
+            return None, False, page_coupons
+        pdp_match = re.search(r'class=[\'"][^\'"]*ui-pdp-price__second-line[^\'"]*[\'"][\s\S]{1,500}?class=[\'"][^\'"]*andes-money-amount__fraction[^\'"]*[\'"][^>]*>([\d\.]+)<', body)
+        if not pdp_match:
+            pdp_match = re.search(r'class=[\'"][^\'"]*ui-pdp-price[^\'"]*[\'"][\s\S]{1,500}?(?<!andes-money-amount--previous[\s\S]{0,80})class=[\'"][^\'"]*andes-money-amount__fraction[^\'"]*[\'"][^>]*>([\d\.]+)<', body)
         if pdp_match:
             cents_match = re.search(r'class=[\'"][^\'"]*ui-pdp-price[^\'"]*[\'"][\s\S]{1,700}?class=[\'"][^\'"]*andes-money-amount__cents[^\'"]*[\'"][^>]*>(\d{2})<', body)
             cents = ("." + cents_match.group(1)) if cents_match else ""
@@ -284,7 +342,7 @@ def extract_store_price_and_availability(body, final_url=""):
             if p and p > 50:
                 return p, True, page_coupons
 
-    # 5. Cyberpuerta & DDTech (Mexico)
+    # 8. Cyberpuerta & DDTech (Mexico)
     if "cyberpuerta.mx" in u_low or "ddtech.mx" in u_low:
         cp_match = re.search(r'class=[\'"][^\'"]*price[^\'"]*[\'"][^>]*>\s*\$?\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})?)', body)
         if cp_match:
@@ -569,6 +627,9 @@ def test_deal_url_and_coupon(
     http_error_code = None
 
     # --- LAYER 1: Direct Store HTTP Check ---
+    store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
+    res["store_name"] = store_label
+
     try:
         req = urllib.request.Request(buy_url, headers=CHROME_HEADERS)
         opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler)
@@ -576,32 +637,48 @@ def test_deal_url_and_coupon(
             final_url = resp.geturl()
             res["final_url"] = final_url
             code = resp.getcode()
+            body = resp.read().decode("utf-8", errors="ignore")
+            low = body.lower()
+
+            # Resolve meta refresh, JavaScript redirects, or intermediate aggregator links
+            # (e.g. adrena.click, seuhardware, aoferta.net, benchpromos, etc.)
+            meta_refresh = re.search(r'<meta[^>]*http-equiv=[\'"]refresh[\'"][^>]*content=[\'"][^;]*;\s*url=([^\'"]+)', body, re.I)
+            js_redirect = re.search(r'(?:window\.location(?:\.replace|\.href)?|location\.href)\s*=\s*[\'"](https?://[^\'"]+)[\'"]', body, re.I)
+            target_url = None
+            if meta_refresh:
+                target_url = meta_refresh.group(1).strip()
+            elif js_redirect:
+                target_url = js_redirect.group(1).strip()
+            elif any(k in final_url for k in ["benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net"]):
+                outgoing = re.findall(r'href=[\'"](https?://(?:meli\.la|mercadolivre|kabum|pichau|terabyteshop|s\.shopee|amazon)[^\'"]*)[\'"]', body, re.I)
+                if outgoing:
+                    target_url = outgoing[0].strip()
+
+            if target_url and target_url != final_url and target_url.startswith("http"):
+                try:
+                    req_out = urllib.request.Request(target_url, headers=CHROME_HEADERS)
+                    with opener.open(req_out, timeout=timeout) as resp_out:
+                        final_url = resp_out.geturl()
+                        res["final_url"] = final_url
+                        body = resp_out.read().decode("utf-8", errors="ignore")
+                        low = body.lower()
+                except urllib.error.HTTPError as he_out:
+                    final_url = getattr(he_out, "url", target_url) or target_url
+                    res["final_url"] = final_url
+                    http_error_code = he_out.code
+                except Exception:
+                    final_url = target_url
+                    res["final_url"] = final_url
+
+            store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
+            res["store_name"] = store_label
+
             if code in (404, 410):
                 res["valid"] = False
                 res["status"] = "out_of_stock"
                 res["reason"] = f"Página não encontrada na loja (HTTP {code})"
-                record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg)
+                record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
                 return res
-
-            body = resp.read().decode("utf-8", errors="ignore")
-            low = body.lower()
-
-            if "benchpromos.com.br" in final_url or "promocoes" in final_url:
-                outgoing = re.findall(r'href=[\'"](https?://(?:meli\.la|mercadolivre|kabum|pichau|terabyteshop|s\.shopee|amazon)[^\'"]*)[\'"]', body, re.I)
-                if outgoing:
-                    try:
-                        req_out = urllib.request.Request(outgoing[0], headers=CHROME_HEADERS)
-                        with opener.open(req_out, timeout=timeout) as resp_out:
-                            final_url = resp_out.geturl()
-                            res["final_url"] = final_url
-                            body = resp_out.read().decode("utf-8", errors="ignore")
-                            low = body.lower()
-                    except urllib.error.HTTPError as he_out:
-                        final_url = getattr(he_out, "url", outgoing[0]) or outgoing[0]
-                        res["final_url"] = final_url
-                        http_error_code = he_out.code
-                    except Exception:
-                        pass
 
             # Check region-appropriate Out-Of-Stock patterns
             oos_list = OOS_PATTERNS_MX if reg == "mx" else OOS_PATTERNS_BR
@@ -610,7 +687,7 @@ def test_deal_url_and_coupon(
                     res["valid"] = False
                     res["status"] = "out_of_stock"
                     res["reason"] = reason_text
-                    record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg)
+                    record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
                     return res
 
             direct_live_price, direct_is_available, _ = extract_store_price_and_availability(body, final_url)
@@ -618,7 +695,7 @@ def test_deal_url_and_coupon(
                 res["valid"] = False
                 res["status"] = "out_of_stock"
                 res["reason"] = "Produto esgotado / indisponível na loja"
-                record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg)
+                record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
                 return res
 
     except urllib.error.HTTPError as he:
@@ -626,11 +703,13 @@ def test_deal_url_and_coupon(
         if getattr(he, "url", None):
             final_url = he.url
             res["final_url"] = final_url
+            store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
+            res["store_name"] = store_label
         if he.code in (404, 410):
             res["valid"] = False
             res["status"] = "out_of_stock"
             res["reason"] = f"Produto removido / página não encontrada na loja (HTTP {he.code})"
-            record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg)
+            record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
             return res
     except Exception:
         pass
@@ -705,7 +784,22 @@ def test_deal_url_and_coupon(
                 return res
         else:
             # Offer requires a coupon or app voucher
+            store_coupon_details = hb_info.get("active_coupons_details", {}).get(store_key, {}) if hb_info else {}
+            coup_rule = store_coupon_details.get(clean_coup) if clean_coup else None
             is_coupon_confirmed = bool(clean_coup and clean_coup in store_active_coupons)
+
+            # Minimum purchase spend validation (Argon Item 2)
+            if is_coupon_confirmed and coup_rule:
+                min_spend = coup_rule.get("min_spend")
+                if min_spend and expected_price and expected_price < (min_spend - 5.0):
+                    res["valid"] = False
+                    res["status"] = "expired"
+                    res["coupon_status"] = "expired"
+                    res["reason"] = f"Cupom {clean_coup} exige gasto mínimo de R$ {min_spend:,.2f} na {store_label} (item anunciado: R$ {expected_price:,.2f})"
+                    record_coupon_status(clean_coup, "expired", res["reason"], source="live_test", reg_id=reg)
+                    record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="expired", store_name=store_label, final_url=final_url)
+                    return res
+
             if is_coupon_confirmed and store_min_coup and store_min_coup <= expected_price * 1.06:
                 res["valid"] = True
                 res["status"] = "active"
@@ -923,6 +1017,28 @@ def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None):
 
         rewired.append(item)
 
+    if all_promos:
+        for p in all_promos:
+            p_id = p.get("post_id", "")
+            b_url = p.get("buy_url", "")
+            deal_st = deals_map.get(p_id) or deals_map.get(p_id.lower()) or deals_map.get(b_url)
+            if deal_st:
+                st_val = deal_st.get("status", "untested")
+                p["deal_status"] = st_val
+                p["deal_status_reason"] = deal_st.get("reason", "")
+                p["stock_verified"] = bool(deal_st.get("stock_verified", False))
+                if deal_st.get("store_name") and deal_st["store_name"] not in ("E-commerce", "Loja"):
+                    p["store_name"] = deal_st["store_name"]
+                if deal_st.get("live_price"):
+                    p["live_store_price_brl"] = deal_st["live_price"]
+                if st_val in ("expired", "out_of_stock"):
+                    p["is_expired"] = True
+                if deal_st.get("coupon_status"):
+                    p["coupon_status"] = deal_st["coupon_status"]
+                    if deal_st["coupon_status"] == "expired":
+                        p["is_coupon_expired"] = True
+                        p["is_expired"] = True
+
     # Recompute best_by_slug strictly using ONLY stock_verified, active deals that do NOT rely on unverified coupons
     best_by_slug = {}
     for d in rewired:
@@ -935,7 +1051,7 @@ def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None):
             continue
         if not d.get("stock_verified"):
             continue
-        if d.get("requires_coupon") and d.get("coupon_status") != "verified":
+        if (d.get("requires_coupon") or d.get("is_conditional_voucher")) and d.get("coupon_status") != "verified":
             continue
         if d.get("hb_price_brl") and d.get("price_brl", 999999) >= d["hb_price_brl"]:
             continue

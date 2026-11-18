@@ -235,7 +235,8 @@ def extract_price_and_coupon(lines):
             candidates.append((prio, val))
 
     if not candidates:
-        return None, None, 0.0, coupon_code, coupon_info
+        is_conditional_voucher = bool(re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", full_text, re.I))
+        return None, None, 0.0, coupon_code, coupon_info, is_conditional_voucher
 
     max_prio = max(c[0] for c in candidates)
     best_vals = [c[1] for c in candidates if c[0] == max_prio]
@@ -257,7 +258,8 @@ def extract_price_and_coupon(lines):
         raw_price = final_price
         discount_applied = 0.0
 
-    return round(final_price, 2), round(raw_price, 2), round(discount_applied, 2), coupon_code, coupon_info
+    is_conditional_voucher = bool(re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", full_text, re.I))
+    return round(final_price, 2), round(raw_price, 2), round(discount_applied, 2), coupon_code, coupon_info, is_conditional_voucher
 
 
 def match_catalog_item(title_and_first_lines, db):
@@ -349,7 +351,7 @@ def fetch_channel_query(ch_id, ch_name, query=""):
         ]
         title = (title_lines[0] if title_lines else lines[0]).strip(" ⭐️🔥🚨⚡🔹")
 
-        price, raw_price, discount_applied, coupon_code, coupon_info = extract_price_and_coupon(lines)
+        price, raw_price, discount_applied, coupon_code, coupon_info, is_conditional_voucher = extract_price_and_coupon(lines)
         if not price:
             continue
 
@@ -369,6 +371,7 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             "discount_applied": discount_applied,
             "coupon_code": coupon_code,
             "coupon_info": coupon_info,
+            "is_conditional_voucher": is_conditional_voucher,
             "buy_url": buy_url,
             "coupon_url": product_links[0] if len(product_links) > 1 else None,
             "region_id": "br"
@@ -579,10 +582,13 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
             item["matched_name"] = cat_item["name"]
             item["hb_price_brl"] = hb_price
             item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2)
+            is_cond = bool(item.get("is_conditional_voucher") or re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", item.get("raw_text", ""), re.I))
+            item["is_conditional_voucher"] = is_cond
             requires_coup = bool(
                 item.get("coupon_code")
                 or item.get("coupon_info")
                 or item.get("discount_applied", 0) > 0
+                or is_cond
                 or re.search(r"\b(cupom|cupon|cupón|resgate|sacola\s*laranja|moedas|no\s*app)\b", item.get("raw_text", ""), re.I)
             )
             item["requires_coupon"] = requires_coup

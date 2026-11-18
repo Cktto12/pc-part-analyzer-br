@@ -1153,6 +1153,17 @@ def parse_args():
 if __name__ == "__main__":
     if "--cron-once" in sys.argv:
         print("[Cloud Cron] Iniciando varredura automatizada 24/7 de promoções e alertas...")
+
+        # 0. Check if base catalog requires an automated refresh (> 6h or missing)
+        br_db_path = get_db_path("br")
+        if not os.path.exists(br_db_path) or (time.time() - os.path.getmtime(br_db_path) > 6 * 3600):
+            print("[Cloud Cron] Base de dados desatualizada (> 6h). Atualizando catálogo base do Hardware Barato...")
+            try:
+                from scraper import build_database
+                build_database(br_db_path)
+            except Exception as e:
+                print(f"[Cloud Cron] Aviso ao reconstruir banco base: {e}")
+
         reg_arg = None
         for i, a in enumerate(sys.argv):
             if a == "--region" and i + 1 < len(sys.argv):
@@ -1166,6 +1177,16 @@ if __name__ == "__main__":
                 config.set_active_region(reg)
             except Exception:
                 pass
+
+            # Pre-scan live promotions to ensure fresh store-verified caches
+            try:
+                raw_db = convert_db_to_active_region(force_refresh=True)
+                import promo_radar
+                print(f"[Cloud Cron ({reg.upper()})] Varrendo promoções e validando lojas em tempo real...")
+                promo_radar.scan_live_promotions(raw_db, max_age_hours=48.0, force=True, region_id=reg)
+            except Exception as e:
+                print(f"[Cloud Cron ({reg.upper()}) Promo Scan Erro] {e}")
+
             cfg = load_alert_config(reg)
             cfg["notifyEnabled"] = True
             cfg["notifyWinToast"] = False  # Headless Linux no GitHub Actions runner
