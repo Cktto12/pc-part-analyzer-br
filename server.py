@@ -533,9 +533,19 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         price_key = f"{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
         if not force_notify and (post_id in history or price_key in history):
             continue
-        # Only notify on genuinely recent offers (<= 2.5h old) so cron never dumps stale/finished deals
-        if not force_notify and float(d.get("age_hours") or 0) > 2.5:
-            continue
+        # Only notify on genuinely fresh offers published within the last 10 minutes
+        if not force_notify:
+            age_mins = float(d.get("age_hours") or 0) * 60.0
+            ts_str = d.get("timestamp") or ""
+            if ts_str:
+                try:
+                    from datetime import datetime, timezone
+                    dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+                    age_mins = max(0.0, (datetime.now(timezone.utc) - dt).total_seconds() / 60.0)
+                except Exception:
+                    pass
+            if age_mins > 10.0:
+                continue
 
         qualifies = False
         reasons = []
