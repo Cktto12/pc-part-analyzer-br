@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GPU & Build Analyzer Pro — Custo-Benefício Contextual, Black Friday & Simulador</title>
+  <title>GCA — GPU & CPU Analyzer: Duelo Relacional, Workstation, Black Friday & Custo-Benefício</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -99,12 +99,12 @@
     <!-- Sidebar Header -->
     <div class="h-16 px-5 flex items-center justify-between border-b border-slate-800/80">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-md shadow-sky-500/20">
-          GPU
+        <div id="sidebar-brand-badge" class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-md shadow-sky-500/20">
+          GCA
         </div>
         <div>
-          <h2 class="text-sm font-bold text-white tracking-tight leading-none">GPU Analyzer</h2>
-          <span class="text-[10px] font-mono text-sky-400">Pro v2.5</span>
+          <h2 class="text-sm font-bold text-white tracking-tight leading-none">GCA Pro</h2>
+          <span class="text-[10px] font-mono text-sky-400">GPU & CPU Analyzer</span>
         </div>
       </div>
       <button onclick="closeSidebar()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition cursor-pointer" title="Fechar Menu">
@@ -119,31 +119,31 @@
       <!-- Tab 1: Duelo Relacional -->
       <button onclick="switchTab('versus')" id="tab-btn-versus" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-3 bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm shadow-sky-500/10 transition-all text-left">
         <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
-        <span>Duelo Relacional</span>
+        <span id="sidebar-tab-title-versus">Duelo Relacional</span>
       </button>
 
       <!-- Tab 2: Custo-Benefício -->
       <button onclick="switchTab('cb')" id="tab-btn-cb" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
         <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-        <span>Custo-Benefício & Alvos</span>
+        <span id="sidebar-tab-title-cb">Custo-Benefício & Alvos</span>
       </button>
 
       <!-- Tab 3: Objetivo de Compra & Consumo -->
       <button onclick="switchTab('builder')" id="tab-btn-builder" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
         <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-        <span>Objetivo de Compra & Consumo</span>
+        <span id="sidebar-tab-title-builder">Objetivo de Compra & Consumo</span>
       </button>
 
       <!-- Tab 4: Upgrades de Plataforma -->
       <button onclick="switchTab('upgrades')" id="tab-btn-upgrades" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
         <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        <span>Upgrades de Plataforma (RAM)</span>
+        <span id="sidebar-tab-title-upgrades">Upgrades de Plataforma (RAM)</span>
       </button>
 
       <!-- Tab 5: Black Friday & Sazonalidade -->
       <button onclick="switchTab('bf')" id="tab-btn-bf" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
         <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-        <span>Black Friday & Sazonalidade</span>
+        <span id="sidebar-tab-title-bf">Black Friday & Sazonalidade</span>
       </button>
 
       <!-- Tab 6: Simulador Real -->
@@ -185,7 +185,7 @@
   <!-- TOP HEADER (CLEAN, MINIMAL & BREATHABLE) -->
   <header class="sticky top-0 z-40 glass-card border-b border-slate-800/80 shadow-md">
     <div class="max-w-[1640px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
-      <!-- Left: Hamburger (3 Lines) + Brand + Active Tab Breadcrumb -->
+      <!-- Left: Hamburger (3 Lines) + Brand -->
       <div class="flex items-center gap-3">
         <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition cursor-pointer" title="Abrir Menu de Abas (3 Linhas)">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,40 +193,46 @@
           </svg>
         </button>
         <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-sm">
-            GPU
+          <div id="header-brand-badge" class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-sm">
+            GCA
           </div>
           <div>
-            <h1 class="text-sm font-bold text-white tracking-tight leading-none">Build & GPU Analyzer <span class="text-sky-400">Pro</span></h1>
+            <h1 class="text-sm font-bold text-white tracking-tight leading-none">GCA <span id="header-brand-sub" class="text-sky-400 font-semibold text-xs">GPU & CPU Analyzer</span></h1>
             <p class="text-[10px] text-slate-400 font-mono mt-0.5" id="header-status">Carregando dados...</p>
           </div>
         </div>
-        <div class="h-5 w-px bg-slate-800 hidden sm:block"></div>
-        <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-900 border border-slate-800">
-          <span class="text-[11px] text-slate-400">Aba Ativa:</span>
-          <span id="header-active-tab-title" class="text-xs font-semibold text-sky-400">Duelo Relacional</span>
-        </div>
       </div>
 
-      <!-- Right: Action Buttons (Radar, Sync, Configurações) -->
-      <div class="flex items-center gap-2">
-        <!-- Button: Live Promo Radar (Prominent at top) -->
-        <button id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 transition cursor-pointer" title="Abrir Radar de Promoções e Cupons ao Vivo">
+      <!-- Right: Action Buttons (Context Toggle, Radar, Sync, Configurações sem labels) -->
+      <div class="flex items-center gap-2 sm:gap-2.5">
+        <!-- THE CONTEXT TOGGLE: GPU vs CPU & Plataforma -->
+        <div class="inline-flex p-0.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs font-mono shadow-inner" id="header-context-toggle">
+          <button type="button" id="btn-ctx-gpu" onclick="setMainContext('gpu')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer bg-sky-500 text-slate-950 shadow-sm" title="Contexto Placas de Vídeo (GPUs)">
+            <span>🎮</span>
+            <span>GPU</span>
+          </button>
+          <button type="button" id="btn-ctx-cpu" onclick="setMainContext('cpu')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer text-slate-400 hover:text-slate-200" title="Contexto Processadores (CPUs, Placas-Mãe, RAM)">
+            <span>⚡</span>
+            <span>CPU</span>
+          </button>
+        </div>
+
+        <!-- Button: Live Promo Radar -->
+        <button id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 transition cursor-pointer" title="Abrir Radar de Promoções e Cupons ao Vivo">
           <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           <span class="hidden sm:inline">Radar</span>
           <span id="promo-radar-badge" class="px-1.5 py-0.5 rounded-md bg-slate-950 text-amber-300 font-mono text-[10px] border border-amber-500/30">...</span>
         </button>
 
         <!-- Button: Refresh Database -->
-        <button id="btn-refresh-db" onclick="refreshDatabase()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sm transition cursor-pointer" title="Sincronizar base de dados">
+        <button id="btn-refresh-db" onclick="refreshDatabase()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sm transition cursor-pointer" title="Sincronizar base de dados">
           <svg id="icon-refresh" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           <span class="hidden sm:inline">Sync</span>
         </button>
 
-        <!-- Button: Settings Tab Shortcut -->
-        <button onclick="switchTab('config')" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 hover:border-slate-600 transition cursor-pointer" title="Abrir Configurações do Sistema (PC de Referência, Monitor, Pesos, Moeda)">
-          <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          <span class="hidden sm:inline">Configurações</span>
+        <!-- Button: Settings Tab Shortcut (No label, just icon as requested) -->
+        <button onclick="switchTab('config')" class="p-2 rounded-xl text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 transition cursor-pointer" title="Abrir Configurações do Sistema (Workstation, PC de Referência, Pesos, Moeda)">
+          <svg class="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
       </div>
     </div>
@@ -378,8 +384,8 @@
           </div>
 
           <!-- Logic Combination + Item Filter + Delivery Channels -->
-          <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-950/90 p-2.5 rounded-xl border border-slate-800">
-            <div class="flex flex-wrap items-center gap-3">
+          <div class="space-y-2.5 bg-slate-950/90 p-3 rounded-xl border border-slate-800">
+            <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-1.5">
                 <span class="text-[11px] text-slate-400 font-semibold">Regra entre gatilhos:</span>
                 <select id="select-notify-logic" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-amber-300 font-bold">
@@ -387,38 +393,57 @@
                   <option value="AND">Todos os gatilhos ativos (E)</option>
                 </select>
               </div>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[11px] text-slate-400 font-semibold">Monitorar:</span>
-                <select id="select-notify-kind" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-sky-300 font-bold">
-                  <option value="all" selected>Todas as Peças (GPU + CPU + RAM)</option>
-                  <option value="gpu">Apenas Placas de Vídeo (GPUs)</option>
-                  <option value="cpu_gpu">GPUs e Processadores (CPUs)</option>
-                </select>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <span class="text-[11px] text-slate-400 font-semibold">Onde avisar:</span>
+                <label class="flex items-center gap-1.5 cursor-pointer text-sky-300" title="Notificação nativa na Central de Ações do Windows 10/11">
+                  <input type="checkbox" id="chk-notify-win-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                  <span>Windows Toast</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-rose-300" title="Abre uma janela Pop-up do Windows por cima de qualquer aplicativo/jogo">
+                  <input type="checkbox" id="chk-notify-win-popup" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-rose-400 cursor-pointer" />
+                  <span>Pop-up Windows</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-emerald-300" title="Banner flutuante no canto superior direito desta página">
+                  <input type="checkbox" id="chk-notify-web-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-emerald-400 cursor-pointer" />
+                  <span>Card em Tela</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-amber-300" title="Notificação direta no celular (ntfy / WhatsApp / E-mail)">
+                  <input type="checkbox" id="chk-notify-phone" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-amber-400 cursor-pointer" />
+                  <span>Notificação no Celular</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-purple-300">
+                  <input type="checkbox" id="chk-notify-sound" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-purple-400 cursor-pointer" />
+                  <span>Aviso Sonoro</span>
+                </label>
               </div>
             </div>
 
-            <div class="flex flex-wrap items-center gap-3">
-              <span class="text-[11px] text-slate-400 font-semibold">Onde avisar:</span>
-              <label class="flex items-center gap-1.5 cursor-pointer text-sky-300" title="Notificação nativa na Central de Ações do Windows 10/11">
-                <input type="checkbox" id="chk-notify-win-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
-                <span>Windows Toast</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer text-rose-300" title="Abre uma janela Pop-up do Windows por cima de qualquer aplicativo/jogo">
-                <input type="checkbox" id="chk-notify-win-popup" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-rose-400 cursor-pointer" />
-                <span>Pop-up Windows</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer text-emerald-300" title="Banner flutuante no canto superior direito desta página">
-                <input type="checkbox" id="chk-notify-web-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-emerald-400 cursor-pointer" />
-                <span>Card em Tela</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer text-amber-300" title="Notificação direta no celular (ntfy / WhatsApp / E-mail)">
-                <input type="checkbox" id="chk-notify-phone" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-amber-400 cursor-pointer" />
-                <span>Notificação no Celular</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer text-purple-300">
-                <input type="checkbox" id="chk-notify-sound" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-purple-400 cursor-pointer" />
-                <span>Aviso Sonoro</span>
-              </label>
+            <!-- Multi-Product Category Filter for Notifications -->
+            <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+              <span class="text-[11px] text-slate-400 font-semibold">Peças Notificadas:</span>
+              <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono">
+                <label class="inline-flex items-center gap-1.5 text-sky-300 cursor-pointer select-none">
+                  <input type="checkbox" id="chk-notify-prod-gpu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                  <span>🎮 Placas de Vídeo (GPUs)</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-emerald-300 cursor-pointer select-none">
+                  <input type="checkbox" id="chk-notify-prod-cpu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-emerald-400 cursor-pointer" />
+                  <span>⚡ Processadores (CPUs)</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-amber-300 cursor-pointer select-none">
+                  <input type="checkbox" id="chk-notify-prod-psu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-amber-400 cursor-pointer" />
+                  <span>🔌 Fontes (PSU)</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-purple-300 cursor-pointer select-none">
+                  <input type="checkbox" id="chk-notify-prod-mobo" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-purple-400 cursor-pointer" />
+                  <span>🔲 Placas-Mãe</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-pink-300 cursor-pointer select-none">
+                  <input type="checkbox" id="chk-notify-prod-ram" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-pink-400 cursor-pointer" />
+                  <span>💾 Memórias RAM</span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -557,27 +582,29 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 1: DUELO RELACIONAL (HOW MUCH MORE SHOULD 5070 COST OVER 5060?)    -->
+    <!-- TAB 1: DUELO RELACIONAL (GPU VS GPU OU CPU VS CPU)                      -->
     <!-- ===================================================================== -->
     <section id="tab-versus" class="space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-sky-500/30 shadow-xl">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Calculadora de Diferença Justa entre GPUs</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Descubra quanto a placa superior pode custar a mais considerando jogos, teto do monitor e inferência de IA.
-            </p>
+      <!-- GPU DUEL VIEW -->
+      <div id="versus-gpu-view" class="space-y-6">
+        <div class="glass-card rounded-2xl p-5 border border-sky-500/30 shadow-xl">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div>
+              <h2 class="text-xl font-bold tracking-tight text-white">Calculadora de Diferença Justa entre GPUs</h2>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Descubra quanto a placa superior pode custar a mais considerando jogos, teto do monitor, renderização e IA.
+              </p>
+            </div>
+            <!-- Quick Duels Presets -->
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs text-slate-400 mr-1">Duelos Rápidos:</span>
+              <button onclick="setDuelPair('rtx-5070', 'rtx-5060')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30 transition">RTX 5070 vs RTX 5060</button>
+              <button onclick="setDuelPair('rtx-5070', 'rtx-5060-ti-16gb')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">RTX 5070 vs 5060 Ti 16GB</button>
+              <button onclick="setDuelPair('rtx-5060-ti-16gb', 'rtx-5060')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">5060 Ti 16GB vs RTX 5060</button>
+              <button onclick="setDuelPair('rx-9070-xt', 'rtx-5070')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">RX 9070 XT vs RTX 5070</button>
+              <button onclick="setDuelPair('rtx-5070', 'rx-580-8gb-ref')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition">RTX 5070 vs Sua RX 580</button>
+            </div>
           </div>
-          <!-- Quick Duels Presets -->
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="text-xs text-slate-400 mr-1">Duelos Rápidos:</span>
-            <button onclick="setDuelPair('rtx-5070', 'rtx-5060')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30 transition">RTX 5070 vs RTX 5060</button>
-            <button onclick="setDuelPair('rtx-5070', 'rtx-5060-ti-16gb')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">RTX 5070 vs 5060 Ti 16GB</button>
-            <button onclick="setDuelPair('rtx-5060-ti-16gb', 'rtx-5060')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">5060 Ti 16GB vs RTX 5060</button>
-            <button onclick="setDuelPair('rx-9070-xt', 'rtx-5070')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition">RX 9070 XT vs RTX 5070</button>
-            <button onclick="setDuelPair('rtx-5070', 'rx-580-8gb-ref')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition">RTX 5070 vs Sua RX 580</button>
-          </div>
-        </div>
 
         <!-- Two GPU Pickers + Custom Price Override -->
         <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-center mt-5">
@@ -753,13 +780,201 @@
           <div class="mt-4 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300" id="duel-ram-ai-insight"></div>
         </div>
       </div>
-    </section>
+    </div> <!-- /versus-gpu-view -->
+
+    <!-- CPU DUEL VIEW -->
+    <div id="versus-cpu-view" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 border border-emerald-500/30 shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <span>Calculadora de Diferença Justa entre Processadores (CPUs)</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">Plataforma & Workstation</span>
+            </h2>
+            <p class="text-xs text-slate-300 mt-0.5">
+              Avalie se o ganho em Jogos, Renderização 3D, Edição de Vídeo e Compilação justifica o preço do chip e a migração de Socket (AM4/AM5/LGA) e RAM (DDR4/DDR5).
+            </p>
+          </div>
+          <!-- Quick CPU Duels Presets -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-xs text-slate-400 mr-1">Duelos Rápidos:</span>
+            <button onclick="setCpuDuelPair('ryzen-7-7800x3d', 'ryzen-5-5600')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition cursor-pointer">7800X3D vs R5 5600 (AM4→AM5)</button>
+            <button onclick="setCpuDuelPair('ryzen-7-5700x3d', 'ryzen-5-5600')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">5700X3D vs R5 5600 (Mesmo AM4)</button>
+            <button onclick="setCpuDuelPair('core-i5-14600kf', 'core-i5-12400f')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">i5 14600KF vs i5 12400F (LGA1700)</button>
+            <button onclick="setCpuDuelPair('ryzen-9-9950x', 'ryzen-7-7700x')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 transition cursor-pointer">9950X vs 7700X (Workstation)</button>
+            <button onclick="setCpuDuelPair('core-ultra-7-265k', 'core-i7-14700kf')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 transition cursor-pointer">Ultra 7 265K vs 14700KF</button>
+          </div>
+        </div>
+
+        <!-- Two CPU Pickers + Custom Price Override -->
+        <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-center mt-5">
+          <!-- Baseline CPU (Base) -->
+          <div class="lg:col-span-5 glass-elevated rounded-2xl p-5 border border-emerald-500/30 hover:border-emerald-500/50 shadow-md shadow-emerald-500/5 transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono uppercase text-emerald-400 font-bold">Processador Base (Referência)</span>
+              <span id="cpu-base-status-badge" class="text-[11px] font-mono px-2 py-0.5 rounded-full"></span>
+            </div>
+            <select id="cpu-duel-select-base" onchange="onCpuDuelSelectionChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-emerald-400 mb-3"></select>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400 block text-[10px]">Preço CPU (Editável)</span>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="text-slate-400 font-mono currency-sym">R$</span>
+                  <input type="number" id="cpu-duel-price-base" oninput="renderCpuDuelAnalysis()" class="w-full bg-transparent font-mono font-bold text-emerald-400 text-sm focus:outline-none border-b border-slate-700 focus:border-emerald-400" step="50" />
+                </div>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400 block text-[10px]">Preço Alvo</span>
+                <span id="cpu-duel-target-base" class="font-mono font-bold text-sky-300 text-sm mt-0.5 block">--</span>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400 block text-[10px]">Mínimo 90d / Média</span>
+                <span id="cpu-duel-hist-base" class="font-mono font-semibold text-slate-200 text-xs mt-0.5 block">--</span>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 pt-2 border-t border-slate-800/80" id="cpu-duel-specs-base"></div>
+          </div>
+
+          <!-- Center VS Badge -->
+          <div class="lg:col-span-1 flex flex-col items-center justify-center py-2">
+            <div class="w-12 h-12 rounded-full bg-slate-800 border-2 border-emerald-500/50 flex items-center justify-center font-mono font-black text-emerald-400 shadow-lg">
+              VS
+            </div>
+            <button onclick="resetCpuDuelPricesToLive()" class="mt-2 text-[11px] text-slate-400 hover:text-emerald-400 underline cursor-pointer">Resetar Preços</button>
+          </div>
+
+          <!-- Candidate CPU -->
+          <div class="lg:col-span-5 glass-elevated rounded-2xl p-5 border border-sky-500/30 hover:border-sky-500/50 shadow-md shadow-sky-500/5 transition-all">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-mono uppercase text-sky-400 font-bold">Processador Superior (Candidato ao Upgrade)</span>
+              <span id="cpu-cand-status-badge" class="text-[11px] font-mono px-2 py-0.5 rounded-full"></span>
+            </div>
+            <select id="cpu-duel-select-cand" onchange="onCpuDuelSelectionChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-sky-400 mb-3"></select>
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400 block text-[10px]">Preço CPU (Editável)</span>
+                <div class="flex items-center gap-1 mt-0.5">
+                  <span class="text-slate-400 font-mono currency-sym">R$</span>
+                  <input type="number" id="cpu-duel-price-cand" oninput="renderCpuDuelAnalysis()" class="w-full bg-transparent font-mono font-bold text-sky-400 text-sm focus:outline-none border-b border-slate-700 focus:border-sky-400" step="50" />
+                </div>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400 block text-[10px]">Preço Alvo</span>
+                <span id="cpu-duel-target-cand" class="font-mono font-bold text-sky-300 text-sm mt-0.5 block">--</span>
+              </div>
+              <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-400 block text-[10px]">Mínimo 90d / Média</span>
+                <span id="cpu-duel-hist-cand" class="font-mono font-semibold text-slate-200 text-xs mt-0.5 block">--</span>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 pt-2 border-t border-slate-800/80" id="cpu-duel-specs-cand"></div>
+          </div>
+        </div>
+
+        <!-- PLATFORM MIGRATION COST & COMPATIBILITY BOX -->
+        <div id="cpu-duel-platform-box" class="mt-5 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2"></div>
+
+        <!-- MULTI-CORE PERFORMANCE & CORE/THREAD/SMT ARCHITECTURE DEEP-DIVE -->
+        <div id="cpu-duel-cores-architecture-box" class="mt-5 glass-elevated rounded-2xl p-5 border border-purple-500/30 shadow-lg space-y-4"></div>
+
+        <!-- VERSUS HEAD-TO-HEAD CPU SCORECARD -->
+        <div id="cpu-duel-versus-block" class="mt-5 glass-elevated rounded-2xl p-5 border border-emerald-500/30 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold tracking-wider">VERSUS CPU HEAD-TO-HEAD</span>
+              <h3 class="text-base font-bold text-white">Comparativo de Desempenho & Índices Reais</h3>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">Ponderado pelo perfil de Jogos + Workstation (Render / Compilação)</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4 items-center">
+            <!-- Left 6 Cols: CPU Score Ratings & Head-to-Head Comparative Bars -->
+            <div class="lg:col-span-6 space-y-4">
+              <div class="grid grid-cols-2 gap-3" id="cpu-duel-versus-ratings"></div>
+              <div class="space-y-2.5 pt-2" id="cpu-duel-versus-bars"></div>
+            </div>
+
+            <!-- Right 6 Cols: Hexagonal Radar Chart (Spider Chart) for CPU -->
+            <div class="lg:col-span-6 bg-slate-900/85 rounded-xl p-4 border border-slate-800 flex flex-col items-center justify-center">
+              <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80 text-xs">
+                <span class="font-bold text-slate-200">Equilíbrio da Plataforma (CPU)</span>
+                <span class="text-[10px] font-mono text-slate-400">Jogos • Multi-Core • Single-Core • Eficiência</span>
+              </div>
+              <div class="h-64 w-full relative">
+                <canvas id="chart-cpu-duel-radar"></canvas>
+              </div>
+              <div class="w-full flex items-center justify-center gap-6 mt-2 pt-2 border-t border-slate-800/60 text-xs font-mono" id="cpu-duel-radar-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RELATIONAL CPU VERDICT BANNER & DELTA THERMOMETER -->
+        <div id="cpu-duel-verdict-box" class="mt-6 rounded-2xl p-5 border transition-all"></div>
+
+        <!-- Interactive CPU Price Delta Thermometer Bar -->
+        <div class="mt-5 bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-semibold tracking-wide text-slate-200">Termômetro da Diferença de Preço (Quanto pagar a mais pelo Processador Superior)</span>
+            <span class="text-xs font-mono text-slate-400" id="cpu-duel-thermometer-subtitle"></span>
+          </div>
+          <div class="relative pt-6 pb-8">
+            <div class="h-5 w-full rounded-full overflow-hidden grid grid-cols-4 border border-slate-700/80 shadow-inner">
+              <div class="bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-slate-950 tracking-wide">EXCELENTE</div>
+              <div class="bg-sky-400 flex items-center justify-center text-[10px] font-bold text-slate-950 tracking-wide">COMPENSA (JUSTO)</div>
+              <div class="bg-amber-400 flex items-center justify-center text-[10px] font-bold text-slate-950 tracking-wide">ÁGIO ALTO</div>
+              <div class="bg-rose-500 flex items-center justify-center text-[10px] font-bold text-white tracking-wide">NÃO COMPENSA</div>
+            </div>
+            <div class="grid grid-cols-4 text-[11px] font-mono text-slate-400 mt-1.5">
+              <div id="cpu-zone-lbl-1">Zona Excelente</div>
+              <div id="cpu-zone-lbl-2">Teto Justo</div>
+              <div id="cpu-zone-lbl-3">Ágio Alto</div>
+              <div id="cpu-zone-lbl-4">Péssimo</div>
+            </div>
+            <div id="cpu-thermometer-marker" class="absolute top-0 transition-all duration-300 transform -translate-x-1/2" style="left: 50%;">
+              <div class="px-2 py-0.5 rounded bg-white text-slate-950 font-mono font-extrabold text-[11px] shadow-lg whitespace-nowrap">
+                Hoje: <span id="cpu-marker-delta-val">--</span>
+              </div>
+              <div class="w-0.5 h-6 bg-white mx-auto"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2 pt-4 border-t border-slate-800/80" id="cpu-duel-scenarios-grid"></div>
+        </div>
+      </div>
+
+      <!-- Historical Price & Spread Chart + CPU Alternatives -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 glass-card rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white">Histórico de Preços dos Processadores</h3>
+              <p class="text-xs text-slate-400">Compare oscilações reais de mercado dos dois chips ao longo do ano.</p>
+            </div>
+          </div>
+          <div class="h-72">
+            <canvas id="chart-cpu-duel-history"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 glass-card rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <span class="text-[11px] font-mono uppercase text-emerald-400 font-bold">Alternativas Inteligentes de Processador</span>
+            <h3 class="text-base font-bold text-white mt-0.5">Opções no mesmo Socket e Melhores Saltos</h3>
+            <p class="text-xs text-slate-400 mt-1">Veja quais processadores entregam melhor custo-benefício em Jogos ou Workstation:</p>
+            <div id="cpu-duel-alternatives-list" class="mt-4 space-y-2.5"></div>
+          </div>
+          <div class="mt-4 p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-300" id="cpu-duel-platform-insight"></div>
+        </div>
+      </div>
+    </div> <!-- /versus-cpu-view -->
+  </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 2: CUSTO-BENEFÍCIO CONTEXTUAL & PREÇO ALVO (ALL GPUS)             -->
+    <!-- TAB 2: CUSTO-BENEFÍCIO CONTEXTUAL & PREÇO ALVO (GPUS OU CPUS)         -->
     <!-- ===================================================================== -->
     <section id="tab-cb" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5">
+      <!-- GPU CB VIEW -->
+      <div id="cb-gpu-view" class="space-y-6">
+        <div class="glass-card rounded-2xl p-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
             <h2 class="text-xl font-bold tracking-tight text-white">Ranking de Custo-Benefício & Preço Alvo</h2>
@@ -871,7 +1086,95 @@
           </table>
         </div>
       </div>
-    </section>
+    </div> <!-- /cb-gpu-view -->
+
+    <!-- CPU CB VIEW -->
+    <div id="cb-cpu-view" class="hidden space-y-6">
+      <div class="glass-card rounded-2xl p-5 border border-emerald-500/20">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              <span>Ranking de Custo-Benefício de Processadores (CPUs)</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">Plataforma & Workstation</span>
+            </h2>
+            <p class="text-xs text-slate-300 mt-0.5">
+              Ponderação entre Single-Core IPC (Jogos), Multi-Core (Renderização 3D, Edição e Compilação) e custo de migração de plataforma (Placa-mãe e RAM).
+            </p>
+          </div>
+          <!-- Filters & Mode -->
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="cpu-cb-search" oninput="renderCpuCBTable()" placeholder="Buscar CPU (ex: 5700X3D, 7800X3D, 14600K)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-400 w-48" />
+            <select id="cpu-cb-filter-socket" onchange="renderCpuCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <option value="ALL">Todos os Sockets</option>
+              <option value="AM5">AMD AM5 (DDR5)</option>
+              <option value="AM4">AMD AM4 (DDR4)</option>
+              <option value="LGA1851">Intel LGA1851 (Ultra)</option>
+              <option value="LGA1700">Intel LGA1700 (12ª–14ª)</option>
+              <option value="LGA1200">Intel LGA1200</option>
+              <option value="LGA2011-3">Intel LGA2011-3 (Xeon)</option>
+            </select>
+            <select id="cpu-cb-filter-brand" onchange="renderCpuCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+              <option value="ALL">Todas Marcas</option>
+              <option value="AMD">AMD Ryzen</option>
+              <option value="Intel">Intel Core / Xeon</option>
+            </select>
+            <select id="cpu-cb-filter-base-rel" onchange="renderCpuCBTable()" class="bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-emerald-300 font-semibold" title="Escolha o Processador Base de Comparação"></select>
+
+            <!-- Mode Switch: Apenas CPU vs Kit Plataforma Completa -->
+            <div class="inline-flex p-0.5 bg-slate-900 border border-slate-700 rounded-lg text-[11px] font-mono" id="group-cpu-cb-platform-mode">
+              <button type="button" id="btn-cpu-mode-isolated" onclick="setCpuPlatformMode('isolated')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-emerald-500 text-slate-950 shadow-sm" title="Avaliar apenas o preço da CPU individual">
+                ⚡ Apenas CPU
+              </button>
+              <button type="button" id="btn-cpu-mode-bundle" onclick="setCpuPlatformMode('bundle')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200" title="Incluir custo de Placa-Mãe e RAM se mudar de socket/DDR">
+                📦 Kit Plataforma (CPU+Mobo+RAM)
+              </button>
+            </div>
+
+            <!-- Exclude Xeons / Server Checkbox -->
+            <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-amber-500/40 text-[11px] font-mono text-amber-300 cursor-pointer select-none hover:border-amber-400 transition" title="Ocultar processadores de servidor antigos (Xeon LGA2011-3/X99) do ranking e cálculo de custo-benefício">
+              <input type="checkbox" id="cpu-cb-exclude-xeon" onchange="toggleExcludeXeons(this.checked)" checked class="rounded border-amber-500/50 bg-slate-950 text-amber-500 focus:ring-0">
+              <span>Ocultar Xeons / X99</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Scatter Chart: CPU Price vs Benefit / Workstation -->
+        <div class="mt-4 bg-slate-900/70 rounded-xl p-4 border border-slate-800/80">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <div>
+              <span id="cpu-cb-chart-title" class="text-xs font-bold text-slate-300">Mapa de Eficiência de CPUs: Preço (<span class="currency-sym">R$</span>) vs Custo-Benefício Contextual</span>
+              <span class="text-[11px] text-slate-400 font-mono ml-2 hidden sm:inline">• Clique no ponto para enviar ao Duelo</span>
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="chart-cpu-cb-scatter"></canvas>
+          </div>
+        </div>
+
+        <!-- Full Interactive CPU Table -->
+        <div class="mt-5 overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 text-[11px] font-mono uppercase text-slate-400 bg-slate-900/60">
+                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCpuCBSort('rank')">#</th>
+                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCpuCBSort('name')">Processador</th>
+                <th class="py-3 px-2 text-center cursor-pointer hover:text-white" onclick="setCpuCBSort('cores')">Cores / Threads</th>
+                <th class="py-3 px-2 text-right cursor-pointer hover:text-white" onclick="setCpuCBSort('gaming')">Jogos</th>
+                <th class="py-3 px-2 text-right cursor-pointer hover:text-white" onclick="setCpuCBSort('workstation')">Workstation</th>
+                <th class="py-3 px-2 text-center">TDP</th>
+                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCpuCBSort('price')">Preço</th>
+                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCpuCBSort('target')">Preço Alvo</th>
+                <th class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCpuCBSort('my_cb')">Custo-Benefício</th>
+                <th class="py-3 px-3 text-right">Relação vs Base</th>
+                <th class="py-3 px-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="cpu-cb-table-body" class="divide-y divide-slate-800/60 text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </div> <!-- /cb-cpu-view -->
+  </section>
 
     <!-- ===================================================================== -->
     <!-- TAB 3: MEU PC, CONSUMO DE ENERGIA (WATTS) & O QUE FALTA                -->
@@ -1066,7 +1369,25 @@
             <button onclick="toggleBFSummary()" id="bf-btn-toggle-summary" class="bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 transition cursor-pointer">
               Estatísticas Multi-Anos
             </button>
+            <button onclick="toggleBFCustomModelsDrawer()" id="bf-btn-toggle-custom" class="bg-slate-900 border border-sky-500/40 hover:border-sky-400 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 transition cursor-pointer font-semibold" title="Escolha exatamente quais modelos devem aparecer no gráfico e na análise">
+              ⚙️ Escolher Modelos
+            </button>
           </div>
+        </div>
+
+        <!-- Collapsible Custom Models Selector Drawer -->
+        <div id="bf-custom-models-drawer" class="hidden mt-3 p-4 rounded-xl bg-slate-900/90 border border-sky-500/40 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>🛠️ Personalizar Modelos Exibidos na Black Friday</span>
+            </span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="selectAllBFModels(true)" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono hover:bg-sky-500/30 cursor-pointer">Marcar Todos</button>
+              <button type="button" onclick="selectAllBFModels(false)" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-mono hover:bg-slate-700 cursor-pointer">Desmarcar</button>
+              <button type="button" onclick="toggleBFCustomModelsDrawer()" class="text-xs text-slate-400 hover:text-white cursor-pointer">✕ Fechar</button>
+            </div>
+          </div>
+          <div id="bf-custom-models-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-56 overflow-y-auto pr-1"></div>
         </div>
 
         <!-- Multi-Year Historical Black Friday Reference Cards (Configurable/Collapsible) -->
@@ -1090,6 +1411,13 @@
                 <select id="bf-target-item" onchange="onBFTargetItemChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"></select>
                 <!-- Dynamic Hardware Info Pill (RAM, VRAM, Arch) -->
                 <div id="bf-target-info-pill" class="mt-2 flex flex-wrap items-center gap-2"></div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-[11px] text-slate-300 font-semibold">Defina sua Faixa de Alvo:</span>
+                <button type="button" onclick="syncBFTargetRangeToExpected()" title="Ajustar automaticamente para a faixa estatística da BF" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold cursor-pointer transition">
+                  ↺ Sincronizar com Faixa BF
+                </button>
               </div>
 
               <div class="grid grid-cols-2 gap-2.5 text-xs">
@@ -1223,39 +1551,86 @@
               Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.
             </p>
           </div>
-          <!-- Controls: GPU A vs GPU B + CPU Mode Toggle + Upscaling -->
+          <!-- Controls: Setup A (GPU A + CPU A) vs Setup B (GPU B + CPU B) + Upscaling & Modes -->
           <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-sky-400 font-bold">GPU A:</span>
-              <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white"></select>
+            <!-- Setup A Group (Sky) -->
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-sky-950/40 border border-sky-500/40">
+              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-extrabold uppercase">Setup A</span>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">GPU:</span>
+                <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">CPU:</span>
+                <select id="sim-select-cpu-a" onchange="onSimCpuChange(this.value, 'a')" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-emerald-400 font-bold">GPU B:</span>
-              <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white"></select>
+
+            <!-- Swap Button -->
+            <button type="button" onclick="swapSimulatorSetups()" title="Inverter Setup A e Setup B" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer text-xs font-bold">
+              ⇄
+            </button>
+
+            <!-- Setup B Group (Emerald) -->
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-extrabold uppercase">Setup B</span>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">GPU:</span>
+                <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="text-[10px] text-slate-400 font-mono">CPU:</span>
+                <select id="sim-select-cpu-b" onchange="onSimCpuChange(this.value, 'b')" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <span class="text-xs text-amber-400 font-bold">CPU:</span>
-              <select id="sim-select-cpu" onchange="onSimCpuChange(this.value)" class="bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white"></select>
+
+            <!-- Hidden legacy CPU selector to maintain backwards compatibility -->
+            <select id="sim-select-cpu" class="hidden"></select>
+
+            <!-- Mode & Upscaling -->
+            <div class="flex items-center gap-2">
+              <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
+                <option value="both" selected>GPU + CPU (Setup Completo)</option>
+                <option value="gpu">Apenas GPU (Gráficos Puros)</option>
+                <option value="cpu">Apenas CPU (Processamento Puro)</option>
+              </select>
+              <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-800 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300">
+                <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
+                <option value="sr">Só Upscaling Qualidade (DLSS / FSR)</option>
+                <option value="native">Raster Nativo Puro (Sem DLSS / Sem FG)</option>
+                <option value="max_fg">Máximo Bruto (DLSS 4 + MFG 4×)</option>
+              </select>
             </div>
-            <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
-              <option value="both" selected>Comparar: GPU Pura (Sem CPU) vs Com CPU</option>
-              <option value="pure">Apenas GPU Pura (0% Gargalo de CPU)</option>
-              <option value="cpu">Apenas Considerando CPU Selecionado</option>
-            </select>
-            <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-800 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300">
-              <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
-              <option value="sr">Só Upscaling Qualidade (DLSS / FSR)</option>
-              <option value="native">Raster Nativo Puro (Sem DLSS / Sem FG)</option>
-              <option value="max_fg">Máximo Bruto (DLSS 4 + MFG 4×)</option>
-            </select>
           </div>
         </div>
 
         <!-- XEON / LEGACY ARCHITECTURE ENGINE WARNING BANNER -->
         <div id="sim-xeon-warning-banner" class="mt-4"></div>
 
-        <!-- VERSUS / RTINGS DIRECT HEAD-TO-HEAD HERO CARDS -->
-        <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5"></div>
+        <!-- VERSUS / RTINGS DIRECT HEAD-TO-HEAD HERO CARDS (4 Cards: Jogos, Workstation, IA Local, Equilíbrio) -->
+        <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-5"></div>
+
+        <!-- RADAR / HEXAGON SYSTEM CAPABILITIES COMPARISON (Setup A vs Setup B) -->
+        <div id="sim-radar-hexagon-container" class="mt-5 glass-elevated rounded-2xl p-5 border border-sky-500/30 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+            <div>
+              <span class="text-[10px] font-mono uppercase text-sky-400 font-bold">Radar Hexagonal de Capacidades</span>
+              <h3 class="text-sm font-bold text-white mt-0.5">Comparativo Multidimensional: Setup A (Azul) vs Setup B (Verde)</h3>
+            </div>
+            <div id="sim-radar-winner-badge" class="flex items-center gap-2"></div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-7 flex justify-center items-center">
+              <div class="w-full max-w-[440px] h-[320px] relative">
+                <canvas id="chart-sim-radar"></canvas>
+              </div>
+            </div>
+            <div id="sim-radar-metrics-breakdown" class="lg:col-span-5 space-y-2 text-xs font-mono"></div>
+          </div>
+        </div>
+
+        <!-- DEDICATED WORKSTATION & PRODUTIVIDADE COMPARISON PANEL (Render 3D, Edição 4K, Compilação de Código, Simulação Física) -->
+        <div id="sim-workstation-panel" class="mt-5 glass-elevated rounded-2xl p-5 border border-amber-500/30 shadow-lg space-y-4"></div>
 
         <!-- COLLAPSIBLE: SINGLE GAME DEEP-DIVE INSPECTOR & RELEVANT GAMES FILTER -->
         <details class="mt-5 bg-slate-900/70 rounded-2xl border border-slate-800 p-4 transition-all">
@@ -1550,24 +1925,38 @@
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3.5">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-200">Ponderação do Seu Uso (Soma 100%)</span>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" onclick="setWorkloadPreset(70, 20, 10, '1.0')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium cursor-pointer">Preset Gamer</button>
-                  <button type="button" onclick="setWorkloadPreset(25, 45, 30, '1.6')" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-medium cursor-pointer">Preset Equilibrado</button>
-                  <button type="button" onclick="setWorkloadPreset(10, 60, 30, '2.3')" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-medium cursor-pointer">Preset IA/Eng</button>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <button type="button" onclick="setWorkloadPreset(60, 20, 10, 10, '1.0')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium cursor-pointer">Gamer</button>
+                  <button type="button" onclick="setWorkloadPreset(30, 35, 20, 15, '1.6')" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-medium cursor-pointer">Equilibrado</button>
+                  <button type="button" onclick="setWorkloadPreset(10, 60, 15, 15, '2.0')" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-medium cursor-pointer">Workstation Pro</button>
+                  <button type="button" onclick="setWorkloadPreset(10, 25, 50, 15, '2.3')" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-medium cursor-pointer">IA & Dev</button>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <!-- 4-Pillar Grid -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <!-- Gaming -->
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-xs">
                     <span class="text-emerald-400 font-medium text-[11px]">Jogos</span>
                     <div class="flex items-center gap-0.5">
-                      <input type="number" id="num-w-gaming" min="0" max="100" value="25" oninput="onWeightNumberInput('gaming', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-emerald-400 focus:outline-none" />
+                      <input type="number" id="num-w-gaming" min="0" max="100" value="30" oninput="onWeightNumberInput('gaming', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-emerald-400 focus:outline-none" />
                       <span class="text-[10px] font-mono text-slate-400">%</span>
                     </div>
                   </div>
-                  <input type="range" id="slider-w-gaming" min="0" max="100" value="25" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" />
+                  <input type="range" id="slider-w-gaming" min="0" max="100" value="30" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#10b981;" />
+                </div>
+
+                <!-- Workstation / Productivity -->
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-amber-400 font-medium text-[11px]">Workstation</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-w-workstation" min="0" max="100" value="35" oninput="onWeightNumberInput('workstation', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-amber-400 focus:outline-none" />
+                      <span class="text-[10px] font-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-w-workstation" min="0" max="100" value="35" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f59e0b;" />
                 </div>
 
                 <!-- AI -->
@@ -1575,23 +1964,83 @@
                   <div class="flex items-center justify-between text-xs">
                     <span class="text-purple-400 font-medium text-[11px]">IA Local</span>
                     <div class="flex items-center gap-0.5">
-                      <input type="number" id="num-w-ai" min="0" max="100" value="45" oninput="onWeightNumberInput('ai', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-purple-400 focus:outline-none" />
+                      <input type="number" id="num-w-ai" min="0" max="100" value="20" oninput="onWeightNumberInput('ai', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-purple-400 focus:outline-none" />
                       <span class="text-[10px] font-mono text-slate-400">%</span>
                     </div>
                   </div>
-                  <input type="range" id="slider-w-ai" min="0" max="100" value="45" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#a855f7;" />
+                  <input type="range" id="slider-w-ai" min="0" max="100" value="20" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#a855f7;" />
                 </div>
 
                 <!-- Engineering / Sim -->
                 <div class="space-y-1">
                   <div class="flex items-center justify-between text-xs">
-                    <span class="text-amber-400 font-medium text-[11px]">Treinamento & Simulação</span>
+                    <span class="text-sky-400 font-medium text-[11px]">Simulação/Eng</span>
                     <div class="flex items-center gap-0.5">
-                      <input type="number" id="num-w-soft" min="0" max="100" value="30" oninput="onWeightNumberInput('soft', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-amber-400 focus:outline-none" />
+                      <input type="number" id="num-w-soft" min="0" max="100" value="15" oninput="onWeightNumberInput('soft', this.value)" class="w-11 bg-slate-900 border border-slate-700 rounded px-1 py-0.5 text-[11px] font-mono font-bold text-white text-right focus:border-sky-400 focus:outline-none" />
                       <span class="text-[10px] font-mono text-slate-400">%</span>
                     </div>
                   </div>
-                  <input type="range" id="slider-w-soft" min="0" max="100" value="30" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f59e0b;" />
+                  <input type="range" id="slider-w-soft" min="0" max="100" value="15" oninput="onWeightSliderInput(event)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#38bdf8;" />
+                </div>
+              </div>
+
+              <!-- Workstation Sub-Profile Config Panel -->
+              <div class="mt-3 p-3 rounded-lg bg-slate-900/90 border border-amber-500/20 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">Perfil Workstation</span>
+                    <span class="text-[11px] text-slate-300 font-semibold">Distribuição de Cargas Profissionais</span>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <span id="ws-profile-sum-indicator" class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">Auto-Balance: 100%</span>
+                  </div>
+                </div>
+
+                <!-- Presets for Workstation Sub-Profile -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span class="text-[10px] font-mono text-slate-400">Presets:</span>
+                  <button type="button" onclick="setWorkstationPreset('balanced')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-mono transition cursor-pointer">⚖️ Equilibrado (33%)</button>
+                  <button type="button" onclick="setWorkstationPreset('render')" class="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[10px] font-mono transition cursor-pointer">🎨 3D Render (70%)</button>
+                  <button type="button" onclick="setWorkstationPreset('editing')" class="px-2 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-[10px] font-mono transition cursor-pointer">🎬 Edição 4K (70%)</button>
+                  <button type="button" onclick="setWorkstationPreset('compilation')" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-mono transition cursor-pointer">⚙️ Dev / Código (70%)</button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  <!-- 3D Rendering (Blender / Cinebench / V-Ray) -->
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-amber-300 text-[11px]">Render 3D (Blender / V-Ray)</span>
+                      <div class="flex items-center gap-0.5">
+                        <input type="number" id="num-ws-rendering" min="0" max="100" value="40" oninput="onWorkstationProfileInput('rendering', this.value)" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-[10px] font-mono font-bold text-amber-300 text-right focus:border-amber-400 focus:outline-none" />
+                        <span class="text-[10px] font-mono text-slate-400">%</span>
+                      </div>
+                    </div>
+                    <input type="range" id="slider-ws-rendering" min="0" max="100" value="40" oninput="onWorkstationProfileInput('rendering', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f59e0b;" />
+                  </div>
+
+                  <!-- Video Editing (Premiere / DaVinci) -->
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-sky-300 text-[11px]">Edição de Vídeo (Premiere/Resolve)</span>
+                      <div class="flex items-center gap-0.5">
+                        <input type="number" id="num-ws-editing" min="0" max="100" value="30" oninput="onWorkstationProfileInput('editing', this.value)" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-[10px] font-mono font-bold text-sky-300 text-right focus:border-sky-400 focus:outline-none" />
+                        <span class="text-[10px] font-mono text-slate-400">%</span>
+                      </div>
+                    </div>
+                    <input type="range" id="slider-ws-editing" min="0" max="100" value="30" oninput="onWorkstationProfileInput('editing', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#38bdf8;" />
+                  </div>
+
+                  <!-- Code / Compilation (C++, Rust, Docker) -->
+                  <div class="space-y-1">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-emerald-300 text-[11px]">Compilação & Dev (Rust/Docker)</span>
+                      <div class="flex items-center gap-0.5">
+                        <input type="number" id="num-ws-compilation" min="0" max="100" value="30" oninput="onWorkstationProfileInput('compilation', this.value)" class="w-10 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-[10px] font-mono font-bold text-emerald-300 text-right focus:border-emerald-400 focus:outline-none" />
+                        <span class="text-[10px] font-mono text-slate-400">%</span>
+                      </div>
+                    </div>
+                    <input type="range" id="slider-ws-compilation" min="0" max="100" value="30" oninput="onWorkstationProfileInput('compilation', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#10b981;" />
+                  </div>
                 </div>
               </div>
 
