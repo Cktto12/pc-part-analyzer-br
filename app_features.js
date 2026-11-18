@@ -4474,24 +4474,24 @@ function evaluateDealsForAlerts() {
       if (d.price_brl <= st.allMin * 1.01) {
         hitBF = true;
         d.bf_alert_banner = '🚨🔥 PREÇO DE BLACK FRIDAY — MÍNIMO HISTÓRICO! 🔥🚨';
-        reasons.push(activeReg === 'mx' ? `🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})` : `🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})`);
+        reasons.push(`🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})`);
       } else if (d.price_brl <= Math.max(exp.low, userMin)) {
         d.bf_alert_banner = '🚨🔥 PREÇO DE BLACK FRIDAY (PISO BF)! 🔥🚨';
-        if (mode === 'user_or_low' || mode === 'bf_mid' || mode === 'bf_high') {
+        if (mode !== 'all_min') {
           hitBF = true;
-          reasons.push(activeReg === 'mx' ? `🏷️ Meta Ganga BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})` : `🏷️ Meta Pechincha BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})`);
+          reasons.push(`🏷️ Piso Black Friday (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})`);
         }
       } else if (d.price_brl <= exp.mid) {
-        d.bf_alert_banner = '⚡🔥 PREÇO DE BLACK FRIDAY (NA MÉDIA BF)! 🔥⚡';
-        if (mode === 'bf_mid' || mode === 'bf_high') {
+        d.bf_alert_banner = '⚡🔥 PREÇO DE BLACK FRIDAY (NA FAIXA)! 🔥⚡';
+        if (mode !== 'all_min') {
           hitBF = true;
-          reasons.push(activeReg === 'mx' ? `🏷️ Promedio Esperado BF (≤ ${formatMoneyShort(exp.mid)})` : `🏷️ Média Esperada BF (≤ ${formatMoneyShort(exp.mid)})`);
+          reasons.push(`🏷️ Média Esperada BF (≤ ${formatMoneyShort(exp.mid)})`);
         }
       } else if (d.price_brl <= Math.max(exp.high, userMax)) {
-        d.bf_alert_banner = '⚡🔥 PREÇO DE BLACK FRIDAY (NA FAIXA BF)! 🔥⚡';
-        if (mode === 'bf_high') {
+        d.bf_alert_banner = '⚡🔥 PREÇO DE BLACK FRIDAY (NA FAIXA)! 🔥⚡';
+        if (mode === 'user_or_low' || mode === 'bf_high') {
           hitBF = true;
-          reasons.push(activeReg === 'mx' ? `🏷️ Rango BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})` : `🏷️ Dentro da Faixa BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})`);
+          reasons.push(`🏷️ Dentro da Faixa BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})`);
         }
       }
     }

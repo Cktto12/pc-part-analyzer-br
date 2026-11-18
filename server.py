@@ -533,6 +533,9 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         price_key = f"{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
         if not force_notify and (post_id in history or price_key in history):
             continue
+        # Only notify on genuinely recent offers (<= 2.5h old) so cron never dumps stale/finished deals
+        if not force_notify and float(d.get("age_hours") or 0) > 2.5:
+            continue
 
         qualifies = False
         reasons = []
@@ -591,7 +594,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
             if force_notify:
                 break
 
-    # 6. Also scan direct catalog items (gpus/cpus) for BF pricing, >= avg30dMinPct drops, or custom_targets drops
+    # 6. Scan direct catalog items ONLY when a real price drop vs yesterday occurred or slug is a custom target
     if (trig_bf or trig_avg30d or targets) and not (force_notify and notified_count > 0):
         import coupon_tracker
         target_map = {t.get("slug"): float(t.get("max_price") or 0) for t in targets if t.get("slug")}
@@ -606,9 +609,17 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 price_key = f"{slug}_{round(cur_p)}"
                 if not force_notify and price_key in history:
                     continue
+                hist_list = it.get("history") or []
+                prev_day_p = float(hist_list[-2]["price"]) if len(hist_list) >= 2 and hist_list[-2].get("price") else cur_p
+                dropped_today = (prev_day_p > 0) and (((prev_day_p - cur_p) / prev_day_p) * 100.0 >= 3.0)
+                is_custom_tgt = (slug in target_map and target_map[slug] > 0 and cur_p <= target_map[slug])
+                # Skip stale static catalog items unless they are a custom target or dropped >= 3% vs yesterday
+                if not force_notify and not is_custom_tgt and not dropped_today:
+                    continue
+
                 reasons = []
                 bf_banner = None
-                if slug in target_map and target_map[slug] > 0 and cur_p <= target_map[slug]:
+                if is_custom_tgt:
                     reasons.append(f"🎯 Meta Atingida (≤ {config.format_currency(target_map[slug], region_id=reg_id)})")
                 if trig_avg30d:
                     avg30 = _get_item_avg_30d(it)
