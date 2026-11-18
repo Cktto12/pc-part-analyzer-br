@@ -1,22 +1,22 @@
 {
   "coupons": {
     "DALHE11": {
-      "status": "unverified",
-      "reason": "Em estoque na KaBuM! por R$ 839.99 (sem cupom). Valor de R$ 747.00 depende do cupom DALHE11 aplicar no carrinho",
+      "status": "expired",
+      "reason": "Cupom DALHE11 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 549.99",
       "source": "live_test",
-      "updated_at": "2026-11-18 15:44:15"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "ZAFABLACK13": {
-      "status": "verified",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 5,272.19)",
+      "status": "expired",
+      "reason": "Cupom ZAFABLACK13 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 6,059.99",
       "source": "live_test",
-      "updated_at": "2026-11-18 15:43:36"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "ZAFADINHO13": {
       "status": "expired",
-      "reason": "Cupom ZAFADINHO13 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 3,099.00",
+      "reason": "Cupom ZAFADINHO13 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 6,199.99",
       "source": "live_test",
-      "updated_at": "2026-11-18 15:44:14"
+      "updated_at": "2026-11-18 19:02:48"
     },
     "11DO11TECH": {
       "status": "unverified",
@@ -52,37 +52,37 @@
       "status": "expired",
       "reason": "Cupom GANGUEX3D expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 1,769.99",
       "source": "live_test",
-      "updated_at": "2026-11-18 15:43:28"
+      "updated_at": "2026-11-18 19:02:49"
     },
     "NINJAX3D": {
       "status": "unverified",
-      "reason": "Em estoque na KaBuM! por R$ 2,149.99 (sem cupom). Valor de R$ 1,999.00 depende do cupom NINJAX3D aplicar no carrinho",
+      "reason": "Em estoque na KaBuM! por R$ 2,149.99 (sem cupom). Valor de R$ 1,999.49 depende do cupom NINJAX3D aplicar no carrinho",
       "source": "live_test",
-      "updated_at": "2026-11-18 15:44:16"
+      "updated_at": "2026-11-18 19:02:43"
     }
   },
   "deals": {
     "ofertasadrenaline/60130": {
-      "status": "active",
-      "reason": "Confirmado em estoque na Amazon BR por R$ 989.99 (sem depender de cupom)",
+      "status": "untested",
+      "reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 989.99,
-      "stock_verified": true,
-      "coupon_status": "none",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Amazon BR",
-      "final_url": "https://www.amazon.com.br/dp/B09VCHQHZ6?th=1&linkCode=sl2&tag=grupoferta-20&linkId=d40f336e04d1efccef283dbbd6721e53&ref_=as_li_ss_tl&ascsubtag=srctok-76f8b0e24e75b1d5&btn_type=ss&btn_ref=srctok-76f8b0e24e75b1d5",
-      "updated_at": "2026-11-18 15:43:34"
+      "final_url": "https://www.amazon.com.br/dp/B09VCHQHZ6?th=1&linkCode=sl2&tag=grupoferta-20&linkId=d40f336e04d1efccef283dbbd6721e53&ref_=as_li_ss_tl&ascsubtag=srctok-7d8dc68a878553e1&btn_type=ss&btn_ref=srctok-7d8dc68a878553e1",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://link.amazon/B0biyDQfi": {
-      "status": "active",
-      "reason": "Confirmado em estoque na Amazon BR por R$ 989.99 (sem depender de cupom)",
+      "status": "untested",
+      "reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 989.99,
-      "stock_verified": true,
-      "coupon_status": "none",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Amazon BR",
-      "final_url": "https://www.amazon.com.br/dp/B09VCHQHZ6?th=1&linkCode=sl2&tag=grupoferta-20&linkId=d40f336e04d1efccef283dbbd6721e53&ref_=as_li_ss_tl&ascsubtag=srctok-76f8b0e24e75b1d5&btn_type=ss&btn_ref=srctok-76f8b0e24e75b1d5",
-      "updated_at": "2026-11-18 15:43:34"
+      "final_url": "https://www.amazon.com.br/dp/B09VCHQHZ6?th=1&linkCode=sl2&tag=grupoferta-20&linkId=d40f336e04d1efccef283dbbd6721e53&ref_=as_li_ss_tl&ascsubtag=srctok-7d8dc68a878553e1&btn_type=ss&btn_ref=srctok-7d8dc68a878553e1",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "IskandarSouza/198641": {
       "status": "unverified_coupon",
@@ -92,8 +92,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027413_ab83b2666f2e2bbf1e39887246e47f1f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028564_babf9faa8632bc5ad2ecec7cd5e66cab&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "iskandarsouza/198641": {
       "status": "unverified_coupon",
@@ -103,8 +103,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027413_ab83b2666f2e2bbf1e39887246e47f1f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028564_babf9faa8632bc5ad2ecec7cd5e66cab&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://seuhardware.com/s/8BWawlW": {
       "status": "unverified_coupon",
@@ -114,162 +114,162 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027413_ab83b2666f2e2bbf1e39887246e47f1f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028564_babf9faa8632bc5ad2ecec7cd5e66cab&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "ofertasadrenaline/60134": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 2,696.99)",
+      "status": "out_of_stock",
+      "reason": "Sem estoque na loja (avise-me)",
       "source": "live_test",
-      "live_price": 3099.99,
-      "stock_verified": true,
-      "coupon_status": "verified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/1078272/placa-de-video-nvidia-zotac-rtx-5060-8gb-twin-edge-oc-gddr7-128bits-zotac-zt-b50600h-10a?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027413_fa8aeb07445b93cae53c0a2be6c4043a&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/1078272/placa-de-video-nvidia-zotac-rtx-5060-8gb-twin-edge-oc-gddr7-128bits-zotac-zt-b50600h-10a?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028562_cd598b952a43d0aaab44c15a6a2e3d1b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "https://tidd.ly/4iVlbRf": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 2,696.99)",
+      "status": "out_of_stock",
+      "reason": "Sem estoque na loja (avise-me)",
       "source": "live_test",
-      "live_price": 3099.99,
-      "stock_verified": true,
-      "coupon_status": "verified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/1078272/placa-de-video-nvidia-zotac-rtx-5060-8gb-twin-edge-oc-gddr7-128bits-zotac-zt-b50600h-10a?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027413_fa8aeb07445b93cae53c0a2be6c4043a&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/1078272/placa-de-video-nvidia-zotac-rtx-5060-8gb-twin-edge-oc-gddr7-128bits-zotac-zt-b50600h-10a?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028562_cd598b952a43d0aaab44c15a6a2e3d1b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "IskandarSouza/198604": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwM02AQtXlJKosq6hB-QeYjHEEVT9GqMdfHzAY7Z8dMBT9sVDAgAWttktBAtcNJPiDLI_hGFbCMaGf-B9MHJ5LFeeM7rdmH8H45jQFcmn8eq25BLCVhvMLW4F_tT9R6toWj1Xu0sJQsvaBJ3vIYiDIZ21rnboEzx1-vSjzh4tnM3qTLZPW9gDvGAqz3RjZLkzvGtFo&mmp_pid=an_18357780003&uls_trackid=575j4tv700c2&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxkh8byukb",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzQS1zrA5Evh1l7oE5FVwbtpvTg4WBn7CabDaokf__EP2-_mC7qzHYvfi1hhg1B_m0TxfEJ-USdFIN7xwT8c8trOkU4g-FovzM6bttroXSmN4qjTf4x6g8vkO3mucSmks8dJFDpn4yMIzgWJUpdOM7_QHQO5cqVLzrimE1Li99GCo6Tn2NNiUHhtL5yft6hZ2GpQDQ&mmp_pid=an_18357780003&uls_trackid=575j8eb200l1&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd1adenfk3h",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "iskandarsouza/198604": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwM02AQtXlJKosq6hB-QeYjHEEVT9GqMdfHzAY7Z8dMBT9sVDAgAWttktBAtcNJPiDLI_hGFbCMaGf-B9MHJ5LFeeM7rdmH8H45jQFcmn8eq25BLCVhvMLW4F_tT9R6toWj1Xu0sJQsvaBJ3vIYiDIZ21rnboEzx1-vSjzh4tnM3qTLZPW9gDvGAqz3RjZLkzvGtFo&mmp_pid=an_18357780003&uls_trackid=575j4tv700c2&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxkh8byukb",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzQS1zrA5Evh1l7oE5FVwbtpvTg4WBn7CabDaokf__EP2-_mC7qzHYvfi1hhg1B_m0TxfEJ-USdFIN7xwT8c8trOkU4g-FovzM6bttroXSmN4qjTf4x6g8vkO3mucSmks8dJFDpn4yMIzgWJUpdOM7_QHQO5cqVLzrimE1Li99GCo6Tn2NNiUHhtL5yft6hZ2GpQDQ&mmp_pid=an_18357780003&uls_trackid=575j8eb200l1&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd1adenfk3h",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "https://seuhardware.com/s/ul6hDv8": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwM02AQtXlJKosq6hB-QeYjHEEVT9GqMdfHzAY7Z8dMBT9sVDAgAWttktBAtcNJPiDLI_hGFbCMaGf-B9MHJ5LFeeM7rdmH8H45jQFcmn8eq25BLCVhvMLW4F_tT9R6toWj1Xu0sJQsvaBJ3vIYiDIZ21rnboEzx1-vSjzh4tnM3qTLZPW9gDvGAqz3RjZLkzvGtFo&mmp_pid=an_18357780003&uls_trackid=575j4tv700c2&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxkh8byukb",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzQS1zrA5Evh1l7oE5FVwbtpvTg4WBn7CabDaokf__EP2-_mC7qzHYvfi1hhg1B_m0TxfEJ-USdFIN7xwT8c8trOkU4g-FovzM6bttroXSmN4qjTf4x6g8vkO3mucSmks8dJFDpn4yMIzgWJUpdOM7_QHQO5cqVLzrimE1Li99GCo6Tn2NNiUHhtL5yft6hZ2GpQDQ&mmp_pid=an_18357780003&uls_trackid=575j8eb200l1&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd1adenfk3h",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "IskandarSouza/198458": {
       "status": "expired",
-      "reason": "Oferta antiga (25.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (25.4h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=0ae1b5dc4d9946ad8a752e1d802cedbb-1795027455395-02764-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=0ae1b5dc4d9946ad8a752e1d802cedbb-1795027455395-02764-_c3RkGwqr&terminal_id=ab36f0f86a2647eaaaf689c0f637c635&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.aliexpress.us/item/3256809283699197.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8ecc5bf7756a4005aae68c27e1634773-1795028560679-09963-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=8ecc5bf7756a4005aae68c27e1634773-1795028560679-09963-_c3RkGwqr&terminal_id=b25def39fb7a469283d41340da671724&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "iskandarsouza/198458": {
       "status": "expired",
-      "reason": "Oferta antiga (25.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (25.4h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=0ae1b5dc4d9946ad8a752e1d802cedbb-1795027455395-02764-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=0ae1b5dc4d9946ad8a752e1d802cedbb-1795027455395-02764-_c3RkGwqr&terminal_id=ab36f0f86a2647eaaaf689c0f637c635&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.aliexpress.us/item/3256809283699197.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8ecc5bf7756a4005aae68c27e1634773-1795028560679-09963-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=8ecc5bf7756a4005aae68c27e1634773-1795028560679-09963-_c3RkGwqr&terminal_id=b25def39fb7a469283d41340da671724&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "https://seuhardware.com/s/4s1wtOf": {
-      "status": "expired",
-      "reason": "Oferta antiga (25.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "status": "untested",
+      "reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=0ae1b5dc4d9946ad8a752e1d802cedbb-1795027455395-02764-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=0ae1b5dc4d9946ad8a752e1d802cedbb-1795027455395-02764-_c3RkGwqr&terminal_id=ab36f0f86a2647eaaaf689c0f637c635&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=6fc2f3b354db48b9adcff0e3ffad723b-1795028563557-02465-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=6fc2f3b354db48b9adcff0e3ffad723b-1795028563557-02465-_c3RkGwqr&terminal_id=a9e2f346b1b84c7485773f3021f45d8b&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "IskandarSouza/198501": {
       "status": "expired",
-      "reason": "Oferta antiga (20.7h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (21.0h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=3b96a97eeb8c4d2fa2dc8d3e568ab28d-1795027455745-02434-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=3b96a97eeb8c4d2fa2dc8d3e568ab28d-1795027455745-02434-_c3NkewUP&terminal_id=e72ecccbea364a5e879cc9cd07ebafc4&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:16"
+      "final_url": "https://www.aliexpress.us/item/3256808720597044.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8649dba1919c424cbffea7931c8a07be-1795028560970-09668-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=8649dba1919c424cbffea7931c8a07be-1795028560970-09668-_c3NkewUP&terminal_id=9d7e2a0870f64c678b7cc2c04dbe200a&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "iskandarsouza/198501": {
       "status": "expired",
-      "reason": "Oferta antiga (20.7h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (21.0h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=3b96a97eeb8c4d2fa2dc8d3e568ab28d-1795027455745-02434-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=3b96a97eeb8c4d2fa2dc8d3e568ab28d-1795027455745-02434-_c3NkewUP&terminal_id=e72ecccbea364a5e879cc9cd07ebafc4&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:16"
+      "final_url": "https://www.aliexpress.us/item/3256808720597044.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8649dba1919c424cbffea7931c8a07be-1795028560970-09668-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=8649dba1919c424cbffea7931c8a07be-1795028560970-09668-_c3NkewUP&terminal_id=9d7e2a0870f64c678b7cc2c04dbe200a&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "https://seuhardware.com/s/AMLSDxh": {
       "status": "expired",
-      "reason": "Oferta antiga (20.7h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (21.0h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=3b96a97eeb8c4d2fa2dc8d3e568ab28d-1795027455745-02434-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=3b96a97eeb8c4d2fa2dc8d3e568ab28d-1795027455745-02434-_c3NkewUP&terminal_id=e72ecccbea364a5e879cc9cd07ebafc4&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:16"
+      "final_url": "https://www.aliexpress.us/item/3256808720597044.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8649dba1919c424cbffea7931c8a07be-1795028560970-09668-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=8649dba1919c424cbffea7931c8a07be-1795028560970-09668-_c3NkewUP&terminal_id=9d7e2a0870f64c678b7cc2c04dbe200a&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "IskandarSouza/198500": {
       "status": "expired",
-      "reason": "Oferta antiga (21.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=703c72374d8e4bcfa96077a609122472-1795027454839-09610-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=703c72374d8e4bcfa96077a609122472-1795027454839-09610-_c3u2KSyx&terminal_id=3615abaee9ef4751b5e80759b1b660e7&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://login.aliexpress.us/sync_cookie_write.htm?acs_random_token=cbac8b4476594fb294ff799a1bfa511e&xman_goto=https%3A%2F%2Fwww.aliexpress.us%2Fitem%2F3256809376131008.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie%26aff_fcid%3D594b9f30658f4a04a7cf9639f1ef4449-1795028560120-01824-_c3u2KSyx%26tt%3DAPI%26aff_fsk%3D_c3u2KSyx%26aff_platform%3Dapi-new-link-generate%26sk%3D_c3u2KSyx%26aff_trace_key%3D594b9f30658f4a04a7cf9639f1ef4449-1795028560120-01824-_c3u2KSyx%26terminal_id%3D1d526f6a4ebc4bfd94428ff942322715%26afSmartRedirect%3Dy%26gatewayAdapt%3Dglo2usa4itemAdapt%26_randl_shipto%3DUS&_ga=GA1.1.1353996408207119.1795028562437",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "iskandarsouza/198500": {
       "status": "expired",
-      "reason": "Oferta antiga (21.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=703c72374d8e4bcfa96077a609122472-1795027454839-09610-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=703c72374d8e4bcfa96077a609122472-1795027454839-09610-_c3u2KSyx&terminal_id=3615abaee9ef4751b5e80759b1b660e7&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://login.aliexpress.us/sync_cookie_write.htm?acs_random_token=cbac8b4476594fb294ff799a1bfa511e&xman_goto=https%3A%2F%2Fwww.aliexpress.us%2Fitem%2F3256809376131008.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie%26aff_fcid%3D594b9f30658f4a04a7cf9639f1ef4449-1795028560120-01824-_c3u2KSyx%26tt%3DAPI%26aff_fsk%3D_c3u2KSyx%26aff_platform%3Dapi-new-link-generate%26sk%3D_c3u2KSyx%26aff_trace_key%3D594b9f30658f4a04a7cf9639f1ef4449-1795028560120-01824-_c3u2KSyx%26terminal_id%3D1d526f6a4ebc4bfd94428ff942322715%26afSmartRedirect%3Dy%26gatewayAdapt%3Dglo2usa4itemAdapt%26_randl_shipto%3DUS&_ga=GA1.1.1353996408207119.1795028562437",
+      "updated_at": "2026-11-18 19:02:42"
     },
     "https://seuhardware.com/s/sZmq6ZN": {
-      "status": "expired",
-      "reason": "Oferta antiga (21.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "status": "untested",
+      "reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=703c72374d8e4bcfa96077a609122472-1795027454839-09610-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=703c72374d8e4bcfa96077a609122472-1795027454839-09610-_c3u2KSyx&terminal_id=3615abaee9ef4751b5e80759b1b660e7&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=c0c20b65dc514ceea6edae88eee36cbc-1795028562981-05244-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=c0c20b65dc514ceea6edae88eee36cbc-1795028562981-05244-_c3u2KSyx&terminal_id=35c362f8cf4b4c7b9b1e8de4f0acf2e8&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "peperaiohardware/123847": {
       "status": "unverified_coupon",
@@ -279,8 +279,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795027455_a5759070b9a854525d327d181bb719e8&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795028559_e73bbcfefaaf03ec7af5adb760818185&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
+      "updated_at": "2026-11-18 19:02:39"
     },
     "https://aoferta.net/002VByeH-Kabum": {
       "status": "unverified_coupon",
@@ -290,52 +290,52 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795027455_a5759070b9a854525d327d181bb719e8&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795028559_e73bbcfefaaf03ec7af5adb760818185&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
+      "updated_at": "2026-11-18 19:02:39"
     },
     "peperaiohardware/123826": {
-      "status": "active",
-      "reason": "Confirmado em estoque na Amazon BR por R$ 989.99 (sem depender de cupom)",
+      "status": "untested",
+      "reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 989.99,
-      "stock_verified": true,
-      "coupon_status": "none",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Amazon BR",
       "final_url": "https://www.amazon.com.br/dp/B09VCHQHZ6?tag=fermeira-20&linkCode=ogi&language=pt-BR&th=1",
-      "updated_at": "2026-11-18 15:43:34"
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://amzn.to/3UJ4IYm": {
-      "status": "active",
-      "reason": "Confirmado em estoque na Amazon BR por R$ 989.99 (sem depender de cupom)",
+      "status": "untested",
+      "reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 989.99,
-      "stock_verified": true,
-      "coupon_status": "none",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Amazon BR",
       "final_url": "https://www.amazon.com.br/dp/B09VCHQHZ6?tag=fermeira-20&linkCode=ogi&language=pt-BR&th=1",
-      "updated_at": "2026-11-18 15:43:34"
+      "updated_at": "2026-11-18 19:02:45"
     },
     "peperaiohardware/123749": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (15.7h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/764945146/58266378609?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAy6M7hm3Fb4Nng_jstHUs02ZCJZ20ROrj9a0gMoMD-XHfzRNR22DTrGpOcZHtnpJM1D9KhEtZqf4TB-BXcADuR4Td_d_OR07B2Zw1G1W0oMWTr32gIxp2k7hRqhrJ3Vo5bMhZmmjSGWC5Pr1xndLDzXhoY5fuc5P8rr6Koy2rq2dXNDyxdYdk18qesaLev-kKMUACc&mmp_pid=an_18170680001&share_channel_code=2&uls_trackid=575j4tc803c4&utm_campaign=id_fadb36aed0322990&utm_content=peperaio----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvcxjzqmrakf",
-      "updated_at": "2026-11-18 15:43:29"
+      "final_url": "https://shopee.com.br/opaanlp/764945146/58266378609?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwUa_MWeSPtDno73SXBELdwkNNwkjrGhQ9yCfRNXUmkV8bU-vmAzgjQt30mMAxtUoWzWYqQ8UKeIy32S0ThLrK6B22X8LKfJamkTxkWrV8Y5rXRlga8mu10Jilv_FvehLdIFHaP0n12LGXCIC69vs8O6XNeKF1WrZ_qaIvmhzvhlW-W9VT4Ue57X0Dg-uDVDgr265E&mmp_pid=an_18170680001&share_channel_code=2&uls_trackid=575j8e0501k8&utm_campaign=id_fadb36aed0322990&utm_content=peperaio----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvd1a3x73y9y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "https://s.shopee.com.br/3g5L1ivqqH": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (15.7h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/764945146/58266378609?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAy6M7hm3Fb4Nng_jstHUs02ZCJZ20ROrj9a0gMoMD-XHfzRNR22DTrGpOcZHtnpJM1D9KhEtZqf4TB-BXcADuR4Td_d_OR07B2Zw1G1W0oMWTr32gIxp2k7hRqhrJ3Vo5bMhZmmjSGWC5Pr1xndLDzXhoY5fuc5P8rr6Koy2rq2dXNDyxdYdk18qesaLev-kKMUACc&mmp_pid=an_18170680001&share_channel_code=2&uls_trackid=575j4tc803c4&utm_campaign=id_fadb36aed0322990&utm_content=peperaio----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvcxjzqmrakf",
-      "updated_at": "2026-11-18 15:43:29"
+      "final_url": "https://shopee.com.br/opaanlp/764945146/58266378609?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwUa_MWeSPtDno73SXBELdwkNNwkjrGhQ9yCfRNXUmkV8bU-vmAzgjQt30mMAxtUoWzWYqQ8UKeIy32S0ThLrK6B22X8LKfJamkTxkWrV8Y5rXRlga8mu10Jilv_FvehLdIFHaP0n12LGXCIC69vs8O6XNeKF1WrZ_qaIvmhzvhlW-W9VT4Ue57X0Dg-uDVDgr265E&mmp_pid=an_18170680001&share_channel_code=2&uls_trackid=575j8e0501k8&utm_campaign=id_fadb36aed0322990&utm_content=peperaio----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvd1a3x73y9y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "IskandarSouza/198646": {
       "status": "unverified_coupon",
@@ -345,8 +345,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027411_26225ba70b99b9b5cc99a5a769f593d5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=sophie&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028551_55f4408cf2afcc19a27676add3fee3dc&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=sophie&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "iskandarsouza/198646": {
       "status": "unverified_coupon",
@@ -356,8 +356,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027411_26225ba70b99b9b5cc99a5a769f593d5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=sophie&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028551_55f4408cf2afcc19a27676add3fee3dc&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=sophie&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "https://seuhardware.com/s/Gd54ESm": {
       "status": "unverified_coupon",
@@ -367,8 +367,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027411_26225ba70b99b9b5cc99a5a769f593d5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=sophie&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028551_55f4408cf2afcc19a27676add3fee3dc&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=sophie&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "ofertasadrenaline/60144": {
       "status": "unverified_coupon",
@@ -378,8 +378,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027412_51c6fbc4f01b8eacbe4bc1ee1335e7a1&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028564_36a3d89729ae6efd44e20a1c38356a5c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://curt.link/gMIVk": {
       "status": "unverified_coupon",
@@ -389,85 +389,85 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027412_51c6fbc4f01b8eacbe4bc1ee1335e7a1&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/938497/processador-amd-ryzen-7-5700-3-7-ghz-4-6ghz-max-turbo-cache-20mb-8-nucleos-16-threads-am4-sem-video-integrado-100-100000743sbx?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028564_36a3d89729ae6efd44e20a1c38356a5c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "peperaiohardware/123677": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Terabyte (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (21.1h) sem confirmação de estoque ativo na Terabyte",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Terabyte",
       "final_url": "https://www.terabyteshop.com.br/produto/42466/memoria-ddr4-spectrum-blitz-8gb-3200mhz-preto-st-rm-bz8g32c16bd4?p=21011&tag=tanner&utm_source=redessociais&utm_term=taner91&ts=1794952684",
-      "updated_at": "2026-11-18 15:44:17"
+      "updated_at": "2026-11-18 19:02:42"
     },
     "https://aoferta.net/00200NNF-Terabyte": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Terabyte (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (21.1h) sem confirmação de estoque ativo na Terabyte",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Terabyte",
       "final_url": "https://www.terabyteshop.com.br/produto/42466/memoria-ddr4-spectrum-blitz-8gb-3200mhz-preto-st-rm-bz8g32c16bd4?p=21011&tag=tanner&utm_source=redessociais&utm_term=taner91&ts=1794952684",
-      "updated_at": "2026-11-18 15:44:17"
+      "updated_at": "2026-11-18 19:02:42"
     },
     "IskandarSouza/198606": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 5,272.19)",
+      "status": "expired",
+      "reason": "Cupom ZAFABLACK13 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 6,059.99",
       "source": "live_test",
       "live_price": 6059.99,
       "stock_verified": true,
-      "coupon_status": "verified",
+      "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/717772/placa-de-video-inno3d-rtx-5070-twin-x2-oc-nvidia-geforce-12gb-gddr7-2542mhz-blackwell-ray-tracing-dlss-4-n50702-12d7x-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027414_1468326ee8cb77f50f5072b25a735f76&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:36"
+      "final_url": "https://www.kabum.com.br/produto/717772/placa-de-video-inno3d-rtx-5070-twin-x2-oc-nvidia-geforce-12gb-gddr7-2542mhz-blackwell-ray-tracing-dlss-4-n50702-12d7x-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028565_5ef445a5403b43ef3221785a9e6f161b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "iskandarsouza/198606": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 5,272.19)",
+      "status": "expired",
+      "reason": "Cupom ZAFABLACK13 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 6,059.99",
       "source": "live_test",
       "live_price": 6059.99,
       "stock_verified": true,
-      "coupon_status": "verified",
+      "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/717772/placa-de-video-inno3d-rtx-5070-twin-x2-oc-nvidia-geforce-12gb-gddr7-2542mhz-blackwell-ray-tracing-dlss-4-n50702-12d7x-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027414_1468326ee8cb77f50f5072b25a735f76&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:36"
+      "final_url": "https://www.kabum.com.br/produto/717772/placa-de-video-inno3d-rtx-5070-twin-x2-oc-nvidia-geforce-12gb-gddr7-2542mhz-blackwell-ray-tracing-dlss-4-n50702-12d7x-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028565_5ef445a5403b43ef3221785a9e6f161b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "https://seuhardware.com/s/qnHn12u": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 5,272.19)",
+      "status": "expired",
+      "reason": "Cupom ZAFABLACK13 expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 6,059.99",
       "source": "live_test",
       "live_price": 6059.99,
       "stock_verified": true,
-      "coupon_status": "verified",
+      "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/717772/placa-de-video-inno3d-rtx-5070-twin-x2-oc-nvidia-geforce-12gb-gddr7-2542mhz-blackwell-ray-tracing-dlss-4-n50702-12d7x-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027414_1468326ee8cb77f50f5072b25a735f76&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:36"
+      "final_url": "https://www.kabum.com.br/produto/717772/placa-de-video-inno3d-rtx-5070-twin-x2-oc-nvidia-geforce-12gb-gddr7-2542mhz-blackwell-ray-tracing-dlss-4-n50702-12d7x-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028565_5ef445a5403b43ef3221785a9e6f161b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "peperaiohardware/123806": {
-      "status": "expired",
-      "reason": "Cupom DIADATECH expirado/inativo na Mercado Livre — preço atual em estoque sem cupom: R$ 483.65",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 483.65,
-      "stock_verified": true,
-      "coupon_status": "expired",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=ferbeto&matt_tool=16873625&forceInApp=true&ref=BKWWotUjPr3%2FwkdFB1IDA40kGUO4yt%2Bq7GHievGa%2Fb5HaipJH31V5HN1P%2B4KlfB3wMpRzi0nFDkAKYRsZqUcLrvdPN2RAclXKV2HA9oiVtQT69ZzbMKJMz%2FJNOkbR0NQGGeg65X00Xv7UnSkY5XtBakf5tSeaJbwJysizetM4i59ICy9wKQtGozaGtrL3WLvjbJpVcE%3D",
-      "updated_at": "2026-11-18 15:43:35"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "https://meli.la/1i8Uk4s": {
-      "status": "expired",
-      "reason": "Cupom DIADATECH expirado/inativo na Mercado Livre — preço atual em estoque sem cupom: R$ 483.65",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 483.65,
-      "stock_verified": true,
-      "coupon_status": "expired",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=ferbeto&matt_tool=16873625&forceInApp=true&ref=BKWWotUjPr3%2FwkdFB1IDA40kGUO4yt%2Bq7GHievGa%2Fb5HaipJH31V5HN1P%2B4KlfB3wMpRzi0nFDkAKYRsZqUcLrvdPN2RAclXKV2HA9oiVtQT69ZzbMKJMz%2FJNOkbR0NQGGeg65X00Xv7UnSkY5XtBakf5tSeaJbwJysizetM4i59ICy9wKQtGozaGtrL3WLvjbJpVcE%3D",
-      "updated_at": "2026-11-18 15:43:35"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "peperaiohardware/123704": {
       "status": "expired",
@@ -477,8 +477,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795025532_41cff3911ffc27a564d814b8e3d54b48&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=taner91&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
-      "updated_at": "2026-11-18 18:12:12"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795028566_0a54767ee381ab013e4fdfc6e246da4d&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=taner91&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "https://aoferta.net/004qsHb9-Kabum": {
       "status": "expired",
@@ -488,107 +488,107 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795025532_41cff3911ffc27a564d814b8e3d54b48&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=taner91&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
-      "updated_at": "2026-11-18 18:12:12"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795028566_0a54767ee381ab013e4fdfc6e246da4d&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=taner91&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "IskandarSouza/198602": {
-      "status": "active",
-      "reason": "Em estoque na Mercado Livre já por R$ 4,076.00 direto!",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 4076.0,
-      "stock_verified": true,
-      "coupon_status": "verified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza/lists",
-      "updated_at": "2026-11-18 15:43:36"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "iskandarsouza/198602": {
-      "status": "active",
-      "reason": "Em estoque na Mercado Livre já por R$ 4,076.00 direto!",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 4076.0,
-      "stock_verified": true,
-      "coupon_status": "verified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza/lists",
-      "updated_at": "2026-11-18 15:43:36"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "https://seuhardware.com/s/3DUQ1Sl": {
-      "status": "active",
-      "reason": "Em estoque na Mercado Livre já por R$ 4,076.00 direto!",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 4076.0,
-      "stock_verified": true,
-      "coupon_status": "verified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza/lists",
-      "updated_at": "2026-11-18 15:43:36"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "peperaiohardware/123698": {
       "status": "expired",
-      "reason": "Oferta antiga (19.1h) sem confirmação de estoque ativo na Shopee",
+      "reason": "Oferta antiga (20.0h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAzjllrTnW9jlJew2IQQgRDCUNwemhoBLvEW4sid5XQUgUv_hUJKD-jbeCQqJU6ChUT3fGWe-R0Zxb_oO2OM9JLXLriXFP0JGLBRiOeHFFBqCjfFTAqE92XOxVEzQkpDoWVUl3SdrzvyfNtqXUduyami_IssBFHOl0erRxyfjQEo6o-fnx6fCzxfNEWgn9YYTmETQkhheBsB-g4pZ4eLg4xgRMi-GcDAHaLxGj_xYFzbcLvPtfKS3b8cv_DLA7y-D4NOmGdTEAY02xNjyHE74x2OnrBTKKlvR2Im&mmp_pid=an_18170680001&uls_trackid=575iv66200l7&utm_campaign=id_4d03f31c4898e62e&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvct67dzwy8j&xptdk=54ade367-4395-4e39-8af8-fc2439b13a6d",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAyC_uWKSPI9U9uBcFYt1JKNJEMGQtbNkqBOfOrZJZXNSS1ENU3PwRtcqZ4PCSdX0YcdYOAab5Qeiv3pK1xqpyI9MkTH0DzlN229sIuh6Jlp-C57SPq693ZDi7ScZMg3GcRve36CSHXjCmum1QXsfO7bQ3WU802ckz2UYOz8fpRTC-U7MmngRMHMqKdbPaxfhAx_1JS7N6HsG3g1kT3n6Anv36GmqCzXj8yUEWkz0hFDIcblcuHBmDVaFaUpZLViRIySRoy6Dw_bVSXquaVCaCKWh37IAAimGRC2&mmp_pid=an_18170680001&uls_trackid=575j8ed701sh&utm_campaign=id_4d03f31c4898e62e&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvd1afavxe7q&xptdk=54ade367-4395-4e39-8af8-fc2439b13a6d",
+      "updated_at": "2026-11-18 19:02:51"
     },
     "https://s.shopee.com.br/8KrAIn7jkX": {
       "status": "expired",
-      "reason": "Oferta antiga (19.1h) sem confirmação de estoque ativo na Shopee",
+      "reason": "Oferta antiga (20.0h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAzjllrTnW9jlJew2IQQgRDCUNwemhoBLvEW4sid5XQUgUv_hUJKD-jbeCQqJU6ChUT3fGWe-R0Zxb_oO2OM9JLXLriXFP0JGLBRiOeHFFBqCjfFTAqE92XOxVEzQkpDoWVUl3SdrzvyfNtqXUduyami_IssBFHOl0erRxyfjQEo6o-fnx6fCzxfNEWgn9YYTmETQkhheBsB-g4pZ4eLg4xgRMi-GcDAHaLxGj_xYFzbcLvPtfKS3b8cv_DLA7y-D4NOmGdTEAY02xNjyHE74x2OnrBTKKlvR2Im&mmp_pid=an_18170680001&uls_trackid=575iv66200l7&utm_campaign=id_4d03f31c4898e62e&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvct67dzwy8j&xptdk=54ade367-4395-4e39-8af8-fc2439b13a6d",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAyC_uWKSPI9U9uBcFYt1JKNJEMGQtbNkqBOfOrZJZXNSS1ENU3PwRtcqZ4PCSdX0YcdYOAab5Qeiv3pK1xqpyI9MkTH0DzlN229sIuh6Jlp-C57SPq693ZDi7ScZMg3GcRve36CSHXjCmum1QXsfO7bQ3WU802ckz2UYOz8fpRTC-U7MmngRMHMqKdbPaxfhAx_1JS7N6HsG3g1kT3n6Anv36GmqCzXj8yUEWkz0hFDIcblcuHBmDVaFaUpZLViRIySRoy6Dw_bVSXquaVCaCKWh37IAAimGRC2&mmp_pid=an_18170680001&uls_trackid=575j8ed701sh&utm_campaign=id_4d03f31c4898e62e&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvd1afavxe7q&xptdk=54ade367-4395-4e39-8af8-fc2439b13a6d",
+      "updated_at": "2026-11-18 19:02:51"
     },
     "peperaiohardware/123640": {
       "status": "expired",
-      "reason": "Oferta antiga (24.3h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (25.2h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
       "final_url": "https://aceleraafiliado.com/bots/peperaio",
-      "updated_at": "2026-11-18 18:12:13"
+      "updated_at": "2026-11-18 19:02:47"
     },
     "https://cutt.ly/LyebwPCv": {
       "status": "expired",
-      "reason": "Oferta antiga (24.3h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (25.2h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
       "final_url": "https://aceleraafiliado.com/bots/peperaio",
-      "updated_at": "2026-11-18 18:12:13"
+      "updated_at": "2026-11-18 19:02:47"
     },
     "ofertasadrenaline/60059": {
       "status": "expired",
-      "reason": "Oferta antiga (27.2h) sem confirmação de estoque ativo na Shopee",
+      "reason": "Oferta antiga (28.1h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAxcI2U4FsRaH0f8m_8Lx7SGm-3wzpdEvLF4qr-hOjNXfCo9PD03Oj6Fk7rdZPgU4M_9sGLFmnCZ33eKAdSS3ZLGDfpSk41f0yNnkRWLMHOrXq2kjWOZ_18cPVGDC0KWOklXT-FLpL58KuaVLh2wT1kMQ3_6RqlUGXrpAlsgPZFLQh0yH9MVxXoNj9-JXFszdn9ZkLVMRWcKEKQDQE0ltwFuHeYyC-3J-hZ7eekIsSslQGwFCi9vXbDBJBS-xEr1U71qsboWKm0iMr8jDPo5huxeclsZzymJIkjr&mmp_pid=an_18329640336&uls_trackid=575iv67k00c3&utm_campaign=id_54tlzz9ZGgT&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvct68u1jbk3",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAz4pg8eK5oCyrqypZ_kxVufnp-2ouCg8s0gtHMU_lwp_lG2ExMAsM5J2n7BgVPuEKpy7EjHajinla_sDmV1E_hWDUX-ru3dcl8AqbYqqlGqebv6x93pPArcS6gEmA-ji3V4Db-V8RZkrQ2Ur--UHj45WJbw6-VL1CsbtDZPiXufPbt6Tko1MsI02czSYq4Pz4kkHTd-PC7xWHklw8IkFDoQG8yHnALwdo4GqSpM8xGxDUpX90cca24B6On3TtHvW0BQrqDqC05ZNQsyF34bM1youLpcMxCI4UNY&mmp_pid=an_18329640336&uls_trackid=575j8ef401sh&utm_campaign=id_54tlzz9ZGgT&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd1agxtyccf",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "https://s.shopee.com.br/80EJO2qqx0": {
       "status": "expired",
-      "reason": "Oferta antiga (27.2h) sem confirmação de estoque ativo na Shopee",
+      "reason": "Oferta antiga (28.1h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAxcI2U4FsRaH0f8m_8Lx7SGm-3wzpdEvLF4qr-hOjNXfCo9PD03Oj6Fk7rdZPgU4M_9sGLFmnCZ33eKAdSS3ZLGDfpSk41f0yNnkRWLMHOrXq2kjWOZ_18cPVGDC0KWOklXT-FLpL58KuaVLh2wT1kMQ3_6RqlUGXrpAlsgPZFLQh0yH9MVxXoNj9-JXFszdn9ZkLVMRWcKEKQDQE0ltwFuHeYyC-3J-hZ7eekIsSslQGwFCi9vXbDBJBS-xEr1U71qsboWKm0iMr8jDPo5huxeclsZzymJIkjr&mmp_pid=an_18329640336&uls_trackid=575iv67k00c3&utm_campaign=id_54tlzz9ZGgT&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvct68u1jbk3",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://shopee.com.br/5700x-Processador-Ryzen-7-5700x-3.4ghz-%284.6ghz-Max%29-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.22398871196?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE3QAAAAz4pg8eK5oCyrqypZ_kxVufnp-2ouCg8s0gtHMU_lwp_lG2ExMAsM5J2n7BgVPuEKpy7EjHajinla_sDmV1E_hWDUX-ru3dcl8AqbYqqlGqebv6x93pPArcS6gEmA-ji3V4Db-V8RZkrQ2Ur--UHj45WJbw6-VL1CsbtDZPiXufPbt6Tko1MsI02czSYq4Pz4kkHTd-PC7xWHklw8IkFDoQG8yHnALwdo4GqSpM8xGxDUpX90cca24B6On3TtHvW0BQrqDqC05ZNQsyF34bM1youLpcMxCI4UNY&mmp_pid=an_18329640336&uls_trackid=575j8ef401sh&utm_campaign=id_54tlzz9ZGgT&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd1agxtyccf",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "peperaiohardware/123605": {
       "status": "expired",
@@ -614,36 +614,36 @@
     },
     "IskandarSouza/198505": {
       "status": "expired",
-      "reason": "Oferta antiga (19.5h) sem confirmação de estoque ativo na Shopee",
+      "reason": "Oferta antiga (20.3h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzLyn1G62tcUUuGZGg4yOgSs9DAnkCg5zpIbjuQF_abGovn_Mff7OSxF02p--ABKSJW0YozYu_Bw7AmLI9Fzup2MDR2FzTK62wh7NNDNtnbNHb1jNGYd_PvJn0wLw25QDmwFKRUEEknHosBaSBNWevw8I4Aa9l4p-4NB_rRCgmNNsoUANOl8YCkH-zFZrOu7iE7J1o&mmp_pid=an_18357780003&uls_trackid=575iv67600c6&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvct68husak7",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAw7RZIjtlN40hu0D8ANps0F-nPY5MFmppmtP3pPfN9MGp7wmQ-A2xGn4CgyFCqhcunsNcYM0XXZt2S60oKUQTcewo6X85ERY7QroqtjQ-NZIpIPSxeuqDEOnFMWPiSgG0Dl6rKO9KIk_LhRRCgf9p5l3DmZ7iVWgXiJQKJjzZZ3TB6WOILhviNWCuMnLblWFHGRJVQ&mmp_pid=an_18357780003&uls_trackid=575j8ef301c6&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd1agxnp8e3",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "iskandarsouza/198505": {
       "status": "expired",
-      "reason": "Oferta antiga (19.5h) sem confirmação de estoque ativo na Shopee",
+      "reason": "Oferta antiga (20.3h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzLyn1G62tcUUuGZGg4yOgSs9DAnkCg5zpIbjuQF_abGovn_Mff7OSxF02p--ABKSJW0YozYu_Bw7AmLI9Fzup2MDR2FzTK62wh7NNDNtnbNHb1jNGYd_PvJn0wLw25QDmwFKRUEEknHosBaSBNWevw8I4Aa9l4p-4NB_rRCgmNNsoUANOl8YCkH-zFZrOu7iE7J1o&mmp_pid=an_18357780003&uls_trackid=575iv67600c6&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvct68husak7",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAw7RZIjtlN40hu0D8ANps0F-nPY5MFmppmtP3pPfN9MGp7wmQ-A2xGn4CgyFCqhcunsNcYM0XXZt2S60oKUQTcewo6X85ERY7QroqtjQ-NZIpIPSxeuqDEOnFMWPiSgG0Dl6rKO9KIk_LhRRCgf9p5l3DmZ7iVWgXiJQKJjzZZ3TB6WOILhviNWCuMnLblWFHGRJVQ&mmp_pid=an_18357780003&uls_trackid=575j8ef301c6&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd1agxnp8e3",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "https://seuhardware.com/s/z9F8G5T": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (20.3h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwvXq8TTKJs0mhq37TnNbrVUkL0gd9Quk4UJTUoebgZbm99u7Waeh3RNgzThcGj3liTt0mAi0sFJXsniP8S3Bx5dnreRjp_myQptAL_swHOCN3TuVBCJKEVuDuTwQhtX6nHcevXAecrFGAhbB04T0MGM5xi5H-iZEVp090v-0TRNrYPXtV8PsWAY8CO9cjW-HApDKw&mmp_pid=an_18357780003&uls_trackid=575j4t6h00s2&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxjurekqt3",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAw7RZIjtlN40hu0D8ANps0F-nPY5MFmppmtP3pPfN9MGp7wmQ-A2xGn4CgyFCqhcunsNcYM0XXZt2S60oKUQTcewo6X85ERY7QroqtjQ-NZIpIPSxeuqDEOnFMWPiSgG0Dl6rKO9KIk_LhRRCgf9p5l3DmZ7iVWgXiJQKJjzZZ3TB6WOILhviNWCuMnLblWFHGRJVQ&mmp_pid=an_18357780003&uls_trackid=575j8ef301c6&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd1agxnp8e3",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "ofertasadrenaline/60088": {
       "status": "expired",
@@ -653,8 +653,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795025534_218830ba11651569b93db03645a3f69b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028567_3e09e570183220ec0fc342cd0154509e&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "https://curt.link/LlPKD": {
       "status": "expired",
@@ -664,173 +664,173 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795025534_218830ba11651569b93db03645a3f69b&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028567_3e09e570183220ec0fc342cd0154509e&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "ofertasadrenaline/60132": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 5,393.99)",
+      "status": "unverified_coupon",
+      "reason": "Em estoque na KaBuM! por R$ 6,199.99 (sem cupom). Valor de R$ 5,394.00 depende do cupom ZAFABLACK13 aplicar no carrinho",
       "source": "live_test",
       "live_price": 6199.99,
       "stock_verified": true,
-      "coupon_status": "verified",
+      "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027413_559cc377ed4e592ac928a1d06133a4ff&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028564_dc04415a4aea82ff03f20f39bb91ccf7&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://tidd.ly/4t6WzcR": {
-      "status": "active",
-      "reason": "Cupom ZAFABLACK13 confirmado ativo na KaBuM! (R$ 5,393.99)",
+      "status": "unverified_coupon",
+      "reason": "Em estoque na KaBuM! por R$ 6,199.99 (sem cupom). Valor de R$ 5,394.00 depende do cupom ZAFABLACK13 aplicar no carrinho",
       "source": "live_test",
       "live_price": 6199.99,
       "stock_verified": true,
-      "coupon_status": "verified",
+      "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027413_559cc377ed4e592ac928a1d06133a4ff&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:35"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028564_dc04415a4aea82ff03f20f39bb91ccf7&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "IskandarSouza/198536": {
       "status": "expired",
-      "reason": "Oferta antiga (17.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (18.0h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005012055257411.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_pg_marcos&aff_fcid=aec9505da51544e397e82557539b2847-1795025532795-06781-_c4C68njV&tt=API&aff_fsk=_c4C68njV&aff_platform=api-new-link-generate&sk=_c4C68njV&aff_trace_key=aec9505da51544e397e82557539b2847-1795025532795-06781-_c4C68njV&terminal_id=4b789df2c9a34cc1ba6c4b36f234454a&afSmartRedirect=y",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://www.aliexpress.com/item/1005012055257411.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_pg_marcos&aff_fcid=4a57b294c34140969fad24d5183942d4-1795028565909-04667-_c4C68njV&tt=API&aff_fsk=_c4C68njV&aff_platform=api-new-link-generate&sk=_c4C68njV&aff_trace_key=4a57b294c34140969fad24d5183942d4-1795028565909-04667-_c4C68njV&terminal_id=8ef951a383cf4bbf88bf76028b4ee7e3&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "iskandarsouza/198536": {
       "status": "expired",
-      "reason": "Oferta antiga (17.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (18.0h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005012055257411.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_pg_marcos&aff_fcid=aec9505da51544e397e82557539b2847-1795025532795-06781-_c4C68njV&tt=API&aff_fsk=_c4C68njV&aff_platform=api-new-link-generate&sk=_c4C68njV&aff_trace_key=aec9505da51544e397e82557539b2847-1795025532795-06781-_c4C68njV&terminal_id=4b789df2c9a34cc1ba6c4b36f234454a&afSmartRedirect=y",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://www.aliexpress.com/item/1005012055257411.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_pg_marcos&aff_fcid=4a57b294c34140969fad24d5183942d4-1795028565909-04667-_c4C68njV&tt=API&aff_fsk=_c4C68njV&aff_platform=api-new-link-generate&sk=_c4C68njV&aff_trace_key=4a57b294c34140969fad24d5183942d4-1795028565909-04667-_c4C68njV&terminal_id=8ef951a383cf4bbf88bf76028b4ee7e3&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "https://seuhardware.com/s/KKARrpq": {
       "status": "expired",
-      "reason": "Oferta antiga (17.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (18.0h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005012055257411.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_pg_marcos&aff_fcid=aec9505da51544e397e82557539b2847-1795025532795-06781-_c4C68njV&tt=API&aff_fsk=_c4C68njV&aff_platform=api-new-link-generate&sk=_c4C68njV&aff_trace_key=aec9505da51544e397e82557539b2847-1795025532795-06781-_c4C68njV&terminal_id=4b789df2c9a34cc1ba6c4b36f234454a&afSmartRedirect=y",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://www.aliexpress.com/item/1005012055257411.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_pg_marcos&aff_fcid=4a57b294c34140969fad24d5183942d4-1795028565909-04667-_c4C68njV&tt=API&aff_fsk=_c4C68njV&aff_platform=api-new-link-generate&sk=_c4C68njV&aff_trace_key=4a57b294c34140969fad24d5183942d4-1795028565909-04667-_c4C68njV&terminal_id=8ef951a383cf4bbf88bf76028b4ee7e3&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:46"
     },
     "IskandarSouza/198520": {
       "status": "expired",
-      "reason": "Oferta antiga (17.3h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (18.1h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=20418a73c351427e87974174bbc769c7-1795025532346-09612-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=20418a73c351427e87974174bbc769c7-1795025532346-09612-_c2xcIHSr&terminal_id=11fdde26e1ef49ca9b5caa3458a383ee",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=10efad63522d4bde85a3db1f0ac9bce5-1795028565913-04582-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=10efad63522d4bde85a3db1f0ac9bce5-1795028565913-04582-_c2xcIHSr&terminal_id=0055f5243fed4efbb5631d3227d293a1",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "iskandarsouza/198520": {
       "status": "expired",
-      "reason": "Oferta antiga (17.3h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (18.1h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=20418a73c351427e87974174bbc769c7-1795025532346-09612-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=20418a73c351427e87974174bbc769c7-1795025532346-09612-_c2xcIHSr&terminal_id=11fdde26e1ef49ca9b5caa3458a383ee",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=10efad63522d4bde85a3db1f0ac9bce5-1795028565913-04582-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=10efad63522d4bde85a3db1f0ac9bce5-1795028565913-04582-_c2xcIHSr&terminal_id=0055f5243fed4efbb5631d3227d293a1",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "https://a.aliexpress.com/_c2xcIHSr": {
       "status": "expired",
-      "reason": "Oferta antiga (17.3h) sem confirmação de estoque ativo na E-commerce BR",
+      "reason": "Oferta antiga (18.1h) sem confirmação de estoque ativo na E-commerce BR",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=20418a73c351427e87974174bbc769c7-1795025532346-09612-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=20418a73c351427e87974174bbc769c7-1795025532346-09612-_c2xcIHSr&terminal_id=11fdde26e1ef49ca9b5caa3458a383ee",
-      "updated_at": "2026-11-18 18:12:13"
+      "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=10efad63522d4bde85a3db1f0ac9bce5-1795028565913-04582-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=10efad63522d4bde85a3db1f0ac9bce5-1795028565913-04582-_c2xcIHSr&terminal_id=0055f5243fed4efbb5631d3227d293a1",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "IskandarSouza/198460": {
-      "status": "out_of_stock",
-      "reason": "Oferta encerrada na Terabyte — menor preço em estoque hoje: R$ 4,199.99 (era R$ 3,899.00)",
+      "status": "expired",
+      "reason": "Oferta antiga (25.2h) sem confirmação de estoque ativo na Terabyte",
       "source": "live_test",
-      "live_price": 4199.99,
+      "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Terabyte",
       "final_url": "https://www.terabyteshop.com.br/produto/36459/placa-de-video-asus-amd-radeon-rx-9060-xt-prime-oc-16gb-gddr6-fsr-ray-tracing-90yv0lf1-m0na00?p=680355&tag=vevs",
-      "updated_at": "2026-11-18 15:44:16"
+      "updated_at": "2026-11-18 19:02:41"
     },
     "iskandarsouza/198460": {
-      "status": "out_of_stock",
-      "reason": "Oferta encerrada na Terabyte — menor preço em estoque hoje: R$ 4,199.99 (era R$ 3,899.00)",
+      "status": "expired",
+      "reason": "Oferta antiga (25.2h) sem confirmação de estoque ativo na Terabyte",
       "source": "live_test",
-      "live_price": 4199.99,
+      "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Terabyte",
       "final_url": "https://www.terabyteshop.com.br/produto/36459/placa-de-video-asus-amd-radeon-rx-9060-xt-prime-oc-16gb-gddr6-fsr-ray-tracing-90yv0lf1-m0na00?p=680355&tag=vevs",
-      "updated_at": "2026-11-18 15:44:16"
+      "updated_at": "2026-11-18 19:02:41"
     },
     "https://seuhardware.com/s/mXg2vko": {
-      "status": "out_of_stock",
-      "reason": "Oferta encerrada na Terabyte — menor preço em estoque hoje: R$ 4,199.99 (era R$ 3,899.00)",
+      "status": "expired",
+      "reason": "Oferta antiga (25.2h) sem confirmação de estoque ativo na Terabyte",
       "source": "live_test",
-      "live_price": 4199.99,
+      "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Terabyte",
       "final_url": "https://www.terabyteshop.com.br/produto/36459/placa-de-video-asus-amd-radeon-rx-9060-xt-prime-oc-16gb-gddr6-fsr-ray-tracing-90yv0lf1-m0na00?p=680355&tag=vevs",
-      "updated_at": "2026-11-18 15:44:16"
+      "updated_at": "2026-11-18 19:02:41"
     },
     "ofertasadrenaline/60058": {
       "status": "expired",
-      "reason": "Cupom/desconto do grupo expirado/inativo na Shopee — preço atual em estoque sem cupom: R$ 1,606.32",
+      "reason": "Oferta antiga (28.1h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
-      "live_price": 1606.32,
-      "stock_verified": true,
-      "coupon_status": "expired",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-7-9700X-3.8GHz-%285.5GHz-Turbo%29-8-Cores-16-Threads-AM5-40MB-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58203555992?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE-gAAAAyP33Kz0VdCIgfR3z2bq8wrtzNKLl39K_GEwWX9W4JQQPvuFvArQYwz0uFxIvRhD8t1aUUtM0GRY-mwcq2fuJ8mS4ho95hQfxHKF-w3I8BmhmlyRIaasO4F-Z7n0hkDWYNoNMLrosda6Wo_eA_0lLsiCoWOO9eKYCR8OLjwggVhPLzHuGDu-r9WI1wCvW3urnDJmGjrIZT95u1dJF-IvHlyvhCLwtaK_-zpPpfqlhRnLCJIi53m-vCfzh_Iw1GgSYApU0V9zkewpUTSzJxadsYofBWj8ANP_hxYesH4IIpw6St6r-DC8Yuakk81q3doo-OoZWeXX0A&mmp_pid=an_18329640336&uls_trackid=575j4t5600c6&utm_campaign=id_AW9ReyOf4gj&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvcxjtnaboro",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-7-9700X-3.8GHz-%285.5GHz-Turbo%29-8-Cores-16-Threads-AM5-40MB-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58203555992?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE-gAAAAyMdmESFpoPMORIHhzPwzA-mcXMviH5H_HrFA9RlmcZTmUWTW4daK_JAs4HKaCnwcrQzjnazO5ap-mdJPXC3HMPP3BpwEPYvUfbmySgXYfNXwVbWCjmdTMceD5zIqX5c4Oq98TSQ9Km77RR_JzCZ0HHeNoqmX6f10ZDhrzkW21fkR4GjZuVaeMy_gbp3u7OnJB8P3z6QHg5Yp1qhoTN4cZaJ-3VvCi2S3dwpFYjc9FE714WZzJsbMNZs6Fl34-y54Ap-P5MkaI_MzWrp9IrsOQIWrLq22Zi-mjowxDzD8Qjr3_KGN85tgtoyXPJWXOcGb2HXuXAsqo&mmp_pid=an_18329640336&uls_trackid=575j8dug01c1&utm_campaign=id_AW9ReyOf4gj&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd1a2hwkb9h",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "https://s.shopee.com.br/30pdQpJUkT": {
       "status": "expired",
-      "reason": "Cupom/desconto do grupo expirado/inativo na Shopee — preço atual em estoque sem cupom: R$ 1,606.32",
+      "reason": "Oferta antiga (28.1h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
-      "live_price": 1606.32,
-      "stock_verified": true,
-      "coupon_status": "expired",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-7-9700X-3.8GHz-%285.5GHz-Turbo%29-8-Cores-16-Threads-AM5-40MB-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58203555992?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE-gAAAAyP33Kz0VdCIgfR3z2bq8wrtzNKLl39K_GEwWX9W4JQQPvuFvArQYwz0uFxIvRhD8t1aUUtM0GRY-mwcq2fuJ8mS4ho95hQfxHKF-w3I8BmhmlyRIaasO4F-Z7n0hkDWYNoNMLrosda6Wo_eA_0lLsiCoWOO9eKYCR8OLjwggVhPLzHuGDu-r9WI1wCvW3urnDJmGjrIZT95u1dJF-IvHlyvhCLwtaK_-zpPpfqlhRnLCJIi53m-vCfzh_Iw1GgSYApU0V9zkewpUTSzJxadsYofBWj8ANP_hxYesH4IIpw6St6r-DC8Yuakk81q3doo-OoZWeXX0A&mmp_pid=an_18329640336&uls_trackid=575j4t5600c6&utm_campaign=id_AW9ReyOf4gj&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvcxjtnaboro",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-7-9700X-3.8GHz-%285.5GHz-Turbo%29-8-Cores-16-Threads-AM5-40MB-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58203555992?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE-gAAAAyMdmESFpoPMORIHhzPwzA-mcXMviH5H_HrFA9RlmcZTmUWTW4daK_JAs4HKaCnwcrQzjnazO5ap-mdJPXC3HMPP3BpwEPYvUfbmySgXYfNXwVbWCjmdTMceD5zIqX5c4Oq98TSQ9Km77RR_JzCZ0HHeNoqmX6f10ZDhrzkW21fkR4GjZuVaeMy_gbp3u7OnJB8P3z6QHg5Yp1qhoTN4cZaJ-3VvCi2S3dwpFYjc9FE714WZzJsbMNZs6Fl34-y54Ap-P5MkaI_MzWrp9IrsOQIWrLq22Zi-mjowxDzD8Qjr3_KGN85tgtoyXPJWXOcGb2HXuXAsqo&mmp_pid=an_18329640336&uls_trackid=575j8dug01c1&utm_campaign=id_AW9ReyOf4gj&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd1a2hwkb9h",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "ofertasadrenaline/60062": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (27.9h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/1930141978/58220525620?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTEmQAAAAxzPIYvTbtmmYDtX0hz8xt0Ccx-GnBVaeu_S0EZh4gY4BfNmUeuuyxQQJMLpPYivlRJPRahMqJzqW_96NHzopYafW2WK9PD20fdFSk6MX1qEnR-xg-hoPXDc9P0zA495FWVhpWcmbrpkdSxwknKhTMXTO3ISREs9cr4H255uSd4xvEiUGas-Quy29bDeKLK4ID25G45Gg&mmp_pid=an_18329640336&uls_trackid=575j4t5c00c3&utm_campaign=id_AGG55sZJw2b&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvcxjtr659sw",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/1930141978/58220525620?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTEmQAAAAxbGW0wILTDJLV7HY_UHQnhbdGkh7WwFdwp6DJvbZRpUqvyV2qKTpDkLOBWUhHO15DYhUZYkWJnWzcmYJKauhC_nVN68vExRr6qRhaSBgCJ1ek4mQ0Yk3UL_Ny3Zh0Wi_yXYiH7QmLNoHu9C_w_lHvu-aBnKP7mf8eqVWXig2To9-YZc04Zvu1TV2rU8-oubWmnFx6leQ&mmp_pid=an_18329640336&uls_trackid=575j8dv100l7&utm_campaign=id_AGG55sZJw2b&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd1a2yi15x3",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "https://s.shopee.com.br/8Kr9miN9oD": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (27.9h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/1930141978/58220525620?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTEmQAAAAxzPIYvTbtmmYDtX0hz8xt0Ccx-GnBVaeu_S0EZh4gY4BfNmUeuuyxQQJMLpPYivlRJPRahMqJzqW_96NHzopYafW2WK9PD20fdFSk6MX1qEnR-xg-hoPXDc9P0zA495FWVhpWcmbrpkdSxwknKhTMXTO3ISREs9cr4H255uSd4xvEiUGas-Quy29bDeKLK4ID25G45Gg&mmp_pid=an_18329640336&uls_trackid=575j4t5c00c3&utm_campaign=id_AGG55sZJw2b&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvcxjtr659sw",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/1930141978/58220525620?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTEmQAAAAxbGW0wILTDJLV7HY_UHQnhbdGkh7WwFdwp6DJvbZRpUqvyV2qKTpDkLOBWUhHO15DYhUZYkWJnWzcmYJKauhC_nVN68vExRr6qRhaSBgCJ1ek4mQ0Yk3UL_Ny3Zh0Wi_yXYiH7QmLNoHu9C_w_lHvu-aBnKP7mf8eqVWXig2To9-YZc04Zvu1TV2rU8-oubWmnFx6leQ&mmp_pid=an_18329640336&uls_trackid=575j8dv100l7&utm_campaign=id_AGG55sZJw2b&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd1a2yi15x3",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "IskandarSouza/198587": {
       "status": "untested",
@@ -841,7 +841,7 @@
       "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-      "updated_at": "2026-11-18 18:12:13"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "iskandarsouza/198587": {
       "status": "untested",
@@ -852,62 +852,62 @@
       "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-      "updated_at": "2026-11-18 18:12:13"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "https://seuhardware.com/s/f1nxNwb": {
-      "status": "unverified_coupon",
-      "reason": "Em estoque na Mercado Livre por R$ 483.65 (sem cupom). Valor de R$ 435.00 depende do cupom DIADATECH aplicar no carrinho",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 483.65,
-      "stock_verified": true,
-      "coupon_status": "unverified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-      "updated_at": "2026-11-18 15:43:33"
+      "updated_at": "2026-11-18 19:02:46"
     },
     "IskandarSouza/198603": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwvXq8TTKJs0mhq37TnNbrVUkL0gd9Quk4UJTUoebgZbm99u7Waeh3RNgzThcGj3liTt0mAi0sFJXsniP8S3Bx5dnreRjp_myQptAL_swHOCN3TuVBCJKEVuDuTwQhtX6nHcevXAecrFGAhbB04T0MGM5xi5H-iZEVp090v-0TRNrYPXtV8PsWAY8CO9cjW-HApDKw&mmp_pid=an_18357780003&uls_trackid=575j4t6h00s2&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxjurekqt3",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAyGbU5dDfGePUNbRA7_wkq-uOqMC2swLG0PQGXt4dNLAxD6IzvRzyyQhBPWiJ-3os3AZ4EbXe5RX6iZdpdk1VWMBrtQoyp6mxG-HSOkXPHboJ7kz_D9-bCADAEyC4CzuLl8YSajuofyBST-f5SHH9Vul8onEm2qM2cw7l6Ha8A1w47sd8_RVQmTAXJM1xzY0JF5VO8&mmp_pid=an_18357780003&uls_trackid=575j8dpn00c3&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd19xbnvy6w",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "iskandarsouza/198603": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAwvXq8TTKJs0mhq37TnNbrVUkL0gd9Quk4UJTUoebgZbm99u7Waeh3RNgzThcGj3liTt0mAi0sFJXsniP8S3Bx5dnreRjp_myQptAL_swHOCN3TuVBCJKEVuDuTwQhtX6nHcevXAecrFGAhbB04T0MGM5xi5H-iZEVp090v-0TRNrYPXtV8PsWAY8CO9cjW-HApDKw&mmp_pid=an_18357780003&uls_trackid=575j4t6h00s2&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxjurekqt3",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58272778713?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAyGbU5dDfGePUNbRA7_wkq-uOqMC2swLG0PQGXt4dNLAxD6IzvRzyyQhBPWiJ-3os3AZ4EbXe5RX6iZdpdk1VWMBrtQoyp6mxG-HSOkXPHboJ7kz_D9-bCADAEyC4CzuLl8YSajuofyBST-f5SHH9Vul8onEm2qM2cw7l6Ha8A1w47sd8_RVQmTAXJM1xzY0JF5VO8&mmp_pid=an_18357780003&uls_trackid=575j8dpn00c3&utm_campaign=id_166b095bed92a4f5&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd19xbnvy6w",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "IskandarSouza/198643": {
-      "status": "unverified_coupon",
-      "reason": "Em estoque na Mercado Livre por R$ 483.65 (sem cupom). Valor de R$ 435.00 depende do cupom DIADATECH aplicar no carrinho",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 483.65,
-      "stock_verified": true,
-      "coupon_status": "unverified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-      "updated_at": "2026-11-18 15:43:33"
+      "updated_at": "2026-11-18 19:02:45"
     },
     "iskandarsouza/198643": {
-      "status": "unverified_coupon",
-      "reason": "Em estoque na Mercado Livre por R$ 483.65 (sem cupom). Valor de R$ 435.00 depende do cupom DIADATECH aplicar no carrinho",
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 483.65,
-      "stock_verified": true,
-      "coupon_status": "unverified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Mercado Livre",
       "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-      "updated_at": "2026-11-18 15:43:33"
+      "updated_at": "2026-11-18 19:02:45"
     },
     "ofertasadrenaline/60140": {
       "status": "unverified_coupon",
@@ -917,8 +917,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027411_99753ff15840ebede321369dc4460849&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028563_8777991783cb911b685e6d5c5a47e410&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://tidd.ly/4Az0ceg": {
       "status": "unverified_coupon",
@@ -928,8 +928,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027411_99753ff15840ebede321369dc4460849&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028563_8777991783cb911b685e6d5c5a47e410&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "peperaiohardware/123843": {
       "status": "unverified_coupon",
@@ -939,8 +939,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795027413_ca269719823af6ccbd5913e2ff9bddf1&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
-      "updated_at": "2026-11-18 15:43:34"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795028564_9fcda89f29474468f2a9e6eb9d93ef55&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://aoferta.net/002QiLXH-Kabum": {
       "status": "unverified_coupon",
@@ -950,8 +950,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795027413_ca269719823af6ccbd5913e2ff9bddf1&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
-      "updated_at": "2026-11-18 15:43:34"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1109753&sv1=affiliate&sv_campaign_id=1109753&awc=17729_1795028564_9fcda89f29474468f2a9e6eb9d93ef55&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=Pherlima&utm_term=1109753&sv1=affiliate&sv_campaign_id=1109753",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "nerdofertas/152366": {
       "status": "expired",
@@ -1560,25 +1560,25 @@
     },
     "peperaiohardware/123519": {
       "status": "expired",
-      "reason": "Cupom/desconto do grupo expirado/inativo na Shopee — preço atual em estoque sem cupom: R$ 533.59",
+      "reason": "Oferta antiga (42.5h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
-      "live_price": 533.59,
-      "stock_verified": true,
-      "coupon_status": "expired",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/PC-Gamer-Spectrum-AMD-RYZEN-5-5500-GeForce-GTX-1660-Super-6GB-16GB-DDR4-SSD-480GB-Fonte-500W-80-Plus-i.627750190.58251505538?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE7gAAAAzVJ1yuUJNRPVdsLfSvffDHGTTTJGwkq6fPhD23DVgBYX7X0w4tCRQ5GFQHRrLi3_Jpr_bOMXuV9boS5AMPotw3kQWjiizNim6_eux86vZDgg58kL4RC9_nB7okZV_tE1aopufNh4BjARfRwm8GO9Rx3vK_PTYB7OR2LtXyXdPAfIyp2cNvZ-dL9IGbs_fXG8oEaAwpq7l2gdJQ4-8IwuWhNY68kDYq741jCGW3ZrkrebAozzSrFgcEjgWyGonbBdliyWhrsfsQ3s6aQsy8giprE0cwX9SkyUGxY7xoCio61jiyR3nsIWoiJl4&mmp_pid=an_18170680001&uls_trackid=575j51s401c5&utm_campaign=id_786348c84f0f6aa1&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvcxoorah3qr",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://shopee.com.br/PC-Gamer-Spectrum-AMD-RYZEN-5-5500-GeForce-GTX-1660-Super-6GB-16GB-DDR4-SSD-480GB-Fonte-500W-80-Plus-i.627750190.58251505538?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE7gAAAAzAGFRZULuiwVvUMac6hjQIsEK9wn6cxcjG8vS260nJWCRFP2Q0Bas8FdNM_fDG-pfRNdaUNFY3e_MQfHdd4kRb7vUGAmV3g_p4IG0yjh_YDKHbRY2uiqAF4bGcVRiTe9wIqcy6ChHGKjjdZ_4G9rv-YynIAGp-bBXX3D6MTJwwvsLk7lTO1KanfU_hi8nhSUfyyddewQeQwPSpOZh5GjHmjg4Y-M4PuPQQEt7d-ArdBzzJ2ba0RTUItMAyy9kpMOcH4LK3KhKaTmE3y2Hlb2WAFqZmED6hOIql0Y0vNyUUTaZOoueNahyuj_U&mmp_pid=an_18170680001&uls_trackid=575j8doi01cc&utm_campaign=id_786348c84f0f6aa1&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvd19wc8pr5d",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "https://s.shopee.com.br/9V36CCpL5D": {
       "status": "expired",
-      "reason": "Cupom/desconto do grupo expirado/inativo na Shopee — preço atual em estoque sem cupom: R$ 533.59",
+      "reason": "Oferta antiga (42.5h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
-      "live_price": 533.59,
-      "stock_verified": true,
-      "coupon_status": "expired",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/PC-Gamer-Spectrum-AMD-RYZEN-5-5500-GeForce-GTX-1660-Super-6GB-16GB-DDR4-SSD-480GB-Fonte-500W-80-Plus-i.627750190.58251505538?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE7gAAAAzVJ1yuUJNRPVdsLfSvffDHGTTTJGwkq6fPhD23DVgBYX7X0w4tCRQ5GFQHRrLi3_Jpr_bOMXuV9boS5AMPotw3kQWjiizNim6_eux86vZDgg58kL4RC9_nB7okZV_tE1aopufNh4BjARfRwm8GO9Rx3vK_PTYB7OR2LtXyXdPAfIyp2cNvZ-dL9IGbs_fXG8oEaAwpq7l2gdJQ4-8IwuWhNY68kDYq741jCGW3ZrkrebAozzSrFgcEjgWyGonbBdliyWhrsfsQ3s6aQsy8giprE0cwX9SkyUGxY7xoCio61jiyR3nsIWoiJl4&mmp_pid=an_18170680001&uls_trackid=575j51s401c5&utm_campaign=id_786348c84f0f6aa1&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvcxoorah3qr",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://shopee.com.br/PC-Gamer-Spectrum-AMD-RYZEN-5-5500-GeForce-GTX-1660-Super-6GB-16GB-DDR4-SSD-480GB-Fonte-500W-80-Plus-i.627750190.58251505538?gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE7gAAAAzAGFRZULuiwVvUMac6hjQIsEK9wn6cxcjG8vS260nJWCRFP2Q0Bas8FdNM_fDG-pfRNdaUNFY3e_MQfHdd4kRb7vUGAmV3g_p4IG0yjh_YDKHbRY2uiqAF4bGcVRiTe9wIqcy6ChHGKjjdZ_4G9rv-YynIAGp-bBXX3D6MTJwwvsLk7lTO1KanfU_hi8nhSUfyyddewQeQwPSpOZh5GjHmjg4Y-M4PuPQQEt7d-ArdBzzJ2ba0RTUItMAyy9kpMOcH4LK3KhKaTmE3y2Hlb2WAFqZmED6hOIql0Y0vNyUUTaZOoueNahyuj_U&mmp_pid=an_18170680001&uls_trackid=575j8doi01cc&utm_campaign=id_786348c84f0f6aa1&utm_content=tanner----&utm_medium=affiliates&utm_source=an_18170680001&utm_term=fvd19wc8pr5d",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "ofertasadrenaline/60008": {
       "status": "expired",
@@ -1599,8 +1599,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027410_06bea4a30d0d364bde78d6102616a788&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028562_7747e317591c32bc2234d3bf00d32839&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "ofertasadrenaline/59960": {
       "status": "expired",
@@ -1625,26 +1625,26 @@
       "updated_at": "2026-11-18 12:59:13"
     },
     "IskandarSouza/198394": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (30.6h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzUz97ZXnfM8ff1MksnuoYc7CHzPjRBR44hBxdysGwOaGe_pQBlIuAWqbrsatPSg9jBujzF9zqIfeSVAXbH5mWrrdEi_pL9eGqk63HprMVKjRsLoA2xIsdjttvzds9z9ny1TQhEg7jsCpmwAW4yFZ3LNmxmB24Itdoz9HcCVV2Z6xUaZxazLhVu0e3XoVHqN4j5whQ&mmp_pid=an_18357780003&uls_trackid=575j4t6e00c3&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxjuoqjm7m",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAz_cBcYlWqEKKfSEWdlPtm_AOCA-KDLd5E908M0ko56M3sPQbhaZuOGSFmzWgwx24mTzk58N3V7L2cKcEQP6dwRirV4aln1owJTYB3D7fKB2UcGHwvcHm75CGQVs5A-_NMRdd9XVWiYSMbVXP4-FvQz7zZwOFec3WcqVssJkTey2t4FB4ZUmPE4N78IDDhFsTljj2o&mmp_pid=an_18357780003&uls_trackid=575j8dpl00c5&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd19xa3iwsd",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "iskandarsouza/198394": {
-      "status": "out_of_stock",
-      "reason": "Produto esgotado na Shopee (0 unidades em estoque hoje)",
+      "status": "expired",
+      "reason": "Oferta antiga (30.6h) sem confirmação de estoque ativo na Shopee",
       "source": "live_test",
       "live_price": null,
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAzUz97ZXnfM8ff1MksnuoYc7CHzPjRBR44hBxdysGwOaGe_pQBlIuAWqbrsatPSg9jBujzF9zqIfeSVAXbH5mWrrdEi_pL9eGqk63HprMVKjRsLoA2xIsdjttvzds9z9ny1TQhEg7jsCpmwAW4yFZ3LNmxmB24Itdoz9HcCVV2Z6xUaZxazLhVu0e3XoVHqN4j5whQ&mmp_pid=an_18357780003&uls_trackid=575j4t6e00c3&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvcxjuoqjm7m",
-      "updated_at": "2026-11-18 15:43:27"
+      "final_url": "https://shopee.com.br/opaanlp/242173379/58222757833?__mobile__=1&exp_group=rollout&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTElwAAAAz_cBcYlWqEKKfSEWdlPtm_AOCA-KDLd5E908M0ko56M3sPQbhaZuOGSFmzWgwx24mTzk58N3V7L2cKcEQP6dwRirV4aln1owJTYB3D7fKB2UcGHwvcHm75CGQVs5A-_NMRdd9XVWiYSMbVXP4-FvQz7zZwOFec3WcqVssJkTey2t4FB4ZUmPE4N78IDDhFsTljj2o&mmp_pid=an_18357780003&uls_trackid=575j8dpl00c5&utm_campaign=id_0b6c7631647e25c3&utm_content=vevsfps----&utm_medium=affiliates&utm_source=an_18357780003&utm_term=fvd19xa3iwsd",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "ofertasadrenaline/60041": {
       "status": "expired",
@@ -1654,8 +1654,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/426262/processador-amd-ryzen-7-7800x3d-4-2ghz-5-0ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100000910wof?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1794919250_1219979bd6cff6f7b0a8bda36775742f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&sv1=affiliate&sv_campaign_id=1408527&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027407_9644b501f1e5297d12f103bd33db52a4",
-      "updated_at": "2026-11-18 15:43:28"
+      "final_url": "https://www.kabum.com.br/produto/426262/processador-amd-ryzen-7-7800x3d-4-2ghz-5-0ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100000910wof?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1794919250_1219979bd6cff6f7b0a8bda36775742f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&sv1=affiliate&sv_campaign_id=1408527&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028568_853d0ebf287c6fa0906adc61c3aab2e3",
+      "updated_at": "2026-11-18 19:02:49"
     },
     "https://curt.link/bFdVj": {
       "status": "expired",
@@ -1665,8 +1665,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/426262/processador-amd-ryzen-7-7800x3d-4-2ghz-5-0ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100000910wof?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1794919250_1219979bd6cff6f7b0a8bda36775742f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&sv1=affiliate&sv_campaign_id=1408527&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027407_9644b501f1e5297d12f103bd33db52a4",
-      "updated_at": "2026-11-18 15:43:28"
+      "final_url": "https://www.kabum.com.br/produto/426262/processador-amd-ryzen-7-7800x3d-4-2ghz-5-0ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100000910wof?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1794919250_1219979bd6cff6f7b0a8bda36775742f&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&sv1=affiliate&sv_campaign_id=1408527&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028568_853d0ebf287c6fa0906adc61c3aab2e3",
+      "updated_at": "2026-11-18 19:02:49"
     },
     "ofertasadrenaline/59941": {
       "status": "active",
@@ -1746,26 +1746,26 @@
       "updated_at": "2026-11-18 12:59:15"
     },
     "ofertasadrenaline/60172": {
-      "status": "active",
-      "reason": "Confirmado em estoque na Amazon BR por R$ 1,769.99 (sem depender de cupom)",
+      "status": "untested",
+      "reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 1769.99,
-      "stock_verified": true,
-      "coupon_status": "none",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Amazon BR",
-      "final_url": "https://www.amazon.com.br/dp/B0BTZB7F88?th=1&linkCode=sl2&tag=grupoferta-20&linkId=718c3c01b3bcb3705eb9927ab733c585&ref_=as_li_ss_tl&ascsubtag=srctok-666b370fe8fe1db6&btn_type=ss&btn_ref=srctok-666b370fe8fe1db6",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.amazon.com.br/dp/B0BTZB7F88?th=1&linkCode=sl2&tag=grupoferta-20&linkId=718c3c01b3bcb3705eb9927ab733c585&ref_=as_li_ss_tl&ascsubtag=srctok-1da91a8731768772&btn_type=ss&btn_ref=srctok-1da91a8731768772",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "https://link.amazon/B00ArxfvZ": {
-      "status": "active",
-      "reason": "Confirmado em estoque na Amazon BR por R$ 1,769.99 (sem depender de cupom)",
+      "status": "untested",
+      "reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 1769.99,
-      "stock_verified": true,
-      "coupon_status": "none",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Amazon BR",
-      "final_url": "https://www.amazon.com.br/dp/B0BTZB7F88?th=1&linkCode=sl2&tag=grupoferta-20&linkId=718c3c01b3bcb3705eb9927ab733c585&ref_=as_li_ss_tl&ascsubtag=srctok-666b370fe8fe1db6&btn_type=ss&btn_ref=srctok-666b370fe8fe1db6",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://www.amazon.com.br/dp/B0BTZB7F88?th=1&linkCode=sl2&tag=grupoferta-20&linkId=718c3c01b3bcb3705eb9927ab733c585&ref_=as_li_ss_tl&ascsubtag=srctok-1da91a8731768772&btn_type=ss&btn_ref=srctok-1da91a8731768772",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "ofertasadrenaline/59981": {
       "status": "expired",
@@ -1830,8 +1830,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714567/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teo-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027409_50be6818ffa93094da2f81108b7b548c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.kabum.com.br/produto/714567/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teo-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028563_2e74a0ada5e292fb9679a6c5d08e7094&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "iskandarsouza/198417": {
       "status": "expired",
@@ -1841,8 +1841,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714567/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teo-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027409_50be6818ffa93094da2f81108b7b548c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.kabum.com.br/produto/714567/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teo-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028563_2e74a0ada5e292fb9679a6c5d08e7094&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "https://seuhardware.com/s/vktinwP": {
       "status": "expired",
@@ -1852,8 +1852,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714567/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teo-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027409_50be6818ffa93094da2f81108b7b548c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.kabum.com.br/produto/714567/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teo-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028563_2e74a0ada5e292fb9679a6c5d08e7094&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "IskandarSouza/198375": {
       "status": "expired",
@@ -1896,8 +1896,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714566/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-ice-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teoi-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795025534_307d4a5fd54ddebcd76995d147a098bf&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714566/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-ice-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teoi-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028567_55c93dc80b9532053f26a136dfa18a23&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "iskandarsouza/198418": {
       "status": "expired",
@@ -1907,8 +1907,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714566/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-ice-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teoi-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795025534_307d4a5fd54ddebcd76995d147a098bf&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714566/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-ice-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teoi-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028567_55c93dc80b9532053f26a136dfa18a23&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "https://seuhardware.com/s/wvJyhPq": {
       "status": "expired",
@@ -1918,8 +1918,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714566/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-ice-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teoi-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795025534_307d4a5fd54ddebcd76995d147a098bf&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714566/placa-de-video-gigabyte-rtx-5070-ti-eagle-oc-ice-sff-16g-nvidia-geforce-16gb-gddr7-256bits-rgb-dlss-ray-tracing-9vn507teoi-00-g10?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028567_55c93dc80b9532053f26a136dfa18a23&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:47"
     },
     "ofertasadrenaline/60039": {
       "status": "expired",
@@ -1973,8 +1973,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795025534_0b8b68a9784db026889c7c935857f8bd&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028567_3654c56bf4ca0339ab2e2c8bbce1f499&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "iskandarsouza/198412": {
       "status": "expired",
@@ -1984,8 +1984,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795025534_0b8b68a9784db026889c7c935857f8bd&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028567_3654c56bf4ca0339ab2e2c8bbce1f499&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "https://seuhardware.com/s/KZhNRKo": {
       "status": "expired",
@@ -1995,8 +1995,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795025534_0b8b68a9784db026889c7c935857f8bd&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 18:12:15"
+      "final_url": "https://www.kabum.com.br/produto/714572/placa-de-video-gigabyte-rtx-5070-eagle-oc-ice-sff-12g-nvidia-geforce-12gb-gddr7-192bits-rgb-dlss-ray-tracing-gv-n5070eagleoc-ice-12gd?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028567_3654c56bf4ca0339ab2e2c8bbce1f499&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:48"
     },
     "IskandarSouza/198398": {
       "status": "expired",
@@ -2006,8 +2006,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/777056/placa-de-video-inno3d-rtx-5060-twin-x2-nvidia-geforce-8gb-128bits-2497mhz-fp4-e-dlss-4-ray-tracing-n50602-08d7-195071n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027406_d9cc3270c1f340462039f145fd2383bb&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:29"
+      "final_url": "https://www.kabum.com.br/produto/777056/placa-de-video-inno3d-rtx-5060-twin-x2-nvidia-geforce-8gb-128bits-2497mhz-fp4-e-dlss-4-ray-tracing-n50602-08d7-195071n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028545_478a610c25842ec959a1b2edab234446&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:26"
     },
     "iskandarsouza/198398": {
       "status": "expired",
@@ -2017,8 +2017,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/777056/placa-de-video-inno3d-rtx-5060-twin-x2-nvidia-geforce-8gb-128bits-2497mhz-fp4-e-dlss-4-ray-tracing-n50602-08d7-195071n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027406_d9cc3270c1f340462039f145fd2383bb&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:29"
+      "final_url": "https://www.kabum.com.br/produto/777056/placa-de-video-inno3d-rtx-5060-twin-x2-nvidia-geforce-8gb-128bits-2497mhz-fp4-e-dlss-4-ray-tracing-n50602-08d7-195071n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028545_478a610c25842ec959a1b2edab234446&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:26"
     },
     "https://seuhardware.com/s/vGsWiLH": {
       "status": "expired",
@@ -2028,8 +2028,8 @@
       "stock_verified": true,
       "coupon_status": "expired",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/777056/placa-de-video-inno3d-rtx-5060-twin-x2-nvidia-geforce-8gb-128bits-2497mhz-fp4-e-dlss-4-ray-tracing-n50602-08d7-195071n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027406_d9cc3270c1f340462039f145fd2383bb&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:29"
+      "final_url": "https://www.kabum.com.br/produto/777056/placa-de-video-inno3d-rtx-5060-twin-x2-nvidia-geforce-8gb-128bits-2497mhz-fp4-e-dlss-4-ray-tracing-n50602-08d7-195071n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028545_478a610c25842ec959a1b2edab234446&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:26"
     },
     "peperaiohardware/123534": {
       "status": "expired",
@@ -2054,26 +2054,26 @@
       "updated_at": "2026-11-18 16:19:20"
     },
     "ofertasadrenaline/60182": {
-      "status": "unverified_coupon",
-      "reason": "Em estoque na Shopee por R$ 1,203.36 (sem cupom). Valor de R$ 1,093.88 depende do cupom/app aplicar no carrinho",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 1203.36,
-      "stock_verified": true,
-      "coupon_status": "unverified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-5-9600X-3.9GHz-%285.4GHz-Turbo%29-6-Cores-12-Threads-AM5-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58252018512?extraParams=%7B%22display_model_id%22%3A209615801008%2C%22model_selection_logic%22%3A3%7D&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE9QAAAAzmd3CP95D9lvnIHtiVeglfCHMEUhxgy5zD4dqp66wFACPUtWmT4vjhOdfOS8Dckctb4I5DC_Ec0DVPa_WFqhP3fv4fnGGVNN4Reu6DpahK-hoWLPAhI1H_XRTmPJoUr0b6tRKpNgRstovyNq268-Nz0U2MG7T6LXjtP1gHH3eYOdIoIXh0WYFCWDL1DRxtRoGS8dW-jpo244W7q2ZkedLr97BbOIQeLghrPPx8g3nEy40NxdslD5NkdhVJ_CxSE_p8ef8XgSAvzUbmCGmzX29BQ3gsLiwEaZmhzvS1Ftf-3gUTScRBZ6fghTpFbiEk86Xa&image_ids=br-11134207-81z1k-mibn8hown40601&mmp_pid=an_18329640336&uls_trackid=575j51rs00k8&utm_campaign=id_219ZTKBAmW9&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvcxooicj8jy",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-5-9600X-3.9GHz-%285.4GHz-Turbo%29-6-Cores-12-Threads-AM5-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58252018512?extraParams=%7B%22display_model_id%22%3A209615801008%2C%22model_selection_logic%22%3A3%7D&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE9QAAAAxw-TMxvybIgDNllJmloWwRAIiHKrPlc12XkLcTTe8uFT-dn2NXrHM5Eujs8kvrGn8xh_EztrTmndusi14tCkSvWxyQ2jR4HBupnkScPeKnWXisqcVbr3NgOWhjoG8MmGDs8937_MdgdDAjRn19dWQntqMAOkQDOMeyYwg1BfHzzD7KokY2jkb6gmj05VpOxEnv7ixL9wh2PdZ5ayj-OiaAp8_upW8CicNh_QQuzzqiWOujaFDMUP3nUvABGwhfAEHWo3f1_VUJDJ7jC9dn4ad3JrTaqNQqTuSPqAwFByDF57xU27jZeCrgLNwpyNwp2Cvu&image_ids=br-11134207-81z1k-mibn8hown40601&mmp_pid=an_18329640336&uls_trackid=575j8doh02l7&utm_campaign=id_219ZTKBAmW9&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd19wc5k1uh",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "https://s.shopee.com.br/6Amguku6Ej": {
-      "status": "unverified_coupon",
-      "reason": "Em estoque na Shopee por R$ 1,203.36 (sem cupom). Valor de R$ 1,093.88 depende do cupom/app aplicar no carrinho",
+      "status": "untested",
+      "reason": "Estoque/preço na Shopee não pôde ser confirmado automaticamente (verifique no link)",
       "source": "live_test",
-      "live_price": 1203.36,
-      "stock_verified": true,
-      "coupon_status": "unverified",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
       "store_name": "Shopee",
-      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-5-9600X-3.9GHz-%285.4GHz-Turbo%29-6-Cores-12-Threads-AM5-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58252018512?extraParams=%7B%22display_model_id%22%3A209615801008%2C%22model_selection_logic%22%3A3%7D&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE9QAAAAzmd3CP95D9lvnIHtiVeglfCHMEUhxgy5zD4dqp66wFACPUtWmT4vjhOdfOS8Dckctb4I5DC_Ec0DVPa_WFqhP3fv4fnGGVNN4Reu6DpahK-hoWLPAhI1H_XRTmPJoUr0b6tRKpNgRstovyNq268-Nz0U2MG7T6LXjtP1gHH3eYOdIoIXh0WYFCWDL1DRxtRoGS8dW-jpo244W7q2ZkedLr97BbOIQeLghrPPx8g3nEy40NxdslD5NkdhVJ_CxSE_p8ef8XgSAvzUbmCGmzX29BQ3gsLiwEaZmhzvS1Ftf-3gUTScRBZ6fghTpFbiEk86Xa&image_ids=br-11134207-81z1k-mibn8hown40601&mmp_pid=an_18329640336&uls_trackid=575j51rs00k8&utm_campaign=id_219ZTKBAmW9&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvcxooicj8jy",
-      "updated_at": "2026-11-18 15:44:15"
+      "final_url": "https://shopee.com.br/Processador-AMD-Ryzen-5-9600X-3.9GHz-%285.4GHz-Turbo%29-6-Cores-12-Threads-AM5-Novo-%28Sem-Caixa-Box-ou-Cooler%29-i.1617314731.58252018512?extraParams=%7B%22display_model_id%22%3A209615801008%2C%22model_selection_logic%22%3A3%7D&gads_t_sig=gqRjZGVrxHCFomtpsTE0MjUxOnRzc19zZGtfa2V5omt20QACpGFsZ2_SAAAAZKNkZWvAomN0xEAAAAAMc1TPTF0zl9lUk9doKYfbtNkYCBZaTm6dQ6q3WJIrnGYlyLtpSCE1-D6jy2YmlKEe_b7zxJZfI6lpwZ6fqmNpcGhlcnRleHTE9QAAAAxw-TMxvybIgDNllJmloWwRAIiHKrPlc12XkLcTTe8uFT-dn2NXrHM5Eujs8kvrGn8xh_EztrTmndusi14tCkSvWxyQ2jR4HBupnkScPeKnWXisqcVbr3NgOWhjoG8MmGDs8937_MdgdDAjRn19dWQntqMAOkQDOMeyYwg1BfHzzD7KokY2jkb6gmj05VpOxEnv7ixL9wh2PdZ5ayj-OiaAp8_upW8CicNh_QQuzzqiWOujaFDMUP3nUvABGwhfAEHWo3f1_VUJDJ7jC9dn4ad3JrTaqNQqTuSPqAwFByDF57xU27jZeCrgLNwpyNwp2Cvu&image_ids=br-11134207-81z1k-mibn8hown40601&mmp_pid=an_18329640336&uls_trackid=575j8doh02l7&utm_campaign=id_219ZTKBAmW9&utm_content=----&utm_medium=affiliates&utm_source=an_18329640336&utm_term=fvd19wc5k1uh",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "ofertasadrenaline/60187": {
       "status": "active",
@@ -2083,8 +2083,8 @@
       "stock_verified": true,
       "coupon_status": "none",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027409_29fc837ce26135453b708c953f86b75d&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:30"
+      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028561_71e9d9c83f5a3ff5807073c0d3238bed&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "https://tidd.ly/3WUE8w6": {
       "status": "active",
@@ -2094,8 +2094,8 @@
       "stock_verified": true,
       "coupon_status": "none",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027409_29fc837ce26135453b708c953f86b75d&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:30"
+      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028561_71e9d9c83f5a3ff5807073c0d3238bed&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:41"
     },
     "IskandarSouza/198696": {
       "status": "active",
@@ -2105,8 +2105,8 @@
       "stock_verified": true,
       "coupon_status": "verified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027454_2d125cbcba4d2f8afb32cfaddeefba29&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:44:17"
+      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028559_50d6775adad774577cfa2addfdb0962c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "iskandarsouza/198696": {
       "status": "active",
@@ -2116,8 +2116,8 @@
       "stock_verified": true,
       "coupon_status": "verified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027454_2d125cbcba4d2f8afb32cfaddeefba29&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:44:17"
+      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028559_50d6775adad774577cfa2addfdb0962c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "https://seuhardware.com/s/mGGQUeQ": {
       "status": "active",
@@ -2127,8 +2127,8 @@
       "stock_verified": true,
       "coupon_status": "verified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027454_2d125cbcba4d2f8afb32cfaddeefba29&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:44:17"
+      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028559_50d6775adad774577cfa2addfdb0962c&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "IskandarSouza/198695": {
       "status": "untested",
@@ -2138,8 +2138,8 @@
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=ae4b773d80bf4a069cbab9d2c218b8a7-1795027410934-03915-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=ae4b773d80bf4a069cbab9d2c218b8a7-1795027410934-03915-_c3RkGwqr&terminal_id=9f0d98da3fcd4beb86f989b69a596b5d&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=6fc2f3b354db48b9adcff0e3ffad723b-1795028563557-02465-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=6fc2f3b354db48b9adcff0e3ffad723b-1795028563557-02465-_c3RkGwqr&terminal_id=a9e2f346b1b84c7485773f3021f45d8b&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "iskandarsouza/198695": {
       "status": "untested",
@@ -2149,8 +2149,8 @@
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=ae4b773d80bf4a069cbab9d2c218b8a7-1795027410934-03915-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=ae4b773d80bf4a069cbab9d2c218b8a7-1795027410934-03915-_c3RkGwqr&terminal_id=9f0d98da3fcd4beb86f989b69a596b5d&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=6fc2f3b354db48b9adcff0e3ffad723b-1795028563557-02465-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=6fc2f3b354db48b9adcff0e3ffad723b-1795028563557-02465-_c3RkGwqr&terminal_id=a9e2f346b1b84c7485773f3021f45d8b&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "ofertasadrenaline/60189": {
       "status": "active",
@@ -2160,8 +2160,8 @@
       "stock_verified": true,
       "coupon_status": "none",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027411_9ed90873d43d2699a9ac5bc496ab1d95&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
-      "updated_at": "2026-11-18 15:43:32"
+      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028563_e6bd9a7ebf64537a0a997a077af9e43a&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "https://curt.link/AEaxV": {
       "status": "active",
@@ -2171,8 +2171,8 @@
       "stock_verified": true,
       "coupon_status": "none",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027411_9ed90873d43d2699a9ac5bc496ab1d95&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
-      "updated_at": "2026-11-18 15:43:32"
+      "final_url": "https://www.kabum.com.br/produto/728738/placa-de-video-inno3d-geforce-rtx-5080-x3-16gb-gddr7-256bits-n50803-16d7-176068n?aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028563_e6bd9a7ebf64537a0a997a077af9e43a&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=grupo-ofertas&utm_term=689417&sv1=affiliate&sv_campaign_id=689417",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "IskandarSouza/198697": {
       "status": "active",
@@ -2182,8 +2182,8 @@
       "stock_verified": true,
       "coupon_status": "verified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027410_654dc336e9605fe5c3d5e408fc3a39ee&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028563_18b562ebf67b33e60aaf54e104e395a3&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "iskandarsouza/198697": {
       "status": "active",
@@ -2193,8 +2193,8 @@
       "stock_verified": true,
       "coupon_status": "verified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027410_654dc336e9605fe5c3d5e408fc3a39ee&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028563_18b562ebf67b33e60aaf54e104e395a3&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "https://seuhardware.com/s/fUCugFp": {
       "status": "active",
@@ -2204,8 +2204,8 @@
       "stock_verified": true,
       "coupon_status": "verified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027410_654dc336e9605fe5c3d5e408fc3a39ee&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/776942/placa-de-video-inno3d-geforce-rtx-5070-twin-x2-12gb-192bits-gddr7-n50702-12d7-195064n?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028563_18b562ebf67b33e60aaf54e104e395a3&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:44"
     },
     "ofertasadrenaline/60180": {
       "status": "unverified_coupon",
@@ -2215,8 +2215,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795008271_5bc2675cdeef8e8a113d0d0252d72eb9&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795019870_b285abc94c0f93638a062ee7b7bdd5ca&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027411_405eecf698ce4cdb642a0591deebd138",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795008271_5bc2675cdeef8e8a113d0d0252d72eb9&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795019870_b285abc94c0f93638a062ee7b7bdd5ca&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028564_db143fafca00dd37b4373a0cd860da67",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "https://curt.link/ejSpj": {
       "status": "unverified_coupon",
@@ -2226,8 +2226,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795008271_5bc2675cdeef8e8a113d0d0252d72eb9&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795019870_b285abc94c0f93638a062ee7b7bdd5ca&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795027411_405eecf698ce4cdb642a0591deebd138",
-      "updated_at": "2026-11-18 15:43:33"
+      "final_url": "https://www.kabum.com.br/produto/320799/processador-amd-ryzen-5-5500-3-6ghz-4-2ghz-max-turbo-cache-19mb-6-nucleos-12-threads-am4-sem-video-integrado-100-100000457box?aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795008271_5bc2675cdeef8e8a113d0d0252d72eb9&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=1408527&aw_affid=1408527&sv1=affiliate&sv_campaign_id=1408527&awc=17729_1795019870_b285abc94c0f93638a062ee7b7bdd5ca&aw_affid=689417&sv1=affiliate&sv_campaign_id=689417&awc=17729_1795028564_db143fafca00dd37b4373a0cd860da67",
+      "updated_at": "2026-11-18 19:02:45"
     },
     "IskandarSouza/198711": {
       "status": "unverified_coupon",
@@ -2237,8 +2237,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027454_c4fee7f799193f07e6b2f6922238f7d5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:44:16"
+      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028559_8c14f2d029258d31ef1f4ab680b58cc5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "iskandarsouza/198711": {
       "status": "unverified_coupon",
@@ -2248,8 +2248,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027454_c4fee7f799193f07e6b2f6922238f7d5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:44:16"
+      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028559_8c14f2d029258d31ef1f4ab680b58cc5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "https://seuhardware.com/s/3GHEmy1": {
       "status": "unverified_coupon",
@@ -2259,8 +2259,8 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795027454_c4fee7f799193f07e6b2f6922238f7d5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-      "updated_at": "2026-11-18 15:44:16"
+      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795028559_8c14f2d029258d31ef1f4ab680b58cc5&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+      "updated_at": "2026-11-18 19:02:40"
     },
     "IskandarSouza/198699": {
       "status": "untested",
@@ -2270,8 +2270,8 @@
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=75ae41fca0634b86b1dfbcaf38d7b690-1795027410478-09870-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=75ae41fca0634b86b1dfbcaf38d7b690-1795027410478-09870-_c3u2KSyx&terminal_id=45b055b64f5348939df155bbd9cd9c23&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:43:30"
+      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=c0c20b65dc514ceea6edae88eee36cbc-1795028562981-05244-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=c0c20b65dc514ceea6edae88eee36cbc-1795028562981-05244-_c3u2KSyx&terminal_id=35c362f8cf4b4c7b9b1e8de4f0acf2e8&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "iskandarsouza/198699": {
       "status": "untested",
@@ -2281,8 +2281,8 @@
       "stock_verified": false,
       "coupon_status": null,
       "store_name": "E-commerce BR",
-      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=75ae41fca0634b86b1dfbcaf38d7b690-1795027410478-09870-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=75ae41fca0634b86b1dfbcaf38d7b690-1795027410478-09870-_c3u2KSyx&terminal_id=45b055b64f5348939df155bbd9cd9c23&afSmartRedirect=y",
-      "updated_at": "2026-11-18 15:43:30"
+      "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=c0c20b65dc514ceea6edae88eee36cbc-1795028562981-05244-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=c0c20b65dc514ceea6edae88eee36cbc-1795028562981-05244-_c3u2KSyx&terminal_id=35c362f8cf4b4c7b9b1e8de4f0acf2e8&afSmartRedirect=y",
+      "updated_at": "2026-11-18 19:02:43"
     },
     "ofertasadrenaline/60193": {
       "status": "unverified_coupon",
@@ -2292,9 +2292,64 @@
       "stock_verified": true,
       "coupon_status": "unverified",
       "store_name": "KaBuM!",
-      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795027410_06bea4a30d0d364bde78d6102616a788&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
-      "updated_at": "2026-11-18 15:43:31"
+      "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=3000679&sv1=affiliate&sv_campaign_id=3000679&awc=17729_1795028562_7747e317591c32bc2234d3bf00d32839&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=&utm_term=3000679&sv1=affiliate&sv_campaign_id=3000679",
+      "updated_at": "2026-11-18 19:02:43"
+    },
+    "https://meli.la/1NQwa93": {
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
+      "source": "live_test",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
+      "store_name": "Mercado Livre",
+      "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BKUZyUOx2osgXFaN9%2BkBZq0Cd2zzi0v5%2FYgMdjzS1r%2BKv5am9Nm1Ae8WkYBSW9GEbcprBpUA0IruiToiHrKcSu950OSCz%2FrANEY9LwULF8y6iHhjJvx%2FLWOSZ19Rg%2BIc98%2Foq5bNi%2FFG3jP2SmBhziMFUQmd0bOd8SZJE%2Ba6W7SY3NsSJj%2FtAGzkOpUeOtF206uXk5RXEw%3D%3D",
+      "updated_at": "2026-11-18 19:02:36"
+    },
+    "https://meli.la/12yen4W": {
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
+      "source": "live_test",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
+      "store_name": "Mercado Livre",
+      "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BP7jduOi6fXppDNrWUlENYL7TCJj3SzqtySUTFkxjYdeqW0WvA7Ue5WuDyv%2BS68OzLh1wj6UQcLUFunW4QrdYgm%2FKYuKidrzoUgLwihcakDnDJyDmZ943hOvUKaNkEeTrds9B8LsBnS3iphnsDjDNo4yauRNQ6Asj3KAHD29Zs%2F244QMtiyae0NnZemtDwcibKUQBHVALEK8x%2Bf2ulNSwPxEiLWKyJh%2BKKMuK%2FlQW621C0ZvQKqtG3T3hPvJMZ%2F9dTve",
+      "updated_at": "2026-11-18 19:02:37"
+    },
+    "https://meli.la/1RR9uCm": {
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
+      "source": "live_test",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
+      "store_name": "Mercado Livre",
+      "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BBeUPiVkryWURiHlijZXU8fbAmz7u1busAFFMsqoydin0N30TH2BrZu3C39%2FT5o%2BO0G5%2BDVlWlHjr3pHHXWUX5hYFiBsIYQb0ZdR%2Fiu4F9v8pTPm9gtQt%2F89E9QfbERzguwLUfH%2FrrL9Fumd9P2aRZGr3JcaGMkSkdaPYSP3SZwZOPBah%2BoyZ86GZ9DssMr6R7BEveynHmacutgR%2FU%2BdleYQLOY%2BFiY2NZXcNH6%2BlxGSGhJIXrC%2Fd%2B3ImPCYZy60tg6F",
+      "updated_at": "2026-11-18 19:02:37"
+    },
+    "https://meli.la/119B9ZF": {
+      "status": "untested",
+      "reason": "Estoque/preço na Mercado Livre não pôde ser confirmado automaticamente (verifique no link)",
+      "source": "live_test",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
+      "store_name": "Mercado Livre",
+      "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BOw%2F%2Bn8QyDaXmvozP6HF6F33T0zosSg8cOEjXo3BYMFiFiSZSvpS3A0LEN1qHiooP6i2hyGPfsUtz9VrNrGI3vJrvwQPuOBPjBAAQoKysR89gwyISAb4Da3IpI4xOCeAEB%2BGC%2FS7TetwGPhtE1wVUz0lgvYauLBsLiOho7869s%2FRZbp%2BDWb5uyr0cDDSRQTNbLkzndhJMqtvzo7MJej%2BdOR74qXUTh8tWg2QafeZOO0XH83n%2BwtljWVq0FuhcvBGwadz",
+      "updated_at": "2026-11-18 19:02:38"
+    },
+    "https://meli.la/2qd4CeQ": {
+      "status": "out_of_stock",
+      "reason": "Anúncio pausado no Mercado Livre",
+      "source": "live_test",
+      "live_price": null,
+      "stock_verified": false,
+      "coupon_status": null,
+      "store_name": "Mercado Livre",
+      "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BDSUjlDfpVAAusQl6Rj6mJTQYWEOHAq9d%2F7rhDTNWWwhxtuWD%2FDlWK82yPksENR5tDTXtuBhF0%2BnbxmgZyLzoROc%2FCQnSKAcd8Ox6FL9m0y0z88C%2BW%2Bu4dMgsy5hxas6%2BpRQwgqFAjG2SdqQjjnZM1CJqBlisg976n6PUbtohZN73yhnhJZDsToWMkHYSBEqKveaM14nOzrNugFmvjfLWmcUAMhXgjhFAWIf4o%2F5d1H1SsS85tAd7LFMGgHy2xZwidxT",
+      "updated_at": "2026-11-18 19:02:39"
     }
   },
-  "updated_at": "2026-11-18 15:44:17"
+  "updated_at": "2026-11-18 19:02:51"
 }

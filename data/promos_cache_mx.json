@@ -1,8 +1,8 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "18:12:27",
-  "last_sitewise_test_at": "2026-11-18 18:12:28",
+  "scanned_at": "19:03:03",
+  "last_sitewise_test_at": "2026-11-18 19:03:09",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -28,7 +28,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 45.7,
+      "age_hours": 46.5,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -41,7 +41,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "active",
-      "deal_status_reason": "Oferta antiga (45.7h) sem confirmação de estoque ativo na AliExpress",
+      "deal_status_reason": "Oferta antiga (46.5h) sem confirmação de estoque ativo na AliExpress",
       "stock_verified": false,
       "coupon_status_reason": ""
     }
@@ -66,7 +66,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211272",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 17.2
+      "age_hours": 18.0
     },
     {
       "post_id": "pdmx/1210910",
@@ -86,7 +86,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210910",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 37.0
+      "age_hours": 37.8
     },
     {
       "post_id": "pdmx/1210777",
@@ -106,7 +106,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210777",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 41.0
+      "age_hours": 41.9
     },
     {
       "post_id": "pdmx/1210639",
@@ -126,7 +126,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210639",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 45.7,
+      "age_hours": 46.5,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -139,7 +139,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (45.7h) sem confirmação de estoque ativo na AliExpress",
+      "deal_status_reason": "Oferta antiga (46.5h) sem confirmação de estoque ativo na AliExpress",
       "stock_verified": false
     }
   ],
@@ -185,25 +185,25 @@
       },
       "pdmx/1210639": {
         "status": "expired",
-        "reason": "Oferta antiga (45.7h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (46.5h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "AliExpress",
         "final_url": "https://www.promodescuentos.com/ofertas/ryzen-7-5700x-en-aliexpress-1210639",
-        "updated_at": "2026-11-18 18:12:28"
+        "updated_at": "2026-11-18 19:03:09"
       },
       "https://www.promodescuentos.com/share-deal/1210639": {
         "status": "expired",
-        "reason": "Oferta antiga (45.7h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (46.5h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "AliExpress",
         "final_url": "https://www.promodescuentos.com/ofertas/ryzen-7-5700x-en-aliexpress-1210639",
-        "updated_at": "2026-11-18 18:12:28"
+        "updated_at": "2026-11-18 19:03:09"
       },
       "pdmx/1211293": {
         "status": "active",
@@ -216,8 +216,63 @@
         "reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)",
         "source": "live_test",
         "updated_at": "2026-11-18 03:07:34"
+      },
+      "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203080%2010GB": {
+        "status": "untested",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "Loja",
+        "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203080%2010GB",
+        "updated_at": "2026-11-18 19:03:04"
+      },
+      "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%205600%20XT": {
+        "status": "untested",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "Loja",
+        "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%205600%20XT",
+        "updated_at": "2026-11-18 19:03:05"
+      },
+      "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203070%20Ti": {
+        "status": "untested",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "Loja",
+        "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203070%20Ti",
+        "updated_at": "2026-11-18 19:03:06"
+      },
+      "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203080%20Ti": {
+        "status": "untested",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "Loja",
+        "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203080%20Ti",
+        "updated_at": "2026-11-18 19:03:07"
+      },
+      "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203050%208GB": {
+        "status": "untested",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "Loja",
+        "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203050%208GB",
+        "updated_at": "2026-11-18 19:03:08"
       }
     },
-    "updated_at": "2026-11-18 18:12:28"
+    "updated_at": "2026-11-18 19:03:09"
   }
 }
