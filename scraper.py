@@ -18,13 +18,6 @@ except Exception:
     get_market_config = None
 
 def get_catalog_base_url():
-    if get_market_config:
-        try:
-            cfg = get_market_config()
-            db_settings = cfg.get("database_source_settings", {})
-            return (db_settings.get("catalog_base_url") or 'https://www.hardwarebarato.com').rstrip('/')
-        except Exception:
-            pass
     return 'https://www.hardwarebarato.com'
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -208,9 +201,15 @@ def compute_ai_and_software_scores(slug, bench, spec):
         "llm_32b_tok_s": tok_32b,
     }
 
+SCRAPER_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8"
+}
+
 def fetch_json_arrays(path):
     url = get_catalog_base_url() + path
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    req = urllib.request.Request(url, headers=SCRAPER_HEADERS)
     html = urllib.request.urlopen(req, timeout=20).read().decode('utf-8', errors='ignore')
     pushes = re.findall(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', html, re.DOTALL)
     unescaped = "".join(pushes).replace('\\"', '"').replace('\\\\', '\\')
@@ -244,18 +243,19 @@ def fetch_gpu_detail(gpu_item):
     lp = gpu_item.get('lowestPrice') or {}
     coupon = lp.get('coupon')
     reg_price = safe_price(lp.get('price'), 0.0)
-    current_price = safe_price(coupon.get('price') if isinstance(coupon, dict) else None, reg_price)
-    if current_price <= 0:
-        current_price = reg_price
-    inst_base = safe_price(lp.get('installmentPrice'), reg_price)
-    inst_price = safe_price(coupon.get('installmentPrice') if isinstance(coupon, dict) else None, inst_base)
+    coup_price = safe_price(coupon.get('price') if isinstance(coupon, dict) else None, 0.0)
+    # Never assume conditional/voucher coupon price as the default base price_brl!
+    # Keep reg_price as the guaranteed direct store price, and expose coupon_price_brl separately.
+    current_price = reg_price if reg_price > 0 else coup_price
+    inst_base = safe_price(lp.get('installmentPrice'), current_price)
+    inst_price = inst_base
 
     history = []
     offers = []
     scraped_vram = None
     try:
         url = f'https://www.hardwarebarato.com/produtos/placas-de-video/{slug}'
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        req = urllib.request.Request(url, headers=SCRAPER_HEADERS)
         html = urllib.request.urlopen(req, timeout=20).read().decode('utf-8', errors='ignore')
         pushes = re.findall(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', html, re.DOTALL)
         unescaped = "".join(pushes).replace('\\"', '"').replace('\\\\', '\\')
@@ -360,6 +360,7 @@ def fetch_gpu_detail(gpu_item):
         "tdp_w": gpu_item.get("tdp") or 150,
         "price_brl": round(current_price, 2),
         "regular_price_brl": round(reg_price, 2),
+        "coupon_price_brl": round(coup_price, 2) if coup_price > 0 else None,
         "installment_price_brl": round(inst_price, 2),
         "coupon": coupon.get("code") if isinstance(coupon, dict) else None,
         "coupon_label": coupon.get("discountLabel") if isinstance(coupon, dict) else None,
@@ -387,8 +388,8 @@ def fetch_gpu_detail(gpu_item):
             "vs_target_brl": vs_target_brl,
             "status": price_status,
         },
-        # Keep up to 600 days of daily history (includes 2025 Nov Black Friday + 2026!) for fast interactive charts
-        "history": history[:600]
+        # Keep the MOST RECENT 600 days of daily history (includes 2025 Nov Black Friday + 2026!)
+        "history": history[-600:]
     }
 
 def build_database(output_path):
@@ -465,7 +466,7 @@ def build_database(output_path):
         hist = []
         try:
             url = f'https://www.hardwarebarato.com/produtos/processadores/{slug}'
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            req = urllib.request.Request(url, headers=SCRAPER_HEADERS)
             html = urllib.request.urlopen(req, timeout=15).read().decode('utf-8', errors='ignore')
             pushes = re.findall(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', html, re.DOTALL)
             unescaped = "".join(pushes).replace('\\"', '"').replace('\\\\', '\\')
@@ -493,7 +494,8 @@ def build_database(output_path):
                             hist.append({'date': date_str, 'price': round(p, 2), 'store': h.get('storeName') or 'loja'})
         except Exception:
             pass
-        return slug, hist[:600]
+        hist.sort(key=lambda x: x['date'])
+        return slug, hist[-600:]
 
     cpu_to_fetch = []
     for c in raw_cpus:
@@ -501,7 +503,7 @@ def build_database(output_path):
             lp = c.get('lowestPrice') or {}
             coup = lp.get('coupon')
             reg_p = safe_price(lp.get('price'), 0.0)
-            p = safe_price(coup.get('price') if isinstance(coup, dict) else None, reg_p)
+            p = reg_p if reg_p > 0 else safe_price(coup.get('price') if isinstance(coup, dict) else None, 0.0)
             cpu_to_fetch.append((c['slug'], p))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
@@ -525,7 +527,9 @@ def build_database(output_path):
         lp = c.get('lowestPrice') or {}
         coup = lp.get('coupon')
         reg_p = safe_price(lp.get('price'), 0.0)
-        p = safe_price(coup.get('price') if isinstance(coup, dict) else None, reg_p)
+        coup_p = safe_price(coup.get('price') if isinstance(coup, dict) else None, 0.0)
+        # Never assume coupon price as default base price_brl on CPUs either!
+        p = reg_p if reg_p > 0 else coup_p
         if p <= 0:
             continue
         name = c.get('name', '')
@@ -550,6 +554,10 @@ def build_database(output_path):
             "tdp_w": c.get('tdp') or 65,
             "benchmark": c.get('benchmark') or 3000,
             "price_brl": round(p, 2),
+            "regular_price_brl": round(reg_p, 2) if reg_p > 0 else round(p, 2),
+            "coupon_price_brl": round(coup_p, 2) if coup_p > 0 else None,
+            "coupon": coup.get("code") if isinstance(coup, dict) else None,
+            "coupon_label": coup.get("discountLabel") if isinstance(coup, dict) else None,
             "socket": socket,
             "ddr": ddr,
             "store_name": lp.get('storeName') or 'loja',

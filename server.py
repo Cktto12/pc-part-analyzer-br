@@ -422,6 +422,14 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     targets = cfg.get("custom_targets", [])
 
     for d in matched:
+        # Never notify expired, out-of-stock, or unverified offers!
+        if d.get("is_expired") or d.get("is_coupon_expired"):
+            continue
+        if d.get("deal_status") in ("expired", "out_of_stock", "untested"):
+            continue
+        if reg_id == "br" and not d.get("stock_verified", False):
+            continue
+
         # STRICT REGIONAL ISOLATION CHECK
         d_reg = (d.get("region_id") or reg_id).lower()
         if d_reg != reg_id:
@@ -831,8 +839,13 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 code = qs.get("code", [None])[0]
                 price = float(qs.get("price", ["0"])[0]) if qs.get("price") else None
                 post_id = qs.get("post_id", [""])[0] or None
+                slug = qs.get("slug", [""])[0] or None
+                kind = qs.get("kind", [""])[0] or None
                 import coupon_tracker
-                res = coupon_tracker.test_deal_url_and_coupon(url, coupon_code=code, expected_price=price, post_id=post_id)
+                res = coupon_tracker.test_deal_url_and_coupon(
+                    url, coupon_code=code, expected_price=price, post_id=post_id,
+                    matched_slug=slug, matched_kind=kind
+                )
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
@@ -853,8 +866,14 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 url = body.get("url", "")
                 code = body.get("coupon_code") or body.get("code")
                 price = body.get("price")
+                post_id = body.get("post_id")
+                slug = body.get("slug") or body.get("matched_slug")
+                kind = body.get("kind") or body.get("matched_kind")
                 import coupon_tracker
-                res = coupon_tracker.test_deal_url_and_coupon(url, coupon_code=code, expected_price=price)
+                res = coupon_tracker.test_deal_url_and_coupon(
+                    url, coupon_code=code, expected_price=price, post_id=post_id,
+                    matched_slug=slug, matched_kind=kind
+                )
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
@@ -1143,6 +1162,10 @@ if __name__ == "__main__":
 
         for reg in regions_to_scan:
             print(f"[Cloud Cron] Processando região: {reg.upper()}")
+            try:
+                config.set_active_region(reg)
+            except Exception:
+                pass
             cfg = load_alert_config(reg)
             cfg["notifyEnabled"] = True
             cfg["notifyWinToast"] = False  # Headless Linux no GitHub Actions runner
@@ -1158,6 +1181,11 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"[Cloud Cron ({reg.upper()}) Sitewise Erro] {e}")
 
+        # Always restore default region to Brazil ('br') in config/market_config.json
+        try:
+            config.set_active_region("br")
+        except Exception:
+            pass
         print("[Cloud Cron] Concluído com sucesso!")
         sys.exit(0)
 

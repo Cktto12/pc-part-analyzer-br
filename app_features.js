@@ -2713,14 +2713,22 @@ function onBFTargetItemChange(silent) {
       const dealStatus = dealsMap[pId] || dealsMap[pId.toLowerCase()] || (best.buy_url ? dealsMap[best.buy_url] : null);
       const couponStatus = (cleanCoup && PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons && PROMO_STATE.couponStatus.coupons[cleanCoup]) || null;
       const isExpired = best.is_expired || (dealStatus && (dealStatus.status === 'expired' || dealStatus.status === 'out_of_stock')) || (couponStatus && couponStatus.status === 'expired');
-      const isWorking = !isExpired && ((dealStatus && dealStatus.status === 'active') || (couponStatus && couponStatus.status === 'active'));
+      const isVerifiedActive = !isExpired && (
+        (hasRealCoupon && ((couponStatus && couponStatus.status === 'verified') || best.coupon_status === 'verified')) ||
+        (!hasRealCoupon && ((dealStatus && dealStatus.status === 'active' && dealStatus.stock_verified) || (best.deal_status === 'active' && best.stock_verified)))
+      );
+      const isUnverifiedCoupon = !isExpired && !isVerifiedActive && (hasRealCoupon || best.deal_status === 'unverified_coupon');
+      const liveStorePrice = (dealStatus && dealStatus.live_price) || best.live_store_price_brl || null;
       const buyUrl = best.buy_url || best.post_url || '#';
+      const resolvedStore = (dealStatus && dealStatus.store_name && dealStatus.store_name !== 'E-commerce') ? dealStatus.store_name : (best.store_name || (activeReg === 'mx' ? 'Cyberpuerta' : 'E-commerce'));
 
       let freshBadge = '';
       if (isExpired) {
         freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
-      } else if (isWorking) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO ATIVO NA LOJA'}</span>`;
+      } else if (isVerifiedActive) {
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO EM ESTOQUE NA LOJA'}</span>`;
+      } else if (isUnverifiedCoupon) {
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Depende do cupom aplicar no carrinho da loja'}">⚠️ DEPENDE DE CUPOM NO CARRINHO${liveStorePrice ? ` (Sem cupom: ${formatMoney(liveStorePrice)})` : ''}</span>`;
       } else if (best.age_hours <= 2) {
         freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
       } else if (best.age_hours <= 8) {
@@ -2752,7 +2760,7 @@ function onBFTargetItemChange(silent) {
             ${freshBadge}
           </div>
           <div class="flex items-center gap-1 flex-wrap">
-            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testar status">
+            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl}, '${best.matched_slug || slug}', '${best.matched_kind || st.kind}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testar status">
               <span>🧪 ${activeReg === 'mx' ? 'Probar' : 'Testar'}</span>
             </button>
             ${hasRealCoupon ? `
@@ -2769,12 +2777,12 @@ function onBFTargetItemChange(silent) {
           </div>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
-          <span>${activeReg === 'mx' ? 'Fuente' : 'Canal'}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${activeReg === 'mx' ? 'Tienda' : 'Loja'}: ${best.store_name || (activeReg === 'mx' ? 'Cyberpuerta' : 'E-commerce')} • Modelo: ${(best.title || '').slice(0, 55)}</span>
+          <span>${activeReg === 'mx' ? 'Fuente' : 'Canal'}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${activeReg === 'mx' ? 'Tienda' : 'Loja'}: ${resolvedStore} • Modelo: ${(best.title || '').slice(0, 55)}</span>
           <div class="flex items-center gap-1">
             <span class="text-slate-400 text-[10px]">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isWorking ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
             <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
-            ${(isWorking || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
+            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
           </div>
         </div>
       `;
@@ -3077,9 +3085,10 @@ async function fetchTelegramChannelHTML(chId, query) {
       if (r.ok) return await r.text();
     } catch (_) {}
   }
-  // Static GitHub Pages fallback: fetch Telegram mirror directly via CORS proxy
+  // Static GitHub Pages fallback: fetch Telegram mirror directly via multiple resilient CORS proxies
   const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
   const proxies = [
+    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(tgUrl)}`,
     `https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`,
     `https://corsproxy.io/?${encodeURIComponent(tgUrl)}`
   ];
@@ -3092,6 +3101,13 @@ async function fetchTelegramChannelHTML(chId, query) {
       }
     } catch (_) {}
   }
+  try {
+    const rJson = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' });
+    if (rJson.ok) {
+      const j = await rJson.json();
+      if (j && j.contents && j.contents.includes('tgme_widget_message')) return j.contents;
+    }
+  } catch (_) {}
   return '';
 }
 
@@ -3178,9 +3194,9 @@ const CLIENT_GPU_RULES = [
   ['rx-7900-gre',      /\brx\s*7900\s*gre\b/i],
   ['rx-7800-xt',       /\brx\s*7800\s*xt\b/i],
   ['rx-7700-xt',       /\brx\s*7700\s*xt\b/i],
-  ['rx-7600-xt',       /\brx\s*7600\s*xt\b/i],
+  ['rx-7600-xt',       /\brx\s*7600\s*xt\b(?!.*?\b8\s*gb\b)/i],
   ['rx-7650-gre',      /\brx\s*7650\s*gre\b/i],
-  ['rx-7600',          /\brx\s*7600(?!\s*xt)\b/i],
+  ['rx-7600',          /\brx\s*7600(?!\s*xt)\b|\brx\s*7600\s*xt\b.*?\b8\s*gb\b/i],
   ['rx-6750-xt',       /\brx\s*6750\s*xt\b/i],
   ['rx-6700-xt',       /\brx\s*6700\s*xt\b/i],
   ['rx-6600-xt',       /\brx\s*6600\s*xt\b/i],
@@ -3225,7 +3241,8 @@ const CLIENT_RAM_RULES = [
 
 function parsePriceClient(rawStr) {
   let s = (rawStr || '').trim();
-  const decSep = window.STATE?.market?.monetary?.decimal_separator || ',';
+  const activeReg = typeof getActiveRegionId === 'function' ? getActiveRegionId() : 'br';
+  const decSep = activeReg === 'br' ? ',' : (window.STATE?.market?.monetary?.decimal_separator || ',');
   if (decSep === ',') {
     if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
     else if (s.includes(',')) s = s.replace(',', '.');
@@ -3234,7 +3251,7 @@ function parsePriceClient(rawStr) {
       if (parts[parts.length - 1].length === 3) s = s.replace(/\./g, '');
     }
   } else {
-    // US / UK style: 1,299.99
+    // US / UK / MX style: 1,299.99
     s = s.replace(/,/g, '');
   }
   const v = parseFloat(s);
@@ -3248,13 +3265,17 @@ function extractPriceAndCouponClient(lines) {
   let couponInfo = null;
   let detectedDiscountBRL = 0;
   let detectedDiscountPct = 0;
+  let requiresCoupon = false;
   const candidates = [];
 
   const mCode = fullText.match(/(?:cupom|c[oó]digo|promo code|coupon)\s*(?:de\s*desconto)?\s*[:\-]?\s*\b([A-Z0-9]{4,18})\b/i);
   if (mCode) {
     const w = mCode[1].toUpperCase();
-    const stop = new Set(['PARA', 'ESTA', 'ESSA', 'HOJE', 'AQUI', 'MAIS', 'PELO', 'SITE', 'LOJA', 'SHOPEE', 'KABUM', 'MAGALU', 'MERCADO', 'AMAZON', 'NEWEGG', 'BESTBUY', 'HTTPS', 'HTTP', 'WWW', 'COM', 'BR']);
-    if (!stop.has(w)) couponCode = w;
+    const stop = new Set(['PARA', 'ESTA', 'ESSA', 'HOJE', 'AQUI', 'MAIS', 'PELO', 'SITE', 'LOJA', 'SHOPEE', 'KABUM', 'MAGALU', 'MERCADO', 'AMAZON', 'NEWEGG', 'BESTBUY', 'HTTPS', 'HTTP', 'WWW', 'COM', 'BR', 'RESGATE', 'APP']);
+    if (!stop.has(w)) {
+      couponCode = w;
+      requiresCoupon = true;
+    }
   }
 
   // Detect explicit discount amounts or percentages
@@ -3263,28 +3284,38 @@ function extractPriceAndCouponClient(lines) {
                   line.match(/(?:R\$|\$|€|£)\s*([0-9]{2,4})\s*(?:off|de\s*desconto|discount)/i);
     if (mDisc) {
       const dVal = parseFloat(mDisc[1]);
-      if (dVal >= 10 && dVal <= 3000) detectedDiscountBRL = Math.max(detectedDiscountBRL, dVal);
+      if (dVal >= 10 && dVal <= 3000) {
+        detectedDiscountBRL = Math.max(detectedDiscountBRL, dVal);
+        requiresCoupon = true;
+      }
     }
     const mPct = line.match(/\b([1-9][0-9]?)\s*%\s*(?:off|de\s*desconto|discount)/i);
     if (mPct) {
       const pVal = parseFloat(mPct[1]);
-      if (pVal >= 3 && pVal <= 40) detectedDiscountPct = Math.max(detectedDiscountPct, pVal);
+      if (pVal >= 3 && pVal <= 40) {
+        detectedDiscountPct = Math.max(detectedDiscountPct, pVal);
+        requiresCoupon = true;
+      }
     }
   }
 
-  const customPriceRegex = window.STATE?.market?.monetary?.price_regex;
+  const activeReg = typeof getActiveRegionId === 'function' ? getActiveRegionId() : 'br';
+  const customPriceRegex = activeReg === 'br' ? null : window.STATE?.market?.monetary?.price_regex;
   const priceRe = customPriceRegex
     ? new RegExp(customPriceRegex, 'gi')
     : /R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)/gi;
-  const minValidPrice = window.STATE?.market?.monetary?.min_valid_hardware_price || 80;
-  const maxValidPrice = window.STATE?.market?.monetary?.max_valid_hardware_price || 45000;
-  const cashKeywords = window.STATE?.market?.promotion_sources?.cash_intent_keywords || ['por r$', 'valor', '💵', 'pix', 'à vista', 'a vista', '🔥', '$', '€', '£', 'lowest', 'deal'];
+  const minValidPrice = activeReg === 'br' ? 80 : (window.STATE?.market?.monetary?.min_valid_hardware_price || 80);
+  const maxValidPrice = activeReg === 'br' ? 45000 : (window.STATE?.market?.monetary?.max_valid_hardware_price || 45000);
+  const cashKeywords = ['por r$', 'valor', '💵', '💰', 'pix', 'à vista', 'a vista', '🔥', 'no app'];
 
   for (const line of lines) {
     const low = line.toLowerCase();
-    if (!couponInfo && ['cupom', '🎟', '🏷', 'resgate', 'moedas', 'coupon', 'code:'].some(k => low.includes(k))) {
-      const cleaned = line.replace(/https?:\/\/\S+/g, '').replace(/^[\s\-•🎟️🏷️💵🔥*]+|[\s\-•🎟️🏷️💵🔥*]+$/g, '');
-      if (cleaned.length >= 4) couponInfo = cleaned;
+    if (!couponInfo && ['cupom', '🎟', '🏷', 'resgate', 'resgatem', 'moedas', 'coupon', 'code:'].some(k => low.includes(k))) {
+      const cleaned = line.replace(/https?:\/\/\S+/g, '').replace(/^[\s\-•🎟️🏷️💵🔥📝*]+|[\s\-•🎟️🏷️💵🔥📝*]+$/g, '');
+      if (cleaned.length >= 4) {
+        couponInfo = cleaned;
+        requiresCoupon = true;
+      }
     }
     let m;
     priceRe.lastIndex = 0;
@@ -3293,47 +3324,51 @@ function extractPriceAndCouponClient(lines) {
       if (val < minValidPrice || val > maxValidPrice) continue;
       const start = m.index;
       const end = start + m[0].length;
-      const before = line.slice(Math.max(0, start - 22), start).toLowerCase();
-      const after = line.slice(end, Math.min(line.length, end + 22)).toLowerCase();
-      if (/\b(off|desconto|discount)\b/.test(after) || /\b(cupom\s*de|desconto\s*de|resgate|abatimento|save)\b/.test(before)) {
+      const before = line.slice(Math.max(0, start - 25), start).toLowerCase();
+      const after = line.slice(end, Math.min(line.length, end + 25)).toLowerCase();
+      if (/\b(off|desconto|discount)\b/.test(after) || /\b(cupom\s*de|desconto\s*de|resgate|resgatem|abatimento|save)\b/.test(before)) {
         if (!detectedDiscountBRL || val > detectedDiscountBRL) detectedDiscountBRL = Math.max(detectedDiscountBRL, val);
+        requiresCoupon = true;
         continue;
       }
       if (/\d+\s*x\s*(?:de\s*)?$/.test(before)) continue;
       let prio = 1;
       if (cashKeywords.some(k => low.includes(k))) prio = 3;
-      else if (low.includes('parcelado') || low.includes('12x') || low.includes('10x')) prio = 0;
+      else if (low.includes('parcelado') || low.includes('12x') || low.includes('10x') || low.includes('cartão')) prio = 0;
       candidates.push([prio, val]);
     }
   }
-  if (!candidates.length) return { price: null, rawPrice: null, discountApplied: 0, couponCode, couponInfo };
+  if (!candidates.length) return { price: null, rawPrice: null, discountApplied: 0, couponCode, couponInfo, requiresCoupon };
   const maxPrio = Math.max(...candidates.map(c => c[0]));
   const bestVals = candidates.filter(c => c[0] === maxPrio).map(c => c[1]);
   const basePrice = Math.min(...bestVals);
+  const maxBasePrice = Math.max(...bestVals);
 
-  // Double-Discount Guard: If post has final price indicators, do NOT subtract coupon a second time (Argon Item 12)
-  const hasFinalPriceIndicator = lines.some(line =>
-    /\b(por|sai\s*por|fica\s*por|pagando|preço|preco|valor|à\s*vista|a\s*vista|pix)\b/i.test(line)
-  );
-
-  let finalPrice = basePrice;
+  // CRITICAL BRAZIL RULE: Never double-discount!
+  // In Brazilian Telegram channels (@peperaiohardware, @iskandarsouza, @ofertasadrenaline, @benchpromos),
+  // the announced cash/Pix price (e.g. "💰 R$ 1.644 ... Resgatem o cupom de R$ 100 OFF") IS ALREADY the final price with the coupon!
+  const finalPrice = basePrice;
   let discountApplied = 0;
-  if (!hasFinalPriceIndicator) {
-    if (detectedDiscountBRL > 0 && detectedDiscountBRL < basePrice * 0.45) {
-      finalPrice = basePrice - detectedDiscountBRL;
-      discountApplied = detectedDiscountBRL;
-    } else if (detectedDiscountPct > 0) {
-      discountApplied = Math.round(basePrice * (detectedDiscountPct / 100));
-      finalPrice = basePrice - discountApplied;
-    }
+  let rawPrice = basePrice;
+
+  if (maxBasePrice > basePrice * 1.02 && maxBasePrice < basePrice * 1.45) {
+    rawPrice = maxBasePrice;
+    discountApplied = Math.round((maxBasePrice - basePrice) * 100) / 100;
+  } else if (detectedDiscountBRL > 0 && detectedDiscountBRL < basePrice * 0.45) {
+    discountApplied = detectedDiscountBRL;
+    rawPrice = Math.round((basePrice + detectedDiscountBRL) * 100) / 100;
+  } else if (detectedDiscountPct > 0) {
+    rawPrice = Math.round((basePrice / Math.max(0.5, 1.0 - detectedDiscountPct / 100.0)) * 100) / 100;
+    discountApplied = Math.round((rawPrice - basePrice) * 100) / 100;
   }
 
   return {
     price: Math.round(finalPrice * 100) / 100,
-    rawPrice: Math.round(basePrice * 100) / 100,
+    rawPrice: Math.round(rawPrice * 100) / 100,
     discountApplied,
     couponCode,
-    couponInfo
+    couponInfo,
+    requiresCoupon: Boolean(requiresCoupon || couponCode || couponInfo || discountApplied > 0)
   };
 }
 
@@ -3392,8 +3427,20 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
       ln => ln.replace(/[^a-zA-Z0-9]/g, '').length >= 6 && !/^(baixa|baixou|parcelado|cupom|oferta|promo|#)/i.test(ln.replace(/^[ ⭐️🔥🚨⚡]+/, ''))
     );
     const title = (titleCand || lines[0]).replace(/^[ ⭐️🔥🚨⚡🏹]+/, '').slice(0, 160);
-    const { price, rawPrice, discountApplied, couponCode, couponInfo } = extractPriceAndCouponClient(lines);
+    const { price, rawPrice, discountApplied, couponCode, couponInfo, requiresCoupon } = extractPriceAndCouponClient(lines);
     if (!price) return;
+
+    const buyUrl = links.length ? links[links.length - 1] : `https://t.me/${postId}`;
+    const uLow = buyUrl.toLowerCase();
+    let storeName = 'E-commerce';
+    if (uLow.includes('kabum')) storeName = 'KaBuM!';
+    else if (uLow.includes('pichau')) storeName = 'Pichau';
+    else if (uLow.includes('terabyte')) storeName = 'Terabyte';
+    else if (uLow.includes('mercadolivre') || uLow.includes('meli.la')) storeName = 'Mercado Livre';
+    else if (uLow.includes('amazon') || uLow.includes('amzn.to')) storeName = 'Amazon BR';
+    else if (uLow.includes('shopee')) storeName = 'Shopee';
+    else if (uLow.includes('magalu') || uLow.includes('magazine')) storeName = 'Magalu';
+    else if (uLow.includes('aliexpress') || uLow.includes('s.click.ali')) storeName = 'AliExpress';
 
     results.push({
       post_id: postId,
@@ -3404,11 +3451,14 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
       title,
       head_text: lines.slice(0, 3).join(' ').slice(0, 260),
       price_brl: price,
+      promo_price_brl: price,
       raw_price_brl: rawPrice,
       discount_applied: discountApplied,
       coupon_code: couponCode,
       coupon_info: couponInfo,
-      buy_url: links.length ? links[links.length - 1] : `https://t.me/${postId}`,
+      requires_coupon: Boolean(requiresCoupon),
+      store_name: storeName,
+      buy_url: buyUrl,
       coupon_url: links.length > 1 ? links[0] : null
     });
   });
@@ -3519,6 +3569,9 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
       item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
 
       const couponCode = (item.coupon_code || '').toUpperCase();
+      const reqCoupon = Boolean(item.requires_coupon || couponCode || item.coupon_info || item.discount_applied > 0);
+      item.requires_coupon = reqCoupon;
+      item.promo_price_brl = item.promo_price_brl || item.price_brl;
       const pId = item.post_id || '';
       const pIdLower = pId.toLowerCase();
       const buyUrl = item.buy_url || '';
@@ -3528,26 +3581,50 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
       const cStatus = couponCode ? couponsMap[couponCode] : null;
       const dStatus = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
 
-      if (dStatus && (dStatus.status === 'expired' || dStatus.status === 'out_of_stock')) {
-        item.is_expired = true;
-        item.deal_status = dStatus.status;
-        item.deal_status_reason = dStatus.reason;
-      } else if (item.age_hours > 8 && item.savings_vs_hb_brl > 250 && (!dStatus || dStatus.status !== 'active')) {
-        // Unverified old flash post (>8h ago claiming > R$ 250 off) is considered expired by default
+      if (dStatus) {
+        if (dStatus.store_name && dStatus.store_name !== 'E-commerce' && dStatus.store_name !== 'Loja') {
+          item.store_name = dStatus.store_name;
+        }
+        if (dStatus.live_price) {
+          item.live_store_price_brl = dStatus.live_price;
+        }
+        item.stock_verified = Boolean(dStatus.stock_verified);
+        item.deal_status_reason = dStatus.reason || '';
+
+        if (dStatus.status === 'expired' || dStatus.status === 'out_of_stock') {
+          item.is_expired = true;
+          item.deal_status = dStatus.status;
+        } else if (dStatus.status === 'unverified_coupon') {
+          item.is_expired = false;
+          item.deal_status = 'unverified_coupon';
+        } else if (dStatus.status === 'active') {
+          item.is_expired = false;
+          item.deal_status = 'active';
+        } else {
+          item.is_expired = Boolean(item.age_hours > 8);
+          item.deal_status = item.is_expired ? 'expired' : 'untested';
+        }
+      } else if (item.age_hours > 8) {
         item.is_expired = true;
         item.deal_status = 'expired';
-        item.deal_status_reason = `Oferta relâmpago antiga (${item.age_hours}h atrás) pendente de validação`;
+        item.stock_verified = false;
+        item.deal_status_reason = `Oferta antiga (${item.age_hours}h atrás) sem confirmação de estoque ativo`;
       } else {
         item.is_expired = false;
-        item.deal_status = 'active';
+        item.deal_status = reqCoupon ? 'unverified_coupon' : 'untested';
+        item.stock_verified = false;
       }
 
       if (cStatus && cStatus.status === 'expired') {
         item.is_coupon_expired = true;
+        item.is_expired = true;
         item.coupon_status = 'expired';
         item.coupon_status_reason = cStatus.reason;
         // REWIRE PRICING: Revoke expired coupon discount!
-        if (item.raw_price_brl && item.raw_price_brl > item.price_brl) {
+        if (item.live_store_price_brl && item.live_store_price_brl > item.price_brl) {
+          item.price_brl = item.live_store_price_brl;
+          item.coupon_discount_revoked = true;
+        } else if (item.raw_price_brl && item.raw_price_brl > item.price_brl) {
           item.price_brl = item.raw_price_brl;
           item.coupon_discount_revoked = true;
         } else if (item.discount_applied > 0) {
@@ -3557,16 +3634,31 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
         if (hbPrice > 0) {
           item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
         }
+      } else if (cStatus && cStatus.status === 'verified') {
+        item.is_coupon_expired = false;
+        item.coupon_status = 'verified';
+        item.coupon_status_reason = cStatus.reason || '';
+      } else if (dStatus && dStatus.coupon_status) {
+        item.coupon_status = dStatus.coupon_status;
+        item.is_coupon_expired = dStatus.coupon_status === 'expired';
+        if (item.is_coupon_expired) item.is_expired = true;
       } else {
         item.is_coupon_expired = false;
-        item.coupon_status = couponCode ? 'active' : 'none';
+        item.coupon_status = reqCoupon ? 'unverified' : 'none';
       }
 
       matchedDeals.push(item);
 
       const slug = m.item.slug;
-      // CRITICAL: ONLY ACTIVE, NON-EXPIRED DEALS CAN BE BEST BY SLUG!
-      if (!item.is_expired && item.deal_status === 'active' && !item.is_coupon_expired) {
+      // CRITICAL POLICY: ONLY STOCK-VERIFIED ACTIVE DEALS (that do NOT depend on unverified coupons) CAN ENTER bestBySlug!
+      if (
+        !item.is_expired &&
+        item.deal_status === 'active' &&
+        item.stock_verified === true &&
+        !item.is_coupon_expired &&
+        (!item.requires_coupon || item.coupon_status === 'verified') &&
+        (hbPrice <= 0 || item.price_brl < hbPrice)
+      ) {
         if (!bestBySlug[slug] || item.price_brl < bestBySlug[slug].price_brl) {
           bestBySlug[slug] = item;
         }
@@ -3669,13 +3761,25 @@ async function syncNotifiedHistoryFromServer() {
   try {
     const regId = getActiveRegionId();
     const staticFile = regId === 'mx' ? 'data/notified_history_mx.json' : 'data/notified_history.json';
-    const res = await fetch(`${staticFile}?t=` + Date.now());
-    if (res.ok) {
-      const hist = await res.json();
-      if (hist && typeof hist === 'object') {
-        Object.keys(hist).forEach(k => PROMO_STATE.notifiedKeys.add(k));
-        persistNotifiedKeys();
-      }
+    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    const urls = isStatic
+      ? [
+          `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/${staticFile}?t=` + Date.now(),
+          `${staticFile}?t=` + Date.now()
+        ]
+      : [`${staticFile}?t=` + Date.now()];
+    for (const u of urls) {
+      try {
+        const res = await fetch(u, { cache: 'no-store' });
+        if (res.ok) {
+          const hist = await res.json();
+          if (hist && typeof hist === 'object') {
+            Object.keys(hist).forEach(k => PROMO_STATE.notifiedKeys.add(k));
+            persistNotifiedKeys();
+            break;
+          }
+        }
+      } catch (_) {}
     }
   } catch (_) {}
 }
@@ -3683,20 +3787,34 @@ async function syncNotifiedHistoryFromServer() {
 async function syncCouponStatusFromServer() {
   try {
     const regId = getActiveRegionId();
+    const staticFile = regId === 'mx' ? 'data/coupon_status_mx.json' : 'data/coupon_status.json';
+    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     let statusObj = null;
-    try {
-      const res = await fetch(`/api/coupon-status?region=${encodeURIComponent(regId)}&t=` + Date.now());
-      if (res.ok) {
-        const d = await res.json();
-        statusObj = d.status || d;
-      }
-    } catch (_) {}
-    if (!statusObj) {
+    if (!isStatic) {
       try {
-        const staticFile = regId === 'mx' ? 'data/coupon_status_mx.json' : 'data/coupon_status.json';
-        const resStatic = await fetch(`${staticFile}?t=` + Date.now());
-        if (resStatic.ok) statusObj = await resStatic.json();
+        const res = await fetch(`/api/coupon-status?region=${encodeURIComponent(regId)}&t=` + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+          const d = await res.json();
+          statusObj = d.status || d;
+        }
       } catch (_) {}
+    }
+    if (!statusObj) {
+      const urls = isStatic
+        ? [
+            `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/${staticFile}?t=` + Date.now(),
+            `${staticFile}?t=` + Date.now()
+          ]
+        : [`${staticFile}?t=` + Date.now()];
+      for (const u of urls) {
+        try {
+          const resStatic = await fetch(u, { cache: 'no-store' });
+          if (resStatic.ok) {
+            statusObj = await resStatic.json();
+            if (statusObj && typeof statusObj === 'object') break;
+          }
+        } catch (_) {}
+      }
     }
     if (statusObj && typeof statusObj === 'object') {
       if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
@@ -4703,6 +4821,10 @@ function applyFlashPromosToCatalog() {
         /\.br\b|t\.me\/(?:peperaio|ofertasadrenaline|iskandar|kabum|benchpromos|nerdofertas|ofertastechbr)/i.test(promo.buy_url || promo.post_url || '')
       );
 
+      const requiresCoup = Boolean(promo && (promo.requires_coupon || promo.coupon_code || promo.coupon_info));
+      const isCoupVerified = Boolean(promo && promo.coupon_status === 'verified');
+      const isStockVerified = Boolean(promo && promo.stock_verified === true);
+
       if (
         PROMO_STATE.applyFlash &&
         promo &&
@@ -4710,11 +4832,13 @@ function applyFlashPromosToCatalog() {
         !isBrLeak &&
         !promo.is_expired &&
         promo.deal_status === 'active' &&
+        isStockVerified &&
         !promo.is_coupon_expired &&
+        (!requiresCoup || isCoupVerified) &&
         promo.price_brl < it._hbPrice
       ) {
         it.price_brl = promo.price_brl;
-        it.coupon = promo.coupon_code || promo.coupon_info || (activeReg === 'mx' ? 'OFERTA MX' : 'PROMO GRUPO');
+        it.coupon = promo.coupon_code || promo.coupon_info || (activeReg === 'mx' ? 'OFERTA MX' : 'OFERTA DIRETA');
         it.store_name = promo.store_name || `@${promo.channel_id}`;
         it.offer_url = promo.buy_url || promo.post_url;
         it._flashPromo = promo;
@@ -4901,49 +5025,92 @@ async function scanLivePromos(force = false) {
     return;
   }
 
-  // If only changing the time-window filter and we already have rawPosts in memory or localStorage (<15 min old),
-  // re-filter 100% locally in the browser with ZERO network requests!
-  if (!force && !extraQ && !extraCh) {
-    if (!PROMO_STATE.rawPosts.length) {
-      const activeRegId = (window.STATE?.market?.region_id || 'br').toLowerCase();
-      // 1. Check if DB has embedded live_promos matching the active region
-      if (activeRegId === 'br' && typeof DB !== 'undefined' && DB && DB.live_promos && Array.isArray(DB.live_promos.matched_deals) && DB.live_promos.matched_deals.length > 0) {
-        PROMO_STATE.lastData = DB.live_promos;
-        PROMO_STATE.channelsScanned = DB.live_promos.channels_scanned || [];
-        applyFlashPromosToCatalog();
-        checkAndFireDealNotifications(false);
-        renderPromoRadarPanel();
-        if (statusEl) {
-          statusEl.textContent = `Nuvem GitHub: Sincronizado às ${DB.live_promos.scanned_at} • ${DB.live_promos.matched_count} ofertas ativas`;
-        }
-        return;
-      }
-
-      // 2. Check localStorage cache
-      try {
-        const cached = JSON.parse(localStorage.getItem(getPromoCacheKey()) || 'null');
-        if (cached && cached.ts && (Date.now() - cached.ts < 15 * 60 * 1000) && Array.isArray(cached.rawPosts)) {
-          PROMO_STATE.rawPosts = cached.rawPosts;
-          PROMO_STATE.channelsScanned = cached.channelsScanned || [];
-        }
-      } catch (_) {}
-    }
-    if (PROMO_STATE.rawPosts.length) {
-      PROMO_STATE.lastData = buildPromoPayloadClient(PROMO_STATE.rawPosts, PROMO_STATE.channelsScanned, maxAge);
-      applyFlashPromosToCatalog();
-      checkAndFireDealNotifications(false);
-      renderPromoRadarPanel();
-      if (statusEl) {
-        statusEl.textContent = `Processado no seu navegador (cache local) • ${PROMO_STATE.channelsScanned.length} canais`;
-      }
-      return;
-    }
-  }
-
-  if (statusEl) statusEl.textContent = 'Processando ofertas no seu navegador (client-side)...';
+  // BRAZIL PIPELINE: First try backend /api/promos (if local server.py is running), then fetch latest cloud-validated promos_cache.json from GitHub raw,
+  // and if force=true on static GitHub Pages, also perform a throttled live Telegram scan (only main feed + extraQ) and merge!
+  if (statusEl) statusEl.textContent = 'Sincronizando ofertas em tempo real e validação de estoque/cupons...';
   if (btn) btn.disabled = true;
 
   try {
+    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+
+    // 1. If running on local server.py, let the Python backend do the full scan + 2-layer store & coupon verification
+    if (!isStatic && !extraQ && !extraCh) {
+      try {
+        const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=br&market=br` + (force ? '&force=1' : ''), { cache: 'no-store' });
+        if (apiRes.ok) {
+          const prData = await apiRes.json();
+          if (prData && Array.isArray(prData.matched_deals)) {
+            if (prData.coupon_status) {
+              if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+              Object.assign(PROMO_STATE.couponStatus.coupons || {}, prData.coupon_status.coupons || {});
+              Object.assign(PROMO_STATE.couponStatus.deals || {}, prData.coupon_status.deals || {});
+            }
+            PROMO_STATE.lastData = prData;
+            PROMO_STATE.channelsScanned = prData.channels_scanned || [];
+            applyFlashPromosToCatalog();
+            checkAndFireDealNotifications(false);
+            updateBFPromoEvaluator(true);
+            renderPromoRadarPanel();
+            if (statusEl) {
+              statusEl.textContent = `Servidor Local (2-Layer Store Verified): Sincronizado às ${prData.scanned_at} • ${prData.matched_deals.length} ofertas`;
+            }
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fetch latest cloud-validated promos_cache.json (from GitHub raw first to bypass CDN lag, then local static file)
+    let cloudData = null;
+    const cacheUrls = isStatic
+      ? [
+          `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache.json?t=` + Date.now(),
+          `data/promos_cache.json?t=` + Date.now()
+        ]
+      : [
+          `data/promos_cache.json?t=` + Date.now(),
+          `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache.json?t=` + Date.now()
+        ];
+    for (const cUrl of cacheUrls) {
+      try {
+        const r = await fetch(cUrl, { cache: 'no-store' });
+        if (r.ok) {
+          const d = await r.json();
+          if (d && Array.isArray(d.matched_deals) && d.matched_deals.length > 0) {
+            cloudData = d;
+            break;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (cloudData && cloudData.coupon_status) {
+      if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+      Object.assign(PROMO_STATE.couponStatus.coupons || {}, cloudData.coupon_status.coupons || {});
+      Object.assign(PROMO_STATE.couponStatus.deals || {}, cloudData.coupon_status.deals || {});
+    }
+
+    // If not forcing a live scrape and no custom search query/channel was entered, use the cloud-validated snapshot immediately
+    if (!force && !extraQ && !extraCh && cloudData) {
+      const filteredMatches = (cloudData.matched_deals || []).filter(d => (d.age_hours || 0) <= maxAge);
+      const filteredFeed = (cloudData.recent_feed || []).filter(d => (d.age_hours || 0) <= maxAge);
+      PROMO_STATE.lastData = Object.assign({}, cloudData, {
+        matched_count: filteredMatches.length,
+        matched_deals: filteredMatches,
+        recent_feed: filteredFeed
+      });
+      PROMO_STATE.channelsScanned = cloudData.channels_scanned || [];
+      applyFlashPromosToCatalog();
+      checkAndFireDealNotifications(false);
+      updateBFPromoEvaluator(true);
+      renderPromoRadarPanel();
+      if (statusEl) {
+        statusEl.textContent = `Nuvem GitHub (Validado): Sincronizado às ${cloudData.scanned_at} • ${filteredMatches.length} ofertas na janela`;
+      }
+      return;
+    }
+
+    // 3. When force=true on GitHub Pages (or custom query/channel), run a throttled live Telegram scrape (1 query per channel, batched 3 at a time)
     const channels = [...getClientPromoChannels()];
     if (extraCh) {
       extraCh.split(',').forEach(raw => {
@@ -4953,64 +5120,45 @@ async function scanLivePromos(force = false) {
         }
       });
     }
-    const queries = [...getClientPromoQueries()];
-    if (extraQ && !queries.includes(extraQ)) queries.push(extraQ);
+    const queries = isStatic ? (extraQ ? ['', extraQ] : ['']) : (extraQ ? [...getClientPromoQueries(), extraQ] : [...getClientPromoQueries()]);
 
-    const tasks = [];
+    const pairs = [];
     channels.forEach(ch => {
-      queries.forEach(q => {
-        tasks.push(
+      queries.forEach(q => pairs.push({ ch, q }));
+    });
+
+    const allRaw = [];
+    const batchSize = isStatic ? 3 : 7;
+    for (let i = 0; i < pairs.length; i += batchSize) {
+      const slice = pairs.slice(i, i + batchSize);
+      const batchRes = await Promise.all(
+        slice.map(({ ch, q }) =>
           fetchTelegramChannelHTML(ch.id, q)
             .then(htmlStr => (htmlStr ? parseTelegramHTMLInBrowser(htmlStr, ch.id, ch.name) : []))
             .catch(() => [])
-        );
+        )
+      );
+      batchRes.forEach(arr => allRaw.push(...arr));
+    }
+
+    // Merge live-scraped posts with cloudData so we never lose cloud-validated deals if a CORS proxy throttles
+    if (allRaw.length === 0 && cloudData) {
+      const filteredMatches = (cloudData.matched_deals || []).filter(d => (d.age_hours || 0) <= maxAge);
+      const filteredFeed = (cloudData.recent_feed || []).filter(d => (d.age_hours || 0) <= maxAge);
+      PROMO_STATE.lastData = Object.assign({}, cloudData, {
+        matched_count: filteredMatches.length,
+        matched_deals: filteredMatches,
+        recent_feed: filteredFeed
       });
-    });
-
-    const nested = await Promise.all(tasks);
-    const allRaw = nested.flat();
-
-    if (allRaw.length === 0) {
-      try {
-        const regId = (window.STATE?.market?.region_id || 'br').toLowerCase();
-        let prData = null;
-        try {
-          const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=${encodeURIComponent(regId)}&market=${encodeURIComponent(regId)}` + (force ? '&force=1' : ''));
-          if (apiRes.ok) prData = await apiRes.json();
-        } catch (_) {}
-
-        if (!prData || !Array.isArray(prData.matched_deals) || prData.matched_deals.length === 0) {
-          const cacheUrl = regId === 'br' ? 'data/promos_cache.json' : `data/promos_cache_${regId}.json`;
-          try {
-            const prRes = await fetch(cacheUrl + '?t=' + Date.now(), { cache: 'no-store' });
-            if (prRes.ok) prData = await prRes.json();
-          } catch (_) {}
-        }
-
-        if (!prData || (!Array.isArray(prData.matched_deals) && !Array.isArray(prData.recent_feed)) || ((prData.matched_deals || []).length === 0 && (prData.recent_feed || []).length === 0)) {
-          const rawUrl = regId === 'br'
-            ? 'https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache.json?t=' + Date.now()
-            : `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache_${regId}.json?t=` + Date.now();
-          try {
-            const rawRes = await fetch(rawUrl, { cache: 'no-store' });
-            if (rawRes.ok) prData = await rawRes.json();
-          } catch (_) {}
-        }
-
-        if (prData && ((Array.isArray(prData.matched_deals) && prData.matched_deals.length > 0) || (Array.isArray(prData.recent_feed) && prData.recent_feed.length > 0))) {
-          PROMO_STATE.lastData = prData;
-          PROMO_STATE.channelsScanned = prData.channels_scanned || [];
-          applyFlashPromosToCatalog();
-          checkAndFireDealNotifications(false);
-          renderPromoRadarPanel();
-          if (statusEl) {
-            const sym = window.STATE?.market?.monetary?.currency_symbol || 'R$';
-            const regName = window.STATE?.market?.region_name || 'Região';
-            statusEl.textContent = `Promoções ${regName} (${sym}): Sincronizado às ${prData.scanned_at || 'recente'} • ${prData.matched_deals.length} ofertas ativas`;
-          }
-          return;
-        }
-      } catch (_) {}
+      PROMO_STATE.channelsScanned = cloudData.channels_scanned || [];
+      applyFlashPromosToCatalog();
+      checkAndFireDealNotifications(false);
+      updateBFPromoEvaluator(true);
+      renderPromoRadarPanel();
+      if (statusEl) {
+        statusEl.textContent = `Nuvem GitHub (Validado): Sincronizado às ${cloudData.scanned_at} • ${filteredMatches.length} ofertas`;
+      }
+      return;
     }
 
     PROMO_STATE.rawPosts = allRaw;
@@ -5025,12 +5173,53 @@ async function scanLivePromos(force = false) {
     } catch (_) {}
 
     const data = buildPromoPayloadClient(allRaw, PROMO_STATE.channelsScanned, maxAge);
+
+    // Merge cloudData's validated matched_deals and recent_feed if any channel wasn't returned by the proxy
+    if (cloudData) {
+      const seenMatched = new Set(data.matched_deals.map(d => d.post_id));
+      (cloudData.matched_deals || []).forEach(cd => {
+        if ((cd.age_hours || 0) <= maxAge && !seenMatched.has(cd.post_id)) {
+          if (!extraQ || (cd.title || '').toLowerCase().includes(extraQ.toLowerCase())) {
+            data.matched_deals.push(cd);
+            seenMatched.add(cd.post_id);
+          }
+        }
+      });
+      const seenFeed = new Set(data.recent_feed.map(d => d.post_id));
+      (cloudData.recent_feed || []).forEach(cf => {
+        if ((cf.age_hours || 0) <= maxAge && !seenFeed.has(cf.post_id)) {
+          if (!extraQ || (cf.title || '').toLowerCase().includes(extraQ.toLowerCase())) {
+            data.recent_feed.push(cf);
+            seenFeed.add(cf.post_id);
+          }
+        }
+      });
+      data.matched_deals.sort((a, b) => (
+        (a.is_expired ? 1 : 0) - (b.is_expired ? 1 : 0) ||
+        (a.is_coupon_expired ? 1 : 0) - (b.is_coupon_expired ? 1 : 0) ||
+        ((a.age_hours > 24) - (b.age_hours > 24)) ||
+        (b.savings_vs_hb_brl - a.savings_vs_hb_brl) ||
+        (a.price_brl - b.price_brl)
+      ));
+      data.recent_feed.sort((a, b) => (a.age_hours || 0) - (b.age_hours || 0));
+      data.matched_count = data.matched_deals.length;
+      if (cloudData.best_by_slug) {
+        Object.keys(cloudData.best_by_slug).forEach(slug => {
+          const cb = cloudData.best_by_slug[slug];
+          if (cb && cb.deal_status === 'active' && cb.stock_verified && !cb.is_expired && (!data.best_by_slug[slug] || cb.price_brl < data.best_by_slug[slug].price_brl)) {
+            data.best_by_slug[slug] = cb;
+          }
+        });
+      }
+    }
+
     PROMO_STATE.lastData = data;
     applyFlashPromosToCatalog();
     checkAndFireDealNotifications(false);
+    updateBFPromoEvaluator(true);
     renderPromoRadarPanel();
     if (statusEl) {
-      statusEl.textContent = `Processado no seu navegador às ${data.scanned_at} • ${data.channels_scanned.length} canais`;
+      statusEl.textContent = `Radar Tempo Real + Validação Lojas às ${data.scanned_at} • ${data.matched_deals.length} ofertas`;
     }
   } catch (e) {
     if (statusEl) statusEl.textContent = 'Erro ao buscar páginas brutas de promoção.';
@@ -5067,23 +5256,22 @@ function renderPromoRadarPanel() {
           const isCheaper = d.savings_vs_hb_brl > 0;
           const isHot = d.is_high_cb || d.is_pechincha;
           const isCouponExpired = d.is_coupon_expired || d.coupon_status === 'expired';
-          const isOutOfStock = d.is_expired || d.deal_status === 'out_of_stock';
+          const isOutOfStock = d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired';
           const rawCoup = d.coupon_code || d.coupon_info;
+          const reqCoup = Boolean(d.requires_coupon || rawCoup);
           let couponBadge = '';
           if (rawCoup) {
             const cleanCoup = (d.coupon_code || rawCoup).replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase() || rawCoup;
             const uStat = typeof getCouponUserStatus === 'function' ? getCouponUserStatus(cleanCoup) : null;
             const isExp = isCouponExpired || (uStat && uStat.status === 'expired');
-            const isWrk = !isCouponExpired && (d.coupon_status === 'active' || (uStat && uStat.status === 'working'));
+            const isVerified = !isExp && (d.coupon_status === 'verified' || (uStat && uStat.status === 'working'));
             let freshTag = '';
             if (isExp) {
               freshTag = '<span class="text-rose-400 font-bold ml-1">❌ Expirado</span>';
-            } else if (isWrk) {
-              freshTag = '<span class="text-emerald-300 font-bold ml-1">✅ Ativo</span>';
-            } else if (d.age_hours <= 2) {
-              freshTag = '<span class="text-emerald-400 ml-1">🟢 Fresco</span>';
-            } else if (d.age_hours > 8) {
-              freshTag = '<span class="text-rose-400 ml-1">🔴 Risco</span>';
+            } else if (isVerified) {
+              freshTag = '<span class="text-emerald-300 font-bold ml-1">✅ Confirmado na Loja</span>';
+            } else {
+              freshTag = `<span class="text-amber-300 font-semibold ml-1">⚠️ Validar no Carrinho${d.live_store_price_brl ? ` (Sem cupom: ${fmtBRLShort(d.live_store_price_brl)})` : ''}</span>`;
             }
 
             couponBadge = `
@@ -5092,7 +5280,11 @@ function renderPromoRadarPanel() {
               </button>
             `;
           } else if (!isOutOfStock) {
-            couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta no link sem cupom'}">⚡ Oferta Direta (Sem Cupom)</span>`;
+            if (d.stock_verified && d.deal_status === 'active') {
+              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta confirmada em estoque'}">✅ Em Estoque (Sem Cupom)</span>`;
+            } else {
+              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta no link'}">⚡ Oferta Direta</span>`;
+            }
           }
           const cbBadge = d.cb_score != null
             ? `<span class="px-1.5 py-0.5 rounded ${d.is_high_cb ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50 font-extrabold' : 'bg-slate-800 text-slate-300'} font-mono text-[10px]">${d.is_high_cb ? '🏆 ' : ''}CB ${d.cb_score}/100</span>`
@@ -5101,24 +5293,27 @@ function renderPromoRadarPanel() {
             ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/50 font-mono font-extrabold text-[10px]">🔥 PECHINCHA</span>`
             : '';
           const statusBadge = isOutOfStock
-            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ Esgotado</span>`
+            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ ${d.deal_status === 'out_of_stock' ? 'Esgotado' : 'Encerrado'}</span>`
             : (isCouponExpired && d.coupon_discount_revoked
               ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-semibold">Preço Sem Cupom</span>`
               : '');
           const safeId = (d.post_id || '').replace(/[^a-zA-Z0-9]/g, '_');
           const cleanCoupCode = (d.coupon_code || '').replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
-          const isTestedActive = !isOutOfStock && !isCouponExpired && (d.coupon_status === 'active' || d.deal_status === 'active');
-          const testBtnClass = isTestedActive
+          const isVerifiedActive = !isOutOfStock && !isCouponExpired && d.stock_verified && (reqCoup ? d.coupon_status === 'verified' : d.deal_status === 'active');
+          const isUnverifiedCoup = !isOutOfStock && !isCouponExpired && !isVerifiedActive && (reqCoup || d.deal_status === 'unverified_coupon');
+          const testBtnClass = isVerifiedActive
             ? 'px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
-            : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1';
-          const testBtnLabel = isTestedActive ? '✅ Testado' : '🧪 Testar';
+            : isUnverifiedCoup
+              ? 'px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
+              : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1';
+          const testBtnLabel = isVerifiedActive ? '✅ Em Estoque' : isUnverifiedCoup ? '⚠️ Testar Cupom' : '🧪 Testar';
           return `
             <div class="p-3 rounded-xl bg-slate-950/80 border ${isOutOfStock ? 'border-rose-900/60 opacity-75' : isHot ? 'border-amber-400/60 shadow-md shadow-amber-500/10' : isCheaper ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold text-[10px]">${d.matched_name}</span>
                   <span class="font-mono font-extrabold text-sm ${isOutOfStock ? 'text-slate-400 line-through' : isCheaper ? 'text-emerald-400' : 'text-white'}">
-                    ${d.coupon_discount_revoked && d.raw_price_brl ? `<span class="line-through text-slate-500 text-xs mr-1">${fmtBRL(d.raw_price_brl - (d.discount_applied||0))}</span>` : ''}
+                    ${d.coupon_discount_revoked && d.promo_price_brl ? `<span class="line-through text-slate-500 text-xs mr-1">${fmtBRL(d.promo_price_brl)}</span>` : ''}
                     ${fmtBRL(d.price_brl)}
                   </span>
                   ${isCheaper && !isOutOfStock
@@ -5131,14 +5326,13 @@ function renderPromoRadarPanel() {
                 </div>
                 <div class="text-[11px] text-slate-300 truncate max-w-xl" title="${d.title}">${d.title}</div>
                 <div class="text-[10px] font-mono text-slate-500">
-                  Canal: <a href="${d.post_url}" target="_blank" class="text-sky-400 hover:underline">@${d.channel_id} ↗</a> • há ${d.age_hours}h
+                  Canal: <a href="${d.post_url}" target="_blank" class="text-sky-400 hover:underline">@${d.channel_id} ↗</a> • há ${d.age_hours}h${d.store_name && d.store_name !== 'E-commerce' ? ` • Loja: <span class="text-slate-300">${d.store_name}</span>` : ''}
                   ${d.coupon_url ? ` • <a href="${d.coupon_url}" target="_blank" class="text-amber-300 hover:underline">Resgatar Cupom ↗</a>` : ''}
-                  ${d.coupon_status_reason ? ` • <span class="text-amber-400/90">${d.coupon_status_reason}</span>` : ''}
-                  ${d.deal_status_reason ? ` • <span class="text-rose-400/90">${d.deal_status_reason}</span>` : ''}
+                  ${d.deal_status_reason ? ` • <span class="${isOutOfStock ? 'text-rose-400/90' : isVerifiedActive ? 'text-emerald-400/90' : 'text-amber-400/90'}">${d.deal_status_reason}</span>` : ''}
                 </div>
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
-                <button id="btn-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoupCode}', ${d.price_brl})" class="${testBtnClass}" title="Testar se o cupom e link continuam ativos na loja">
+                <button id="btn-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoupCode}', ${d.promo_price_brl || d.price_brl}, '${d.matched_slug || ''}', '${d.matched_kind || 'gpu'}')" class="${testBtnClass}" title="Testar se o produto está em estoque e se o cupom aplica na loja">
                   ${testBtnLabel}
                 </button>
                 <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-semibold text-[11px] cursor-pointer">
@@ -5170,7 +5364,141 @@ function renderPromoRadarPanel() {
   }
 }
 
-async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice) {
+async function verifyDealOnStaticClient(postId, buyUrl, couponCode, expectedPrice, slug, kind) {
+  await syncCouponStatusFromServer();
+  const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
+  const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
+  const cleanCoup = (couponCode || '').trim().toUpperCase();
+
+  // Check if Hardware Barato live product page can be fetched via CORS proxy for real-time store stock/coupon check
+  if (slug && getActiveRegionId() === 'br') {
+    const catMap = { gpu: 'placas-de-video', cpu: 'processadores', ram: 'memorias-ram', mobo: 'placas-mae', psu: 'fontes' };
+    const cat = catMap[kind || 'gpu'] || 'placas-de-video';
+    const hbUrl = `https://www.hardwarebarato.com/produtos/${cat}/${slug}`;
+    const proxies = [
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(hbUrl)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(hbUrl)}`
+    ];
+    for (const pUrl of proxies) {
+      try {
+        const r = await fetch(pUrl, { cache: 'no-store' });
+        if (r.ok) {
+          const rawHtml = await r.text();
+          const txt = rawHtml.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+          if (txt.includes('"data":[') && txt.includes('"store":')) {
+            const uLow = (buyUrl || '').toLowerCase();
+            let storeKey = '';
+            let storeLabel = 'Loja';
+            if (uLow.includes('kabum')) { storeKey = 'kabum'; storeLabel = 'KaBuM!'; }
+            else if (uLow.includes('terabyte')) { storeKey = 'terabyte'; storeLabel = 'Terabyte'; }
+            else if (uLow.includes('pichau')) { storeKey = 'pichau'; storeLabel = 'Pichau'; }
+            else if (uLow.includes('mercadolivre') || uLow.includes('meli.la')) { storeKey = 'mercadolivre'; storeLabel = 'Mercado Livre'; }
+            else if (uLow.includes('shopee')) { storeKey = 'shopee'; storeLabel = 'Shopee'; }
+            else if (uLow.includes('amazon') || uLow.includes('amzn.to')) { storeKey = 'amazon'; storeLabel = 'Amazon BR'; }
+            else if (uLow.includes('magalu')) { storeKey = 'magalu'; storeLabel = 'Magalu'; }
+
+            const activeCoupons = new Set();
+            const cIdx = txt.indexOf('"coupons":[');
+            if (cIdx !== -1) {
+              const cBlock = txt.slice(cIdx, cIdx + 12000);
+              const reCoup = /"coupon":"([^"]+)"/g;
+              let mc;
+              while ((mc = reCoup.exec(cBlock)) !== null) {
+                activeCoupons.add(mc[1].trim().toUpperCase());
+              }
+            }
+
+            const dIdx = txt.indexOf('"data":[');
+            const eIdx = txt.indexOf('"priceHistory":', dIdx);
+            if (dIdx !== -1 && eIdx !== -1 && storeKey) {
+              const dBlock = txt.slice(dIdx, eIdx);
+              const storePrices = [];
+              const reOffer = /"price":([0-9.]+)[^{}]*?"store":"([^"]+)"/g;
+              let mo;
+              while ((mo = reOffer.exec(dBlock)) !== null) {
+                if (mo[2].toLowerCase().includes(storeKey)) {
+                  storePrices.push(parseFloat(mo[1]));
+                }
+              }
+              if (storePrices.length === 0) {
+                return {
+                  status: 'out_of_stock',
+                  stock_verified: false,
+                  reason: `Produto esgotado na ${storeLabel} (0 unidades em estoque hoje)`
+                };
+              }
+              const minStorePrice = Math.min(...storePrices);
+              if (!cleanCoup) {
+                if (expectedPrice && minStorePrice > expectedPrice * 1.06) {
+                  return {
+                    status: 'out_of_stock',
+                    live_price: minStorePrice,
+                    stock_verified: false,
+                    reason: `Oferta encerrada na ${storeLabel} — menor preço em estoque hoje: ${fmtBRL(minStorePrice)}`
+                  };
+                }
+                return {
+                  status: 'active',
+                  coupon_status: 'none',
+                  live_price: minStorePrice,
+                  stock_verified: true,
+                  store_name: storeLabel,
+                  reason: `Confirmado em estoque na ${storeLabel} por ${fmtBRL(minStorePrice)} (sem depender de cupom)`
+                };
+              } else {
+                if (activeCoupons.has(cleanCoup)) {
+                  return {
+                    status: 'active',
+                    coupon_status: 'verified',
+                    live_price: minStorePrice,
+                    stock_verified: true,
+                    store_name: storeLabel,
+                    reason: `Cupom ${cleanCoup} confirmado ativo na ${storeLabel}!`
+                  };
+                }
+                if (expectedPrice && minStorePrice > Math.max(expectedPrice * 1.22, expectedPrice + 400)) {
+                  return {
+                    status: 'expired',
+                    coupon_status: 'expired',
+                    live_price: minStorePrice,
+                    stock_verified: false,
+                    store_name: storeLabel,
+                    reason: `Oferta encerrada na ${storeLabel} — preço subiu para ${fmtBRL(minStorePrice)}`
+                  };
+                }
+                return {
+                  status: 'unverified_coupon',
+                  coupon_status: 'unverified',
+                  live_price: minStorePrice,
+                  stock_verified: true,
+                  store_name: storeLabel,
+                  reason: `Em estoque na ${storeLabel} por ${fmtBRL(minStorePrice)} (sem cupom). Desconto de ${cleanCoup} depende de validação no carrinho`
+                };
+              }
+            }
+            break;
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  // Fallback to cloud-synced coupon_status.json
+  const dStat = (postId && (dealsMap[postId] || dealsMap[postId.toLowerCase()])) || (buyUrl && dealsMap[buyUrl]);
+  const cStat = cleanCoup ? couponsMap[cleanCoup] : null;
+  if (dStat) return dStat;
+  if (cStat) return cStat;
+  return {
+    status: cleanCoup ? 'unverified_coupon' : 'untested',
+    coupon_status: cleanCoup ? 'unverified' : 'none',
+    stock_verified: false,
+    reason: cleanCoup
+      ? `Cupom ${cleanCoup} pendente de teste no carrinho da loja`
+      : `Verifique a disponibilidade diretamente no link da loja`
+  };
+}
+
+async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice, slug, kind) {
   const safeId = (postId || '').replace(/[^a-zA-Z0-9]/g, '_');
   const btn = document.getElementById(`btn-test-${safeId}`);
   if (btn) {
@@ -5179,61 +5507,80 @@ async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice) {
   }
 
   try {
-    const q = new URLSearchParams({
-      url: buyUrl || '',
-      code: couponCode || '',
-      price: expectedPrice || '',
-      post_id: postId || ''
-    });
-    const resp = await fetch(`/api/test-coupon?${q.toString()}`);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-    const res = data.result || {};
+    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    let res = null;
+
+    if (!isStatic) {
+      try {
+        const q = new URLSearchParams({
+          url: buyUrl || '',
+          code: couponCode || '',
+          price: expectedPrice || '',
+          post_id: postId || '',
+          slug: slug || '',
+          kind: kind || 'gpu'
+        });
+        const resp = await fetch(`/api/test-coupon?${q.toString()}`, { cache: 'no-store' });
+        if (resp.ok) {
+          const data = await resp.json();
+          res = data.result || null;
+        }
+      } catch (_) {}
+    }
+
+    if (!res) {
+      res = await verifyDealOnStaticClient(postId, buyUrl, couponCode, expectedPrice, slug, kind);
+    }
 
     if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
     if (!PROMO_STATE.couponStatus.coupons) PROMO_STATE.couponStatus.coupons = {};
     if (!PROMO_STATE.couponStatus.deals) PROMO_STATE.couponStatus.deals = {};
 
+    const entry = {
+      status: res.status || 'untested',
+      coupon_status: res.coupon_status || (couponCode ? 'unverified' : 'none'),
+      stock_verified: Boolean(res.stock_verified),
+      live_price: res.live_price || null,
+      store_name: res.store_name || null,
+      reason: res.reason || '',
+      updated_at: new Date().toLocaleTimeString('pt-BR')
+    };
+
+    if (postId) {
+      PROMO_STATE.couponStatus.deals[postId] = entry;
+      PROMO_STATE.couponStatus.deals[postId.toLowerCase()] = entry;
+    }
+    if (buyUrl) {
+      PROMO_STATE.couponStatus.deals[buyUrl] = entry;
+    }
+
     if (res.status === 'expired' || res.status === 'out_of_stock') {
-      if (couponCode) {
+      if (couponCode && res.coupon_status === 'expired') {
         PROMO_STATE.couponStatus.coupons[couponCode.toUpperCase()] = {
           status: 'expired',
           reason: res.reason,
           updated_at: new Date().toLocaleTimeString('pt-BR')
         };
       }
-      if (postId) {
-        PROMO_STATE.couponStatus.deals[postId] = {
-          status: res.status,
-          reason: res.reason,
-          updated_at: new Date().toLocaleTimeString('pt-BR')
-        };
-        PROMO_STATE.couponStatus.deals[postId.toLowerCase()] = PROMO_STATE.couponStatus.deals[postId];
+      localStorage.setItem(getCouponStatusCacheKey(), JSON.stringify(PROMO_STATE.couponStatus));
+      if (!isStatic) {
+        fetch('/api/mark-coupon-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coupon_code: couponCode || null,
+            post_id: postId || null,
+            url: buyUrl || null,
+            status: res.status,
+            reason: res.reason
+          })
+        }).catch(() => {});
       }
-      if (buyUrl) {
-        PROMO_STATE.couponStatus.deals[buyUrl] = {
-          status: res.status,
-          reason: res.reason,
-          updated_at: new Date().toLocaleTimeString('pt-BR')
-        };
-      }
-      localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
-      fetch('/api/mark-coupon-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coupon_code: couponCode || null,
-          post_id: postId || null,
-          url: buyUrl || null,
-          status: res.status,
-          reason: res.reason
-        })
-      }).catch(() => {});
 
       if (btn) {
         btn.disabled = false;
         btn.className = "px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold text-[11px]";
-        btn.innerHTML = `❌ Expirado`;
+        btn.innerHTML = res.status === 'out_of_stock' ? `⚠️ Esgotado` : `❌ Expirado`;
         btn.title = res.reason;
       }
 
@@ -5243,57 +5590,83 @@ async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice) {
             d.is_expired = true;
             d.deal_status = res.status;
             d.deal_status_reason = res.reason;
+            if (res.live_price && res.live_price > d.price_brl) {
+              d.price_brl = res.live_price;
+              d.coupon_discount_revoked = true;
+            }
           }
         });
       }
 
-      if (PROMO_STATE.rawPosts && PROMO_STATE.rawPosts.length) {
-        PROMO_STATE.lastData = buildPromoPayloadClient(PROMO_STATE.rawPosts, PROMO_STATE.channelsScanned, 48);
-      }
-      applyFlashPromosToCatalog();
-      renderPromoRadarPanel();
-      if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
-
       if (typeof showWebToastNotification === 'function') {
         showWebToastNotification(
-          `❌ Oferta Encerrada`,
+          res.status === 'out_of_stock' ? `⚠️ Produto Esgotado` : `❌ Oferta/Cupom Encerrado`,
           `${res.reason}`
         );
+      }
+    } else if (res.status === 'unverified_coupon' || res.status === 'untested') {
+      if (couponCode) {
+        PROMO_STATE.couponStatus.coupons[couponCode.toUpperCase()] = {
+          status: 'unverified',
+          reason: res.reason,
+          updated_at: new Date().toLocaleTimeString('pt-BR')
+        };
+      }
+      localStorage.setItem(getCouponStatusCacheKey(), JSON.stringify(PROMO_STATE.couponStatus));
+      if (btn) {
+        btn.disabled = false;
+        btn.className = "px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold text-[11px]";
+        btn.innerHTML = `⚠️ No Carrinho`;
+        btn.title = res.reason;
+      }
+      if (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals)) {
+        PROMO_STATE.lastData.matched_deals.forEach(d => {
+          if (d.post_id === postId) {
+            d.is_expired = false;
+            d.deal_status = res.status;
+            d.deal_status_reason = res.reason;
+            if (res.live_price) d.live_store_price_brl = res.live_price;
+          }
+        });
+      }
+      if (typeof showWebToastNotification === 'function') {
+        showWebToastNotification(`⚠️ Verificação de Cupom`, `${res.reason}`);
       }
     } else {
       if (couponCode) {
         PROMO_STATE.couponStatus.coupons[couponCode.toUpperCase()] = {
-          status: 'active',
+          status: 'verified',
           reason: res.reason,
           updated_at: new Date().toLocaleTimeString('pt-BR')
         };
       }
-      if (postId) {
-        PROMO_STATE.couponStatus.deals[postId] = {
-          status: 'active',
-          reason: res.reason,
-          updated_at: new Date().toLocaleTimeString('pt-BR')
-        };
-        PROMO_STATE.couponStatus.deals[postId.toLowerCase()] = PROMO_STATE.couponStatus.deals[postId];
-      }
-      if (buyUrl) {
-        PROMO_STATE.couponStatus.deals[buyUrl] = {
-          status: 'active',
-          reason: res.reason,
-          updated_at: new Date().toLocaleTimeString('pt-BR')
-        };
-      }
-      localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
+      localStorage.setItem(getCouponStatusCacheKey(), JSON.stringify(PROMO_STATE.couponStatus));
       if (btn) {
         btn.disabled = false;
         btn.className = "px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold text-[11px]";
-        btn.innerHTML = `✅ Ativo`;
+        btn.innerHTML = `✅ Em Estoque`;
+        btn.title = res.reason;
       }
-      if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
+      if (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals)) {
+        PROMO_STATE.lastData.matched_deals.forEach(d => {
+          if (d.post_id === postId) {
+            d.is_expired = false;
+            d.deal_status = 'active';
+            d.stock_verified = true;
+            d.deal_status_reason = res.reason;
+          }
+        });
+      }
       if (typeof showWebToastNotification === 'function') {
-        showWebToastNotification(`✅ Oferta Ativa!`, `${res.reason}`);
+        showWebToastNotification(`✅ Confirmado em Estoque!`, `${res.reason}`);
       }
     }
+
+    if (PROMO_STATE.rawPosts && PROMO_STATE.rawPosts.length) {
+      PROMO_STATE.lastData = buildPromoPayloadClient(PROMO_STATE.rawPosts, PROMO_STATE.channelsScanned, 48);
+    }
+    applyFlashPromosToCatalog();
+    renderPromoRadarPanel();
     if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
   } catch (err) {
     console.warn('Erro ao testar cupom:', err);
@@ -5312,58 +5685,19 @@ async function testAllRadarCoupons() {
   }
 
   const deals = (PROMO_STATE.lastData && PROMO_STATE.lastData.matched_deals) || [];
-  const toTest = deals.slice(0, 10);
+  const toTest = deals.slice(0, 12);
   let tested = 0;
   let expiredCount = 0;
 
   for (const d of toTest) {
     try {
-      const q = new URLSearchParams({
-        url: d.buy_url || '',
-        code: d.coupon_code || '',
-        price: d.price_brl || '',
-        post_id: d.post_id || ''
-      });
-      const resp = await fetch(`/api/test-coupon?${q.toString()}`);
-      if (resp.ok) {
-        const data = await resp.json();
-        const res = data.result || {};
-        if (res.status === 'expired' || res.status === 'out_of_stock') {
-          expiredCount++;
-          if (d.coupon_code) {
-            PROMO_STATE.couponStatus.coupons[d.coupon_code.toUpperCase()] = {
-              status: 'expired',
-              reason: res.reason,
-              updated_at: new Date().toLocaleTimeString('pt-BR')
-            };
-          }
-          if (d.post_id) {
-            PROMO_STATE.couponStatus.deals[d.post_id] = {
-              status: res.status,
-              reason: res.reason,
-              updated_at: new Date().toLocaleTimeString('pt-BR')
-            };
-            PROMO_STATE.couponStatus.deals[d.post_id.toLowerCase()] = PROMO_STATE.couponStatus.deals[d.post_id];
-          }
-          if (d.buy_url) {
-            PROMO_STATE.couponStatus.deals[d.buy_url] = {
-              status: res.status,
-              reason: res.reason,
-              updated_at: new Date().toLocaleTimeString('pt-BR')
-            };
-          }
-        }
+      await testDealCouponNow(d.post_id, d.buy_url, d.coupon_code || '', d.promo_price_brl || d.price_brl, d.matched_slug || '', d.matched_kind || 'gpu');
+      if (d.is_expired || d.deal_status === 'expired' || d.deal_status === 'out_of_stock') {
+        expiredCount++;
       }
     } catch (_) {}
     tested++;
   }
-
-  localStorage.setItem('gpuAnalyzerCouponStatus_v1', JSON.stringify(PROMO_STATE.couponStatus));
-  if (PROMO_STATE.rawPosts && PROMO_STATE.rawPosts.length) {
-    PROMO_STATE.lastData = buildPromoPayloadClient(PROMO_STATE.rawPosts, PROMO_STATE.channelsScanned, 48);
-  }
-  applyFlashPromosToCatalog();
-  renderPromoRadarPanel();
 
   if (btn) {
     btn.disabled = false;
@@ -5374,8 +5708,8 @@ async function testAllRadarCoupons() {
     showWebToastNotification(
       `🧪 Teste Concluído (${tested} ofertas)`,
       expiredCount > 0
-        ? `${expiredCount} ofertas/cupons expirados foram reconfigurados para liberar novos preços!`
-        : `Todas as ofertas testadas continuam válidas e ativas nas lojas.`
+        ? `${expiredCount} ofertas esgotadas/expiradas foram filtradas automaticamente!`
+        : `Validação de estoque e cupons atualizada.`
     );
   }
 }

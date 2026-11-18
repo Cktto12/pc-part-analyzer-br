@@ -81,9 +81,9 @@ GPU_MATCH_RULES = [
     ("rx-7900-gre",      r"\brx\s*7900\s*gre\b"),
     ("rx-7800-xt",       r"\brx\s*7800\s*xt\b"),
     ("rx-7700-xt",       r"\brx\s*7700\s*xt\b"),
-    ("rx-7600-xt",       r"\brx\s*7600\s*xt\b"),
+    ("rx-7600-xt",       r"\brx\s*7600\s*xt\b(?!.*?\b8\s*gb\b)"),
     ("rx-7650-gre",      r"\brx\s*7650\s*gre\b"),
-    ("rx-7600",          r"\brx\s*7600(?!\s*xt)\b"),
+    ("rx-7600",          r"\brx\s*7600(?!\s*xt)\b|\brx\s*7600\s*xt\b.*?\b8\s*gb\b"),
     ("rx-6750-xt",       r"\brx\s*6750\s*xt\b"),
     ("rx-6700-xt",       r"\brx\s*6700\s*xt\b"),
     ("rx-6600-xt",       r"\brx\s*6600\s*xt\b"),
@@ -180,12 +180,12 @@ def extract_price_and_coupon(lines):
         if word not in {"PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA", "SHOPEE", "KABUM", "MAGALU", "MERCADO", "HTTPS", "HTTP", "WWW", "COM", "BR", "MX"}:
             coupon_code = word
 
-    monetary = get_monetary_config() if get_monetary_config else {}
-    min_val = float(monetary.get("min_valid_hardware_price", 80.0))
-    max_val = float(monetary.get("max_valid_hardware_price", 45000.0))
-    price_pat = monetary.get("price_regex") or r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
-    market_cfg = get_market_config() if get_market_config else {}
-    cash_keywords = market_cfg.get("promotion_sources", {}).get("cash_intent_keywords", ["por r$", "valor", "💵", "pix", "à vista", "a vista", "🔥"])
+    # extract_price_and_coupon parses Brazilian Telegram channel messages -> always use BRL format
+    monetary = {"decimal_separator": ","}
+    min_val = 80.0
+    max_val = 45000.0
+    price_pat = r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
+    cash_keywords = ["por r$", "valor", "💵", "💰", "pix", "à vista", "a vista", "no app", "🔥"]
 
     for line in lines:
         m_disc = re.search(r"(?:cupom\s*de|desconto\s*de|menos|abatimento|off\s*de)\s*R?\$?\s*([0-9]{2,4})", line, re.I) or re.search(r"R\$\s*([0-9]{2,4})\s*(?:off|de\s*desconto)", line, re.I)
@@ -239,24 +239,25 @@ def extract_price_and_coupon(lines):
 
     max_prio = max(c[0] for c in candidates)
     best_vals = [c[1] for c in candidates if c[0] == max_prio]
-    base_price = min(best_vals)
+    final_price = min(best_vals)
 
-    final_price = base_price
-    discount_applied = 0.0
-    has_final_price_indicator = any(
-        re.search(r"\b(por|sai\s*por|fica\s*por|pagando|preço|preco|precio|valor|à\s*vista|a\s*vista|pix|contado)\b", line, re.I)
-        for line in lines
-    )
+    # In Brazilian promo groups (@peperaiohardware, @iskandarsouza, @ofertasadrenaline, etc.),
+    # the announced price (e.g. "💵 R$ 1683 no app" or "💰 R$ 1.729") is ALREADY the final price with coupon.
+    # Never subtract the coupon a second time from final_price! Instead, compute raw_price (price without coupon).
+    if len(set(best_vals)) > 1 and max(best_vals) > final_price:
+        raw_price = max(best_vals)
+        discount_applied = round(raw_price - final_price, 2)
+    elif detected_discount_brl > 0 and detected_discount_brl < final_price * 0.45:
+        raw_price = round(final_price + detected_discount_brl, 2)
+        discount_applied = round(detected_discount_brl, 2)
+    elif 0 < detected_discount_pct <= 40:
+        raw_price = round(final_price / (1.0 - detected_discount_pct / 100.0), 2)
+        discount_applied = round(raw_price - final_price, 2)
+    else:
+        raw_price = final_price
+        discount_applied = 0.0
 
-    if not has_final_price_indicator:
-        if detected_discount_brl > 0 and detected_discount_brl < base_price * 0.45:
-            final_price = base_price - detected_discount_brl
-            discount_applied = detected_discount_brl
-        elif detected_discount_pct > 0:
-            discount_applied = round(base_price * (detected_discount_pct / 100.0), 2)
-            final_price = base_price - discount_applied
-
-    return round(final_price, 2), round(base_price, 2), round(discount_applied, 2), coupon_code, coupon_info
+    return round(final_price, 2), round(raw_price, 2), round(discount_applied, 2), coupon_code, coupon_info
 
 
 def match_catalog_item(title_and_first_lines, db):
@@ -578,31 +579,54 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
             item["matched_name"] = cat_item["name"]
             item["hb_price_brl"] = hb_price
             item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2)
+            requires_coup = bool(
+                item.get("coupon_code")
+                or item.get("coupon_info")
+                or item.get("discount_applied", 0) > 0
+                or re.search(r"\b(cupom|cupon|cupón|resgate|sacola\s*laranja|moedas|no\s*app)\b", item.get("raw_text", ""), re.I)
+            )
+            item["requires_coupon"] = requires_coup
+            item["promo_price_brl"] = item["price_brl"]
             item["is_expired"] = False
-            item["deal_status"] = "active"
+            item["deal_status"] = "untested"
             item["is_coupon_expired"] = False
-            item["coupon_status"] = "active" if item.get("coupon_code") else "none"
+            item["coupon_status"] = "unverified" if requires_coup else "none"
             matched_deals.append(item)
-
-            slug = cat_item["slug"]
-            if slug not in best_by_slug or item["price_brl"] < best_by_slug[slug]["price_brl"]:
-                best_by_slug[slug] = item
 
         all_promos.append(item)
 
     matched_deals.sort(key=lambda d: (-d.get("savings_vs_hb_brl", 0), d.get("price_brl", 999999)))
     all_promos.sort(key=lambda d: d.get("age_hours", 999))
 
+    # Validate deals and coupons against live store pages & Hardware Barato in-stock index
+    coupon_status_obj = {"coupons": {}, "deals": {}}
+    try:
+        import coupon_tracker
+        coupon_tracker.scan_texts_for_expiries(all_promos)
+        coupon_tracker.test_deals_batch(matched_deals, max_items=40, reg_id=reg)
+        matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(matched_deals, all_promos, reg_id=reg)
+        coupon_status_obj = coupon_tracker.load_coupon_status(reg)
+    except Exception as e:
+        print(f"[PromoRadar ({reg})] Warning running coupon_tracker: {e}")
+
+    matched_deals.sort(key=lambda d: (
+        1 if d.get("is_expired") else 0,
+        1 if d.get("is_coupon_expired") else 0,
+        -d.get("savings_vs_hb_brl", 0),
+        d.get("price_brl", 999999)
+    ))
+
     payload = {
         "ok": True,
         "region_id": reg,
         "scanned_at": datetime.now().strftime("%H:%M:%S"),
+        "last_sitewise_test_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "channels_scanned": channels_scanned,
         "matched_count": len(matched_deals),
         "matched_deals": matched_deals[:80],
         "best_by_slug": best_by_slug,
         "recent_feed": all_promos[:60],
-        "coupon_status": {"coupons": {}, "deals": {}}
+        "coupon_status": coupon_status_obj
     }
 
     reg_cache["updated_at"] = now_ts
