@@ -344,6 +344,9 @@ def fetch_channel_query(ch_id, ch_name, query=""):
         dt_m = re.search(r'<time datetime="([^"]+)"', part)
         iso_dt = dt_m.group(1) if dt_m else ""
 
+        img_m = re.search(r'tgme_widget_message_photo_wrap[^>]*style="[^"]*background-image:url\([\'"]?(https?://[^\'"\)]+)', part)
+        image_url = img_m.group(1) if img_m else None
+
         title_lines = [
             ln for ln in lines[:4]
             if len(re.sub(r"[^a-zA-Z0-9]", "", ln)) >= 6
@@ -372,6 +375,7 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             "coupon_code": coupon_code,
             "coupon_info": coupon_info,
             "is_conditional_voucher": is_conditional_voucher,
+            "image_url": image_url,
             "buy_url": buy_url,
             "coupon_url": product_links[0] if len(product_links) > 1 else None,
             "region_id": "br"

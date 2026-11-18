@@ -3446,6 +3446,14 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
     const timeEl = node.querySelector('time[datetime]');
     const isoDt = timeEl ? timeEl.getAttribute('datetime') : '';
 
+    let imageUrl = null;
+    const photoEl = node.querySelector('.tgme_widget_message_photo_wrap');
+    if (photoEl) {
+      const bg = photoEl.style.backgroundImage || photoEl.getAttribute('style') || '';
+      const mBg = bg.match(/url\(['"]?(https?:\/\/[^'")]+)['"]?\)/i);
+      if (mBg) imageUrl = mBg[1];
+    }
+
     const titleCand = lines.slice(0, 4).find(
       ln => ln.replace(/[^a-zA-Z0-9]/g, '').length >= 6 && !/^(baixa|baixou|parcelado|cupom|oferta|promo|#)/i.test(ln.replace(/^[ ⭐️🔥🚨⚡]+/, ''))
     );
@@ -3481,6 +3489,7 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
       coupon_info: couponInfo,
       is_conditional_voucher: Boolean(isConditionalVoucher),
       requires_coupon: Boolean(requiresCoupon),
+      image_url: imageUrl,
       store_name: storeName,
       buy_url: buyUrl,
       coupon_url: links.length > 1 ? links[0] : null
@@ -3736,6 +3745,8 @@ let PROMO_STATE = {
   hbMode: 'brl_or_pct',  // 'brl_or_pct' | 'brl_only' | 'pct_only' | 'brl_and_pct'
   hbMinBrl: 150,
   hbMinPct: 8,
+  trigAvg30d: true,
+  avg30dMinPct: 5,
   notifyLogic: 'OR',     // 'OR' | 'AND'
   notifyKind: 'all',     // 'all' | 'gpu' | 'cpu_gpu'
   notifyCategories: {
@@ -3863,12 +3874,12 @@ try {
   const savedCfg = JSON.parse(localStorage.getItem('gpuAnalyzerPromoSettings_v1') || 'null');
   if (savedCfg && typeof savedCfg === 'object') {
     [
-      'autoSyncEnabled', 'notifyEnabled', 'trigCB', 'trigBF', 'trigHB',
+      'autoSyncEnabled', 'notifyEnabled', 'trigCB', 'trigBF', 'trigHB', 'trigAvg30d',
       'notifyWinToast', 'notifyWinPopup', 'notifyWebToast', 'notifySound', 'notifyPhone', 'ntfyRing'
     ].forEach(k => {
       if (typeof savedCfg[k] === 'boolean') PROMO_STATE[k] = savedCfg[k];
     });
-    ['autoSyncMins', 'notifyMinCB', 'hbMinBrl', 'hbMinPct', 'emailPort'].forEach(k => {
+    ['autoSyncMins', 'notifyMinCB', 'hbMinBrl', 'hbMinPct', 'avg30dMinPct', 'emailPort'].forEach(k => {
       if (typeof savedCfg[k] === 'number' && !isNaN(savedCfg[k])) PROMO_STATE[k] = savedCfg[k];
     });
     ['bfMode', 'hbMode', 'notifyLogic', 'notifyKind', 'phoneService', 'ntfyTopic', 'ntfyPriority', 'waNumber', 'waApikey', 'emailHost', 'emailUser', 'emailPass', 'emailRecipient'].forEach(k => {
@@ -3934,6 +3945,8 @@ function savePromoSettingsToStorage() {
       hbMode: PROMO_STATE.hbMode,
       hbMinBrl: PROMO_STATE.hbMinBrl,
       hbMinPct: PROMO_STATE.hbMinPct,
+      trigAvg30d: PROMO_STATE.trigAvg30d,
+      avg30dMinPct: PROMO_STATE.avg30dMinPct,
       notifyLogic: PROMO_STATE.notifyLogic,
       notifyKind: PROMO_STATE.notifyKind,
       notifyCategories: PROMO_STATE.notifyCategories,
@@ -3979,10 +3992,12 @@ function savePromoSettingsToStorage() {
     trigHB: PROMO_STATE.trigHB,
     hbMinBrl: PROMO_STATE.hbMinBrl,
     hbMinPct: PROMO_STATE.hbMinPct,
+    trigAvg30d: PROMO_STATE.trigAvg30d,
+    avg30dMinPct: PROMO_STATE.avg30dMinPct,
     notifyLogic: PROMO_STATE.notifyLogic,
     custom_targets: [
       { slug: 'rtx-5060', name: 'RTX 5060', max_price: 2300 },
-      { slug: 'rtx-5070', name: 'RTX 5070', max_price: 3800 },
+      { slug: 'rtx-5070', name: 'RTX 5070', max_price: 4500 },
       { slug: 'rtx-4060', name: 'RTX 4060', max_price: 1850 }
     ]
   };
@@ -4226,6 +4241,8 @@ function syncPromoControlsFromState() {
   setVal('select-notify-hb-mode', PROMO_STATE.hbMode);
   setVal('input-notify-hb-brl', PROMO_STATE.hbMinBrl);
   setVal('input-notify-hb-pct', PROMO_STATE.hbMinPct);
+  setChk('chk-trig-avg30d', PROMO_STATE.trigAvg30d);
+  setVal('input-notify-avg30d-pct', PROMO_STATE.avg30dMinPct);
   setVal('select-notify-logic', PROMO_STATE.notifyLogic);
   setVal('select-notify-kind', PROMO_STATE.notifyKind);
   setChk('chk-notify-win-toast', PROMO_STATE.notifyWinToast);
@@ -4274,6 +4291,8 @@ function onUpdatePromoNotificationSettings() {
   PROMO_STATE.hbMode = getVal('select-notify-hb-mode', 'brl_or_pct');
   PROMO_STATE.hbMinBrl = Math.max(10, parseFloat(getVal('input-notify-hb-brl', '150')) || 150);
   PROMO_STATE.hbMinPct = Math.max(1, parseFloat(getVal('input-notify-hb-pct', '8')) || 8);
+  PROMO_STATE.trigAvg30d = getChk('chk-trig-avg30d', true);
+  PROMO_STATE.avg30dMinPct = Math.max(1, parseFloat(getVal('input-notify-avg30d-pct', '5')) || 5);
   PROMO_STATE.notifyLogic = getVal('select-notify-logic', 'OR');
   PROMO_STATE.notifyKind = getVal('select-notify-kind', 'all');
   PROMO_STATE.notifyCategories = {
@@ -4332,6 +4351,9 @@ function updateNotificationPermissionLabel() {
       else if (PROMO_STATE.hbMode === 'pct_only') parts.push(`📉 −${PROMO_STATE.hbMinPct}% vs Database`);
       else if (PROMO_STATE.hbMode === 'brl_and_pct') parts.push(`📉 −${sym} ${PROMO_STATE.hbMinBrl} E −${PROMO_STATE.hbMinPct}% vs Database`);
       else parts.push(`📉 −${sym} ${PROMO_STATE.hbMinBrl} / −${PROMO_STATE.hbMinPct}% vs Database`);
+    }
+    if (PROMO_STATE.trigAvg30d) {
+      parts.push(`⚡ −${PROMO_STATE.avg30dMinPct}% vs Média 30d`);
     }
     const joiner = PROMO_STATE.notifyLogic === 'AND' ? ' E ' : ' OU ';
     sumEl.textContent = parts.length ? `Gatilhos: ${parts.join(joiner)}` : 'Nenhum gatilho marcado';
@@ -4481,9 +4503,24 @@ function evaluateDealsForAlerts() {
         : `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Database`);
     }
 
+    // 4. Evaluate 30-day rolling average flash drop (default >= 5%)
+    let hitAvg30d = false;
+    if (PROMO_STATE.trigAvg30d && d.matched_slug && d.price_brl > 0) {
+      const catPool = (d.matched_kind === 'cpu' ? DB.cpus : (d.matched_kind === 'ram' ? DB.rams : DB.gpus)) || [];
+      const catIt = catPool.find(x => x.slug === d.matched_slug);
+      const avg30 = (catIt && catIt.price_stats && catIt.price_stats.avg_30d) ? catIt.price_stats.avg_30d : 0;
+      if (avg30 > 0) {
+        const drop30Pct = ((avg30 - d.price_brl) / avg30) * 100;
+        if (drop30Pct >= (PROMO_STATE.avg30dMinPct || 5)) {
+          hitAvg30d = true;
+          reasons.push(`⚡ −${drop30Pct.toFixed(1)}% vs Média 30d (${formatMoneyShort(avg30)})`);
+        }
+      }
+    }
+
     d.cb_score = cbScore;
     d.is_high_cb = hitCB;
-    d.is_pechincha = hitBF || hitHB;
+    d.is_pechincha = hitBF || hitHB || hitAvg30d;
     d.alert_reasons = reasons;
 
     // Filter by item category
@@ -4500,6 +4537,7 @@ function evaluateDealsForAlerts() {
     if (PROMO_STATE.trigCB) activeResults.push(hitCB);
     if (PROMO_STATE.trigBF) activeResults.push(hitBF);
     if (PROMO_STATE.trigHB) activeResults.push(hitHB);
+    if (PROMO_STATE.trigAvg30d) activeResults.push(hitAvg30d);
 
     if (!activeResults.length) return;
     const qualifies = PROMO_STATE.notifyLogic === 'AND'
@@ -5514,6 +5552,9 @@ function renderPromoRadarPanel() {
       </div>
     `).join('');
   }
+  if (typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos' && typeof renderBFPromosCardsTab === 'function') {
+    renderBFPromosCardsTab();
+  }
 }
 
 const _HB_CLIENT_CACHE = new Map();
@@ -5984,3 +6025,171 @@ async function testAllRadarCoupons() {
     }
   }
 }
+
+// =========================================================================
+// TAB 5B: BLACK FRIDAY PROMOÇÕES AO VIVO (CARDS ONLY + IMAGENS DOS GRUPOS)
+// =========================================================================
+let BF_CARDS_FILTER = 'all';
+
+function setBFCardsFilter(filterKey) {
+  BF_CARDS_FILTER = filterKey || 'all';
+  const pills = document.querySelectorAll('#bf-cards-filter-pills button[data-bf-filter]');
+  pills.forEach(b => {
+    const isSelected = b.getAttribute('data-bf-filter') === BF_CARDS_FILTER;
+    b.className = isSelected
+      ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer shadow-sm'
+      : 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer';
+  });
+  renderBFPromosCardsTab();
+}
+window.setBFCardsFilter = setBFCardsFilter;
+
+function renderBFPromosCardsTab() {
+  const grid = document.getElementById('bf-promos-cards-grid');
+  const countBadge = document.getElementById('bf-cards-live-count');
+  if (!grid) return;
+
+  const lastData = PROMO_STATE.lastData;
+  const matchedDeals = (lastData && Array.isArray(lastData.matched_deals)) ? lastData.matched_deals : [];
+  const generalFeed = (lastData && Array.isArray(lastData.recent_feed)) ? lastData.recent_feed : [];
+
+  // Merge matched deals with image_url from recent_feed if needed
+  const imgByPost = new Map();
+  generalFeed.forEach(f => {
+    if (f.post_id && f.image_url) imgByPost.set(f.post_id, f.image_url);
+  });
+
+  const searchQ = (document.getElementById('bf-cards-search')?.value || '').trim().toLowerCase();
+
+  const items = matchedDeals.map(d => {
+    const imgUrl = d.image_url || imgByPost.get(d.post_id) || null;
+    const catGroup = d.matched_kind === 'cpu' ? (DB.cpus || []) : (d.matched_kind === 'ram' ? (DB.rams || []) : (DB.gpus || []));
+    const catItem = catGroup.find(x => x.slug === d.matched_slug);
+    const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
+    const allMin = catItem && catItem.price_stats ? catItem.price_stats.min_all_time : null;
+    let bfRange = null;
+    if (catItem && typeof bfAnalyzeItem === 'function' && typeof bfExpectedRange === 'function') {
+      const st = bfAnalyzeItem(catItem, d.matched_kind || 'gpu');
+      bfRange = bfExpectedRange(st, 0.10);
+    }
+    const drop30Pct = (avg30 && avg30 > 0) ? ((avg30 - d.price_brl) / avg30) * 100 : 0;
+    const isGoodBF = Boolean((bfRange && d.price_brl <= bfRange.high) || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5));
+    return { ...d, imgUrl, avg30, allMin, bfRange, drop30Pct, isGoodBF };
+  }).filter(d => {
+    if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
+    if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
+    if (BF_CARDS_FILTER === 'ram' && d.matched_kind !== 'ram') return false;
+    if (BF_CARDS_FILTER === 'in_stock' && (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired')) return false;
+    if (BF_CARDS_FILTER === 'bf_deal' && (!d.isGoodBF || d.is_expired)) return false;
+
+    if (searchQ) {
+      const hay = `${d.title || ''} ${d.matched_name || ''} ${d.store_name || ''} ${d.coupon_code || ''} ${d.channel_id || ''}`.toLowerCase();
+      if (!hay.includes(searchQ)) return false;
+    }
+    return true;
+  });
+
+  if (countBadge) countBadge.textContent = `${items.length} cards`;
+
+  if (!items.length) {
+    grid.innerHTML = `
+      <div class="col-span-full p-8 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-2">
+        <div class="text-slate-300 font-semibold text-sm">Nenhuma oferta encontrada para este filtro no momento.</div>
+        <div class="text-xs text-slate-500">Clique em "🔄 Atualizar Ofertas" para varrer os grupos ao vivo ou limpe os filtros.</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(d => {
+    const cleanCoup = (d.coupon_code || '').trim().toUpperCase();
+    const isExpired = Boolean(d.is_expired || d.deal_status === 'expired' || d.deal_status === 'out_of_stock');
+    const isActive = d.deal_status === 'active' && d.stock_verified;
+    const isUnverifiedCoup = d.deal_status === 'unverified_coupon';
+
+    const statusBadge = d.deal_status === 'out_of_stock'
+      ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ Esgotado</span>`
+      : d.is_coupon_expired
+      ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">❌ Cupom Expirado</span>`
+      : isExpired
+      ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ Encerrado</span>`
+      : isActive
+      ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">✅ Em Estoque</span>`
+      : isUnverifiedCoup
+      ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">⚠️ Testar no Carrinho</span>`
+      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px]">⏳ Aguardando Teste</span>`;
+
+    const bfVerdict = d.allMin && d.price_brl <= d.allMin * 1.02
+      ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">🔥 MÍNIMO HISTÓRICO</span>`
+      : d.bfRange && d.price_brl <= d.bfRange.low
+      ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">✅ Piso Esperado BF</span>`
+      : d.bfRange && d.price_brl <= d.bfRange.high
+      ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">🎯 Faixa BF</span>`
+      : '';
+
+    const imageBlock = d.imgUrl
+      ? `<div class="relative h-44 w-full bg-slate-950 overflow-hidden border-b border-slate-800/80">
+           <img src="${d.imgUrl}" alt="${(d.matched_name || d.title || 'Oferta').replace(/"/g, '&quot;')}" loading="lazy" class="w-full h-full object-contain bg-slate-950/90 p-1.5" onerror="this.parentElement.innerHTML='<div class=\\'h-full flex items-center justify-center text-slate-600 text-xs font-mono\\'>Sem miniatura disponível</div>'" />
+           <div class="absolute top-2 left-2 flex items-center gap-1">${statusBadge}</div>
+           <div class="absolute top-2 right-2">${bfVerdict}</div>
+         </div>`
+      : `<div class="px-4 pt-3 pb-1 flex items-center justify-between gap-2 border-b border-slate-800/60">
+           <div class="flex items-center gap-1.5">${statusBadge}${bfVerdict}</div>
+           <span class="text-[10px] font-mono text-slate-500 uppercase">${d.matched_kind || 'HW'}</span>
+         </div>`;
+
+    const safeId = (d.post_id || '').replace(/[^a-zA-Z0-9]/g, '_');
+
+    return `
+      <div class="rounded-2xl bg-slate-950/90 border ${isExpired ? 'border-rose-900/50 opacity-75' : isActive ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/5' : 'border-slate-800 hover:border-amber-500/40'} overflow-hidden flex flex-col justify-between transition">
+        ${imageBlock}
+        <div class="p-4 space-y-3 flex-1 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
+              <span class="truncate">@${d.channel_id || 'radar'} • ${d.store_name || 'Loja BR'}</span>
+              <span class="shrink-0">há ${d.age_hours}h</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold">${d.matched_name || d.matched_slug || ''}</span>
+              <h3 class="text-xs font-bold text-slate-100 line-clamp-2 mt-0.5" title="${d.title}">${d.title}</h3>
+            </div>
+
+            <!-- Prices & 30d/BF Comparisons -->
+            <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-baseline justify-between gap-2">
+              <div>
+                <div class="text-xl font-mono font-extrabold ${isExpired ? 'text-rose-400 line-through' : 'text-emerald-400'}">${fmtBRL(d.price_brl)}</div>
+                ${d.live_store_price_brl && d.live_store_price_brl !== d.price_brl ? `<div class="text-[10px] font-mono text-slate-400">Sem cupom na loja: ${fmtBRL(d.live_store_price_brl)}</div>` : ''}
+              </div>
+              <div class="text-right font-mono text-[10px] space-y-0.5">
+                ${d.avg30 ? `<div class="${d.drop30Pct >= 5 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">Média 30d: ${fmtBRL(d.avg30)} ${d.drop30Pct >= 1 ? `(-${d.drop30Pct.toFixed(0)}%)` : ''}</div>` : ''}
+                ${d.allMin ? `<div class="text-slate-400">Piso Hist: ${fmtBRL(d.allMin)}</div>` : ''}
+              </div>
+            </div>
+
+            ${cleanCoup || d.coupon_info ? `
+              <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px]">
+                <span class="font-mono text-amber-300 font-bold truncate">🎟️ ${cleanCoup || d.coupon_info}</span>
+                ${cleanCoup ? `<button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] shrink-0 cursor-pointer">Copiar 📋</button>` : ''}
+              </div>
+            ` : ''}
+
+            ${d.deal_status_reason ? `<p class="text-[10px] font-mono ${isExpired ? 'text-rose-400/90' : 'text-slate-400'} line-clamp-2">${d.deal_status_reason}</p>` : ''}
+          </div>
+
+          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1.5">
+            <button id="btn-card-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoup}', ${d.promo_price_brl || d.price_brl}, '${d.matched_slug || ''}', '${d.matched_kind || 'gpu'}')" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">
+              🧪 Testar
+            </button>
+            <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">
+              Simular BF
+            </button>
+            <a href="${d.post_url}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-semibold text-[11px]">Post ↗</a>
+            <a href="${d.buy_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] ml-auto">
+              Loja 🛒
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+window.renderBFPromosCardsTab = renderBFPromosCardsTab;

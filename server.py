@@ -387,6 +387,43 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     line2 = f"{store_or_ch} — {deal_title[:80]}"
     return title, message, line1, line2, url
 
+def _dispatch_alert_channels(cfg, deal_dict, reasons, reg_id):
+    """Formats and sends a deal notification across enabled Windows & Phone push channels."""
+    title, message, line1, line2, url = format_deal_notification(deal_dict, reasons, region_id=reg_id)
+    if cfg.get("notifyWinToast", True):
+        send_windows_native_notification(title, line1, line2, url)
+    if cfg.get("notifyPhone", True):
+        svc = cfg.get("phoneService", "ntfy")
+        if svc == "ntfy" and cfg.get("ntfyTopic"):
+            send_phone_alert_ntfy(
+                topic=cfg["ntfyTopic"],
+                title=title,
+                message=message,
+                url=url,
+                priority=cfg.get("ntfyPriority", "default"),
+                ring=bool(cfg.get("ntfyRing", False))
+            )
+        elif svc == "whatsapp" and cfg.get("waNumber") and cfg.get("waApikey"):
+            send_phone_alert_whatsapp(
+                phone=cfg["waNumber"],
+                apikey=cfg["waApikey"],
+                message=f"*{title}*\n\n{message}\n{url}"
+            )
+        elif svc == "email" and cfg.get("smtp"):
+            send_phone_alert_email(cfg.get("smtp", {}), title, message, url)
+
+
+def _get_item_avg_30d(it):
+    """Returns 30-day average price for a catalog item from price_stats or history."""
+    if not it:
+        return 0.0
+    ps = it.get("price_stats") or {}
+    if ps.get("avg_30d"):
+        return float(ps["avg_30d"])
+    hist = [float(h["price"]) for h in (it.get("history") or [])[-30:] if h.get("price")]
+    return (sum(hist) / len(hist)) if hist else 0.0
+
+
 def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None, fast_poll=False):
     """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts with strict regional isolation."""
     reg_id = (region_id or (cfg.get("region_id") if cfg else None) or get_active_region_id()).lower()
@@ -406,6 +443,13 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 except Exception:
                     pass
 
+    catalog_by_slug = {}
+    for grp in ("gpus", "cpus", "rams", "motherboards", "psus"):
+        kind_name = "gpu" if grp == "gpus" else ("cpu" if grp == "cpus" else ("ram" if grp == "rams" else ("mobo" if grp == "motherboards" else "psu")))
+        for it in db.get(grp, []):
+            if it.get("slug"):
+                catalog_by_slug[it["slug"]] = (kind_name, it)
+
     from promo_radar import scan_live_promotions
     res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id, force=fast_poll, fast_poll=fast_poll)
     matched = res.get("matched_deals", [])
@@ -419,6 +463,8 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     hb_pct = float(cfg.get("hbMinPct", 8))
     trig_cb = bool(cfg.get("trigCB", True))
     trig_hb = bool(cfg.get("trigHB", True))
+    trig_avg30d = bool(cfg.get("trigAvg30d", True))
+    avg30d_min_pct = float(cfg.get("avg30dMinPct", 5))
     targets = cfg.get("custom_targets", [])
 
     for d in matched:
@@ -451,7 +497,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         qualifies = False
         reasons = []
 
-        # 1. Check target list (e.g. RTX 5060 <= 2300, RTX 5070 <= 3800)
+        # 1. Check target list (e.g. RTX 5060 <= 2300, RTX 5070 <= 4500)
         matched_slug = d.get("matched_slug")
         price = d.get("price_brl", 999999)
         for tgt in targets:
@@ -478,40 +524,77 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
             qualifies = True
             reasons.append(f"📉 −{config.format_currency(savings_brl, short=True, region_id=reg_id)} (−{savings_pct:.0f}%) vs Database")
 
+        # 4. Check flash price drop vs 30-day rolling average (default >= 5% drop)
+        if trig_avg30d and matched_slug in catalog_by_slug and price > 0:
+            avg30 = _get_item_avg_30d(catalog_by_slug[matched_slug][1])
+            if avg30 > 0:
+                drop30_pct = ((avg30 - price) / avg30) * 100.0
+                if drop30_pct >= avg30d_min_pct:
+                    qualifies = True
+                    reasons.append(f"⚡ −{drop30_pct:.1f}% vs Média 30d ({config.format_currency(avg30, short=True, region_id=reg_id)})")
+
         if qualifies:
-            title, message, line1, line2, url = format_deal_notification(d, reasons, region_id=reg_id)
-
-            # 1. Native Windows Toast Notification (Runs in background even if site is closed!)
-            if cfg.get("notifyWinToast", True):
-                send_windows_native_notification(title, line1, line2, url)
-
-            # 2. Phone Push Notification (ntfy.sh / WhatsApp / Email) with emojis
-            if cfg.get("notifyPhone", True):
-                svc = cfg.get("phoneService", "ntfy")
-                if svc == "ntfy" and cfg.get("ntfyTopic"):
-                    send_phone_alert_ntfy(
-                        topic=cfg["ntfyTopic"],
-                        title=title,
-                        message=message,
-                        url=url,
-                        priority=cfg.get("ntfyPriority", "default"),
-                        ring=bool(cfg.get("ntfyRing", False))
-                    )
-                elif svc == "whatsapp" and cfg.get("waNumber") and cfg.get("waApikey"):
-                    send_phone_alert_whatsapp(
-                        phone=cfg["waNumber"],
-                        apikey=cfg["waApikey"],
-                        message=f"*{title}*\n\n{message}\n{url}"
-                    )
-                elif svc == "email" and cfg.get("smtp"):
-                    send_phone_alert_email(
-                        cfg.get("smtp", {}),
-                        title,
-                        message,
-                        url
-                    )
-
+            _dispatch_alert_channels(cfg, d, reasons, reg_id)
             history[post_id] = time.time()
+            history[price_key] = time.time()
+            notified_count += 1
+            if force_notify:
+                break
+
+    # 5. Also scan direct catalog items (gpus/cpus) for >= avg30dMinPct drops or custom_targets drops
+    if (trig_avg30d or targets) and not (force_notify and notified_count > 0):
+        import coupon_tracker
+        target_map = {t.get("slug"): float(t.get("max_price") or 0) for t in targets if t.get("slug")}
+        cat_candidates = []
+        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu")):
+            for it in db.get(grp, []):
+                slug = it.get("slug")
+                cur_p = float(it.get("price_brl") or 0)
+                offer_url = it.get("offer_url") or ""
+                if not slug or cur_p <= 0 or not offer_url.startswith("http"):
+                    continue
+                price_key = f"{slug}_{round(cur_p)}"
+                if not force_notify and price_key in history:
+                    continue
+                reasons = []
+                if slug in target_map and target_map[slug] > 0 and cur_p <= target_map[slug]:
+                    reasons.append(f"🎯 Meta Atingida (≤ {config.format_currency(target_map[slug], region_id=reg_id)})")
+                if trig_avg30d:
+                    avg30 = _get_item_avg_30d(it)
+                    if avg30 > 0:
+                        drop30_pct = ((avg30 - cur_p) / avg30) * 100.0
+                        if drop30_pct >= avg30d_min_pct:
+                            reasons.append(f"⚡ −{drop30_pct:.1f}% vs Média 30d ({config.format_currency(avg30, short=True, region_id=reg_id)})")
+                if reasons:
+                    cat_candidates.append((kind_name, it, cur_p, price_key, reasons))
+
+        for kind_name, it, cur_p, price_key, reasons in cat_candidates[:5]:
+            slug = it["slug"]
+            ver = coupon_tracker.test_deal_url_and_coupon(
+                it["offer_url"], expected_price=cur_p, matched_slug=slug, matched_kind=kind_name, reg_id=reg_id
+            )
+            if not ver.get("stock_verified") or ver.get("status") in ("expired", "out_of_stock"):
+                continue
+            avg30 = _get_item_avg_30d(it)
+            pseudo_deal = {
+                "matched_slug": slug,
+                "matched_kind": kind_name,
+                "matched_name": it.get("name", slug),
+                "title": f"{it.get('name', slug)} — Oferta direta na loja",
+                "price_brl": cur_p,
+                "hb_price_brl": avg30 or cur_p,
+                "savings_vs_hb_brl": round(max(0.0, avg30 - cur_p), 2),
+                "store_name": ver.get("store_name") or it.get("store_name") or "Loja BR",
+                "channel_id": "catalogo_direto",
+                "buy_url": ver.get("final_url") or it["offer_url"],
+                "post_url": it["offer_url"],
+                "deal_status": ver.get("status", "active"),
+                "coupon_status": ver.get("coupon_status", "none"),
+                "stock_verified": True,
+                "requires_coupon": False,
+                "region_id": reg_id
+            }
+            _dispatch_alert_channels(cfg, pseudo_deal, reasons, reg_id)
             history[price_key] = time.time()
             notified_count += 1
             if force_notify:

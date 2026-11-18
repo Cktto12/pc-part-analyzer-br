@@ -1427,7 +1427,7 @@ function getPriceStatusBadgeHTML(gpu) {
 function switchTab(tabId) {
   STATE.activeTab = tabId;
 
-  ['versus', 'cb', 'builder', 'upgrades', 'bf', 'sim', 'config'].forEach(id => {
+  ['versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'config'].forEach(id => {
     const sec = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`tab-btn-${id}`);
     if (!sec || !btn) return;
@@ -1517,6 +1517,7 @@ function renderActiveTab() {
     if (t === 'builder') renderPCBuilder();
     if (t === 'upgrades') renderUpgradeSuggestions();
     if (t === 'bf') renderBlackFridayTab();
+    if (t === 'bf-promos' && typeof renderBFPromosCardsTab === 'function') renderBFPromosCardsTab();
     if (t === 'sim') renderSimulator();
     if (t === 'config') renderConfigTab();
   } catch (e) {
