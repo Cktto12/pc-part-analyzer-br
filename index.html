@@ -1596,7 +1596,8 @@
             <button onclick="setBFCardsFilter('cpu')" data-bf-filter="cpu" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer">⚡ CPUs</button>
             <button onclick="setBFCardsFilter('ram')" data-bf-filter="ram" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer">🧬 RAM</button>
             <button onclick="setBFCardsFilter('in_stock')" data-bf-filter="in_stock" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 cursor-pointer">✅ Ativos / Em Estoque</button>
-            <button onclick="setBFCardsFilter('bf_deal')" data-bf-filter="bf_deal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-amber-300 border border-amber-500/30 hover:border-amber-400 cursor-pointer">🔥 Abaixo Média 30d / BF</button>
+            <button onclick="setBFCardsFilter('bf_deal')" data-bf-filter="bf_deal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-amber-300 border border-amber-500/30 hover:border-amber-400 cursor-pointer">🔥 Preço BF / Perto</button>
+            <button onclick="setBFCardsFilter('store_direct')" data-bf-filter="store_direct" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 cursor-pointer">🏬 Lojas Diretas (Sem Grupo)</button>
           </div>
           <div class="relative w-full md:w-64">
             <input type="text" id="bf-cards-search" oninput="renderBFPromosCardsTab()" placeholder="Buscar GPU, CPU, loja, cupom..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none" />
@@ -2249,7 +2250,7 @@
   <!-- Floating Deal Notification Toast Container -->
   <div id="promo-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none"></div>
 
-  <script src="app.js?v=20261118-6"></script>
-  <script src="app_features.js?v=20261118-6"></script>
+  <script src="app.js?v=20261118-7"></script>
+  <script src="app_features.js?v=20261118-7"></script>
 </body>
 </html>

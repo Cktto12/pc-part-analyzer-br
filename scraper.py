@@ -645,6 +645,87 @@ def build_database(output_path):
     print(f"Database saved to {output_path} ({len(enriched_gpus)} GPUs, {len(cpus)} CPUs, {len(rams)} RAMs, {len(mobos)} Mobos, {len(psus)} PSUs)")
     return db
 
+
+def refresh_live_catalog_prices(db_path):
+    """
+    Fast ~1.5s store price refresh across 15+ Brazilian retailers (without re-fetching 175 full histories).
+    Eliminates Telegram-group blind spots by keeping RTX 3080, 3070 Ti, 5070, CPUs, etc. live every 5 minutes.
+    """
+    if not os.path.exists(db_path):
+        return 0, 0
+    with open(db_path, 'r', encoding='utf-8') as f:
+        db = json.load(f)
+
+    def _fetch_cat(path):
+        try:
+            _, arrs = fetch_json_arrays(path)
+            return arrs[0] if arrs else []
+        except Exception:
+            return []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+        fut_gpu = ex.submit(_fetch_cat, '/produtos/placas-de-video')
+        fut_cpu = ex.submit(_fetch_cat, '/produtos/processadores')
+        raw_gpus = fut_gpu.result()
+        raw_cpus = fut_cpu.result()
+
+    gpu_by_slug = {g.get('slug'): g for g in raw_gpus if g.get('slug')}
+    cpu_by_slug = {c.get('slug'): c for c in raw_cpus if c.get('slug')}
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    updated = 0
+    dropped = 0
+
+    for grp, raw_map in (("gpus", gpu_by_slug), ("cpus", cpu_by_slug)):
+        for it in db.get(grp, []):
+            slug = it.get("slug")
+            raw_it = raw_map.get(slug)
+            if not raw_it:
+                continue
+            lp = raw_it.get('lowestPrice') or {}
+            coup = lp.get('coupon')
+            reg_p = safe_price(lp.get('price'), 0.0)
+            coup_p = safe_price(coup.get('price') if isinstance(coup, dict) else None, 0.0)
+            new_p = reg_p if reg_p > 0 else coup_p
+            if new_p <= 0:
+                continue
+            old_p = float(it.get("price_brl") or 0)
+            if old_p > 0 and new_p < old_p * 0.99:
+                dropped += 1
+            it["price_brl"] = round(new_p, 2)
+            it["regular_price_brl"] = round(reg_p, 2)
+            if coup_p > 0:
+                it["coupon_price_brl"] = round(coup_p, 2)
+            if isinstance(coup, dict) and coup.get("code"):
+                it["coupon"] = coup.get("code")
+                it["coupon_label"] = coup.get("discountLabel")
+            if lp.get("storeName"):
+                it["store_name"] = lp.get("storeName")
+            if lp.get("url"):
+                it["offer_url"] = lp.get("url")
+            if lp.get("name"):
+                it["offer_title"] = lp.get("name")
+            if lp.get("image"):
+                it["image"] = lp.get("image")
+
+            hist = it.get("history")
+            if isinstance(hist, list):
+                if hist and hist[-1].get("date") == today_str:
+                    if new_p < float(hist[-1].get("price") or 999999):
+                        hist[-1]["price"] = round(new_p, 2)
+                        hist[-1]["store"] = it.get("store_name") or hist[-1].get("store")
+                else:
+                    hist.append({"date": today_str, "price": round(new_p, 2), "store": it.get("store_name") or "loja"})
+                    if len(hist) > 600:
+                        it["history"] = hist[-600:]
+            updated += 1
+
+    db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(db_path, 'w', encoding='utf-8') as f:
+        json.dump(db, f, ensure_ascii=False, indent=2)
+    print(f"[Live Catalog Refresh] Updated {updated} GPU/CPU prices ({dropped} price drops detected).")
+    return updated, dropped
+
+
 if __name__ == '__main__':
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "hardware_db.json")
     build_database(out)

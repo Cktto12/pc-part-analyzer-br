@@ -1370,7 +1370,7 @@ if __name__ == "__main__":
     if "--cron-once" in sys.argv:
         print("[Cloud Cron] Iniciando varredura automatizada 24/7 de promoções e alertas...")
 
-        # 0. Check if base catalog requires an automated refresh (> 6h or missing)
+        # 0. Refresh base catalog (full 600-day rebuild if > 6h, otherwise fast ~1.5s live store price sync)
         br_db_path = get_db_path("br")
         if not os.path.exists(br_db_path) or (time.time() - os.path.getmtime(br_db_path) > 6 * 3600):
             print("[Cloud Cron] Base de dados desatualizada (> 6h). Atualizando catálogo base do Hardware Barato...")
@@ -1379,6 +1379,12 @@ if __name__ == "__main__":
                 build_database(br_db_path)
             except Exception as e:
                 print(f"[Cloud Cron] Aviso ao reconstruir banco base: {e}")
+        else:
+            try:
+                from scraper import refresh_live_catalog_prices
+                refresh_live_catalog_prices(br_db_path)
+            except Exception as e:
+                print(f"[Cloud Cron] Aviso no refresh rápido de lojas: {e}")
 
         reg_arg = None
         for i, a in enumerate(sys.argv):

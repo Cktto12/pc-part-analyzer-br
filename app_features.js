@@ -6190,8 +6190,8 @@ function renderBFPromosCardsTab() {
   const searchQ = (document.getElementById('bf-cards-search')?.value || '').trim().toLowerCase();
   const nowMs = Date.now();
 
-  const items = matchedDeals.map(d => {
-    const imgUrl = d.image_url || imgByPost.get(d.post_id) || null;
+  const _enrichCard = (d) => {
+    const imgUrl = d.image_url || imgByPost.get(d.post_id) || d.image || null;
     const catGroup = d.matched_kind === 'cpu' ? (DB.cpus || []) : (d.matched_kind === 'ram' ? (DB.rams || []) : (DB.gpus || []));
     const catItem = catGroup.find(x => x.slug === d.matched_slug);
 
@@ -6214,7 +6214,7 @@ function renderBFPromosCardsTab() {
     let tsMs = 0;
     if (d.timestamp) {
       const t = Date.parse(d.timestamp);
-      if (!isNaN(t)) {
+      if (!isNaN(tsMs) && !isNaN(t)) {
         tsMs = t;
         ageHrs = Math.max(0, (nowMs - t) / 3600000);
       }
@@ -6223,6 +6223,7 @@ function renderBFPromosCardsTab() {
     const isHistoricalMin = Boolean(allMin && d.price_brl <= allMin * 1.015);
     const isBFLow = Boolean(targetLow && d.price_brl <= targetLow);
     const isBFRange = Boolean(targetHigh && d.price_brl <= targetHigh);
+    const isNearBF = Boolean(!isBFRange && targetHigh && d.price_brl <= targetHigh * 1.05);
     const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
     const drop30Pct = (avg30 && avg30 > 0) ? ((avg30 - d.price_brl) / avg30) * 100 : 0;
     const isInBFPrice = isHistoricalMin || isBFLow || isBFRange || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5);
@@ -6238,16 +6239,67 @@ function renderBFPromosCardsTab() {
       isHistoricalMin,
       isBFLow,
       isBFRange,
+      isNearBF,
       isInBFPrice,
       tsMs,
       ageHrs
     };
-  }).filter(d => {
+  };
+
+  // 1. Live Telegram group posts
+  const groupCards = matchedDeals.map(_enrichCard);
+
+  // Deduplication signature set from Telegram groups so identical store/price isn't duplicated
+  const seenKeys = new Set();
+  groupCards.forEach(d => {
+    seenKeys.add(`${d.matched_slug}_${(d.store_name || '').toLowerCase()}_${Math.round(d.price_brl || 0)}`);
+  });
+
+  // 2. Direct Store Catalog deals (eliminates Telegram blind spots: RTX 3080, 3070 Ti, Shopee drops, etc.)
+  const storeCatalogCards = [];
+  const dbTs = (typeof DB !== 'undefined' && DB.updated_at) ? Date.parse(DB.updated_at.replace(' ', 'T')) : nowMs;
+  const storeAgeHrs = !isNaN(dbTs) ? Math.max(0.05, (nowMs - dbTs) / 3600000) : 0.5;
+
+  [['gpus', 'gpu'], ['cpus', 'cpu']].forEach(([grp, kindName]) => {
+    (DB[grp] || []).forEach(it => {
+      if (!it || !it.slug || !it.price_brl || it.store_name === 'referencia' || it.is_xeon) return;
+      const baseCard = _enrichCard({
+        post_id: `store_${it.slug}`,
+        matched_kind: kindName,
+        matched_slug: it.slug,
+        matched_name: it.name,
+        title: it.offer_title || it.name,
+        price_brl: it.price_brl,
+        hb_price_brl: it.price_brl,
+        coupon_code: it.coupon || null,
+        store_name: it.store_name || 'Loja BR',
+        channel_id: 'catalogo_lojas',
+        buy_url: it.offer_url || it.href || '#',
+        post_url: it.href || it.offer_url || '#',
+        image_url: it.image || null,
+        age_hours: storeAgeHrs,
+        timestamp: !isNaN(dbTs) ? new Date(dbTs).toISOString() : '',
+        _isStoreDirect: true
+      });
+      // Include if in BF pricing, near BF (within 5%), or >= 3% below 30d avg
+      if (baseCard.isInBFPrice || baseCard.isNearBF || baseCard.drop30Pct >= 3) {
+        const sig = `${baseCard.matched_slug}_${(baseCard.store_name || '').toLowerCase()}_${Math.round(baseCard.price_brl || 0)}`;
+        if (!seenKeys.has(sig)) {
+          storeCatalogCards.push(baseCard);
+        }
+      }
+    });
+  });
+
+  const allCards = [...groupCards, ...storeCatalogCards];
+
+  const items = allCards.filter(d => {
     if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
     if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
     if (BF_CARDS_FILTER === 'ram' && d.matched_kind !== 'ram') return false;
+    if (BF_CARDS_FILTER === 'store_direct' && !d._isStoreDirect) return false;
     if (BF_CARDS_FILTER === 'in_stock' && (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired')) return false;
-    if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice) return false;
+    if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice && !d.isNearBF) return false;
 
     if (searchQ) {
       const hay = `${d.title || ''} ${d.matched_name || ''} ${d.store_name || ''} ${d.coupon_code || ''} ${d.channel_id || ''}`.toLowerCase();
@@ -6255,7 +6307,12 @@ function renderBFPromosCardsTab() {
     }
     return true;
   }).sort((a, b) => {
-    // Strictly sort by MOST RECENT CHANGE FIRST (newest timestamp / smallest ageHrs on top)
+    // Keep very fresh Telegram drops (<= 1.5h) at the top, then prioritize BF-priced deals, then age
+    const aFreshGroup = !a._isStoreDirect && a.ageHrs <= 1.5;
+    const bFreshGroup = !b._isStoreDirect && b.ageHrs <= 1.5;
+    if (aFreshGroup !== bFreshGroup) return aFreshGroup ? -1 : 1;
+    if (aFreshGroup && bFreshGroup) return (b.tsMs || 0) - (a.tsMs || 0);
+    if (a.isInBFPrice !== b.isInBFPrice) return a.isInBFPrice ? -1 : 1;
     if (a.tsMs && b.tsMs && a.tsMs !== b.tsMs) return b.tsMs - a.tsMs;
     return a.ageHrs - b.ageHrs;
   });
@@ -6283,6 +6340,8 @@ function renderBFPromosCardsTab() {
       ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">✅ PISO BLACK FRIDAY</span>`
       : d.isBFRange
       ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🎯 PREÇO DE BLACK FRIDAY</span>`
+      : d.isNearBF
+      ? `<span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-mono text-[11px] font-bold whitespace-nowrap">⚡ Perto da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
       : d.targetHigh
       ? `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-rose-300 border border-rose-500/30 font-mono text-[11px] font-semibold whitespace-nowrap">⏳ Acima da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
       : `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-700 font-mono text-[11px] whitespace-nowrap">ℹ️ Sem faixa BF</span>`;
@@ -6303,7 +6362,9 @@ function renderBFPromosCardsTab() {
           <div class="min-w-0 flex-1 space-y-1">
             <div class="flex items-center gap-2 flex-wrap text-[11px] font-mono">
               <span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-bold">${d.matched_name || d.matched_slug || ''}</span>
-              <span class="text-amber-300 font-semibold">@${d.channel_id || 'grupo'}</span>
+              ${d._isStoreDirect
+                ? `<span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold">🏬 Catálogo Lojas</span>`
+                : `<span class="text-amber-300 font-semibold">@${d.channel_id || 'grupo'}</span>`}
               <span class="text-slate-400">• ${d.store_name || 'Loja BR'}</span>
               <span class="text-emerald-400 font-bold">• há ${ageLabel}</span>
               ${cleanCoup ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🎟️ ${cleanCoup}</span>` : ''}
