@@ -2617,7 +2617,11 @@ function onBFTargetItemChange(silent) {
   const uMax = saved ? saved.max : st.range.high;
   document.getElementById('bf-input-min').value = uMin;
   document.getElementById('bf-input-max').value = uMax;
-  document.getElementById('bf-input-test-price').value = Math.round(st.current);
+  const testPriceInp = document.getElementById('bf-input-test-price');
+  if (testPriceInp && testPriceInp.dataset.userEditedSlug !== slug) {
+    testPriceInp.value = Math.round(st.current);
+    delete testPriceInp.dataset.userEditedSlug;
+  }
   const couponInput = document.getElementById('bf-input-coupon');
   if (couponInput) couponInput.value = '';
 
@@ -2677,6 +2681,13 @@ function onBFTargetItemChange(silent) {
       return true;
     });
     const best = activeDeals.length > 0 ? activeDeals[0] : null;
+    const cheapestActive = activeDeals.reduce((min, d) => (!min || (d.price_brl || 999999) < (min.price_brl || 999999)) ? d : min, null);
+    if (cheapestActive && cheapestActive.price_brl > 0 && cheapestActive.price_brl < st.current) {
+      if (testPriceInp && (testPriceInp.dataset.userEditedSlug !== slug || !silent)) {
+        testPriceInp.value = Math.round(cheapestActive.price_brl);
+        if (!silent) delete testPriceInp.dataset.userEditedSlug;
+      }
+    }
 
     if (best) {
       ctnActive.classList.remove('hidden');
