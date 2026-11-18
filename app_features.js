@@ -5445,7 +5445,49 @@ function renderPromoRadarPanel() {
   const sumEl = document.getElementById('promo-matched-summary');
   const sitewiseEl = document.getElementById('sitewise-validator-text');
 
-  const deals = data.matched_deals || [];
+  const rawDeals = data.matched_deals || [];
+  // Weigh direct retailer default pricing (before coupons) alongside group promotions:
+  // If a retailer's default price is cheaper than any active group deal for that slug (or no group deal exists) and it's a BF/near-BF/30d-drop, include it!
+  const bestActiveGroupBySlug = new Map();
+  rawDeals.forEach(d => {
+    if (!d.is_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired' && d.matched_slug) {
+      const prev = bestActiveGroupBySlug.get(d.matched_slug);
+      if (!prev || d.price_brl < prev) bestActiveGroupBySlug.set(d.matched_slug, d.price_brl);
+    }
+  });
+  const storeExtras = [];
+  [['gpus', 'gpu'], ['cpus', 'cpu']].forEach(([grp, kindName]) => {
+    (DB[grp] || []).forEach(it => {
+      if (!it || !it.slug || !it.price_brl || it.store_name === 'referencia' || it.is_xeon) return;
+      const bestGroupP = bestActiveGroupBySlug.get(it.slug);
+      if (bestGroupP !== undefined && bestGroupP <= it.price_brl) return; // group deal is already cheaper
+      const avg30 = it.price_stats && it.price_stats.avg_30d;
+      const drop30 = (avg30 && avg30 > 0) ? ((avg30 - it.price_brl) / avg30) * 100 : 0;
+      const tgt = it.price_stats && it.price_stats.target_price;
+      const isGood = (tgt && it.price_brl <= tgt * 1.05) || drop30 >= 3;
+      if (!isGood) return;
+      storeExtras.push({
+        post_id: `store_${it.slug}`,
+        matched_kind: kindName,
+        matched_slug: it.slug,
+        matched_name: it.name,
+        title: it.offer_title || it.name,
+        price_brl: it.price_brl,
+        hb_price_brl: it.price_brl,
+        savings_vs_hb_brl: 0,
+        store_name: it.store_name || 'Loja BR',
+        channel_id: 'catalogo_lojas',
+        buy_url: it.offer_url || it.href || '#',
+        post_url: it.href || it.offer_url || '#',
+        age_hours: 0.5,
+        deal_status: 'active',
+        stock_verified: true,
+        requires_coupon: false,
+        _isStoreDirect: true
+      });
+    });
+  });
+  const deals = [...rawDeals, ...storeExtras];
   const cheaperCount = deals.filter(d => d.savings_vs_hb_brl > 0).length;
   const hotCount = deals.filter(d => d.is_high_cb || d.is_pechincha).length;
   if (sumEl) {
@@ -6378,6 +6420,13 @@ function renderBFPromosCardsTab() {
           <div class="text-left lg:text-right">
             <span class="text-[10px] font-mono uppercase text-slate-400 block">Preço Anunciado</span>
             <span class="text-lg font-mono font-extrabold ${d.isInBFPrice ? 'text-emerald-400' : 'text-white'}">${fmtBRL(d.price_brl)}</span>
+            ${!d._isStoreDirect && d.hb_price_brl > 0 ? (
+              d.price_brl < d.hb_price_brl
+                ? `<span class="block text-[10px] font-mono text-emerald-400">✅ −${fmtBRL(d.hb_price_brl - d.price_brl)} vs menor loja</span>`
+                : (d.price_brl > d.hb_price_brl + 1
+                    ? `<span class="block text-[10px] font-mono text-rose-400">⚠️ +${fmtBRL(d.price_brl - d.hb_price_brl)} vs menor loja (${fmtBRL(d.hb_price_brl)})</span>`
+                    : '')
+            ) : ''}
           </div>
 
           <div class="text-left lg:text-right min-w-[130px]">
