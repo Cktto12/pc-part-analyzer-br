@@ -1,5 +1,7 @@
 # 🖥️ PC Part Analyzer BR — Custo-Benefício & Radar de Preços
 
+🌐 **Acesse o site online:** [https://cktto12.github.io/pc-part-analyzer-br/](https://cktto12.github.io/pc-part-analyzer-br/)
+
 Plataforma inteligente e autônoma de análise de hardware para o mercado brasileiro. Monitora em tempo real a evolução de preços de **GPUs, CPUs, Placas-Mãe, Memórias RAM e Fontes**, cruza com benchmarks práticos (jogos e inteligência artificial) e escaneia cupons e promoções relâmpago de grupos especializados de hardware.
 
 ---
