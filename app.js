@@ -1442,6 +1442,11 @@ function switchTab(tabId) {
 
   closeSidebar();
   renderActiveTab();
+  if (tabId === 'bf-promos' && typeof startBFLivePolling === 'function') {
+    startBFLivePolling();
+  } else if (tabId !== 'bf-promos' && typeof stopBFLivePolling === 'function') {
+    stopBFLivePolling();
+  }
 }
 
 function toggleSidebar() {

@@ -1570,19 +1570,20 @@
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
             <div class="flex items-center gap-2 flex-wrap">
-              <h2 class="text-xl font-bold tracking-tight text-white">⚡ Promoções Black Friday — Mural ao Vivo</h2>
+              <h2 class="text-xl font-bold tracking-tight text-white">⚡ Promoções Black Friday — Feed em Tempo Real</h2>
               <span id="bf-cards-live-count" class="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[11px] font-bold">0 ofertas</span>
+              <span id="bf-cards-live-status" class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-bold">🟢 Ao vivo • 10s</span>
             </div>
             <p class="text-xs text-slate-300 mt-1">
-              Visualização rápida em cards com a imagem original do anúncio, preço à vista/Pix, cupom, média 30d e piso histórico BF para acompanhar ofertas relâmpago sem gráficos.
+              Ordenado pela alteração mais recente nos grupos (sem filtro de família, sem gráficos). Mostra miniatura, preço anunciado, faixa alvo Black Friday e veredito instantâneo.
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="scanLivePromos(true)" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition cursor-pointer">
-              🔄 Atualizar Ofertas
+            <button onclick="toggleBFLivePolling()" id="btn-bf-live-toggle" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition cursor-pointer">
+              ⏸️ Pausar Auto (10s)
             </button>
-            <button onclick="testAllRadarCoupons()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition cursor-pointer">
-              🧪 Testar Cupons &amp; Links
+            <button onclick="pollBFLiveCardsFeed(true)" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition cursor-pointer">
+              🔄 Puxar Agora
             </button>
           </div>
         </div>
@@ -1602,8 +1603,8 @@
           </div>
         </div>
 
-        <!-- Live Promo Cards Grid -->
-        <div id="bf-promos-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        <!-- Live Promo Cards List (1 row per card, newest first) -->
+        <div id="bf-promos-cards-grid" class="flex flex-col gap-2.5"></div>
       </div>
     </section>
 
@@ -2248,7 +2249,7 @@
   <!-- Floating Deal Notification Toast Container -->
   <div id="promo-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none"></div>
 
-  <script src="app.js?v=20261118-5"></script>
-  <script src="app_features.js?v=20261118-5"></script>
+  <script src="app.js?v=20261118-6"></script>
+  <script src="app_features.js?v=20261118-6"></script>
 </body>
 </html>

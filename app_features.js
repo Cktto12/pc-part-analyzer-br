@@ -3101,28 +3101,28 @@ async function fetchTelegramChannelHTML(chId, query) {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   if (!isStatic) {
     try {
-      const r = await fetch(`/api/tg-raw?ch=${encodeURIComponent(chId)}&q=${encodeURIComponent(query)}`);
+      const r = await fetchWithTimeout(`/api/tg-raw?ch=${encodeURIComponent(chId)}&q=${encodeURIComponent(query || '')}`, { cache: 'no-store' }, 4500);
       if (r.ok) return await r.text();
     } catch (_) {}
   }
-  // Static GitHub Pages fallback: fetch Telegram mirror directly via multiple resilient CORS proxies
+  // Static GitHub Pages fallback: race CORS proxies concurrently with 4s timeout
   const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
   const proxies = [
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(tgUrl)}`,
     `https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`,
     `https://corsproxy.io/?${encodeURIComponent(tgUrl)}`
   ];
-  for (const pUrl of proxies) {
-    try {
-      const r = await fetch(pUrl, { cache: 'no-store' });
-      if (r.ok) {
-        const txt = await r.text();
-        if (txt && txt.includes('tgme_widget_message')) return txt;
-      }
-    } catch (_) {}
-  }
   try {
-    const rJson = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' });
+    return await Promise.any(proxies.map(async (pUrl) => {
+      const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4000);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const txt = await r.text();
+      if (!txt || !txt.includes('tgme_widget_message')) throw new Error('Empty TG feed');
+      return txt;
+    }));
+  } catch (_) {}
+  try {
+    const rJson = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4000);
     if (rJson.ok) {
       const j = await rJson.json();
       if (j && j.contents && j.contents.includes('tgme_widget_message')) return j.contents;
@@ -6027,9 +6027,12 @@ async function testAllRadarCoupons() {
 }
 
 // =========================================================================
-// TAB 5B: BLACK FRIDAY PROMOÇÕES AO VIVO (CARDS ONLY + IMAGENS DOS GRUPOS)
+// TAB 5B: BLACK FRIDAY PROMOÇÕES AO VIVO (1 ROW/CARD, IMAGENS, POLL 10s)
 // =========================================================================
 let BF_CARDS_FILTER = 'all';
+let _bfLiveTimer = null;
+let _bfLiveEnabled = true;
+let _bfLiveBusy = false;
 
 function setBFCardsFilter(filterKey) {
   BF_CARDS_FILTER = filterKey || 'all';
@@ -6044,6 +6047,114 @@ function setBFCardsFilter(filterKey) {
 }
 window.setBFCardsFilter = setBFCardsFilter;
 
+async function pollBFLiveCardsFeed(manual) {
+  if (_bfLiveBusy) return;
+  _bfLiveBusy = true;
+  const statusEl = document.getElementById('bf-cards-live-status');
+  if (statusEl && manual) statusEl.textContent = '🔄 Puxando grupos...';
+
+  try {
+    const channels = CLIENT_PROMO_CHANNELS || [];
+    const htmlList = await Promise.all(channels.map(ch => fetchTelegramChannelHTML(ch.id, '').then(raw => ({ ch, raw })).catch(() => ({ ch, raw: '' }))));
+
+    const freshPosts = [];
+    htmlList.forEach(({ ch, raw }) => {
+      if (!raw) return;
+      const parsed = parseTelegramHTMLInBrowser(raw, ch.id, ch.name);
+      if (parsed && parsed.length) freshPosts.push(...parsed);
+    });
+
+    if (freshPosts.length) {
+      if (!PROMO_STATE.lastData) {
+        PROMO_STATE.lastData = { ok: true, region_id: getActiveRegionId(), matched_deals: [], recent_feed: [], best_by_slug: {} };
+      }
+      const existingById = new Map();
+      (PROMO_STATE.lastData.matched_deals || []).forEach(d => {
+        if (d.post_id) existingById.set(d.post_id, d);
+      });
+
+      const nowMs = Date.now();
+      freshPosts.forEach(p => {
+        const m = matchCatalogItemClient(p.head_text);
+        if (!m || !m.item) return;
+        const hbPrice = m.item._hbPrice || m.item.price_brl || 0;
+        if (hbPrice > 0 && (p.price_brl < hbPrice * 0.45 || p.price_brl > hbPrice * 1.35)) return;
+
+        let ageHours = 0.05;
+        if (p.timestamp) {
+          const ts = Date.parse(p.timestamp);
+          if (!isNaN(ts)) ageHours = Math.max(0.01, (nowMs - ts) / 3600000);
+        }
+        const prev = existingById.get(p.post_id) || {};
+        existingById.set(p.post_id, {
+          ...prev,
+          ...p,
+          matched_kind: m.kind,
+          matched_slug: m.item.slug,
+          matched_name: m.item.name,
+          hb_price_brl: hbPrice,
+          savings_vs_hb_brl: Math.round((hbPrice - p.price_brl) * 100) / 100,
+          age_hours: Math.round(ageHours * 100) / 100,
+          region_id: getActiveRegionId()
+        });
+      });
+
+      PROMO_STATE.lastData.matched_deals = [...existingById.values()];
+      if (typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') {
+        renderBFPromosCardsTab();
+      }
+    }
+    if (statusEl) {
+      const nowStr = new Date().toLocaleTimeString('pt-BR');
+      statusEl.textContent = _bfLiveEnabled ? `🟢 Ao vivo • 10s (${nowStr})` : `⏸️ Pausado (${nowStr})`;
+    }
+  } catch (e) {
+    if (statusEl) statusEl.textContent = '⚠️ Reconectando (10s)...';
+  } finally {
+    _bfLiveBusy = false;
+  }
+}
+window.pollBFLiveCardsFeed = pollBFLiveCardsFeed;
+
+function startBFLivePolling() {
+  stopBFLivePolling();
+  if (!_bfLiveEnabled) return;
+  pollBFLiveCardsFeed(false);
+  _bfLiveTimer = setInterval(() => {
+    if (_bfLiveEnabled && typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') {
+      pollBFLiveCardsFeed(false);
+    }
+  }, 10000);
+}
+window.startBFLivePolling = startBFLivePolling;
+
+function stopBFLivePolling() {
+  if (_bfLiveTimer) {
+    clearInterval(_bfLiveTimer);
+    _bfLiveTimer = null;
+  }
+}
+window.stopBFLivePolling = stopBFLivePolling;
+
+function toggleBFLivePolling() {
+  _bfLiveEnabled = !_bfLiveEnabled;
+  const btn = document.getElementById('btn-bf-live-toggle');
+  const statusEl = document.getElementById('bf-cards-live-status');
+  if (btn) {
+    btn.textContent = _bfLiveEnabled ? '⏸️ Pausar Auto (10s)' : '▶️ Retomar Auto (10s)';
+    btn.className = _bfLiveEnabled
+      ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition cursor-pointer'
+      : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition cursor-pointer';
+  }
+  if (_bfLiveEnabled) {
+    startBFLivePolling();
+  } else {
+    stopBFLivePolling();
+    if (statusEl) statusEl.textContent = '⏸️ Auto-poll pausado';
+  }
+}
+window.toggleBFLivePolling = toggleBFLivePolling;
+
 function renderBFPromosCardsTab() {
   const grid = document.getElementById('bf-promos-cards-grid');
   const countBadge = document.getElementById('bf-cards-live-count');
@@ -6053,139 +6164,156 @@ function renderBFPromosCardsTab() {
   const matchedDeals = (lastData && Array.isArray(lastData.matched_deals)) ? lastData.matched_deals : [];
   const generalFeed = (lastData && Array.isArray(lastData.recent_feed)) ? lastData.recent_feed : [];
 
-  // Merge matched deals with image_url from recent_feed if needed
   const imgByPost = new Map();
   generalFeed.forEach(f => {
     if (f.post_id && f.image_url) imgByPost.set(f.post_id, f.image_url);
   });
 
   const searchQ = (document.getElementById('bf-cards-search')?.value || '').trim().toLowerCase();
+  const nowMs = Date.now();
 
   const items = matchedDeals.map(d => {
     const imgUrl = d.image_url || imgByPost.get(d.post_id) || null;
     const catGroup = d.matched_kind === 'cpu' ? (DB.cpus || []) : (d.matched_kind === 'ram' ? (DB.rams || []) : (DB.gpus || []));
     const catItem = catGroup.find(x => x.slug === d.matched_slug);
-    const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
-    const allMin = catItem && catItem.price_stats ? catItem.price_stats.min_all_time : null;
+
+    // Compute Black Friday target range identically to Black Friday view
     let bfRange = null;
+    let allMin = null;
     if (catItem && typeof bfAnalyzeItem === 'function' && typeof bfExpectedRange === 'function') {
       const st = bfAnalyzeItem(catItem, d.matched_kind || 'gpu');
       bfRange = bfExpectedRange(st, 0.10);
+      allMin = st.allMin;
+    } else if (catItem && catItem.price_stats) {
+      allMin = catItem.price_stats.min_all_time || null;
     }
+
+    const userSaved = (typeof STATE !== 'undefined' && STATE.bfRanges && STATE.bfRanges[d.matched_slug]) || null;
+    const targetLow = userSaved ? userSaved.min : (bfRange ? bfRange.low : (catItem?.price_stats?.target_price || null));
+    const targetHigh = userSaved ? userSaved.max : (bfRange ? bfRange.high : null);
+
+    let ageHrs = d.age_hours != null ? Number(d.age_hours) : 999;
+    let tsMs = 0;
+    if (d.timestamp) {
+      const t = Date.parse(d.timestamp);
+      if (!isNaN(t)) {
+        tsMs = t;
+        ageHrs = Math.max(0, (nowMs - t) / 3600000);
+      }
+    }
+
+    const isHistoricalMin = Boolean(allMin && d.price_brl <= allMin * 1.015);
+    const isBFLow = Boolean(targetLow && d.price_brl <= targetLow);
+    const isBFRange = Boolean(targetHigh && d.price_brl <= targetHigh);
+    const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
     const drop30Pct = (avg30 && avg30 > 0) ? ((avg30 - d.price_brl) / avg30) * 100 : 0;
-    const isGoodBF = Boolean((bfRange && d.price_brl <= bfRange.high) || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5));
-    return { ...d, imgUrl, avg30, allMin, bfRange, drop30Pct, isGoodBF };
+    const isInBFPrice = isHistoricalMin || isBFLow || isBFRange || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5);
+
+    return {
+      ...d,
+      imgUrl,
+      targetLow,
+      targetHigh,
+      allMin,
+      avg30,
+      drop30Pct,
+      isHistoricalMin,
+      isBFLow,
+      isBFRange,
+      isInBFPrice,
+      tsMs,
+      ageHrs
+    };
   }).filter(d => {
     if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
     if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
     if (BF_CARDS_FILTER === 'ram' && d.matched_kind !== 'ram') return false;
     if (BF_CARDS_FILTER === 'in_stock' && (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired')) return false;
-    if (BF_CARDS_FILTER === 'bf_deal' && (!d.isGoodBF || d.is_expired)) return false;
+    if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice) return false;
 
     if (searchQ) {
       const hay = `${d.title || ''} ${d.matched_name || ''} ${d.store_name || ''} ${d.coupon_code || ''} ${d.channel_id || ''}`.toLowerCase();
       if (!hay.includes(searchQ)) return false;
     }
     return true;
+  }).sort((a, b) => {
+    // Strictly sort by MOST RECENT CHANGE FIRST (newest timestamp / smallest ageHrs on top)
+    if (a.tsMs && b.tsMs && a.tsMs !== b.tsMs) return b.tsMs - a.tsMs;
+    return a.ageHrs - b.ageHrs;
   });
 
-  if (countBadge) countBadge.textContent = `${items.length} cards`;
+  if (countBadge) countBadge.textContent = `${items.length} ofertas`;
 
   if (!items.length) {
     grid.innerHTML = `
-      <div class="col-span-full p-8 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-2">
-        <div class="text-slate-300 font-semibold text-sm">Nenhuma oferta encontrada para este filtro no momento.</div>
-        <div class="text-xs text-slate-500">Clique em "🔄 Atualizar Ofertas" para varrer os grupos ao vivo ou limpe os filtros.</div>
+      <div class="p-6 rounded-xl bg-slate-950/80 border border-slate-800 text-center space-y-2">
+        <div class="text-slate-300 font-semibold text-sm">Nenhuma promoção recente encontrada para este filtro.</div>
+        <div class="text-xs text-slate-500">Aguardando a próxima atualização automática (10s) ou clique em "🔄 Puxar Agora".</div>
       </div>`;
     return;
   }
 
   grid.innerHTML = items.map(d => {
     const cleanCoup = (d.coupon_code || '').trim().toUpperCase();
-    const isExpired = Boolean(d.is_expired || d.deal_status === 'expired' || d.deal_status === 'out_of_stock');
-    const isActive = d.deal_status === 'active' && d.stock_verified;
-    const isUnverifiedCoup = d.deal_status === 'unverified_coupon';
+    const ageLabel = d.ageHrs < 1
+      ? `${Math.max(1, Math.round(d.ageHrs * 60))}m`
+      : `${d.ageHrs.toFixed(1)}h`;
 
-    const statusBadge = d.deal_status === 'out_of_stock'
-      ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ Esgotado</span>`
-      : d.is_coupon_expired
-      ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">❌ Cupom Expirado</span>`
-      : isExpired
-      ? `<span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ Encerrado</span>`
-      : isActive
-      ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">✅ Em Estoque</span>`
-      : isUnverifiedCoup
-      ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">⚠️ Testar no Carrinho</span>`
-      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px]">⏳ Aguardando Teste</span>`;
+    const bfVerdictBadge = d.isHistoricalMin
+      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🔥 MÍNIMO HISTÓRICO BF</span>`
+      : d.isBFLow
+      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">✅ PISO BLACK FRIDAY</span>`
+      : d.isBFRange
+      ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🎯 PREÇO DE BLACK FRIDAY</span>`
+      : d.targetHigh
+      ? `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-rose-300 border border-rose-500/30 font-mono text-[11px] font-semibold whitespace-nowrap">⏳ Acima da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
+      : `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-700 font-mono text-[11px] whitespace-nowrap">ℹ️ Sem faixa BF</span>`;
 
-    const bfVerdict = d.allMin && d.price_brl <= d.allMin * 1.02
-      ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">🔥 MÍNIMO HISTÓRICO</span>`
-      : d.bfRange && d.price_brl <= d.bfRange.low
-      ? `<span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold">✅ Piso Esperado BF</span>`
-      : d.bfRange && d.price_brl <= d.bfRange.high
-      ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold">🎯 Faixa BF</span>`
-      : '';
+    const targetText = d.targetLow && d.targetHigh
+      ? `${fmtBRL(d.targetLow)} – ${fmtBRL(d.targetHigh)}`
+      : (d.targetLow ? fmtBRL(d.targetLow) : '—');
 
-    const imageBlock = d.imgUrl
-      ? `<div class="relative h-44 w-full bg-slate-950 overflow-hidden border-b border-slate-800/80">
-           <img src="${d.imgUrl}" alt="${(d.matched_name || d.title || 'Oferta').replace(/"/g, '&quot;')}" loading="lazy" class="w-full h-full object-contain bg-slate-950/90 p-1.5" onerror="this.parentElement.innerHTML='<div class=\\'h-full flex items-center justify-center text-slate-600 text-xs font-mono\\'>Sem miniatura disponível</div>'" />
-           <div class="absolute top-2 left-2 flex items-center gap-1">${statusBadge}</div>
-           <div class="absolute top-2 right-2">${bfVerdict}</div>
-         </div>`
-      : `<div class="px-4 pt-3 pb-1 flex items-center justify-between gap-2 border-b border-slate-800/60">
-           <div class="flex items-center gap-1.5">${statusBadge}${bfVerdict}</div>
-           <span class="text-[10px] font-mono text-slate-500 uppercase">${d.matched_kind || 'HW'}</span>
-         </div>`;
-
-    const safeId = (d.post_id || '').replace(/[^a-zA-Z0-9]/g, '_');
+    const thumbHtml = d.imgUrl
+      ? `<img src="${d.imgUrl}" alt="" loading="lazy" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-contain bg-slate-950 border border-slate-800 p-1 shrink-0" onerror="this.style.display='none'" />`
+      : `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-[10px] font-mono shrink-0 uppercase">${d.matched_kind || 'HW'}</div>`;
 
     return `
-      <div class="rounded-2xl bg-slate-950/90 border ${isExpired ? 'border-rose-900/50 opacity-75' : isActive ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/5' : 'border-slate-800 hover:border-amber-500/40'} overflow-hidden flex flex-col justify-between transition">
-        ${imageBlock}
-        <div class="p-4 space-y-3 flex-1 flex flex-col justify-between">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
-              <span class="truncate">@${d.channel_id || 'radar'} • ${d.store_name || 'Loja BR'}</span>
-              <span class="shrink-0">há ${d.age_hours}h</span>
+      <div class="p-3 sm:px-4 sm:py-3 rounded-xl bg-slate-950/90 border ${d.isInBFPrice ? 'border-emerald-500/40 shadow-sm shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'} flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition">
+        <!-- Left: Small Image + Title + Group/Store -->
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          ${thumbHtml}
+          <div class="min-w-0 flex-1 space-y-1">
+            <div class="flex items-center gap-2 flex-wrap text-[11px] font-mono">
+              <span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-bold">${d.matched_name || d.matched_slug || ''}</span>
+              <span class="text-amber-300 font-semibold">@${d.channel_id || 'grupo'}</span>
+              <span class="text-slate-400">• ${d.store_name || 'Loja BR'}</span>
+              <span class="text-emerald-400 font-bold">• há ${ageLabel}</span>
+              ${cleanCoup ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🎟️ ${cleanCoup}</span>` : ''}
             </div>
-            <div>
-              <span class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold">${d.matched_name || d.matched_slug || ''}</span>
-              <h3 class="text-xs font-bold text-slate-100 line-clamp-2 mt-0.5" title="${d.title}">${d.title}</h3>
-            </div>
+            <div class="text-xs sm:text-sm font-semibold text-slate-100 truncate" title="${d.title}">${d.title}</div>
+          </div>
+        </div>
 
-            <!-- Prices & 30d/BF Comparisons -->
-            <div class="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 flex items-baseline justify-between gap-2">
-              <div>
-                <div class="text-xl font-mono font-extrabold ${isExpired ? 'text-rose-400 line-through' : 'text-emerald-400'}">${fmtBRL(d.price_brl)}</div>
-                ${d.live_store_price_brl && d.live_store_price_brl !== d.price_brl ? `<div class="text-[10px] font-mono text-slate-400">Sem cupom na loja: ${fmtBRL(d.live_store_price_brl)}</div>` : ''}
-              </div>
-              <div class="text-right font-mono text-[10px] space-y-0.5">
-                ${d.avg30 ? `<div class="${d.drop30Pct >= 5 ? 'text-cyan-300 font-bold' : 'text-slate-400'}">Média 30d: ${fmtBRL(d.avg30)} ${d.drop30Pct >= 1 ? `(-${d.drop30Pct.toFixed(0)}%)` : ''}</div>` : ''}
-                ${d.allMin ? `<div class="text-slate-400">Piso Hist: ${fmtBRL(d.allMin)}</div>` : ''}
-              </div>
-            </div>
-
-            ${cleanCoup || d.coupon_info ? `
-              <div class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-[11px]">
-                <span class="font-mono text-amber-300 font-bold truncate">🎟️ ${cleanCoup || d.coupon_info}</span>
-                ${cleanCoup ? `<button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] shrink-0 cursor-pointer">Copiar 📋</button>` : ''}
-              </div>
-            ` : ''}
-
-            ${d.deal_status_reason ? `<p class="text-[10px] font-mono ${isExpired ? 'text-rose-400/90' : 'text-slate-400'} line-clamp-2">${d.deal_status_reason}</p>` : ''}
+        <!-- Right: Current Price + Target Price + BF Verdict + Actions -->
+        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-4 shrink-0 border-t lg:border-t-0 border-slate-800/80 pt-2 lg:pt-0">
+          <div class="text-left lg:text-right">
+            <span class="text-[10px] font-mono uppercase text-slate-400 block">Preço Anunciado</span>
+            <span class="text-lg font-mono font-extrabold ${d.isInBFPrice ? 'text-emerald-400' : 'text-white'}">${fmtBRL(d.price_brl)}</span>
           </div>
 
-          <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-1.5">
-            <button id="btn-card-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoup}', ${d.promo_price_brl || d.price_brl}, '${d.matched_slug || ''}', '${d.matched_kind || 'gpu'}')" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">
-              🧪 Testar
-            </button>
-            <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">
-              Simular BF
-            </button>
+          <div class="text-left lg:text-right min-w-[130px]">
+            <span class="text-[10px] font-mono uppercase text-slate-400 block">Alvo Black Friday</span>
+            <span class="text-xs font-mono font-bold text-amber-300">${targetText}</span>
+            ${d.allMin ? `<span class="block text-[10px] font-mono text-slate-500">Piso Hist: ${fmtBRL(d.allMin)}</span>` : ''}
+          </div>
+
+          <div>${bfVerdictBadge}</div>
+
+          <div class="flex items-center gap-1.5">
+            ${cleanCoup ? `<button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold cursor-pointer" title="Copiar cupom e abrir">📋</button>` : ''}
+            <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">BF</button>
             <a href="${d.post_url}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-semibold text-[11px]">Post ↗</a>
-            <a href="${d.buy_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] ml-auto">
-              Loja 🛒
-            </a>
+            <a href="${d.buy_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">Loja 🛒</a>
           </div>
         </div>
       </div>
