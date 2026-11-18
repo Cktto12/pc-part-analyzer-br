@@ -1,7 +1,7 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "02:48:31",
+  "scanned_at": "03:07:33",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -27,7 +27,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211293",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 1.0,
+      "age_hours": 1.3,
       "matched_kind": "ram",
       "matched_slug": "ddr5-32gb-5600",
       "matched_name": "DDR5 32 GB 5600 MT/s",
@@ -36,7 +36,9 @@
       "is_expired": false,
       "deal_status": "active",
       "is_coupon_expired": false,
-      "coupon_status": "active"
+      "coupon_status": "active",
+      "deal_status_reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)",
+      "coupon_status_reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)"
     }
   ],
   "best_by_slug": {
@@ -58,7 +60,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211293",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 1.0,
+      "age_hours": 1.3,
       "matched_kind": "ram",
       "matched_slug": "ddr5-32gb-5600",
       "matched_name": "DDR5 32 GB 5600 MT/s",
@@ -67,10 +69,32 @@
       "is_expired": false,
       "deal_status": "active",
       "is_coupon_expired": false,
-      "coupon_status": "active"
+      "coupon_status": "active",
+      "deal_status_reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)",
+      "coupon_status_reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)"
     }
   },
   "recent_feed": [
+    {
+      "post_id": "pdmx/1211321",
+      "channel_id": "promodescuentos_pc",
+      "channel_name": "Promodescuentos PC",
+      "store_name": "Mercado Libre",
+      "post_url": "https://www.promodescuentos.com/share-deal/1211321",
+      "timestamp": "2026-11-18T03:00:19+00:00",
+      "title": "Mercado Libre: Laptop HP 255 G10 Ryzen 3 7335u | Cupón HP y HSBC",
+      "head_text": "Mercado Libre: Laptop HP 255 G10 Ryzen 3 7335u | Cupón HP y HSBC $6,479 MXN",
+      "raw_text": "Mercado Libre: Laptop HP 255 G10 Ryzen 3 7335u | Cupón HP y HSBC - Mercado Libre - $6,479 MXN",
+      "price_brl": 6479,
+      "raw_price_brl": 6479,
+      "discount_applied": 0,
+      "coupon_code": "HSBCBF",
+      "coupon_info": "Cupón MX: HSBCBF",
+      "buy_url": "https://www.promodescuentos.com/share-deal/1211321",
+      "coupon_url": null,
+      "region_id": "mx",
+      "age_hours": 0.1
+    },
     {
       "post_id": "pdmx/1211295",
       "channel_id": "promodescuentos_pc",
@@ -89,7 +113,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211295",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 0.7
+      "age_hours": 1.1
     },
     {
       "post_id": "pdmx/1211293",
@@ -109,7 +133,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211293",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 1.0,
+      "age_hours": 1.3,
       "matched_kind": "ram",
       "matched_slug": "ddr5-32gb-5600",
       "matched_name": "DDR5 32 GB 5600 MT/s",
@@ -138,7 +162,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211272",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 1.8
+      "age_hours": 2.1
     },
     {
       "post_id": "pdmx/1210910",
@@ -158,11 +182,75 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1210910",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 21.6
+      "age_hours": 21.9
     }
   ],
   "coupon_status": {
-    "coupons": {},
-    "deals": {}
-  }
+    "coupons": {
+      "ALIMX5": {
+        "status": "active",
+        "reason": "Confirmado ativo na loja",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "BBVABF26": {
+        "status": "active",
+        "reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)",
+        "source": "live_test",
+        "updated_at": "2026-11-18 03:07:34"
+      }
+    },
+    "deals": {
+      "pdmx/1210338": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 03:58:21"
+      },
+      "https://www.promodescuentos.com/share-deal/1210338": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 03:58:21"
+      },
+      "pdmx/1210494": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "https://www.promodescuentos.com/share-deal/1210494": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "pdmx/1210639": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "https://www.promodescuentos.com/share-deal/1210639": {
+        "status": "active",
+        "reason": "Produto em estoque e página ativa",
+        "source": "live_test",
+        "updated_at": "2026-11-17 12:56:31"
+      },
+      "pdmx/1211293": {
+        "status": "active",
+        "reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)",
+        "source": "live_test",
+        "updated_at": "2026-11-18 03:07:34"
+      },
+      "https://www.promodescuentos.com/share-deal/1211293": {
+        "status": "active",
+        "reason": "Produto ativo na loja por 585.00 (cupom BBVABF26)",
+        "source": "live_test",
+        "updated_at": "2026-11-18 03:07:34"
+      }
+    },
+    "updated_at": "2026-11-18 03:07:34"
+  },
+  "last_sitewise_test_at": "2026-11-18 03:07:34"
 }
