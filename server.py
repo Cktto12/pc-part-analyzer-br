@@ -520,27 +520,31 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     save_notified_history(history, reg_id)
     return {"notified": notified_count, "total_matched": len(matched), "region_id": reg_id}
 
-def run_sitewise_coupon_validator(reg_id=None):
+def run_sitewise_coupon_validator(reg_id=None, max_items=50, target_deals=None):
     """Runs a continuous sitewise validation of links and coupons in regional promos_cache and updates the regional DB."""
     try:
         reg = (reg_id or get_active_region_id()).lower()
         cache_path = get_promos_cache_path(reg)
-        if not os.path.exists(cache_path):
-            return
-        with open(cache_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = {}
+        if os.path.exists(cache_path):
+            with open(cache_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
         deals = data.get("matched_deals", [])
-        if not deals:
-            return
+        to_validate = target_deals if (isinstance(target_deals, list) and target_deals) else deals
+        if not to_validate:
+            return {"ok": True, "tested": 0, "results": {}, "matched_deals": deals, "best_by_slug": data.get("best_by_slug", {}), "coupon_status": data.get("coupon_status", {"coupons": {}, "deals": {}})}
 
         import coupon_tracker
-        results = coupon_tracker.test_deals_batch(deals, max_items=50, reg_id=reg)
-        rewired, best_slug = coupon_tracker.rewire_deals_and_best_by_slug(deals, data.get("recent_feed", []), reg_id=reg)
+        results = coupon_tracker.test_deals_batch(to_validate, max_items=max_items, reg_id=reg)
+        base_deals = deals if deals else to_validate
+        rewired, best_slug = coupon_tracker.rewire_deals_and_best_by_slug(base_deals, data.get("recent_feed", []), reg_id=reg)
         data["matched_deals"] = rewired
         data["best_by_slug"] = best_slug
         data["coupon_status"] = coupon_tracker.load_coupon_status(reg)
         data["last_sitewise_test_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        data["region_id"] = reg
 
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
@@ -553,9 +557,18 @@ def run_sitewise_coupon_validator(reg_id=None):
                 json.dump(db, f, ensure_ascii=False, indent=2)
 
         print(f"[Sitewise Validator ({reg.upper()})] {len(results)} ofertas/cupons verificados na base em segundo plano.")
+        return {
+            "ok": True,
+            "tested": len(results),
+            "results": results,
+            "matched_deals": rewired,
+            "best_by_slug": best_slug,
+            "coupon_status": data["coupon_status"],
+            "last_sitewise_test_at": data["last_sitewise_test_at"]
+        }
     except Exception as e:
         print(f"[Sitewise Validator Erro ({reg_id})] {e}")
-        print(f"[Sitewise Validator Erro] {e}")
+        return {"ok": False, "error": str(e)}
 
 def background_promo_monitor_thread():
     """Background daemon thread: scans for deals, verifies coupons sitewise, and dispatches notifications."""
@@ -849,6 +862,15 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/test-all-coupons":
+            try:
+                qs = parse_qs(parsed.query)
+                reg = (qs.get("region", [None])[0] or get_active_region_id()).lower()
+                max_items = int(qs.get("max_items", ["20"])[0])
+                out = run_sitewise_coupon_validator(reg_id=reg, max_items=max_items)
+                return self.send_json(out, status=200 if out.get("ok") else 500)
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
         elif parsed.path == "/api/coupon-status":
             try:
                 import coupon_tracker
@@ -875,6 +897,17 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                     matched_slug=slug, matched_kind=kind
                 )
                 return self.send_json({"ok": True, "result": res})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/test-all-coupons":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                reg = (body.get("region") or get_active_region_id()).lower()
+                max_items = int(body.get("max_items") or 20)
+                target_deals = body.get("deals")
+                out = run_sitewise_coupon_validator(reg_id=reg, max_items=max_items, target_deals=target_deals)
+                return self.send_json(out, status=200 if out.get("ok") else 500)
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
         elif parsed.path == "/api/mark-coupon-status":

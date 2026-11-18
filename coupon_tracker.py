@@ -26,6 +26,7 @@ _STATUS_LOCK = threading.Lock()
 # In-memory 5-minute cache for Hardware Barato live in-stock store & coupon verification
 _HB_LIVE_CACHE = {}
 _HB_CACHE_LOCK = threading.Lock()
+_HB_SLUG_LOCKS = {}
 
 CHROME_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -135,95 +136,109 @@ def fetch_hb_live_slug_info(kind, slug):
 
     with _HB_CACHE_LOCK:
         cached = _HB_LIVE_CACHE.get(cache_key)
-        if cached and (now - cached["ts"] < 300):
-            return cached["data"]
+        if cached:
+            ttl = 300 if cached["data"] is not None else 20
+            if now - cached["ts"] < ttl:
+                return cached["data"]
+        slug_lock = _HB_SLUG_LOCKS.setdefault(cache_key, threading.Lock())
 
-    url = f"https://www.hardwarebarato.com/produtos/{cat}/{slug}"
-    try:
-        req = urllib.request.Request(url, headers=CHROME_HEADERS)
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            raw_html = resp.read().decode("utf-8", errors="ignore")
-        pushes = re.findall(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', raw_html, re.DOTALL)
-        unescaped = "".join(pushes).replace('\\"', '"').replace('\\\\', '\\')
-
-        def extract_arr(key):
-            idx = unescaped.find(f'"{key}":[')
-            if idx == -1:
-                return []
-            start = unescaped.find('[', idx)
-            depth = 0
-            for i in range(start, len(unescaped)):
-                if unescaped[i] == '[':
-                    depth += 1
-                elif unescaped[i] == ']':
-                    depth -= 1
-                    if depth == 0:
-                        try:
-                            return json.loads(unescaped[start:i + 1])
-                        except Exception:
-                            return []
-            return []
-
-        offers = extract_arr("data")
-        coupons = extract_arr("coupons")
-
-        by_store = {}
-        active_coupons = {}
-
-        active_coupons_details = {}
-        for c in coupons:
-            if c.get("archivedAt") is not None:
-                continue
-            st = (c.get("storeName") or "").lower().strip()
-            code = (c.get("code") or "").upper().strip()
-            min_val = c.get("minPrice") or c.get("min_price") or c.get("minSpend") or c.get("minValue")
-            min_spend = (float(min_val) / 100.0) if (isinstance(min_val, (int, float)) and min_val > 0) else None
-            desc = (c.get("description") or c.get("title") or "").strip()
-            if st and code:
-                active_coupons.setdefault(st, set()).add(code)
-                active_coupons_details.setdefault(st, {})[code] = {
-                    "min_spend": min_spend,
-                    "desc": desc,
-                    "discount": c.get("discount"),
-                    "discount_type": c.get("discountType")
-                }
-
-        for o in offers:
-            st = (o.get("storeName") or "").lower().strip()
-            p_raw = o.get("price")
-            if not st or not isinstance(p_raw, (int, float)) or p_raw <= 0:
-                continue
-            p = round(float(p_raw) / 100.0, 2)
-            c_obj = o.get("coupon") if isinstance(o.get("coupon"), dict) else None
-            c_price = round(float(c_obj["price"]) / 100.0, 2) if (c_obj and isinstance(c_obj.get("price"), (int, float))) else None
-            c_code = (c_obj.get("code") or "").upper().strip() if c_obj else None
-            if c_code:
-                active_coupons.setdefault(st, set()).add(c_code)
-
-            by_store.setdefault(st, []).append({
-                "price": p,
-                "coupon_price": c_price,
-                "coupon_code": c_code,
-                "url": o.get("url") or "",
-                "name": o.get("name") or ""
-            })
-
-        for st in by_store:
-            by_store[st].sort(key=lambda x: x["price"])
-
-        info = {
-            "slug": slug,
-            "kind": kind,
-            "by_store": by_store,
-            "active_coupons": {k: list(v) for k, v in active_coupons.items()},
-            "active_coupons_details": active_coupons_details,
-            "total_offers": len(offers)
-        }
+    with slug_lock:
+        now = time.time()
         with _HB_CACHE_LOCK:
-            _HB_LIVE_CACHE[cache_key] = {"ts": now, "data": info}
-        return info
-    except Exception:
-        return None
+            cached = _HB_LIVE_CACHE.get(cache_key)
+            if cached:
+                ttl = 300 if cached["data"] is not None else 20
+                if now - cached["ts"] < ttl:
+                    return cached["data"]
+
+        url = f"https://www.hardwarebarato.com/produtos/{cat}/{slug}"
+        try:
+            req = urllib.request.Request(url, headers=CHROME_HEADERS)
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                raw_html = resp.read().decode("utf-8", errors="ignore")
+            pushes = re.findall(r'self\.__next_f\.push\(\[1,"(.*?)"\]\)</script>', raw_html, re.DOTALL)
+            unescaped = "".join(pushes).replace('\\"', '"').replace('\\\\', '\\')
+
+            def extract_arr(key):
+                idx = unescaped.find(f'"{key}":[')
+                if idx == -1:
+                    return []
+                start = unescaped.find('[', idx)
+                depth = 0
+                for i in range(start, len(unescaped)):
+                    if unescaped[i] == '[':
+                        depth += 1
+                    elif unescaped[i] == ']':
+                        depth -= 1
+                        if depth == 0:
+                            try:
+                                return json.loads(unescaped[start:i + 1])
+                            except Exception:
+                                return []
+                return []
+
+            offers = extract_arr("data")
+            coupons = extract_arr("coupons")
+
+            by_store = {}
+            active_coupons = {}
+
+            active_coupons_details = {}
+            for c in coupons:
+                if c.get("archivedAt") is not None:
+                    continue
+                st = (c.get("storeName") or "").lower().strip()
+                code = (c.get("code") or "").upper().strip()
+                min_val = c.get("minPrice") or c.get("min_price") or c.get("minSpend") or c.get("minValue")
+                min_spend = (float(min_val) / 100.0) if (isinstance(min_val, (int, float)) and min_val > 0) else None
+                desc = (c.get("description") or c.get("title") or "").strip()
+                if st and code:
+                    active_coupons.setdefault(st, set()).add(code)
+                    active_coupons_details.setdefault(st, {})[code] = {
+                        "min_spend": min_spend,
+                        "desc": desc,
+                        "discount": c.get("discount"),
+                        "discount_type": c.get("discountType")
+                    }
+
+            for o in offers:
+                st = (o.get("storeName") or "").lower().strip()
+                p_raw = o.get("price")
+                if not st or not isinstance(p_raw, (int, float)) or p_raw <= 0:
+                    continue
+                p = round(float(p_raw) / 100.0, 2)
+                c_obj = o.get("coupon") if isinstance(o.get("coupon"), dict) else None
+                c_price = round(float(c_obj["price"]) / 100.0, 2) if (c_obj and isinstance(c_obj.get("price"), (int, float))) else None
+                c_code = (c_obj.get("code") or "").upper().strip() if c_obj else None
+                if c_code:
+                    active_coupons.setdefault(st, set()).add(c_code)
+
+                by_store.setdefault(st, []).append({
+                    "price": p,
+                    "coupon_price": c_price,
+                    "coupon_code": c_code,
+                    "url": o.get("url") or "",
+                    "name": o.get("name") or ""
+                })
+
+            for st in by_store:
+                by_store[st].sort(key=lambda x: x["price"])
+
+            info = {
+                "slug": slug,
+                "kind": kind,
+                "by_store": by_store,
+                "active_coupons": {k: list(v) for k, v in active_coupons.items()},
+                "active_coupons_details": active_coupons_details,
+                "total_offers": len(offers)
+            }
+            with _HB_CACHE_LOCK:
+                _HB_LIVE_CACHE[cache_key] = {"ts": time.time(), "data": info}
+            return info
+        except Exception:
+            with _HB_CACHE_LOCK:
+                _HB_LIVE_CACHE[cache_key] = {"ts": time.time(), "data": None}
+            return None
 
 
 def parse_price_str(s):
@@ -572,7 +587,7 @@ def test_deal_url_and_coupon(
     buy_url,
     coupon_code=None,
     expected_price=None,
-    timeout=8,
+    timeout=5,
     post_id=None,
     reg_id=None,
     matched_slug=None,
@@ -637,22 +652,27 @@ def test_deal_url_and_coupon(
             final_url = resp.geturl()
             res["final_url"] = final_url
             code = resp.getcode()
-            body = resp.read().decode("utf-8", errors="ignore")
+            body = resp.read(512000).decode("utf-8", errors="ignore")
             low = body.lower()
 
             # Resolve meta refresh, JavaScript redirects, or intermediate aggregator links
-            # (e.g. adrena.click, seuhardware, aoferta.net, benchpromos, etc.)
-            meta_refresh = re.search(r'<meta[^>]*http-equiv=[\'"]refresh[\'"][^>]*content=[\'"][^;]*;\s*url=([^\'"]+)', body, re.I)
-            js_redirect = re.search(r'(?:window\.location(?:\.replace|\.href)?|location\.href)\s*=\s*[\'"](https?://[^\'"]+)[\'"]', body, re.I)
+            # Only check when not already on a known direct retail product page
+            is_direct_store_page = any(
+                s in final_url.lower()
+                for s in ("kabum.com.br/produto", "pichau.com.br/", "terabyteshop.com.br/produto", "amazon.com.br/dp", "mercadolivre.com.br/p/")
+            )
             target_url = None
-            if meta_refresh:
-                target_url = meta_refresh.group(1).strip()
-            elif js_redirect:
-                target_url = js_redirect.group(1).strip()
-            elif any(k in final_url for k in ["benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net"]):
-                outgoing = re.findall(r'href=[\'"](https?://(?:meli\.la|mercadolivre|kabum|pichau|terabyteshop|s\.shopee|amazon)[^\'"]*)[\'"]', body, re.I)
-                if outgoing:
-                    target_url = outgoing[0].strip()
+            if not is_direct_store_page:
+                meta_refresh = re.search(r'<meta[^>]*http-equiv=[\'"]refresh[\'"][^>]*content=[\'"][^;]*;\s*url=([^\'"]+)', body, re.I)
+                js_redirect = re.search(r'(?:window\.location(?:\.replace|\.href)?|location\.href)\s*=\s*[\'"](https?://[^\'"]+)[\'"]', body, re.I)
+                if meta_refresh:
+                    target_url = meta_refresh.group(1).strip()
+                elif js_redirect:
+                    target_url = js_redirect.group(1).strip()
+                elif any(k in final_url for k in ["benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net"]):
+                    outgoing = re.findall(r'href=[\'"](https?://(?:meli\.la|mercadolivre|kabum|pichau|terabyteshop|s\.shopee|amazon)[^\'"]*)[\'"]', body, re.I)
+                    if outgoing:
+                        target_url = outgoing[0].strip()
 
             if target_url and target_url != final_url and target_url.startswith("http"):
                 try:
@@ -660,7 +680,7 @@ def test_deal_url_and_coupon(
                     with opener.open(req_out, timeout=timeout) as resp_out:
                         final_url = resp_out.geturl()
                         res["final_url"] = final_url
-                        body = resp_out.read().decode("utf-8", errors="ignore")
+                        body = resp_out.read(512000).decode("utf-8", errors="ignore")
                         low = body.lower()
                 except urllib.error.HTTPError as he_out:
                     final_url = getattr(he_out, "url", target_url) or target_url
@@ -893,11 +913,12 @@ def test_deals_batch(deals, max_items=60, reg_id=None):
 
     to_test = (prioritized + remaining)[:max_items]
 
-    # Pre-warm Hardware Barato live slug cache in parallel for Brazil
+    # Pre-warm Hardware Barato live slug cache with gentle concurrency (avoids rate limiting)
     if reg == "br":
         unique_slugs = {(d.get("matched_kind", "gpu"), d.get("matched_slug")) for d in to_test if d.get("matched_slug")}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
-            list(ex.map(lambda ks: fetch_hb_slug_live_data_safe(ks[0], ks[1]), unique_slugs))
+        if unique_slugs:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+                list(ex.map(lambda ks: fetch_hb_slug_live_data_safe(ks[0], ks[1]), unique_slugs))
 
     results = {}
 
@@ -910,6 +931,7 @@ def test_deals_batch(deals, max_items=60, reg_id=None):
             url,
             coupon_code=coup,
             expected_price=exp_price,
+            timeout=4.5,
             post_id=p_id,
             reg_id=reg,
             matched_slug=deal.get("matched_slug"),
