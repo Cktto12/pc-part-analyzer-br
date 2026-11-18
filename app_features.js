@@ -3751,7 +3751,7 @@ let PROMO_STATE = {
   notifySound: true,
   notifyPhone: false,
   phoneService: 'ntfy', // 'ntfy' | 'whatsapp' | 'email'
-  ntfyTopic: 'meu_alerta_gpu_cecatto',
+  ntfyTopic: 'alerta_deal_jz265i',
   ntfyRing: false,
   ntfyPriority: 'default',
   waNumber: '',
@@ -3956,53 +3956,163 @@ function savePromoSettingsToStorage() {
     }));
   } catch (_) {}
 
+  const topicLink = document.getElementById('link-open-ntfy-topic');
+  const activeTopic = (PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i').trim();
+  if (topicLink) topicLink.href = `https://ntfy.sh/${encodeURIComponent(activeTopic)}`;
+
   // Sync to Python server background monitor so alerts fire even when browser is closed!
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    fetch('/api/alert-config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        notifyEnabled: PROMO_STATE.notifyEnabled,
-        intervalMins: PROMO_STATE.autoSyncMins || 10,
-        notifyWinToast: PROMO_STATE.notifyWinToast,
-        notifyPhone: PROMO_STATE.notifyPhone,
-        phoneService: PROMO_STATE.phoneService || 'ntfy',
-        ntfyTopic: PROMO_STATE.ntfyTopic || 'meu_alerta_gpu_cecatto',
-        ntfyRing: PROMO_STATE.ntfyRing,
-        ntfyPriority: PROMO_STATE.ntfyPriority,
-        trigCB: PROMO_STATE.trigCB,
-        notifyMinCB: PROMO_STATE.notifyMinCB,
-        trigBF: PROMO_STATE.trigBF,
-        bfMode: PROMO_STATE.bfMode,
-        trigHB: PROMO_STATE.trigHB,
-        hbMinBrl: PROMO_STATE.hbMinBrl,
-        hbMinPct: PROMO_STATE.hbMinPct,
-        notifyLogic: PROMO_STATE.notifyLogic,
-        custom_targets: [
-          { slug: 'rtx-5060', name: 'RTX 5060', max_price: 2300 },
-          { slug: 'rtx-5070', name: 'RTX 5070', max_price: 3800 },
-          { slug: 'rtx-4060', name: 'RTX 4060', max_price: 1850 }
-        ]
-      })
-    }).catch(() => {});
+  // Works on localhost AND from GitHub Pages when PC daemon is running locally (Private Network CORS)
+  const alertPayload = {
+    notifyEnabled: PROMO_STATE.notifyEnabled,
+    intervalMins: PROMO_STATE.autoSyncMins || 1,
+    intervalSecs: 30,
+    notifyWinToast: PROMO_STATE.notifyWinToast,
+    notifyPhone: PROMO_STATE.notifyPhone,
+    phoneService: PROMO_STATE.phoneService || 'ntfy',
+    ntfyTopic: activeTopic,
+    ntfyRing: PROMO_STATE.ntfyRing,
+    ntfyPriority: PROMO_STATE.ntfyPriority,
+    trigCB: PROMO_STATE.trigCB,
+    notifyMinCB: PROMO_STATE.notifyMinCB,
+    trigBF: PROMO_STATE.trigBF,
+    bfMode: PROMO_STATE.bfMode,
+    trigHB: PROMO_STATE.trigHB,
+    hbMinBrl: PROMO_STATE.hbMinBrl,
+    hbMinPct: PROMO_STATE.hbMinPct,
+    notifyLogic: PROMO_STATE.notifyLogic,
+    custom_targets: [
+      { slug: 'rtx-5060', name: 'RTX 5060', max_price: 2300 },
+      { slug: 'rtx-5070', name: 'RTX 5070', max_price: 3800 },
+      { slug: 'rtx-4060', name: 'RTX 4060', max_price: 1850 }
+    ]
+  };
+  const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const targetEndpoint = isLocal ? '/api/alert-config' : 'http://localhost:8080/api/alert-config';
+  fetch(targetEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(alertPayload)
+  }).catch(() => {});
+}
+
+async function subscribeToBackgroundPush() {
+  const bgStatusEl = document.getElementById('bg-monitor-status');
+  const btn = document.getElementById('btn-subscribe-push');
+  const topic = (PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i').trim();
+  const topicLink = document.getElementById('link-open-ntfy-topic');
+  if (topicLink) topicLink.href = `https://ntfy.sh/${encodeURIComponent(topic)}`;
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Inscrevendo...';
+  }
+  const setStatus = (msg, cls) => {
+    if (bgStatusEl) { bgStatusEl.innerHTML = msg; bgStatusEl.className = cls; }
+  };
+
+  try {
+    // 1. Request Browser Notification Permission
+    let perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    if (perm === 'default') {
+      perm = await Notification.requestPermission();
+    }
+
+    // 2. Register Service Worker + Periodic Sync (for GitHub Pages closed-tab background polling)
+    let swOk = false;
+    let periodicOk = false;
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      try {
+        const reg = await navigator.serviceWorker.register('./sw.js');
+        swOk = true;
+        if (reg.active) reg.active.postMessage({ type: 'SET_TOPIC', topic });
+        if (reg.installing) reg.installing.postMessage({ type: 'SET_TOPIC', topic });
+        if ('periodicSync' in reg) {
+          try {
+            await reg.periodicSync.register('promo-radar-sync', { minInterval: 5 * 60 * 1000 });
+            periodicOk = true;
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+
+    // 3. Sync alert config & topic directly to local PC Python daemon (works from GitHub Pages too!)
+    let daemonOnline = false;
+    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    try {
+      const r = await fetchWithTimeout(isLocal ? '/api/alert-config' : 'http://localhost:8080/api/alert-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notifyEnabled: true,
+          intervalMins: 1,
+          intervalSecs: 30,
+          notifyWinToast: true,
+          notifyPhone: true,
+          phoneService: PROMO_STATE.phoneService || 'ntfy',
+          ntfyTopic: topic
+        })
+      }, 3000);
+      if (r.ok) daemonOnline = true;
+    } catch (_) {}
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = daemonOnline ? '✅ Push Inscrito & Sincronizado' : '✅ Service Worker Inscrito';
+    }
+
+    if (daemonOnline && perm === 'granted') {
+      setStatus(
+        `✅ Inscrito! Monitor PC ativo (30s) + Service Worker${periodicOk ? ' + PeriodicSync' : ''} inscritos no tópico <code>${topic}</code>. Para push web nativo em qualquer aba/celular: <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300">ntfy.sh/${topic}</a>`,
+        'text-[11px] text-emerald-400 font-mono mt-1'
+      );
+    } else if (perm === 'granted') {
+      setStatus(
+        `✅ Service Worker ativo! Para push instantâneo 24/7 com a aba 100% fechada, clique em <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300 font-bold">ntfy.sh/${topic} → Subscribe</a> (ou deixe o monitor do PC rodando).`,
+        'text-[11px] text-sky-300 font-mono mt-1'
+      );
+    } else {
+      setStatus(
+        `⚠️ Permissão de notificação do navegador: ${perm}. Libere notificações no cadeado da URL ou assine direto em <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300">ntfy.sh/${topic}</a>.`,
+        'text-[11px] text-amber-300 font-mono mt-1'
+      );
+    }
+    try { localStorage.setItem('gca_push_subscribed_v1', '1'); } catch (_) {}
+  } catch (e) {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '📲 Inscrever-se em Push (Aba Fechada)';
+    }
+    setStatus(`Erro ao inscrever push: ${e.message}`, 'text-[11px] text-rose-400 font-mono mt-1');
   }
 }
+window.subscribeToBackgroundPush = subscribeToBackgroundPush;
 
 function updateBackgroundMonitorUI() {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   const badge = document.getElementById('bg-monitor-badge');
   const desc = document.getElementById('bg-monitor-desc');
+  const topic = (PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i').trim();
+  const topicLink = document.getElementById('link-open-ntfy-topic');
+  if (topicLink) topicLink.href = `https://ntfy.sh/${encodeURIComponent(topic)}`;
+
   if (isStatic) {
     if (badge) {
-      badge.textContent = '🌐 Modo Web (GitHub Pages)';
+      badge.textContent = '🌐 GitHub Pages (Push Sync)';
       badge.className = 'px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold';
     }
     if (desc) {
-      desc.innerHTML = 'No GitHub Pages, as ofertas são verificadas no seu navegador enquanto a página estiver aberta. Para monitoramento com o <strong>navegador fechado</strong>, execute o servidor local com <code>python server.py</code> no PC.';
+      desc.innerHTML = 'No GitHub Pages, clique em <strong>Inscrever-se em Push</strong> para ativar o Service Worker + sincronizar suas metas com o monitor Python do PC (30s) e receber alertas em <code>ntfy.sh/' + topic + '</code> mesmo com a aba fechada.';
     }
+    // Probe if local PC daemon is reachable from GitHub Pages
+    fetchWithTimeout('http://localhost:8080/api/market-config', {}, 1500).then(r => {
+      if (r.ok && badge) {
+        badge.textContent = '● PC Daemon Conectado (30s)';
+        badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold';
+      }
+    }).catch(() => {});
   } else {
     if (badge) {
-      badge.textContent = '● Ativo no PC (Python)';
+      badge.textContent = '● Ativo no PC (30s)';
       badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold';
     }
   }
@@ -4022,17 +4132,22 @@ async function testBackgroundAlertNow() {
   let serverSuccess = false;
 
   try {
-    const res = await fetch('/api/test-background-alert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        notifyEnabled: true,
-        notifyWinToast: true,
-        notifyPhone: true,
-        ntfyTopic: PROMO_STATE.ntfyTopic || 'meu_alerta_gpu_cecatto',
-        phoneService: PROMO_STATE.phoneService || 'ntfy'
-      })
-    });
+    const res = await fetch(
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? '/api/test-background-alert'
+        : 'http://localhost:8080/api/test-background-alert',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notifyEnabled: true,
+          notifyWinToast: true,
+          notifyPhone: true,
+          ntfyTopic: PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i',
+          phoneService: PROMO_STATE.phoneService || 'ntfy'
+        })
+      }
+    );
     if (res.ok) {
       const data = await res.json();
       if (data && data.ok) {
@@ -4063,7 +4178,7 @@ async function testBackgroundAlertNow() {
   }
 
   // 2. Direct Phone notification via ntfy.sh (or WhatsApp)
-  const ntfyTopic = PROMO_STATE.ntfyTopic || 'meu_alerta_gpu_cecatto';
+  const ntfyTopic = PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i';
   if ((PROMO_STATE.phoneService || 'ntfy') === 'ntfy' && ntfyTopic) {
     try {
       await fetch('https://ntfy.sh', {
@@ -4176,7 +4291,7 @@ function onUpdatePromoNotificationSettings() {
 
   const rad = document.querySelector('input[name="phone-service-choice"]:checked');
   if (rad) PROMO_STATE.phoneService = rad.value;
-  PROMO_STATE.ntfyTopic = getVal('input-phone-ntfy-topic', 'meu_alerta_gpu_cecatto').trim();
+  PROMO_STATE.ntfyTopic = getVal('input-phone-ntfy-topic', 'alerta_deal_jz265i').trim();
   PROMO_STATE.ntfyRing = getChk('chk-phone-ntfy-ring', false);
   PROMO_STATE.ntfyPriority = getVal('select-phone-ntfy-priority', 'default');
   PROMO_STATE.waNumber = getVal('input-phone-wa-number', '').trim();
@@ -4523,7 +4638,7 @@ function firePhoneNotification(deal) {
   };
 
   if (PROMO_STATE.phoneService === 'ntfy') {
-    payload.topic = PROMO_STATE.ntfyTopic || 'meu_alerta_gpu_cecatto';
+    payload.topic = PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i';
     payload.priority = PROMO_STATE.ntfyPriority || 'default';
     payload.ring = !!PROMO_STATE.ntfyRing;
   } else if (PROMO_STATE.phoneService === 'whatsapp') {
@@ -4625,7 +4740,7 @@ async function testPhoneAlertNow() {
     };
 
     if (PROMO_STATE.phoneService === 'ntfy') {
-      payload.topic = PROMO_STATE.ntfyTopic || 'meu_alerta_gpu_cecatto';
+      payload.topic = PROMO_STATE.ntfyTopic || 'alerta_deal_jz265i';
       payload.priority = PROMO_STATE.ntfyPriority || 'default';
       payload.ring = !!PROMO_STATE.ntfyRing;
     } else if (PROMO_STATE.phoneService === 'whatsapp') {

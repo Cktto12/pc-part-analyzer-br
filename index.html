@@ -455,14 +455,20 @@
                 <span id="bg-monitor-badge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">● Ativo no PC</span>
               </div>
               <p class="text-[11px] text-slate-300" id="bg-monitor-desc">
-                O servidor Python local monitora os grupos silenciosamente a cada 10 min. Se bater suas metas ou for Pechincha, ele dispara o aviso no <strong>Windows e no seu Celular mesmo com todas as abas do navegador fechadas</strong>!
+                O servidor Python local monitora silenciosamente a cada <strong>30s</strong> (inicia com o Windows) e envia push verificado mesmo com todas as abas fechadas. No GitHub Pages, clique em <strong>Inscrever-se em Push</strong> para receber pelo navegador/celular!
               </p>
               <div id="bg-monitor-status" class="text-[11px] font-mono text-slate-400 mt-1"></div>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button type="button" onclick="subscribeToBackgroundPush()" id="btn-subscribe-push" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md transition">
+                📲 Inscrever-se em Push (Aba Fechada)
+              </button>
               <button type="button" onclick="testBackgroundAlertNow()" class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md transition">
                 🔔 Testar em 2º Plano
               </button>
+              <a id="link-open-ntfy-topic" href="https://ntfy.sh/alerta_deal_jz265i" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-semibold transition">
+                🔗 Canal ntfy.sh
+              </a>
             </div>
           </div>
 
@@ -2180,7 +2186,7 @@
   <!-- Floating Deal Notification Toast Container -->
   <div id="promo-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none"></div>
 
-  <script src="app.js?v=20261118-3"></script>
-  <script src="app_features.js?v=20261118-3"></script>
+  <script src="app.js?v=20261118-4"></script>
+  <script src="app_features.js?v=20261118-4"></script>
 </body>
 </html>

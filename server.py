@@ -571,25 +571,29 @@ def run_sitewise_coupon_validator(reg_id=None, max_items=50, target_deals=None):
         return {"ok": False, "error": str(e)}
 
 def background_promo_monitor_thread():
-    """Background daemon thread: fast-polls channel feeds, verifies store links + coupons, and dispatches notifications even when browser tab is closed."""
+    """Background daemon thread: fast-polls channel feeds every 30s, verifies store links + coupons, and dispatches notifications even when browser tab is closed."""
     time.sleep(5)  # brief delay after server boot
     run_sitewise_coupon_validator()
     cycle = 0
     while True:
+        sleep_secs = 30
         try:
             cfg = load_alert_config()
-            interval_mins = max(1, int(cfg.get("intervalMins", 1)))
+            if cfg.get("intervalSecs"):
+                sleep_secs = max(20, int(cfg.get("intervalSecs")))
+            else:
+                sleep_secs = max(30, int(cfg.get("intervalMins", 1)) * 30)
             if cfg.get("notifyEnabled", True):
                 res = check_and_notify_deals(cfg, fast_poll=True)
                 if res.get("notified", 0) > 0:
                     print(f"[Background Monitor] Enviou {res['notified']} alerta(s) de novas ofertas em segundo plano!")
             cycle += 1
-            if cycle % 5 == 0:
+            if cycle % 10 == 0:
                 run_sitewise_coupon_validator()
         except Exception as e:
             print(f"[Background Monitor Erro] {e}")
-            interval_mins = 2
-        time.sleep(interval_mins * 60)
+            sleep_secs = 45
+        time.sleep(sleep_secs)
 
 def fetch_cyberpuerta_live_gpu_prices():
     """Scrapes live MXN GPU prices and direct .mx product links from Cyberpuerta.mx."""
@@ -756,14 +760,22 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
+        # Allow GitHub Pages (HTTPS) to talk to localhost (Private Network Access CORS)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Private-Network", "true")
         super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.end_headers()
 
     def send_json(self, data, status=200):
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
-        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(raw)
 
