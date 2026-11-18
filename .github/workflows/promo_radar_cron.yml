@@ -2,7 +2,7 @@ name: Promo Radar 24-7 Background Monitor
 
 on:
   schedule:
-    - cron: '*/10 * * * *' # Runs every 10 minutes in the cloud
+    - cron: '*/5 * * * *' # Runs every 5 minutes in the cloud (GitHub minimum)
   workflow_dispatch:       # Allows manual trigger from the Actions tab
 
 permissions:

@@ -507,7 +507,7 @@ def fetch_mexico_native_promotions():
     return posts
 
 
-def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_hours=72.0, force=False, region_id=None):
+def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_hours=72.0, force=False, region_id=None, fast_poll=False):
     """
     Scans live promotions strictly isolated by region_id ('br' or 'mx').
     Never mixes Brazilian and Mexican channels, coupons, or caches.
@@ -532,8 +532,8 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
                 cid = ch.strip().lstrip("@").split("/")[-1]
                 if cid and not any(c["id"].lower() == cid.lower() for c in channels):
                     channels.append({"id": cid, "name": f"@{cid}"})
-        queries = list(DEFAULT_SEARCH_QUERIES)
-        if extra_queries:
+        queries = ["", "RTX", "RX ", "Ryzen"] if fast_poll else list(DEFAULT_SEARCH_QUERIES)
+        if not fast_poll and extra_queries:
             for q in extra_queries:
                 if q and q not in queries:
                     queries.append(q)
@@ -605,11 +605,39 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     all_promos.sort(key=lambda d: d.get("age_hours", 999))
 
     # Validate deals and coupons against live store pages & Hardware Barato in-stock index
+    cache_filename = "promos_cache.json" if reg == "br" else f"promos_cache_{reg}.json"
+    cache_path = os.path.join(BASE_DIR, "data", cache_filename)
+
+    if fast_poll and os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                existing_cache = json.load(f)
+            seen_matched_ids = {d.get("post_id") for d in matched_deals if d.get("post_id")}
+            for prev_d in existing_cache.get("matched_deals", []):
+                pid = prev_d.get("post_id")
+                if pid and pid not in seen_matched_ids and float(prev_d.get("age_hours") or 0) <= max_age_hours:
+                    matched_deals.append(prev_d)
+                    seen_matched_ids.add(pid)
+            seen_feed_ids = {p.get("post_id") for p in all_promos if p.get("post_id")}
+            for prev_f in existing_cache.get("recent_feed", []):
+                pid = prev_f.get("post_id")
+                if pid and pid not in seen_feed_ids and float(prev_f.get("age_hours") or 0) <= max_age_hours:
+                    all_promos.append(prev_f)
+                    seen_feed_ids.add(pid)
+        except Exception:
+            pass
+
     coupon_status_obj = {"coupons": {}, "deals": {}}
     try:
         import coupon_tracker
         coupon_tracker.scan_texts_for_expiries(all_promos)
-        coupon_tracker.test_deals_batch(matched_deals, max_items=40, reg_id=reg)
+        if fast_poll:
+            existing_deals_status = coupon_tracker.load_coupon_status(reg).get("deals", {})
+            untested_or_new = [d for d in matched_deals if not existing_deals_status.get(d.get("post_id", ""))]
+            if untested_or_new:
+                coupon_tracker.test_deals_batch(untested_or_new, max_items=12, reg_id=reg)
+        else:
+            coupon_tracker.test_deals_batch(matched_deals, max_items=40, reg_id=reg)
         matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(matched_deals, all_promos, reg_id=reg)
         coupon_status_obj = coupon_tracker.load_coupon_status(reg)
     except Exception as e:
@@ -640,8 +668,6 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     _PROMO_CACHE["updated_at"] = now_ts
     _PROMO_CACHE["data"] = payload
 
-    cache_filename = "promos_cache.json" if reg == "br" else f"promos_cache_{reg}.json"
-    cache_path = os.path.join(BASE_DIR, "data", cache_filename)
     try:
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         with open(cache_path, "w", encoding="utf-8") as f:

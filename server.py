@@ -387,7 +387,7 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     line2 = f"{store_or_ch} — {deal_title[:80]}"
     return title, message, line1, line2, url
 
-def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None):
+def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None, fast_poll=False):
     """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts with strict regional isolation."""
     reg_id = (region_id or (cfg.get("region_id") if cfg else None) or get_active_region_id()).lower()
     if cfg is None:
@@ -407,7 +407,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     pass
 
     from promo_radar import scan_live_promotions
-    res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id)
+    res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id, force=fast_poll, fast_poll=fast_poll)
     matched = res.get("matched_deals", [])
     history = load_notified_history(reg_id)
     notified_count = 0
@@ -571,21 +571,24 @@ def run_sitewise_coupon_validator(reg_id=None, max_items=50, target_deals=None):
         return {"ok": False, "error": str(e)}
 
 def background_promo_monitor_thread():
-    """Background daemon thread: scans for deals, verifies coupons sitewise, and dispatches notifications."""
-    time.sleep(10)  # initial delay after server boot
+    """Background daemon thread: fast-polls channel feeds, verifies store links + coupons, and dispatches notifications even when browser tab is closed."""
+    time.sleep(5)  # brief delay after server boot
     run_sitewise_coupon_validator()
+    cycle = 0
     while True:
         try:
             cfg = load_alert_config()
-            interval_mins = max(2, int(cfg.get("intervalMins", 10)))
+            interval_mins = max(1, int(cfg.get("intervalMins", 1)))
             if cfg.get("notifyEnabled", True):
-                res = check_and_notify_deals(cfg)
+                res = check_and_notify_deals(cfg, fast_poll=True)
                 if res.get("notified", 0) > 0:
                     print(f"[Background Monitor] Enviou {res['notified']} alerta(s) de novas ofertas em segundo plano!")
-            run_sitewise_coupon_validator()
+            cycle += 1
+            if cycle % 5 == 0:
+                run_sitewise_coupon_validator()
         except Exception as e:
             print(f"[Background Monitor Erro] {e}")
-            interval_mins = 10
+            interval_mins = 2
         time.sleep(interval_mins * 60)
 
 def fetch_cyberpuerta_live_gpu_prices():
@@ -747,6 +750,13 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
 class AppRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=BASE_DIR, **kwargs)
+
+    def end_headers(self):
+        # Always prevent browser 304 stale caching of HTML/JS/JSON assets
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
 
     def send_json(self, data, status=200):
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8")

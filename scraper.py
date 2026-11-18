@@ -452,15 +452,8 @@ def build_database(output_path):
     _, cpu_arrays = fetch_json_arrays('/produtos/processadores')
     raw_cpus = cpu_arrays[0] if cpu_arrays else []
 
-    # Key CPUs across generations to fetch full 550-day Black Friday history for
-    KEY_CPU_HISTORY_SLUGS = {
-        "ryzen-5-5500", "ryzen-5-5600", "ryzen-5-5600x", "ryzen-7-5700x", "ryzen-7-5700x3d",
-        "ryzen-5-7600", "ryzen-5-7600x", "ryzen-7-7700", "ryzen-7-7800x3d",
-        "ryzen-5-9600x", "ryzen-7-9700x", "ryzen-7-9800x3d",
-        "core-i5-12400f", "core-i5-13400f", "core-i5-14400f", "core-i5-14600kf",
-        "core-ultra-5-225f", "core-ultra-5-245kf"
-    }
-
+    # Fetch full 600-day Black Friday & daily price history for ALL catalog CPUs
+    # so every CPU family (Budget, Mid, X3D, Workstation & Multi-Core, Custom) renders real charts & BF floors
     def fetch_cpu_history(slug_and_price):
         slug, cur_p = slug_and_price
         hist = []
@@ -484,7 +477,7 @@ def build_database(output_path):
                             break
                 if arr_end != -1:
                     raw_hist = json.loads(unescaped[arr_start:arr_end])
-                    floor_valid = max(200.0, cur_p * 0.35)
+                    floor_valid = max(120.0, cur_p * 0.30)
                     seen_dates = set()
                     for h in raw_hist:
                         date_str = h.get('addedAt', '').replace('$D', '')[:10]
@@ -499,13 +492,14 @@ def build_database(output_path):
 
     cpu_to_fetch = []
     for c in raw_cpus:
-        if c['slug'] in KEY_CPU_HISTORY_SLUGS:
-            lp = c.get('lowestPrice') or {}
-            coup = lp.get('coupon')
-            reg_p = safe_price(lp.get('price'), 0.0)
-            p = reg_p if reg_p > 0 else safe_price(coup.get('price') if isinstance(coup, dict) else None, 0.0)
+        lp = c.get('lowestPrice') or {}
+        coup = lp.get('coupon')
+        reg_p = safe_price(lp.get('price'), 0.0)
+        p = reg_p if reg_p > 0 else safe_price(coup.get('price') if isinstance(coup, dict) else None, 0.0)
+        if p > 0 and c.get('slug'):
             cpu_to_fetch.append((c['slug'], p))
 
+    print(f"Fetching price history for {len(cpu_to_fetch)} CPUs...")
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
         cpu_hist_results = dict(ex.map(fetch_cpu_history, cpu_to_fetch))
 
