@@ -370,6 +370,8 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     title = f"{prefix}{name} por {fmt_p}{coupon_tag}"
 
     reasons_line = " • ".join(reasons_list) if reasons_list else ("🔥 Oferta Detectada" if reg == "br" else "🔥 Oferta en México")
+    bf_banner = (d.get("bf_alert_banner") or "").strip()
+    bf_banner_line = f"{bf_banner}\n" if bf_banner else ""
     coupon_line = f"\n🎟️ {coupon_word}: {coup}" if coup else ""
 
     savings_brl = d.get("savings_vs_hb_brl", 0)
@@ -381,9 +383,9 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     channel_line = f"\n📢 {channel_word}: {store_or_ch}"
     deal_title = (d.get("title") or "").strip()[:140]
 
-    message = f"{reasons_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
+    message = f"{bf_banner_line}{reasons_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
     url = d.get("buy_url") or d.get("post_url") or ""
-    line1 = f"{reasons_line}{' | ' + coupon_word + ': ' + coup if coup else ''}"
+    line1 = f"{(bf_banner + ' • ') if bf_banner else ''}{reasons_line}{' | ' + coupon_word + ': ' + coup if coup else ''}"
     line2 = f"{store_or_ch} — {deal_title[:80]}"
     return title, message, line1, line2, url
 
@@ -424,6 +426,43 @@ def _get_item_avg_30d(it):
     return (sum(hist) / len(hist)) if hist else 0.0
 
 
+def _get_bf_pricing_alert_tag(price, it):
+    """Evaluates whether `price` reaches Black Friday pricing vs item history/range and returns (is_bf, banner, reason)."""
+    if not it or price <= 0:
+        return False, None, None
+    hist = sorted(it.get("history") or [], key=lambda h: h.get("date", ""))
+    prices = [float(h["price"]) for h in hist if h.get("price")]
+    cur_p = float(it.get("price_brl") or 0)
+    all_min = min(prices) if prices else (float((it.get("price_stats") or {}).get("min_all_time") or 0) or cur_p)
+
+    # Mirror bfAnalyzeItem & bfExpectedRange calculations
+    from datetime import datetime
+    cur_year = datetime.now().year
+    last_y = cur_year - 1
+    pre = [float(h["price"]) for h in hist if f"{last_y}-09-15" <= (h.get("date") or "") <= f"{last_y}-10-31" and h.get("price")]
+    bf = [float(h["price"]) for h in hist if f"{last_y}-11-01" <= (h.get("date") or "") <= f"{last_y}-12-02" and h.get("price")]
+    disc = 0.09
+    if pre and bf:
+        pre_avg = sum(pre) / len(pre)
+        bf_min = min(bf)
+        if pre_avg > 0:
+            disc = max(0.06, max(0.0, 1.0 - bf_min / pre_avg))
+
+    last45 = [float(h["price"]) for h in hist[-45:] if h.get("price")]
+    recent_avg = (sum(last45) / len(last45)) if last45 else cur_p
+    anchor = (cur_p * 0.55 + recent_avg * 0.45) if (cur_p and recent_avg) else (cur_p or recent_avg or 1000.0)
+    bf_low = round(max(anchor * (1.0 - min(0.20, disc * 1.20)), max(anchor * 0.80, min(all_min * 1.15, anchor * 0.85) if all_min else anchor * 0.82)))
+    bf_high = round(max(anchor * (1.0 - disc), anchor * (1.0 - disc * 0.50)))
+
+    if all_min > 0 and price <= all_min * 1.01:
+        return True, "🚨🔥 PREÇO DE BLACK FRIDAY — MÍNIMO HISTÓRICO! 🔥🚨", f"🔥 Mín. Histórico BF (≤ R$ {all_min:,.0f})"
+    if bf_low > 0 and price <= bf_low:
+        return True, "🚨🔥 PREÇO DE BLACK FRIDAY (PISO BF)! 🔥🚨", f"🏷️ Piso BF (≤ R$ {bf_low:,.0f})"
+    if bf_high > 0 and price <= bf_high:
+        return True, "⚡🔥 PREÇO DE BLACK FRIDAY (NA FAIXA)! 🔥⚡", f"🏷️ Faixa BF (≤ R$ {bf_high:,.0f})"
+    return False, None, None
+
+
 def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None, fast_poll=False):
     """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts with strict regional isolation."""
     reg_id = (region_id or (cfg.get("region_id") if cfg else None) or get_active_region_id()).lower()
@@ -462,6 +501,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     hb_brl = float(cfg.get("hbMinBrl", 600 if reg_id == "mx" else 150))
     hb_pct = float(cfg.get("hbMinPct", 8))
     trig_cb = bool(cfg.get("trigCB", True))
+    trig_bf = bool(cfg.get("trigBF", True))
     trig_hb = bool(cfg.get("trigHB", True))
     trig_avg30d = bool(cfg.get("trigAvg30d", True))
     avg30d_min_pct = float(cfg.get("avg30dMinPct", 5))
@@ -533,6 +573,16 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     qualifies = True
                     reasons.append(f"⚡ −{drop30_pct:.1f}% vs Média 30d ({config.format_currency(avg30, short=True, region_id=reg_id)})")
 
+        # 5. ALWAYS warn if it reaches Black Friday pricing!
+        if matched_slug in catalog_by_slug and price > 0:
+            is_bf, bf_banner, bf_reason = _get_bf_pricing_alert_tag(price, catalog_by_slug[matched_slug][1])
+            if is_bf:
+                d["bf_alert_banner"] = bf_banner
+                d["is_bf_pricing"] = True
+                if trig_bf:
+                    qualifies = True
+                    reasons.append(bf_reason)
+
         if qualifies:
             _dispatch_alert_channels(cfg, d, reasons, reg_id)
             history[post_id] = time.time()
@@ -541,8 +591,8 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
             if force_notify:
                 break
 
-    # 5. Also scan direct catalog items (gpus/cpus) for >= avg30dMinPct drops or custom_targets drops
-    if (trig_avg30d or targets) and not (force_notify and notified_count > 0):
+    # 6. Also scan direct catalog items (gpus/cpus) for BF pricing, >= avg30dMinPct drops, or custom_targets drops
+    if (trig_bf or trig_avg30d or targets) and not (force_notify and notified_count > 0):
         import coupon_tracker
         target_map = {t.get("slug"): float(t.get("max_price") or 0) for t in targets if t.get("slug")}
         cat_candidates = []
@@ -557,6 +607,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 if not force_notify and price_key in history:
                     continue
                 reasons = []
+                bf_banner = None
                 if slug in target_map and target_map[slug] > 0 and cur_p <= target_map[slug]:
                     reasons.append(f"🎯 Meta Atingida (≤ {config.format_currency(target_map[slug], region_id=reg_id)})")
                 if trig_avg30d:
@@ -565,10 +616,15 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                         drop30_pct = ((avg30 - cur_p) / avg30) * 100.0
                         if drop30_pct >= avg30d_min_pct:
                             reasons.append(f"⚡ −{drop30_pct:.1f}% vs Média 30d ({config.format_currency(avg30, short=True, region_id=reg_id)})")
+                is_bf, bf_b, bf_reason = _get_bf_pricing_alert_tag(cur_p, it)
+                if is_bf:
+                    bf_banner = bf_b
+                    if trig_bf:
+                        reasons.append(bf_reason)
                 if reasons:
-                    cat_candidates.append((kind_name, it, cur_p, price_key, reasons))
+                    cat_candidates.append((kind_name, it, cur_p, price_key, reasons, bf_banner))
 
-        for kind_name, it, cur_p, price_key, reasons in cat_candidates[:5]:
+        for kind_name, it, cur_p, price_key, reasons, bf_banner in cat_candidates[:5]:
             slug = it["slug"]
             ver = coupon_tracker.test_deal_url_and_coupon(
                 it["offer_url"], expected_price=cur_p, matched_slug=slug, matched_kind=kind_name, reg_id=reg_id
@@ -592,6 +648,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 "coupon_status": ver.get("coupon_status", "none"),
                 "stock_verified": True,
                 "requires_coupon": False,
+                "bf_alert_banner": bf_banner,
                 "region_id": reg_id
             }
             _dispatch_alert_channels(cfg, pseudo_deal, reasons, reg_id)

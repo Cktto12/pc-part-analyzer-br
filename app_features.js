@@ -4470,18 +4470,29 @@ function evaluateDealsForAlerts() {
       const userMax = userSaved ? userSaved.max : exp.high;
 
       const mode = PROMO_STATE.bfMode || 'user_or_low';
+      d.bf_alert_banner = null;
       if (d.price_brl <= st.allMin * 1.01) {
         hitBF = true;
+        d.bf_alert_banner = '🚨🔥 PREÇO DE BLACK FRIDAY — MÍNIMO HISTÓRICO! 🔥🚨';
         reasons.push(activeReg === 'mx' ? `🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})` : `🔥 Mín. Histórico (${formatMoneyShort(st.allMin)})`);
-      } else if (mode === 'user_or_low' && d.price_brl <= Math.max(exp.low, userMin)) {
-        hitBF = true;
-        reasons.push(activeReg === 'mx' ? `🏷️ Meta Ganga BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})` : `🏷️ Meta Pechincha BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})`);
-      } else if (mode === 'bf_mid' && d.price_brl <= exp.mid) {
-        hitBF = true;
-        reasons.push(activeReg === 'mx' ? `🏷️ Promedio Esperado BF (≤ ${formatMoneyShort(exp.mid)})` : `🏷️ Média Esperada BF (≤ ${formatMoneyShort(exp.mid)})`);
-      } else if (mode === 'bf_high' && d.price_brl <= Math.max(exp.high, userMax)) {
-        hitBF = true;
-        reasons.push(activeReg === 'mx' ? `🏷️ Rango BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})` : `🏷️ Dentro da Faixa BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})`);
+      } else if (d.price_brl <= Math.max(exp.low, userMin)) {
+        d.bf_alert_banner = '🚨🔥 PREÇO DE BLACK FRIDAY (PISO BF)! 🔥🚨';
+        if (mode === 'user_or_low' || mode === 'bf_mid' || mode === 'bf_high') {
+          hitBF = true;
+          reasons.push(activeReg === 'mx' ? `🏷️ Meta Ganga BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})` : `🏷️ Meta Pechincha BF (≤ ${formatMoneyShort(Math.max(exp.low, userMin))})`);
+        }
+      } else if (d.price_brl <= exp.mid) {
+        d.bf_alert_banner = '⚡🔥 PREÇO DE BLACK FRIDAY (NA MÉDIA BF)! 🔥⚡';
+        if (mode === 'bf_mid' || mode === 'bf_high') {
+          hitBF = true;
+          reasons.push(activeReg === 'mx' ? `🏷️ Promedio Esperado BF (≤ ${formatMoneyShort(exp.mid)})` : `🏷️ Média Esperada BF (≤ ${formatMoneyShort(exp.mid)})`);
+        }
+      } else if (d.price_brl <= Math.max(exp.high, userMax)) {
+        d.bf_alert_banner = '⚡🔥 PREÇO DE BLACK FRIDAY (NA FAIXA BF)! 🔥⚡';
+        if (mode === 'bf_high') {
+          hitBF = true;
+          reasons.push(activeReg === 'mx' ? `🏷️ Rango BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})` : `🏷️ Dentro da Faixa BF (≤ ${formatMoneyShort(Math.max(exp.high, userMax))})`);
+        }
       }
     }
 
@@ -4583,6 +4594,11 @@ function showDealToastNotification(deal) {
         <span class="font-mono font-extrabold text-base text-emerald-400">${fmtBRL(deal.price_brl)}</span>
       </div>
     </div>
+    ${deal.bf_alert_banner ? `
+      <div class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-emerald-500/25 border border-amber-400 text-amber-200 font-mono font-extrabold text-[11px] tracking-wide">
+        ${deal.bf_alert_banner}
+      </div>
+    ` : ''}
     <div class="text-[11px] text-slate-300 line-clamp-2">${deal.title}</div>
     <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800">
       <div class="flex items-center gap-1.5">
@@ -4612,9 +4628,10 @@ function showDealToastNotification(deal) {
 
 function fireWindowsNativeNotification(deal) {
   const reasons = (deal.alert_reasons || []).join(' • ');
+  const bfHead = deal.bf_alert_banner ? `${deal.bf_alert_banner} • ` : '';
   const couponTxt = (deal.coupon_code || deal.coupon_info) ? ` | Cupom: ${deal.coupon_code || deal.coupon_info}` : '';
   const title = `🔥 ${deal.matched_name} por ${fmtBRL(deal.price_brl)}`;
-  const line1 = `${reasons}${couponTxt}`;
+  const line1 = `${bfHead}${reasons}${couponTxt}`;
   const line2 = `Canal @${deal.channel_id} — Clique para abrir oferta`;
   const url = deal.buy_url && deal.buy_url.startsWith('http') ? deal.buy_url : (deal.post_url || '');
 
@@ -4656,11 +4673,12 @@ function fireWindowsNativeNotification(deal) {
 
 function firePhoneNotification(deal) {
   const reasons = (deal.alert_reasons || []).join(' • ');
+  const bfLine = deal.bf_alert_banner ? `${deal.bf_alert_banner}\n` : '';
   const couponTxt = (deal.coupon_code || deal.coupon_info) ? `\n🎟️ Cupom Necessário: ${deal.coupon_code || deal.coupon_info}` : '';
   const couponTag = (deal.coupon_code || deal.coupon_info) ? ` (c/ Cupom: ${deal.coupon_code || deal.coupon_info})` : '';
   const hbDiffTxt = deal.hb_price_brl > deal.price_brl ? `\n📉 Economia vs Ref: -${formatMoney(deal.savings_vs_hb_brl)} (Ref: ${formatMoney(deal.hb_price_brl)})` : '';
   const title = `🔥 ${deal.matched_name} por ${formatMoney(deal.price_brl)}${couponTag}`;
-  const message = `${reasons}${couponTxt}${hbDiffTxt}\n📢 Canal: @${deal.channel_id}\n${deal.title}`;
+  const message = `${bfLine}${reasons}${couponTxt}${hbDiffTxt}\n📢 Canal: @${deal.channel_id}\n${deal.title}`;
   const url = deal.buy_url && deal.buy_url.startsWith('http') ? deal.buy_url : (deal.post_url || '');
 
   const postId = deal.post_id || `${deal.channel_id}_${deal.matched_slug}_${Math.round(deal.price_brl)}`;
