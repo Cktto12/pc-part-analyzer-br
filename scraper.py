@@ -637,12 +637,28 @@ def build_database(output_path):
                 "offer_url": f"https://www.hardwarebarato.com/produtos/fontes/{ps['slug']}"
             })
 
-    laptops = prev_laptops
+    laptops = list(prev_laptops or [])
     try:
         import laptop_scraper
         scraped_laptops = laptop_scraper.build_laptops_catalog(existing_laptops=prev_laptops)
         if scraped_laptops:
-            laptops = scraped_laptops
+            min_full = max(10, int(len(laptops) * 0.6))
+            if not laptops or len(scraped_laptops) >= min_full:
+                # Full scrape succeeded; merge in any previous high-history slugs that temporarily dipped
+                scraped_by_slug = {item.get("slug"): item for item in scraped_laptops if item.get("slug")}
+                merged = list(scraped_laptops)
+                for prev in laptops:
+                    p_slug = prev.get("slug")
+                    if p_slug and p_slug not in scraped_by_slug and len(prev.get("history") or []) >= 5:
+                        merged.append(prev)
+                laptops = merged
+            else:
+                # Partial scrape (e.g. rate-limited in CI): update existing slugs without dropping catalog items
+                by_slug = {item.get("slug"): item for item in laptops if item.get("slug")}
+                for item in scraped_laptops:
+                    if item.get("slug"):
+                        by_slug[item["slug"]] = item
+                laptops = list(by_slug.values())
     except Exception as e:
         print(f"Warning building laptops catalog: {e}")
 
