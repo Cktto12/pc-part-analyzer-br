@@ -1178,7 +1178,7 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
           grid: { color: 'rgba(51, 65, 85, 0.35)' },
           pointLabels: {
             color: '#94a3b8',
-            font: { size: 10, family: 'JetBrains Mono, monospace', weight: 'bold' }
+            font: { size: 12, family: gcaFontFamily(), weight: 'bold' }
           }
         }
       },
@@ -1188,7 +1188,7 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
           position: 'bottom',
           labels: {
             color: '#cbd5e1',
-            font: { size: 10, family: 'JetBrains Mono, monospace' },
+            font: { size: 12, family: gcaFontFamily() },
             boxWidth: 12
           }
         },
@@ -2502,7 +2502,7 @@ function renderBFChart(stats, yPrev) {
         c.fillStyle = 'rgba(245, 158, 11, 0.08)';
         c.fillRect(x0, chartArea.top, Math.max(2, x1 - x0), chartArea.bottom - chartArea.top);
         c.fillStyle = 'rgba(245, 158, 11, 0.7)';
-        c.font = '10px JetBrains Mono, monospace';
+        c.font = '600 12px ' + gcaFontFamily();
         c.fillText(`BF ${y}`, x0 + 3, chartArea.top + 11);
 
         // Exact Black Friday Date marker (4th Friday of November)
@@ -2522,7 +2522,7 @@ function renderBFChart(stats, yPrev) {
             c.restore();
 
             c.fillStyle = '#ef4444';
-            c.font = 'bold 9px JetBrains Mono, monospace';
+            c.font = 'bold 12px ' + gcaFontFamily();
             const dayStr = exactBf.slice(8);
             c.fillText(`📍 Dia BF (${dayStr}/11)`, xBf - 24, chartArea.top + 23);
           }
@@ -2656,7 +2656,7 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
             c.restore();
 
             c.fillStyle = '#ef4444';
-            c.font = 'bold 9px JetBrains Mono, monospace';
+            c.font = 'bold 12px ' + gcaFontFamily();
             c.fillText(`📍 BF (${exactBf.slice(8)}/11)`, xBf - 20, chartArea.top + 14);
           }
         }

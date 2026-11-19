@@ -168,5 +168,10 @@
     };
   }
 
+  // Fonte do tema ativo, para textos desenhados direto no canvas
+  window.gcaFontFamily = function () {
+    return readCssVar('--ui-font-sans', "'Plus Jakarta Sans', sans-serif");
+  };
+
   applyChartTheme();
 })();

@@ -12,6 +12,13 @@ USED = set()
 for fn in ("index.html", "app.js", "app_features.js", "laptop_mode.js"):
     with open(os.path.join(ROOT, fn), encoding="utf-8") as fh:
         USED.update(re.findall(r"[A-Za-z0-9:/_.\[\]#-]+", fh.read()))
+# Classes montadas por template no JS (ex.: `text-${rel.color}-400`) não
+# aparecem literalmente no código: inclui os tons de texto de todas as cores.
+_FAMS = ("sky emerald amber rose purple violet indigo cyan teal orange red green "
+         "yellow pink fuchsia lime blue").split()
+for _f in _FAMS:
+    for _shade in ("300", "400"):
+        USED.add(f"text-{_f}-{_shade}")
 
 DARK = {  # Tema C - Black Friday vibrante
     "--ui-font-sans": "'Outfit', -apple-system, 'Segoe UI', Roboto, sans-serif",
