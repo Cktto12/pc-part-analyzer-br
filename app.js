@@ -1752,10 +1752,11 @@ function renderHomeTab() {
 
   const kpiDeals = document.getElementById('home-kpi-deals');
   const kpiDealsSub = document.getElementById('home-kpi-deals-sub');
-  if (kpiDeals) kpiDeals.textContent = promoData ? String(activeDeals.length) : '--';
+  const offerCount = (typeof getActiveOfferCount === 'function') ? getActiveOfferCount() : null;
+  if (kpiDeals) kpiDeals.textContent = offerCount != null ? String(offerCount) : '--';
   if (kpiDealsSub) {
-    kpiDealsSub.textContent = promoData
-      ? (activeDeals.length > 0 ? 'Promoções verificadas no Radar' : 'Nenhuma oferta ativa agora')
+    kpiDealsSub.textContent = offerCount != null
+      ? (offerCount > 0 ? 'Em estoque agora, de grupos e lojas' : 'Nenhuma oferta ativa agora')
       : 'Carregando radar de ofertas...';
   }
 

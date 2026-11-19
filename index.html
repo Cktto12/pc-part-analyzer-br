@@ -22,8 +22,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles/ui.css?v=20261119-8" />
-  <link rel="stylesheet" href="styles/themes.css?v=20261119-3" />
-  <script src="styles/chart-theme.js?v=20261119-4"></script>
+  <link rel="stylesheet" href="styles/themes.css?v=20261119-4" />
+  <script src="styles/chart-theme.js?v=20261119-5"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -270,7 +270,7 @@
               Ofertas ativas hoje
               <span class="ui-info ui-info--bottom" onclick="event.stopPropagation()">
                 <span class="ui-info-trigger" tabindex="0" aria-label="Sobre ofertas ativas">i</span>
-                <span class="ui-info-popover" role="tooltip">Promoções reais detectadas pelo Radar nos grupos monitorados e cruzadas com a base de preços.</span>
+                <span class="ui-info-popover" role="tooltip">Ofertas em estoque agora: promoções dos grupos monitorados e quedas de preço direto nas lojas. É o mesmo número do botão Promoções no topo.</span>
               </span>
             </span>
             <span id="home-kpi-deals" class="ui-kpi-value ui-kpi-value--brand">--</span>
@@ -406,8 +406,8 @@
       <div id="versus-gpu-view" class="space-y-5">
         <div class="ui-card space-y-5">
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div class="flex items-center gap-2">
-              <h2 class="ui-title-xl">Duelo de GPUs</h2>
+            <div class="flex items-center gap-2 shrink-0">
+              <h2 class="ui-title-xl whitespace-nowrap">Duelo de GPUs</h2>
               <span class="ui-info ui-info--bottom">
                 <button type="button" class="ui-info-trigger" aria-label="Sobre o duelo de GPUs">i</button>
                 <span class="ui-info-popover" role="tooltip">Compara duas placas considerando seu perfil de jogos, teto do monitor, renderização e IA, e calcula o teto justo da diferença de preço.</span>
@@ -614,8 +614,8 @@
     <div id="versus-cpu-view" class="hidden space-y-5">
       <div class="ui-card space-y-5">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div class="flex items-center gap-2">
-            <h2 class="ui-title-xl">Duelo de CPUs</h2>
+          <div class="flex items-center gap-2 shrink-0">
+            <h2 class="ui-title-xl whitespace-nowrap">Duelo de CPUs</h2>
             <span class="ui-info ui-info--bottom">
               <button type="button" class="ui-info-trigger" aria-label="Sobre o duelo de CPUs">i</button>
               <span class="ui-info-popover" role="tooltip">Avalia se o ganho em Jogos, Renderização, Edição e Compilação compensa o preço do chip mais eventual troca de Socket (AM4/AM5/LGA) e RAM (DDR4/DDR5).</span>
@@ -813,8 +813,8 @@
     <div id="versus-laptop-view" class="hidden space-y-5">
       <div class="ui-card space-y-5">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div class="flex items-center gap-2">
-            <h2 class="ui-title-xl">Duelo de Notebooks</h2>
+          <div class="flex items-center gap-2 shrink-0">
+            <h2 class="ui-title-xl whitespace-nowrap">Duelo de Notebooks</h2>
             <span class="ui-info ui-info--bottom">
               <button type="button" class="ui-info-trigger" aria-label="Sobre o duelo de notebooks">i</button>
               <span class="ui-info-popover" role="tooltip">Compara sistema completo lado a lado: CPU, GPU/TGP, Jogos, IA/VRAM, Workstation, Tela, Portabilidade, Bateria e Preço Justo.</span>
@@ -3051,8 +3051,8 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261119-10"></script>
-  <script src="app_features.js?v=20261119-9"></script>
+  <script src="app.js?v=20261119-11"></script>
+  <script src="app_features.js?v=20261119-10"></script>
   <script src="laptop_mode.js?v=20261119-8"></script>
   <script src="styles/combo.js?v=20261119-3"></script>
 </body>

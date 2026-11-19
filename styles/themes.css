@@ -40,10 +40,10 @@
   --ui-bad-text: #ff7a5c;
   --ui-bad-soft: rgba(255, 77, 46, 0.14);
   --ui-bad-border: rgba(255, 77, 46, 0.42);
-  --ui-compare-a: #38bdf8;
-  --ui-compare-a-text: #7dd3fc;
-  --ui-compare-a-soft: rgba(56, 189, 248, 0.15);
-  --ui-compare-a-border: rgba(56, 189, 248, 0.4);
+  --ui-compare-a: #ffcc00;
+  --ui-compare-a-text: #ffd93d;
+  --ui-compare-a-soft: rgba(255, 204, 0, 0.15);
+  --ui-compare-a-border: rgba(255, 204, 0, 0.42);
   --ui-compare-b: #c084fc;
   --ui-compare-b-text: #d8b4fe;
   --ui-compare-b-soft: rgba(192, 132, 252, 0.15);
@@ -300,4 +300,34 @@ html[data-theme] .bg-purple-400.text-white { color: #ffffff; }
 :root[data-theme="light"] .text-lime-400 { color: #4d7c0f; }
 :root[data-theme="light"] .text-blue-300,
 :root[data-theme="light"] .text-blue-400 { color: #1d4ed8; }
+
+/* Modo escuro: classes sky (azul antigo) seguem a cor da marca */
+:root[data-theme="dark"] .text-sky-100 { color: var(--ui-brand-hover); }
+:root[data-theme="dark"] .text-sky-200 { color: var(--ui-brand-hover); }
+:root[data-theme="dark"] .text-sky-300,
+:root[data-theme="dark"] .hover\:text-sky-300:hover { color: var(--ui-brand-hover); }
+:root[data-theme="dark"] .text-sky-400 { color: var(--ui-brand); }
+:root[data-theme="dark"] .text-sky-500 { color: var(--ui-brand); }
+:root[data-theme="dark"] .bg-sky-400,
+:root[data-theme="dark"] .hover\:bg-sky-500:hover { background-color: var(--ui-brand); color: var(--ui-brand-ink); }
+:root[data-theme="dark"] .bg-sky-500\/10,
+:root[data-theme="dark"] .bg-sky-500\/15,
+:root[data-theme="dark"] .bg-sky-500\/20,
+:root[data-theme="dark"] .hover\:bg-sky-500\/30:hover { background-color: var(--ui-brand-soft); }
+:root[data-theme="dark"] .bg-sky-950\/20,
+:root[data-theme="dark"] .bg-sky-950\/30,
+:root[data-theme="dark"] .bg-sky-950\/40,
+:root[data-theme="dark"] .bg-sky-950\/50 { background-color: rgba(255, 204, 0, 0.07); }
+:root[data-theme="dark"] .hover\:border-sky-400:hover,
+:root[data-theme="dark"] .focus\:border-sky-400:focus,
+:root[data-theme="dark"] .border-sky-500\/30,
+:root[data-theme="dark"] .border-sky-500\/40,
+:root[data-theme="dark"] .hover\:border-sky-500\/40:hover,
+:root[data-theme="dark"] .border-sky-500\/50,
+:root[data-theme="dark"] .border-sky-500\/60 { border-color: var(--ui-brand-border); }
+:root[data-theme="dark"] .ring-sky-400,
+:root[data-theme="dark"] .ring-sky-500\/40 { --tw-ring-color: var(--ui-brand-border); }
+:root[data-theme="dark"] .accent-sky-400,
+:root[data-theme="dark"] .accent-sky-500 { accent-color: var(--ui-brand); }
+:root[data-theme="dark"] .from-sky-400 { --tw-gradient-from: var(--ui-brand) var(--tw-gradient-from-position); --tw-gradient-to: rgba(255, 204, 0, 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }
 :root[data-theme="light"] .bg-white { background-color: #ffffff; }

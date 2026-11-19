@@ -55,10 +55,10 @@ DARK = {  # Tema C - Black Friday vibrante
     "--ui-bad-text": "#ff7a5c",
     "--ui-bad-soft": "rgba(255, 77, 46, 0.14)",
     "--ui-bad-border": "rgba(255, 77, 46, 0.42)",
-    "--ui-compare-a": "#38bdf8",
-    "--ui-compare-a-text": "#7dd3fc",
-    "--ui-compare-a-soft": "rgba(56, 189, 248, 0.15)",
-    "--ui-compare-a-border": "rgba(56, 189, 248, 0.4)",
+    "--ui-compare-a": "#ffcc00",
+    "--ui-compare-a-text": "#ffd93d",
+    "--ui-compare-a-soft": "rgba(255, 204, 0, 0.15)",
+    "--ui-compare-a-border": "rgba(255, 204, 0, 0.42)",
     "--ui-compare-b": "#c084fc",
     "--ui-compare-b-text": "#d8b4fe",
     "--ui-compare-b-soft": "rgba(192, 132, 252, 0.15)",
@@ -308,6 +308,51 @@ for fam, (c50, c600, c700) in PALETTE.items():
         sels_bg += variants(f"bg-{fam}-{shade}")
     css.append(rule(light, sels_bg, f"background-color: {c50};"))
     css.append(rule(light, variants(f"border-{fam}-900"), f"border-color: {c50};"))
+
+# ---- Modo escuro (C): o azul antigo (sky) vira o amarelo da marca ----
+css.append("\n/* Modo escuro: classes sky (azul antigo) seguem a cor da marca */\n")
+dark = ':root[data-theme="dark"]'
+
+
+def pref_variants(base, prefix, pseudo):
+    out = []
+    for a in ALPHAS:
+        c = prefix + base + (f"/{a}" if a else "")
+        if c in USED:
+            out.append(f".{esc(c)}{pseudo}")
+    return out
+
+
+for shade in ("100", "200", "300"):
+    css.append(rule(dark, variants(f"text-sky-{shade}"), "color: var(--ui-brand-hover);"))
+for shade in ("400", "500"):
+    css.append(rule(dark, variants(f"text-sky-{shade}"), "color: var(--ui-brand);"))
+sky_solid = []
+for shade in ("400", "500"):
+    sky_solid += [s_ for s_ in variants(f"bg-sky-{shade}") if "/" not in s_]
+css.append(rule(dark, sky_solid, "background-color: var(--ui-brand); color: var(--ui-brand-ink);"))
+sky_soft = []
+for shade in ("400", "500"):
+    sky_soft += [s_ for s_ in variants(f"bg-sky-{shade}") if "/" in s_]
+css.append(rule(dark, sky_soft, "background-color: var(--ui-brand-soft);"))
+sky_deep = []
+for shade in ("900", "950"):
+    sky_deep += variants(f"bg-sky-{shade}")
+css.append(rule(dark, sky_deep, "background-color: rgba(255, 204, 0, 0.07);"))
+sky_border = []
+for shade in ("300", "400", "500", "600"):
+    sky_border += variants(f"border-sky-{shade}")
+    sky_border += pref_variants(f"border-sky-{shade}", "focus:", ":focus")
+css.append(rule(dark, sky_border, "border-color: var(--ui-brand-border);"))
+sky_ring = []
+for shade in ("400", "500"):
+    sky_ring += variants(f"ring-sky-{shade}")
+css.append(rule(dark, sky_ring, "--tw-ring-color: var(--ui-brand-border);"))
+sky_accent = []
+for shade in ("400", "500"):
+    sky_accent += variants(f"accent-sky-{shade}")
+css.append(rule(dark, sky_accent, "accent-color: var(--ui-brand);"))
+css.append(f"{dark} .from-sky-400 {{ --tw-gradient-from: var(--ui-brand) var(--tw-gradient-from-position); --tw-gradient-to: rgba(255, 204, 0, 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to); }}\n")
 
 # Texto escuro de botões sólidos (text-slate-950) segue escuro no claro; no
 # escuro C os botões amarelos usam a tinta da marca.

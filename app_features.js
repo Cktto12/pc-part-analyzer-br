@@ -5317,11 +5317,9 @@ function applyFlashPromosToCatalog() {
     });
   });
 
-  const badge = document.getElementById('promo-radar-badge');
-  if (badge) {
-    const totalDeals = (lastDataReg === activeReg && PROMO_STATE.lastData && PROMO_STATE.lastData.matched_count) || 0;
-    badge.textContent = appliedCount > 0 ? `${appliedCount} abaixo do Catálogo` : `${totalDeals} ofertas`;
-  }
+  // Contagem única de ofertas (topo, Início e Promoções mostram o mesmo número)
+  PROMO_STATE.activeOfferCtx = null;
+  getActiveOfferCount();
 
   enrichGPUsWithContextualMetrics();
   if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
@@ -6484,6 +6482,27 @@ function toggleBFLivePolling() {
 }
 window.toggleBFLivePolling = toggleBFLivePolling;
 
+// ===== Contagem única de ofertas ativas =====
+// Ofertas ativas = cards da aba Promoções (grupos + lojas) em estoque, no contexto atual.
+function syncOfferCounters() {
+  const n = PROMO_STATE.activeOfferCount;
+  if (n == null) return;
+  const label = `${n} ${n === 1 ? 'oferta' : 'ofertas'}`;
+  const badge = document.getElementById('promo-radar-badge');
+  if (badge) badge.textContent = label;
+  const kpi = document.getElementById('home-kpi-deals');
+  if (kpi) kpi.textContent = String(n);
+}
+
+function getActiveOfferCount() {
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  if (PROMO_STATE.activeOfferCount == null || PROMO_STATE.activeOfferCtx !== ctx) {
+    try { renderBFPromosCardsTab(); } catch (_) { /* sem dados ainda */ }
+  }
+  return PROMO_STATE.activeOfferCount;
+}
+window.getActiveOfferCount = getActiveOfferCount;
+
 function renderBFPromosCardsTab() {
   const grid = document.getElementById('bf-promos-cards-grid');
   const countBadge = document.getElementById('bf-cards-live-count');
@@ -6619,6 +6638,13 @@ function renderBFPromosCardsTab() {
   const allCards = [...groupCards, ...storeCatalogCards];
   const isLapCtx = (typeof STATE !== 'undefined' && STATE.context === 'laptop');
 
+  // Fonte única da contagem de ofertas ativas no contexto atual
+  const activeInCtx = allCards.filter(d =>
+    (isLapCtx ? d.matched_kind === 'laptop' : d.matched_kind !== 'laptop') && !d.isOutOfStock);
+  PROMO_STATE.activeOfferCount = activeInCtx.length;
+  PROMO_STATE.activeOfferCtx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  syncOfferCounters();
+
   const items = allCards.filter(d => {
     if (isLapCtx && d.matched_kind !== 'laptop') return false;
     if (!isLapCtx && d.matched_kind === 'laptop') return false;
@@ -6654,7 +6680,7 @@ function renderBFPromosCardsTab() {
     return a.ageHrs - b.ageHrs;
   });
 
-  if (countBadge) countBadge.textContent = `${items.length} ofertas`;
+  if (countBadge) countBadge.textContent = `${activeInCtx.length} ofertas ativas`;
 
   // Populate KPI strip
   const setKpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };

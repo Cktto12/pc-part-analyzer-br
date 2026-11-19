@@ -122,6 +122,32 @@
           pl.tooltip.bodyColor = P.textSecondary;
         }
         if (pl.legend && pl.legend.labels) pl.legend.labels.color = P.textSecondary;
+        recolorSkyDatasets(chart, P);
+    }
+
+    // O azul antigo (sky) dos datasets acompanha a cor do lado A do tema ativo
+    const SKY_RE = /^(#38bdf8|#0ea5e9|rgba?\(\s*56\s*,\s*189\s*,\s*248\s*(?:,\s*([\d.]+))?\s*\))$/i;
+    function hexToRgb(hex) {
+      const h = String(hex).trim().replace('#', '');
+      if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+      return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+    }
+    function recolorSkyDatasets(chart, P) {
+      const rgb = hexToRgb(P.compareA);
+      const keys = ['borderColor', 'backgroundColor', 'pointBackgroundColor', 'pointBorderColor', 'pointHoverBackgroundColor'];
+      const datasets = (chart.data && chart.data.datasets) || [];
+      datasets.forEach((ds) => {
+        if (!ds._gcaOrig) ds._gcaOrig = {};
+        keys.forEach((k) => {
+          if (!(k in ds._gcaOrig)) ds._gcaOrig[k] = ds[k];
+          const orig = ds._gcaOrig[k];
+          if (typeof orig !== 'string') return;
+          const m = orig.match(SKY_RE);
+          if (!m || !rgb) { ds[k] = orig; return; }
+          const alpha = m[2] !== undefined ? m[2] : '1';
+          ds[k] = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+        });
+      });
     }
 
     const gcaThemePlugin = {
