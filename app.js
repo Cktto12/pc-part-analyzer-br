@@ -4833,6 +4833,11 @@ function renderSimulatorLegacy() {
 async function initDatabaseSources() {
   const sel = document.getElementById('select-db-source');
   const sidebarName = document.getElementById('sidebar-db-source-name');
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  if (isStatic) {
+    if (sidebarName) sidebarName.textContent = 'Database Nuvem';
+    return;
+  }
   try {
     const res = await fetch('/api/sources');
     if (res.ok) {
@@ -4860,18 +4865,21 @@ async function changeDatabaseSource(sourceId) {
   if (status) status.textContent = `Alternando base de dados para: ${sourceId}...`;
   STATE.activeSource = sourceId;
 
-  try {
-    const res = await fetch('/api/sources/select', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source_id: sourceId })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const sidebarName = document.getElementById('sidebar-db-source-name');
-      if (sidebarName && data.source_name) sidebarName.textContent = data.source_name;
-    }
-  } catch (_) {}
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  if (!isStatic) {
+    try {
+      const res = await fetch('/api/sources/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_id: sourceId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const sidebarName = document.getElementById('sidebar-db-source-name');
+        if (sidebarName && data.source_name) sidebarName.textContent = data.source_name;
+      }
+    } catch (_) {}
+  }
 
   await loadHardwareDatabase();
 }
@@ -4935,28 +4943,31 @@ async function initMarketConfig() {
   STATE.availableRegions = FALLBACK_AVAILABLE_REGIONS;
   const rawSaved = (localStorage.getItem('selected_market_region') || 'br').toLowerCase().trim();
   const savedReg = (rawSaved === 'mx') ? 'mx' : 'br';
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
 
   let loaded = false;
   // 1. Try server endpoint if backend is active
-  try {
-    await fetch('/api/market-config/select', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ region_id: savedReg })
-    }).catch(() => {});
+  if (!isStatic) {
+    try {
+      await fetch('/api/market-config/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ region_id: savedReg })
+      }).catch(() => {});
 
-    const res = await fetch('/api/market-config?t=' + Date.now());
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.config) {
-        STATE.market = data.config;
-        loaded = true;
+      const res = await fetch('/api/market-config?t=' + Date.now());
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.config) {
+          STATE.market = data.config;
+          loaded = true;
+        }
+        if (data && data.available_regions && data.available_regions.length) {
+          STATE.availableRegions = data.available_regions.filter(r => r.region_id === 'br' || r.region_id === 'mx');
+        }
       }
-      if (data && data.available_regions && data.available_regions.length) {
-        STATE.availableRegions = data.available_regions.filter(r => r.region_id === 'br' || r.region_id === 'mx');
-      }
-    }
-  } catch (_) {}
+    } catch (_) {}
+  }
 
   // 2. Static / GitHub Pages fallback: fetch static config/regions/<savedReg>.json
   if (!loaded) {
@@ -5046,25 +5057,28 @@ async function changeMarketRegion(regionId) {
 
   try { localStorage.setItem('selected_market_region', regionId); } catch (_) {}
 
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   let serverUpdated = false;
   // 1. Try server API if backend exists
-  try {
-    const res = await fetch('/api/market-config/select', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ region_id: regionId })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.config) {
-        STATE.market = data.config;
-        serverUpdated = true;
+  if (!isStatic) {
+    try {
+      const res = await fetch('/api/market-config/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ region_id: regionId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.config) {
+          STATE.market = data.config;
+          serverUpdated = true;
+        }
+        if (data && data.available_regions && data.available_regions.length) {
+          STATE.availableRegions = data.available_regions.filter(r => r.region_id === 'br' || r.region_id === 'mx');
+        }
       }
-      if (data && data.available_regions && data.available_regions.length) {
-        STATE.availableRegions = data.available_regions.filter(r => r.region_id === 'br' || r.region_id === 'mx');
-      }
-    }
-  } catch (_) {}
+    } catch (_) {}
+  }
 
   // 2. Static / GitHub Pages fallback: load config/regions/<regionId>.json
   if (!serverUpdated) {

@@ -4273,13 +4273,6 @@ function updateBackgroundMonitorUI() {
     if (desc) {
       desc.innerHTML = 'No GitHub Pages, clique em <strong>Inscrever-se em Push</strong> para ativar o Service Worker + sincronizar suas metas com o monitor Python do PC (30s) e receber alertas em <code>ntfy.sh/' + topic + '</code> mesmo com a aba fechada.';
     }
-    // Probe if local PC daemon is reachable from GitHub Pages
-    fetchWithTimeout('http://localhost:8080/api/market-config', {}, 1500).then(r => {
-      if (r.ok && badge) {
-        badge.textContent = '● PC Daemon Conectado (30s)';
-        badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold';
-      }
-    }).catch(() => {});
   } else {
     if (badge) {
       badge.textContent = '● Ativo no PC (30s)';
@@ -5360,11 +5353,14 @@ async function scanLivePromos(force = false) {
     if (btn) btn.disabled = true;
     if (statusEl) statusEl.textContent = 'Buscando ofertas y cupones en México (Promodescuentos / Cyberpuerta / DDTech)...';
     try {
+      const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
       let prData = null;
-      try {
-        const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=mx&market=mx` + (force ? '&force=1' : ''));
-        if (apiRes.ok) prData = await apiRes.json();
-      } catch (_) {}
+      if (!isStatic) {
+        try {
+          const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=mx&market=mx` + (force ? '&force=1' : ''));
+          if (apiRes.ok) prData = await apiRes.json();
+        } catch (_) {}
+      }
 
       if (!prData || !Array.isArray(prData.matched_deals)) {
         try {
