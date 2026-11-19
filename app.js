@@ -388,13 +388,8 @@ function syncComparisonScaleControls() {
   const btnRelDuel = document.getElementById('btn-scale-rel-duel');
   const btnAbsDuel = document.getElementById('btn-scale-abs-duel');
   if (btnRelDuel && btnAbsDuel) {
-    if (isAbs) {
-      btnRelDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
-      btnAbsDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
-    } else {
-      btnRelDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
-      btnAbsDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
-    }
+    btnRelDuel.classList.toggle('is-active', !isAbs);
+    btnAbsDuel.classList.toggle('is-active', isAbs);
   }
 
   // Cost-Benefit Table segmented buttons
@@ -483,13 +478,14 @@ function renderComparisonBarHTML({
   const isAbs = STATE.comparisonScaleMode === 'absolute';
   const extremes = typeof getCatalogExtremes === 'function' ? getCatalogExtremes() : null;
 
-  // Relative difference vs Base GPU
   const diff = diffPct != null ? diffPct : (baseVal > 0 ? ((candVal / baseVal) - 1) * 100 : 0);
   const sign = diff > 0 ? '+' : '';
-  const diffText = `${sign}${Math.round(diff)}%`;
-  const badgeColor = isPrice
-    ? (diff <= 0 ? 'text-emerald-300' : 'text-amber-300')
-    : (diff >= 0 ? 'text-emerald-300' : 'text-rose-300');
+  const diffText = Math.abs(diff) < 0.5 ? 'Igual' : `${sign}${Math.round(diff)}%`;
+  const diffBadgeClass = Math.abs(diff) < 0.5
+    ? 'ui-badge'
+    : (isPrice
+        ? (diff <= 0 ? 'ui-badge ui-badge--good' : 'ui-badge ui-badge--warn')
+        : (diff > 0 ? 'ui-badge ui-badge--good' : 'ui-badge ui-badge--bad'));
 
   let baseWidthPct = 50;
   let candWidthPct = 50;
@@ -497,60 +493,44 @@ function renderComparisonBarHTML({
   let candRightLabel = '';
 
   if (isAbs) {
-    // 1. MODO ABSOLUTO: O teto (100% da barra) é o registro máximo absoluto do catálogo (ex: RTX 5090)
     const ceiling = maxVal && maxVal > 0 ? maxVal : Math.max(baseVal, candVal, 1);
-    baseWidthPct = Math.min(100, Math.max(3, (baseVal / ceiling) * 100));
-    candWidthPct = Math.min(100, Math.max(3, (candVal / ceiling) * 100));
-
-    baseRightLabel = `${baseWidthPct.toFixed(0)}% do Topo`;
-    candRightLabel = `${candWidthPct.toFixed(0)}% do Topo (${diffText} vs Base)`;
+    baseWidthPct = Math.min(100, Math.max(4, (baseVal / ceiling) * 100));
+    candWidthPct = Math.min(100, Math.max(4, (candVal / ceiling) * 100));
+    baseRightLabel = `${baseWidthPct.toFixed(0)}% topo`;
+    candRightLabel = `${candWidthPct.toFixed(0)}% topo`;
   } else {
-    // 2. MODO RELATIVO: Ancorado na placa base como referência direta (100% de si)
     const headToHeadMax = Math.max(baseVal, candVal, 1);
     baseWidthPct = Math.min(100, Math.max(4, (baseVal / headToHeadMax) * 100));
     candWidthPct = Math.min(100, Math.max(4, (candVal / headToHeadMax) * 100));
-
-    baseRightLabel = '100% (Base)';
-    candRightLabel = Math.abs(diff) < 0.5 ? '100% (Igual)' : `${diffText} vs Base`;
+    baseRightLabel = baseLabel != null ? String(baseLabel) : String(baseVal);
+    candRightLabel = candLabel != null ? String(candLabel) : String(candVal);
   }
 
-  const baseBarColor = 'bg-emerald-500';
-  const candBarColor = isPrice
-    ? (diff <= 0 ? 'bg-emerald-400' : 'bg-amber-400')
-    : (diff >= 0 ? 'bg-sky-400' : 'bg-rose-400');
-
   return `
-    <div class="space-y-1.5 p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
-      <div class="flex items-center justify-between text-xs">
-        <div class="flex items-center gap-1.5 text-slate-300 font-medium">
+    <div class="ui-comp-bar">
+      <div class="ui-comp-bar-head">
+        <div class="flex items-center gap-2 text-slate-200 font-semibold">
           ${iconSvg}
-          <span class="font-bold">${title}</span>
+          <span>${title}</span>
         </div>
-        <div class="flex items-center gap-2 font-mono text-[11px]">
-          <span class="text-emerald-400 font-semibold">${baseLabel != null ? baseLabel : baseVal}</span>
-          <span class="text-slate-600">vs</span>
-          <span class="font-bold ${badgeColor}">${candLabel != null ? candLabel : candVal} <span class="text-[10px] opacity-80">(${diffText})</span></span>
-        </div>
+        <span class="${diffBadgeClass} ui-mono">${diffText}</span>
       </div>
 
-      <div class="space-y-1 pt-0.5">
-        <!-- Barra 1: Placa Base -->
-        <div class="flex items-center gap-2 text-[10px] font-mono">
-          <span class="w-16 truncate text-slate-400 shrink-0 text-right" title="${baseName}">${baseName}</span>
-          <div class="h-2 flex-1 bg-slate-900 rounded-full relative overflow-hidden border border-slate-800/80" title="${baseName}: ${baseLabel != null ? baseLabel : baseVal} (${baseWidthPct.toFixed(0)}%)">
-            <div class="h-full rounded-full transition-all duration-300 ${baseBarColor}" style="width: ${baseWidthPct.toFixed(1)}%;"></div>
+      <div class="space-y-1.5">
+        <div class="ui-comp-bar-track-row">
+          <span class="ui-comp-bar-name" style="color: var(--ui-compare-a-text);" title="${baseName}">${baseName}</span>
+          <div class="ui-meter flex-1 relative" title="${baseName}: ${baseLabel != null ? baseLabel : baseVal} (${baseWidthPct.toFixed(0)}%)">
+            <div class="ui-meter-fill ui-meter-fill--a" style="width: ${baseWidthPct.toFixed(1)}%;"></div>
           </div>
-          <span class="w-28 text-right text-emerald-400 font-bold shrink-0">${baseRightLabel}</span>
+          <span class="ui-comp-bar-val" style="color: var(--ui-compare-a-text);">${baseRightLabel}</span>
         </div>
 
-        <!-- Barra 2: Candidata -->
-        <div class="flex items-center gap-2 text-[10px] font-mono">
-          <span class="w-16 truncate text-sky-300 font-bold shrink-0 text-right" title="${candName}">${candName}</span>
-          <div class="h-2 flex-1 bg-slate-900 rounded-full relative overflow-hidden border border-slate-800/80" title="${candName}: ${candLabel != null ? candLabel : candVal} (${candWidthPct.toFixed(0)}%)">
-            <div class="absolute top-0 bottom-0 w-0.5 bg-emerald-500/70 z-20 pointer-events-none" style="left: ${baseWidthPct.toFixed(1)}%;" title="Ponto da Placa Base (${baseName})"></div>
-            <div class="h-full rounded-full transition-all duration-300 ${candBarColor}" style="width: ${candWidthPct.toFixed(1)}%;"></div>
+        <div class="ui-comp-bar-track-row">
+          <span class="ui-comp-bar-name" style="color: var(--ui-compare-b-text);" title="${candName}">${candName}</span>
+          <div class="ui-meter flex-1 relative" title="${candName}: ${candLabel != null ? candLabel : candVal} (${candWidthPct.toFixed(0)}%)">
+            <div class="ui-meter-fill ui-meter-fill--b" style="width: ${candWidthPct.toFixed(1)}%;"></div>
           </div>
-          <span class="w-28 text-right font-bold ${badgeColor} shrink-0">${candRightLabel}</span>
+          <span class="ui-comp-bar-val" style="color: var(--ui-compare-b-text);">${candRightLabel}</span>
         </div>
       </div>
     </div>
@@ -2429,20 +2409,18 @@ function renderDuelAnalysis() {
   const baseEffGaming = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(baseGpu) : baseGpu.gaming_score;
   const candEffGaming = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(candGpu) : candGpu.gaming_score;
   document.getElementById('duel-specs-base').innerHTML = `
-    <span>🧠 <strong>${baseGpu.vram_gb}GB</strong> ${baseGpu.memory_type} (${baseGpu.bandwidth_gbs} GB/s)</span>
-    ${baseTech ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px]">✨ ${baseTech}</span>` : ''}
-    <span>🤖 Inf. 14B: <strong class="text-purple-300">${baseGpu.llm_14b_tok_s} tok/s</strong> (8B: ${baseGpu.llm_8b_tok_s})</span>
-    <span>⚡ Treinamento: <strong class="text-amber-300">${getEffectiveEngineeringScore(baseGpu)}</strong></span>
-    <span>🎮 Jogos Efetivo: <strong class="text-emerald-300">${baseEffGaming}</strong> <span class="text-slate-500">(Raster: ${baseGpu.gaming_score})</span></span>
-    <a href="${baseGpu.offer_url}" target="_blank" class="text-emerald-400 hover:underline font-semibold">Loja (${baseGpu.store_name}) ↗</a>
+    <span><strong>${baseGpu.vram_gb}GB</strong> ${baseGpu.memory_type}</span>
+    ${baseTech ? `<span class="ui-badge ui-badge--a">${baseTech}</span>` : ''}
+    <span>IA 14B: <strong class="text-slate-100">${baseGpu.llm_14b_tok_s} tok/s</strong></span>
+    <span>Jogos: <strong class="text-slate-100">${baseEffGaming}</strong></span>
+    <a href="${baseGpu.offer_url}" target="_blank" class="text-sky-300 hover:underline font-semibold">Loja (${baseGpu.store_name}) ↗</a>
   `;
   document.getElementById('duel-specs-cand').innerHTML = `
-    <span>🧠 <strong>${candGpu.vram_gb}GB</strong> ${candGpu.memory_type} (${candGpu.bandwidth_gbs} GB/s)</span>
-    ${candTech ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-[10px]">✨ ${candTech}</span>` : ''}
-    <span>🤖 Inf. 14B: <strong class="text-purple-300">${candGpu.llm_14b_tok_s} tok/s</strong> (8B: ${candGpu.llm_8b_tok_s})</span>
-    <span>⚡ Treinamento: <strong class="text-amber-300">${getEffectiveEngineeringScore(candGpu)}</strong></span>
-    <span>🎮 Jogos Efetivo: <strong class="text-emerald-300">${candEffGaming}</strong> <span class="text-slate-500">(Raster: ${candGpu.gaming_score})</span></span>
-    <a href="${candGpu.offer_url}" target="_blank" class="text-sky-400 hover:underline font-semibold">Loja (${candGpu.store_name}) ↗</a>
+    <span><strong>${candGpu.vram_gb}GB</strong> ${candGpu.memory_type}</span>
+    ${candTech ? `<span class="ui-badge ui-badge--b">${candTech}</span>` : ''}
+    <span>IA 14B: <strong class="text-slate-100">${candGpu.llm_14b_tok_s} tok/s</strong></span>
+    <span>Jogos: <strong class="text-slate-100">${candEffGaming}</strong></span>
+    <a href="${candGpu.offer_url}" target="_blank" class="text-violet-300 hover:underline font-semibold">Loja (${candGpu.store_name}) ↗</a>
   `;
 
   // Evaluate relational compensation
@@ -2556,41 +2534,39 @@ function renderDuelAnalysis() {
   const bAvgRadar = Math.round((bScoreGame + bScoreTech + bScoreAI + bScoreTrain + bScoreEff + bScoreCB) / 6);
   const cAvgRadar = Math.round((cScoreGame + cScoreTech + cScoreAI + cScoreTrain + cScoreEff + cScoreCB) / 6);
 
-  // Render Score Hero Cards (Versus-Style)
+  // Render Score Hero Cards (A = Cyan, B = Violet)
   const versusRatingsEl = document.getElementById('duel-versus-ratings');
   if (versusRatingsEl) {
-    const candWinsPerf = cOverallPerf > bOverallPerf;
-
     versusRatingsEl.innerHTML = `
-      <div class="bg-slate-900/90 rounded-xl p-3.5 border border-emerald-500/40 space-y-1 relative overflow-hidden shadow-sm">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-mono text-emerald-400 font-bold uppercase tracking-wider">PLACA BASE</span>
-          <span class="text-[10px] font-mono text-slate-400 font-semibold">${fmtBRL(basePrice)}</span>
+      <div class="ui-score-card ui-score-card--a">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--a">A · Base</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(basePrice)}</span>
         </div>
-        <div class="text-sm font-extrabold text-white truncate" title="${baseGpu.name}">${baseGpu.name}</div>
-        <div class="flex items-baseline gap-2 pt-1">
-          <span class="text-2xl font-mono font-black text-emerald-400">${bScoreCB}</span>
-          <span class="text-[11px] font-mono text-slate-400">/ 100 Custo-Benefício</span>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${baseGpu.name}">${baseGpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-a-text);">${bScoreCB}</span>
+          <span class="text-xs text-slate-400">/ 100 Custo-benefício</span>
         </div>
-        <div class="text-[11px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-          <span>Desempenho Geral:</span>
-          <strong class="text-slate-200">${bOverallPerf} pts</strong>
+        <div class="text-xs ui-mono text-slate-400 flex items-center justify-between pt-1.5 border-t border-slate-800">
+          <span>Desempenho geral</span>
+          <strong class="text-slate-100">${bOverallPerf} pts</strong>
         </div>
       </div>
 
-      <div class="bg-slate-900/90 rounded-xl p-3.5 border border-sky-500/40 space-y-1 relative overflow-hidden shadow-sm">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-mono text-sky-400 font-bold uppercase tracking-wider">CANDIDATA UPGRADE</span>
-          <span class="text-[10px] font-mono text-slate-400 font-semibold">${fmtBRL(candPrice)}</span>
+      <div class="ui-score-card ui-score-card--b">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--b">B · Candidata</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(candPrice)}</span>
         </div>
-        <div class="text-sm font-extrabold text-white truncate" title="${candGpu.name}">${candGpu.name}</div>
-        <div class="flex items-baseline gap-2 pt-1">
-          <span class="text-2xl font-mono font-black text-sky-400">${cScoreCB}</span>
-          <span class="text-[11px] font-mono text-slate-400">/ 100 Custo-Benefício</span>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${candGpu.name}">${candGpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-b-text);">${cScoreCB}</span>
+          <span class="text-xs text-slate-400">/ 100 Custo-benefício</span>
         </div>
-        <div class="text-[11px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-          <span>Desempenho Geral:</span>
-          <strong class="${candWinsPerf ? 'text-sky-300 font-bold' : 'text-slate-200'}">${cOverallPerf} pts</strong>
+        <div class="text-xs ui-mono text-slate-400 flex items-center justify-between pt-1.5 border-t border-slate-800">
+          <span>Desempenho geral</span>
+          <strong class="text-slate-100">${cOverallPerf} pts</strong>
         </div>
       </div>
     `;
@@ -2686,26 +2662,26 @@ function renderDuelAnalysis() {
 
     const datasets = [
       {
-        label: `${baseGpu.name} (${bAvgRadar}/100)`,
+        label: `A · ${baseGpu.name} (${bAvgRadar}/100)`,
         data: radarDataB,
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.22)',
-        pointBackgroundColor: '#10b981',
-        pointBorderColor: '#ffffff',
-        pointHoverBackgroundColor: '#ffffff',
-        pointHoverBorderColor: '#10b981',
-        borderWidth: 2,
-        pointRadius: 3
-      },
-      {
-        label: `${candGpu.name} (${cAvgRadar}/100)`,
-        data: radarDataC,
         borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.25)',
+        backgroundColor: 'rgba(56, 189, 248, 0.22)',
         pointBackgroundColor: '#38bdf8',
         pointBorderColor: '#ffffff',
         pointHoverBackgroundColor: '#ffffff',
         pointHoverBorderColor: '#38bdf8',
+        borderWidth: 2,
+        pointRadius: 3
+      },
+      {
+        label: `B · ${candGpu.name} (${cAvgRadar}/100)`,
+        data: radarDataC,
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167, 139, 250, 0.24)',
+        pointBackgroundColor: '#a78bfa',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: '#a78bfa',
         borderWidth: 2,
         pointRadius: 3
       }
@@ -2715,17 +2691,17 @@ function renderDuelAnalysis() {
       const topData = [100, 100, 100, 100, topScoreEff, topScoreCB];
       const topAvg = Math.round((100 + 100 + 100 + 100 + topScoreEff + topScoreCB) / 6);
       datasets.push({
-        label: `${topGpu.name} (Topo 100 Absoluto Ref - ${topAvg}/100)`,
+        label: `${topGpu.name} (Ref Topo 100 - ${topAvg}/100)`,
         data: topData,
-        borderColor: '#a855f7',
+        borderColor: '#94a3b8',
         borderDash: [5, 4],
-        backgroundColor: 'rgba(168, 85, 247, 0.08)',
-        pointBackgroundColor: '#a855f7',
+        backgroundColor: 'rgba(148, 163, 184, 0.08)',
+        pointBackgroundColor: '#94a3b8',
         pointBorderColor: '#ffffff',
         pointHoverBackgroundColor: '#ffffff',
-        pointHoverBorderColor: '#a855f7',
-        borderWidth: 2,
-        pointRadius: 3
+        pointHoverBorderColor: '#94a3b8',
+        borderWidth: 1.75,
+        pointRadius: 2.5
       });
     }
 
@@ -2767,22 +2743,22 @@ function renderDuelAnalysis() {
     const radarLegendEl = document.getElementById('duel-radar-legend');
     if (radarLegendEl) {
       const topLegend = (isAbs && topGpu) ? `
-        <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-2">
-          <span class="w-3 h-3 rounded-full bg-purple-400 inline-block shadow-sm"></span>
-          <span class="text-purple-300 font-bold">${topGpu.name}</span>
-          <span class="text-slate-400 text-[10px]">(Topo 100 Ref)</span>
+        <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span>
+          <span class="text-slate-300 font-semibold">${topGpu.name}</span>
+          <span class="text-slate-500">(Topo)</span>
         </div>
       ` : '';
 
       radarLegendEl.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-emerald-400 inline-block shadow-sm"></span>
-          <span class="text-white font-bold">${baseGpu.name}</span>
+          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--ui-compare-a);"></span>
+          <span class="text-white font-semibold">${baseGpu.name}</span>
           <span class="text-slate-400">(${bAvgRadar}/100)</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-sky-400 inline-block shadow-sm"></span>
-          <span class="text-white font-bold">${candGpu.name}</span>
+          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--ui-compare-b);"></span>
+          <span class="text-white font-semibold">${candGpu.name}</span>
           <span class="text-slate-400">(${cAvgRadar}/100)</span>
         </div>
         ${topLegend}
@@ -2791,38 +2767,72 @@ function renderDuelAnalysis() {
   }
 
   const vBox = document.getElementById('duel-verdict-box');
-  vBox.className = `mt-6 rounded-2xl p-5 border transition-all ${colorMap[rel.color]}`;
-  vBox.innerHTML = `
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-      <div class="space-y-1.5 max-w-4xl">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <span class="px-3 py-1 rounded-lg text-xs font-mono font-black uppercase ${badgeMap[rel.color]}">${rel.label}</span>
-          <span class="text-sm font-mono font-bold text-white">
-            Diferença Atual: <span class="underline">${rel.actualDelta >= 0 ? '+' : ''}${fmtBRL(rel.actualDelta)}</span>
-            (${((rel.actualDelta / Math.max(1, basePrice)) * 100).toFixed(0)}% mais cara que a ${baseGpu.name})
-          </span>
+  if (vBox) {
+    const isGood = rel.tier === 'steal' || rel.tier === 'fair';
+    const isWarn = rel.tier === 'stretch';
+    const tone = isGood ? 'good' : (isWarn ? 'warn' : 'bad');
+    const badgeLabel = rel.tier === 'steal' ? 'Vale muito' : (isGood ? 'Vale a pena' : (isWarn ? 'Aguarde' : 'Não compensa'));
+    const deltaPct = Math.round((rel.actualDelta / Math.max(1, basePrice)) * 100);
+    const deltaSign = rel.actualDelta >= 0 ? '+' : '';
+    const perfSign = rel.perfGainPct >= 0 ? '+' : '';
+    const excessOverFair = Math.max(0, rel.actualDelta - rel.fairMaxDelta);
+
+    let oneLineVerdict = '';
+    if (isGood) {
+      if (rel.actualDelta <= 0 && rel.perfGainPct >= 0) {
+        oneLineVerdict = `Vale muito: ${candGpu.name} entrega ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho custando menos.`;
+      } else if (rel.perfGainPct < 0) {
+        oneLineVerdict = `Vale pela economia: ${candGpu.name} economiza ${fmtBRLShort(Math.abs(rel.actualDelta))} com perda proporcional.`;
+      } else {
+        oneLineVerdict = `Vale a pena pagar ${deltaSign}${fmtBRLShort(rel.actualDelta)} pela ${candGpu.name} por ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho.`;
+      }
+    } else if (isWarn) {
+      oneLineVerdict = `Aguarde: a ${candGpu.name} está ${fmtBRLShort(excessOverFair)} acima do teto justo para ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho.`;
+    } else {
+      oneLineVerdict = rel.perfGainPct <= 0
+        ? `Não compensa: a ${candGpu.name} entrega menos desempenho (${rel.perfGainPct.toFixed(0)}%) para o seu perfil.`
+        : `Não compensa: ${deltaSign}${fmtBRLShort(rel.actualDelta)} a mais por ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho está caro.`;
+    }
+
+    vBox.className = `ui-verdict ui-verdict--${tone} space-y-4`;
+    vBox.innerHTML = `
+      <div class="ui-verdict-grid">
+        <div class="space-y-2 max-w-3xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ui-badge ui-badge--${tone} font-bold uppercase tracking-wide">${badgeLabel}</span>
+            <span class="ui-badge">${rel.label}</span>
+          </div>
+          <h3 class="ui-verdict-headline">${oneLineVerdict}</h3>
         </div>
-        <h3 class="text-lg font-extrabold text-white pt-1">${rel.summary}</h3>
-        <p class="text-xs opacity-90 leading-relaxed">
-          Para o seu perfil (<strong>${STATE.wGaming}% Jogos / ${STATE.wAI}% Inferência IA Local / ${STATE.wSoft}% AI Training, Eth & OpenDSS</strong> • monitor ${typeof getMonitorLabel === 'function' ? getMonitorLabel() : ''}),
-          a <strong>${candGpu.name}</strong> entrega <strong>${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(1)}% de ganho ponderado real</strong>:
-          Inferência IA Local (tok/s & KV-Cache): <strong>${rel.aiGainPct >= 0 ? '+' : ''}${rel.aiGainPct.toFixed(0)}%</strong> (${candGpu.llm_14b_tok_s} vs ${baseGpu.llm_14b_tok_s} tok/s em 14B) •
-          AI Training / Eth Frames / OpenDSS: <strong>${rel.softGainPct >= 0 ? '+' : ''}${rel.softGainPct.toFixed(0)}%</strong> •
-          Jogos (FPS): <strong>${rel.gamingGainPct >= 0 ? '+' : ''}${rel.gamingGainPct.toFixed(0)}%</strong>.
-        </p>
+        <div class="ui-verdict-numbers">
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Diferença de preço</span>
+            <span class="ui-verdict-stat-value">${deltaSign}${fmtBRLShort(rel.actualDelta)}</span>
+            <span class="ui-verdict-stat-sub">${deltaSign}${deltaPct}% vs ${baseGpu.name}</span>
+          </div>
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Teto justo (B)</span>
+            <span class="ui-verdict-stat-value" style="color: var(--ui-good-text);">${fmtBRLShort(rel.fairMaxCandPrice)}</span>
+            <span class="ui-verdict-stat-sub">Até +${fmtBRLShort(rel.fairMaxDelta)} de diferença</span>
+          </div>
+        </div>
       </div>
-      <div class="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 text-right">
-        <div>
-          <span class="text-[10px] font-mono uppercase text-emerald-400 block">Teto p/ Ser "Pechincha"</span>
-          <span class="text-sm font-mono font-bold text-white">Até +${fmtBRLShort(rel.stealDelta)} <span class="text-slate-400">(${candGpu.name} ≤ ${fmtBRLShort(rel.stealCandPrice)})</span></span>
+
+      <details class="ui-details">
+        <summary>Ver detalhes do cálculo e perfil de uso</summary>
+        <div class="ui-details-body space-y-2">
+          <p class="text-slate-200 leading-relaxed">${rel.summary}</p>
+          <p class="text-slate-400 leading-relaxed">
+            Perfil ativo (<strong>${STATE.wGaming}% Jogos • ${STATE.wAI}% IA Local • ${STATE.wSoft}% Engenharia</strong>${typeof getMonitorLabel === 'function' ? ` • Monitor ${getMonitorLabel()}` : ''}):
+            Jogos <strong>${rel.gamingGainPct >= 0 ? '+' : ''}${rel.gamingGainPct.toFixed(0)}%</strong> •
+            IA 14B <strong>${rel.aiGainPct >= 0 ? '+' : ''}${rel.aiGainPct.toFixed(0)}%</strong> (${candGpu.llm_14b_tok_s} vs ${baseGpu.llm_14b_tok_s} tok/s) •
+            Engenharia <strong>${rel.softGainPct >= 0 ? '+' : ''}${rel.softGainPct.toFixed(0)}%</strong> •
+            Pechincha: ${candGpu.name} ≤ <strong>${fmtBRLShort(rel.stealCandPrice)}</strong>.
+          </p>
         </div>
-        <div class="border-t border-slate-800 pt-1.5">
-          <span class="text-[10px] font-mono uppercase text-sky-400 block">Teto Máximo Justo (Vale a Pena)</span>
-          <span class="text-sm font-mono font-bold text-white">Até +${fmtBRLShort(rel.fairMaxDelta)} <span class="text-slate-400">(${candGpu.name} ≤ ${fmtBRLShort(rel.fairMaxCandPrice)})</span></span>
-        </div>
-      </div>
-    </div>
-  `;
+      </details>
+    `;
+  }
 
   // Update Thermometer Labels & Marker Position (Reflects true shelf price ceiling accounting for forced PSU upgrade)
   const stretchShelfPrice = Math.max(0, basePrice + rel.stretchMaxDelta - ((candGpu._psuUpgradeCost || 0) - (baseGpu._psuUpgradeCost || 0)));
@@ -3104,20 +3114,20 @@ function renderCpuDuelRadarChart(baseCpu, candCpu) {
       labels: ['Jogos', 'Workstation', 'Single-Core', 'Compilação/IA', 'Eficiência Térmica', 'Custo-Benefício'],
       datasets: [
         {
-          label: baseCpu.name,
+          label: `A · ${baseCpu.name}`,
           data: [bGame, bWS, bSingle, bAI, bEff, bCB],
-          backgroundColor: 'rgba(16, 185, 129, 0.25)',
-          borderColor: '#10b981',
-          pointBackgroundColor: '#10b981',
+          backgroundColor: 'rgba(56, 189, 248, 0.22)',
+          borderColor: '#38bdf8',
+          pointBackgroundColor: '#38bdf8',
           pointBorderColor: '#fff',
           borderWidth: 2
         },
         {
-          label: candCpu.name,
+          label: `B · ${candCpu.name}`,
           data: [cGame, cWS, cSingle, cAI, cEff, cCB],
-          backgroundColor: 'rgba(56, 189, 248, 0.25)',
-          borderColor: '#38bdf8',
-          pointBackgroundColor: '#38bdf8',
+          backgroundColor: 'rgba(167, 139, 250, 0.24)',
+          borderColor: '#a78bfa',
+          pointBackgroundColor: '#a78bfa',
           pointBorderColor: '#fff',
           borderWidth: 2
         }
@@ -3136,7 +3146,7 @@ function renderCpuDuelRadarChart(baseCpu, candCpu) {
           angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
           pointLabels: {
             color: '#cbd5e1',
-            font: { size: 10, family: 'Inter, sans-serif', weight: '600' }
+            font: { size: 12, family: 'Inter, sans-serif', weight: '600' }
           }
         }
       }
@@ -3146,8 +3156,8 @@ function renderCpuDuelRadarChart(baseCpu, candCpu) {
   const legendEl = document.getElementById('cpu-duel-radar-legend');
   if (legendEl) {
     legendEl.innerHTML = `
-      <span class="inline-flex items-center gap-1.5 text-emerald-400 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>${baseCpu.name}</span>
-      <span class="inline-flex items-center gap-1.5 text-sky-400 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>${candCpu.name}</span>
+      <span class="inline-flex items-center gap-1.5 text-white font-semibold"><span class="w-2.5 h-2.5 rounded-full" style="background: var(--ui-compare-a);"></span>${baseCpu.name}</span>
+      <span class="inline-flex items-center gap-1.5 text-white font-semibold"><span class="w-2.5 h-2.5 rounded-full" style="background: var(--ui-compare-b);"></span>${candCpu.name}</span>
     `;
   }
 }
@@ -3476,8 +3486,8 @@ function renderCpuDuelAnalysis() {
   // Badges & Target Prices
   const bBadge = document.getElementById('cpu-base-status-badge');
   const cBadge = document.getElementById('cpu-cand-status-badge');
-  if (bBadge) bBadge.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">${baseCpu.store_name || 'loja'}</span>`;
-  if (cBadge) cBadge.innerHTML = `<span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-mono">${candCpu.store_name || 'loja'}</span>`;
+  if (bBadge) bBadge.innerHTML = `<span class="ui-badge">${baseCpu.store_name || 'loja'}</span>`;
+  if (cBadge) cBadge.innerHTML = `<span class="ui-badge">${candCpu.store_name || 'loja'}</span>`;
 
   const bTarget = baseCpu.price_stats?.target_price || Math.round(baseCpu.price_brl * 0.90);
   const cTarget = candCpu.price_stats?.target_price || Math.round(candCpu.price_brl * 0.90);
@@ -3500,20 +3510,18 @@ function renderCpuDuelAnalysis() {
   const specsCandEl = document.getElementById('cpu-duel-specs-cand');
   if (specsBaseEl) {
     specsBaseEl.innerHTML = `
-      <span>⚡ <strong>${bSpecs.cores}C / ${bSpecs.threads}T</strong> (${bSpecs.socket} • ${bSpecs.ddr})</span>
-      <span>🔥 TDP: <strong>${bSpecs.tdp}W</strong></span>
-      <span>🎮 Jogos: <strong class="text-emerald-300">${baseCpu._gamingScore || getCpuGamingScore(baseCpu)} pts</strong></span>
-      <span>💼 Workstation: <strong class="text-amber-300">${baseCpu._workstationScore || getCpuWorkstationScore(baseCpu)} pts</strong></span>
-      <a href="${baseCpu.offer_url}" target="_blank" class="text-emerald-400 hover:underline font-semibold">Loja (${baseCpu.store_name || 'loja'}) ↗</a>
+      <span><strong>${bSpecs.cores}C / ${bSpecs.threads}T</strong> (${bSpecs.socket} • ${bSpecs.ddr})</span>
+      <span>TDP: <strong>${bSpecs.tdp}W</strong></span>
+      <span>Jogos: <strong class="text-slate-100">${baseCpu._gamingScore || getCpuGamingScore(baseCpu)}</strong></span>
+      <a href="${baseCpu.offer_url}" target="_blank" class="text-sky-300 hover:underline font-semibold">Loja (${baseCpu.store_name || 'loja'}) ↗</a>
     `;
   }
   if (specsCandEl) {
     specsCandEl.innerHTML = `
-      <span>⚡ <strong>${cSpecs.cores}C / ${cSpecs.threads}T</strong> (${cSpecs.socket} • ${cSpecs.ddr})</span>
-      <span>🔥 TDP: <strong>${cSpecs.tdp}W</strong></span>
-      <span>🎮 Jogos: <strong class="text-sky-300">${candCpu._gamingScore || getCpuGamingScore(candCpu)} pts</strong></span>
-      <span>💼 Workstation: <strong class="text-amber-300">${candCpu._workstationScore || getCpuWorkstationScore(candCpu)} pts</strong></span>
-      <a href="${candCpu.offer_url}" target="_blank" class="text-sky-400 hover:underline font-semibold">Loja (${candCpu.store_name || 'loja'}) ↗</a>
+      <span><strong>${cSpecs.cores}C / ${cSpecs.threads}T</strong> (${cSpecs.socket} • ${cSpecs.ddr})</span>
+      <span>TDP: <strong>${cSpecs.tdp}W</strong></span>
+      <span>Jogos: <strong class="text-slate-100">${candCpu._gamingScore || getCpuGamingScore(candCpu)}</strong></span>
+      <a href="${candCpu.offer_url}" target="_blank" class="text-violet-300 hover:underline font-semibold">Loja (${candCpu.store_name || 'loja'}) ↗</a>
     `;
   }
 
@@ -3567,21 +3575,33 @@ function renderCpuDuelAnalysis() {
     renderCpuArchitectureComparison(baseCpu, candCpu);
   }
 
-  // Versus Ratings
+  // Versus Ratings (A = Cyan, B = Violet)
   const bOverall = Math.round(baseCpu._compositeScore / 100);
   const cOverall = Math.round(candCpu._compositeScore / 100);
   const ratingsEl = document.getElementById('cpu-duel-versus-ratings');
   if (ratingsEl) {
     ratingsEl.innerHTML = `
-      <div class="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/30 text-center">
-        <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">${baseCpu.name}</span>
-        <div class="text-2xl font-black text-white mt-0.5 font-mono">${bOverall}<span class="text-xs text-slate-400">/100</span></div>
-        <span class="text-[10px] text-slate-400">Desempenho Geral</span>
+      <div class="ui-score-card ui-score-card--a">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--a">A · Base</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(basePrice)}</span>
+        </div>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${baseCpu.name}">${baseCpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-a-text);">${bOverall}</span>
+          <span class="text-xs text-slate-400">/ 100 Desempenho geral</span>
+        </div>
       </div>
-      <div class="bg-slate-900/90 p-3 rounded-xl border border-sky-500/30 text-center">
-        <span class="text-[10px] font-mono uppercase text-sky-400 font-bold">${candCpu.name}</span>
-        <div class="text-2xl font-black text-white mt-0.5 font-mono">${cOverall}<span class="text-xs text-slate-400">/100</span></div>
-        <span class="text-[10px] text-slate-400">Desempenho Geral</span>
+      <div class="ui-score-card ui-score-card--b">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--b">B · Candidato</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(candPrice)}</span>
+        </div>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${candCpu.name}">${candCpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-b-text);">${cOverall}</span>
+          <span class="text-xs text-slate-400">/ 100 Desempenho geral</span>
+        </div>
       </div>
     `;
   }
@@ -3655,31 +3675,64 @@ function renderCpuDuelAnalysis() {
   // Radar Chart
   renderCpuDuelRadarChart(baseCpu, candCpu);
 
-  // Verdict Box
+  // Verdict Box (Veredito Primeiro)
   const verdictBox = document.getElementById('cpu-duel-verdict-box');
   if (verdictBox) {
     const isGood = rel.verdictType === 'steal' || rel.verdictType === 'fair';
-    const borderCls = isGood ? 'border-emerald-500/40 bg-emerald-950/20' : (rel.verdictType === 'enthusiast' ? 'border-amber-500/40 bg-amber-950/20' : 'border-rose-500/40 bg-rose-950/20');
-    verdictBox.className = `mt-6 rounded-2xl p-5 border ${borderCls} transition-all`;
+    const isWarn = rel.verdictType === 'enthusiast';
+    const tone = isGood ? 'good' : (isWarn ? 'warn' : 'bad');
+    const badgeLabel = rel.verdictType === 'steal' ? 'Vale muito' : (isGood ? 'Vale a pena' : (isWarn ? 'Aguarde' : 'Não compensa'));
+    const deltaSign = rel.actualTotalDelta >= 0 ? '+' : '';
+    const perfSign = rel.perfGainPct >= 0 ? '+' : '';
+    const migBadge = rel.migration.isSamePlatform
+      ? `<span class="ui-badge ui-badge--good">Mesmo socket (${bSpecs.socket})</span>`
+      : `<span class="ui-badge ui-badge--warn">Migração ${bSpecs.socket} → ${cSpecs.socket}: +${fmtBRLShort(rel.migration.totalCost)}</span>`;
+
+    let oneLineVerdict = '';
+    if (isGood) {
+      oneLineVerdict = `Vale a pena investir ${deltaSign}${fmtBRLShort(rel.actualTotalDelta)} pelo ${candCpu.name} (${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho).`;
+    } else if (isWarn) {
+      const excess = Math.max(0, rel.actualTotalDelta - rel.fairMaxDelta);
+      oneLineVerdict = `Aguarde: o ${candCpu.name} está ${fmtBRLShort(excess)} acima do teto justo para ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho.`;
+    } else {
+      oneLineVerdict = `Não compensa: ${deltaSign}${fmtBRLShort(rel.actualTotalDelta)} no total por ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho está caro.`;
+    }
+
+    verdictBox.className = `ui-verdict ui-verdict--${tone} space-y-4`;
     verdictBox.innerHTML = `
-      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-        <div class="flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded-full font-mono font-bold text-xs uppercase bg-${rel.badgeColor}-500/20 text-${rel.badgeColor}-300 border border-${rel.badgeColor}-500/40">${rel.badgeLabel}</span>
-          <h3 class="text-base font-bold text-white">${rel.headline}</h3>
+      <div class="ui-verdict-grid">
+        <div class="space-y-2 max-w-3xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ui-badge ui-badge--${tone} font-bold uppercase tracking-wide">${badgeLabel}</span>
+            ${migBadge}
+          </div>
+          <h3 class="ui-verdict-headline">${oneLineVerdict}</h3>
         </div>
-        <div class="text-right">
-          <span class="text-xs text-slate-400 block font-mono">Diferença Total (CPU + Plataforma):</span>
-          <span class="text-sm font-mono font-bold text-white">${fmtBRL(rel.actualTotalDelta)}</span>
+        <div class="ui-verdict-numbers">
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Diferença total</span>
+            <span class="ui-verdict-stat-value">${deltaSign}${fmtBRLShort(rel.actualTotalDelta)}</span>
+            <span class="ui-verdict-stat-sub">${rel.migration.isSamePlatform ? 'Só o processador' : `CPU + ${fmtBRLShort(rel.migration.totalCost)} plataforma`}</span>
+          </div>
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Teto justo</span>
+            <span class="ui-verdict-stat-value" style="color: var(--ui-good-text);">+${fmtBRLShort(rel.fairMaxDelta)}</span>
+            <span class="ui-verdict-stat-sub">Pechincha: ≤ +${fmtBRLShort(rel.stealDelta)}</span>
+          </div>
         </div>
       </div>
-      <p class="text-xs text-slate-300 mt-3 leading-relaxed">
-        ${rel.summary}
-      </p>
-      <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 gap-2">
-        <span>Teto Justo Linear: <strong class="text-sky-300">+${fmtBRL(rel.fairMaxDelta)}</strong></span>
-        <span>Zona Pechincha: <strong class="text-emerald-300">≤ +${fmtBRL(rel.stealDelta)}</strong></span>
-        <span>Custo Plataforma (Mobo/RAM): <strong class="text-amber-300">+${fmtBRL(rel.migration.totalCost)}</strong></span>
-      </div>
+
+      <details class="ui-details">
+        <summary>Ver detalhes do cálculo</summary>
+        <div class="ui-details-body space-y-2">
+          <p class="text-slate-200 leading-relaxed">${rel.summary}</p>
+          <p class="text-slate-400">
+            Jogos: <strong>${rel.gamingGainPct >= 0 ? '+' : ''}${rel.gamingGainPct.toFixed(0)}%</strong> •
+            Workstation: <strong>${rel.wsGainPct >= 0 ? '+' : ''}${rel.wsGainPct.toFixed(0)}%</strong> •
+            IA/Compilação: <strong>${rel.aiGainPct >= 0 ? '+' : ''}${rel.aiGainPct.toFixed(0)}%</strong>
+          </p>
+        </div>
+      </details>
     `;
   }
 

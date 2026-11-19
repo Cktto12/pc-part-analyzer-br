@@ -61,9 +61,9 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Quatro cards grandes "O que você quer fazer?", que levam a cada área
 
 ### Fase 3 — Duelo: veredito primeiro
-- [ ] Card grande com a resposta em uma frase: **Vale / Aguarde / Não compensa**, mais a diferença de preço
-- [ ] Barras de desempenho no lugar dos parágrafos
-- [ ] Explicações detalhadas em "Ver detalhes" recolhido
+- [x] Card grande com a resposta em uma frase: **Vale / Aguarde / Não compensa**, mais a diferença de preço
+- [x] Barras de desempenho no lugar dos parágrafos
+- [x] Explicações detalhadas em "Ver detalhes" recolhido
 
 ### Fase 4 — Custo-benefício
 - [ ] Tabela mais enxuta, com selo de status do preço (abaixo do alvo / no alvo / caro)

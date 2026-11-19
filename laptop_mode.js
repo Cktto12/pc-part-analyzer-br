@@ -664,13 +664,8 @@ function _syncLaptopScaleButtons() {
   const bRel = document.getElementById('btn-laptop-scale-rel-duel');
   const bAbs = document.getElementById('btn-laptop-scale-abs-duel');
   if (!bRel || !bAbs) return;
-  if (isAbs) {
-    bRel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
-    bAbs.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
-  } else {
-    bRel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
-    bAbs.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
-  }
+  bRel.classList.toggle('is-active', !isAbs);
+  bAbs.classList.toggle('is-active', isAbs);
 }
 
 function _renderLaptopPickerMeta(lap, side) {
@@ -932,32 +927,32 @@ function renderLaptopDuelAnalysis() {
   const rel = evaluateLaptopRelationalUpgrade(baseLap, candLap, basePrice, candPrice);
   const ex = getLaptopCatalogExtremes();
 
-  // Overall Versus Score Cards
+  // Overall Versus Score Cards (A = Cyan, B = Violet)
   const ratingsEl = document.getElementById('laptop-duel-versus-ratings');
   if (ratingsEl) {
     const bWin = baseLap._overallVersusScore > candLap._overallVersusScore;
     const cWin = candLap._overallVersusScore > baseLap._overallVersusScore;
     ratingsEl.innerHTML = `
-      <div class="p-3.5 rounded-xl bg-emerald-950/25 border ${bWin ? 'border-emerald-400 shadow-emerald-500/10 shadow-md' : 'border-emerald-500/30'} flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold block">Score Base ${bWin ? '👑 VENCEDOR' : ''}</span>
-          <span class="text-xs font-bold text-white truncate block">${_escLapHtml(shortLaptopChipName(baseLap))}</span>
-          <span class="text-[10px] text-slate-400 font-mono">C/B: ${baseLap._myCBScore}/100</span>
+      <div class="ui-score-card ui-score-card--a">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--a">A · Base ${bWin ? '★' : ''}</span>
+          <span class="text-xs ui-mono text-slate-400">C/B ${baseLap._myCBScore}/100</span>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/50 flex flex-col items-center justify-center shrink-0">
-          <span class="text-lg font-mono font-black text-emerald-300 leading-none">${baseLap._overallVersusScore}</span>
-          <span class="text-[9px] font-mono text-emerald-400">/100</span>
+        <span class="text-sm font-bold text-white truncate block mt-1">${_escLapHtml(shortLaptopChipName(baseLap))}</span>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-a-text);">${baseLap._overallVersusScore}</span>
+          <span class="text-xs text-slate-400">/ 100 Score geral</span>
         </div>
       </div>
-      <div class="p-3.5 rounded-xl bg-purple-950/25 border ${cWin ? 'border-purple-400 shadow-purple-500/10 shadow-md' : 'border-purple-500/30'} flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <span class="text-[10px] font-mono uppercase text-purple-400 font-bold block">Score Candidato ${cWin ? '👑 VENCEDOR' : ''}</span>
-          <span class="text-xs font-bold text-white truncate block">${_escLapHtml(shortLaptopChipName(candLap))}</span>
-          <span class="text-[10px] text-slate-400 font-mono">C/B: ${candLap._myCBScore}/100</span>
+      <div class="ui-score-card ui-score-card--b">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--b">B · Candidato ${cWin ? '★' : ''}</span>
+          <span class="text-xs ui-mono text-slate-400">C/B ${candLap._myCBScore}/100</span>
         </div>
-        <div class="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/50 flex flex-col items-center justify-center shrink-0">
-          <span class="text-lg font-mono font-black text-purple-300 leading-none">${candLap._overallVersusScore}</span>
-          <span class="text-[9px] font-mono text-purple-400">/100</span>
+        <span class="text-sm font-bold text-white truncate block mt-1">${_escLapHtml(shortLaptopChipName(candLap))}</span>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-b-text);">${candLap._overallVersusScore}</span>
+          <span class="text-xs text-slate-400">/ 100 Score geral</span>
         </div>
       </div>
     `;
@@ -1086,20 +1081,20 @@ function renderLaptopDuelAnalysis() {
         labels: ['Jogos', 'Workstation', 'IA / VRAM', 'Software', 'Tela', 'Bateria', 'Portabilidade', 'Upgr./Portas'],
         datasets: [
           {
-            label: `Base: ${shortLaptopChipName(baseLap)}`,
+            label: `A · ${shortLaptopChipName(baseLap)}`,
             data: toRadarArr(baseLap),
-            borderColor: '#10b981',
-            backgroundColor: 'rgba(16, 185, 129, 0.20)',
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.22)',
             borderWidth: 2,
-            pointBackgroundColor: '#10b981'
+            pointBackgroundColor: '#38bdf8'
           },
           {
-            label: `Cand: ${shortLaptopChipName(candLap)}`,
+            label: `B · ${shortLaptopChipName(candLap)}`,
             data: toRadarArr(candLap),
-            borderColor: '#a855f7',
-            backgroundColor: 'rgba(168, 85, 247, 0.22)',
+            borderColor: '#a78bfa',
+            backgroundColor: 'rgba(167, 139, 250, 0.24)',
             borderWidth: 2,
-            pointBackgroundColor: '#a855f7'
+            pointBackgroundColor: '#a78bfa'
           }
         ]
       },
@@ -1113,7 +1108,7 @@ function renderLaptopDuelAnalysis() {
             ticks: { display: false, stepSize: 25 },
             grid: { color: 'rgba(148, 163, 184, 0.16)' },
             angleLines: { color: 'rgba(148, 163, 184, 0.16)' },
-            pointLabels: { color: '#cbd5e1', font: { size: 11, family: 'monospace' } }
+            pointLabels: { color: '#cbd5e1', font: { size: 12, family: 'Inter, sans-serif', weight: '600' } }
           }
         },
         plugins: { legend: { display: false } }
@@ -1124,8 +1119,8 @@ function renderLaptopDuelAnalysis() {
   const legEl = document.getElementById('laptop-duel-radar-legend');
   if (legEl) {
     legEl.innerHTML = `
-      <span class="flex items-center gap-1.5 text-emerald-300"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Base: ${_escLapHtml(shortLaptopChipName(baseLap))}</span>
-      <span class="flex items-center gap-1.5 text-purple-300"><span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span> Cand: ${_escLapHtml(shortLaptopChipName(candLap))}</span>
+      <span class="flex items-center gap-1.5 text-white font-semibold"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--ui-compare-a);"></span> ${_escLapHtml(shortLaptopChipName(baseLap))}</span>
+      <span class="flex items-center gap-1.5 text-white font-semibold"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--ui-compare-b);"></span> ${_escLapHtml(shortLaptopChipName(candLap))}</span>
     `;
   }
 
@@ -1134,37 +1129,31 @@ function renderLaptopDuelAnalysis() {
   const whyAEl = document.getElementById('laptop-duel-why-a');
   if (whyAEl) {
     whyAEl.innerHTML = `
-      <div class="flex items-center justify-between border-b border-emerald-500/20 pb-2">
-        <span class="text-xs font-bold text-emerald-300">✅ Por que escolher ${_escLapHtml(shortLaptopChipName(baseLap))}?</span>
-        <span class="text-[10px] font-mono text-emerald-400">Base</span>
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span class="text-sm font-bold text-white">Por que escolher ${_escLapHtml(shortLaptopChipName(baseLap))}?</span>
+        <span class="ui-badge ui-badge--a">A · Base</span>
       </div>
-      <ul class="space-y-1.5 text-xs text-slate-200">
+      <ul class="space-y-1.5 text-sm text-slate-300">
         ${(whys.a.length ? whys.a : ['Equilíbrio próximo neste confronto — confira Custo-Benefício e Histórico de preços.'])
-          .map(t => `<li class="flex items-start gap-2"><span class="text-emerald-400 font-bold">•</span><span>${t}</span></li>`).join('')}
+          .map(t => `<li class="flex items-start gap-2"><span class="font-bold" style="color: var(--ui-compare-a);">•</span><span>${t}</span></li>`).join('')}
       </ul>
     `;
   }
   const whyBEl = document.getElementById('laptop-duel-why-b');
   if (whyBEl) {
     whyBEl.innerHTML = `
-      <div class="flex items-center justify-between border-b border-purple-500/20 pb-2">
-        <span class="text-xs font-bold text-purple-300">✅ Por que escolher ${_escLapHtml(shortLaptopChipName(candLap))}?</span>
-        <span class="text-[10px] font-mono text-purple-400">Candidato</span>
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+        <span class="text-sm font-bold text-white">Por que escolher ${_escLapHtml(shortLaptopChipName(candLap))}?</span>
+        <span class="ui-badge ui-badge--b">B · Candidato</span>
       </div>
-      <ul class="space-y-1.5 text-xs text-slate-200">
+      <ul class="space-y-1.5 text-sm text-slate-300">
         ${(whys.b.length ? whys.b : ['Modelo equivalente neste recorte — avalie se o preço justifica o conjunto.'])
-          .map(t => `<li class="flex items-start gap-2"><span class="text-purple-400 font-bold">•</span><span>${t}</span></li>`).join('')}
+          .map(t => `<li class="flex items-start gap-2"><span class="font-bold" style="color: var(--ui-compare-b);">•</span><span>${t}</span></li>`).join('')}
       </ul>
     `;
   }
 
-  // Relational Verdict Box
-  const colorMap = {
-    emerald: 'bg-emerald-950/45 border-emerald-500/60 text-emerald-100',
-    sky: 'bg-sky-950/45 border-sky-500/60 text-sky-100',
-    amber: 'bg-amber-950/45 border-amber-500/60 text-amber-100',
-    rose: 'bg-rose-950/45 border-rose-500/60 text-rose-100'
-  };
+  // Relational Verdict Box (Veredito Primeiro)
   const badgeMap = {
     emerald: 'bg-emerald-500 text-slate-950',
     sky: 'bg-sky-400 text-slate-950',
@@ -1173,21 +1162,58 @@ function renderLaptopDuelAnalysis() {
   };
   const verdictEl = document.getElementById('laptop-duel-verdict-box');
   if (verdictEl) {
-    verdictEl.className = `mt-6 rounded-2xl p-5 border transition-all ${colorMap[rel.color] || colorMap.sky}`;
+    const isGood = rel.color === 'emerald' || rel.color === 'sky';
+    const isWarn = rel.color === 'amber';
+    const tone = isGood ? 'good' : (isWarn ? 'warn' : 'bad');
+    const badgeLabel = rel.color === 'emerald' ? 'Vale muito' : (isGood ? 'Vale a pena' : (isWarn ? 'Aguarde' : 'Não compensa'));
+    const deltaSign = rel.actualDelta >= 0 ? '+' : '';
+    const perfSign = rel.perfGainPct >= 0 ? '+' : '';
+    const deltaPct = Math.round((rel.actualDelta / Math.max(1, basePrice)) * 100);
+    const bName = _escLapHtml(shortLaptopChipName(baseLap));
+    const cName = _escLapHtml(shortLaptopChipName(candLap));
+
+    let oneLineVerdict = '';
+    if (isGood) {
+      oneLineVerdict = rel.actualDelta <= 0 && rel.perfGainPct >= 0
+        ? `Vale muito: ${cName} entrega ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho custando menos.`
+        : `Vale a pena pagar ${deltaSign}${fmtBRLShort(rel.actualDelta)} pelo ${cName} (${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho geral).`;
+    } else if (isWarn) {
+      const excess = Math.max(0, rel.actualDelta - rel.fairMaxDelta);
+      oneLineVerdict = `Aguarde: o ${cName} está ${fmtBRLShort(excess)} acima do teto justo para ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho.`;
+    } else {
+      oneLineVerdict = `Não compensa: ${deltaSign}${fmtBRLShort(rel.actualDelta)} a mais por ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho está caro.`;
+    }
+
+    verdictEl.className = `ui-verdict ui-verdict--${tone} space-y-4`;
     verdictEl.innerHTML = `
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1.5">
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-black ${badgeMap[rel.color] || badgeMap.sky}">${rel.tier}</span>
-            <span class="text-xs font-mono opacity-85">Ganho Contextual: <strong>${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(1)}%</strong> • Diferença de Preço: <strong>${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}</strong></span>
+      <div class="ui-verdict-grid">
+        <div class="space-y-2 max-w-3xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ui-badge ui-badge--${tone} font-bold uppercase tracking-wide">${badgeLabel}</span>
+            <span class="ui-badge">${rel.tier}</span>
           </div>
-          <p class="text-xs sm:text-sm leading-relaxed">${rel.summary}</p>
+          <h3 class="ui-verdict-headline">${oneLineVerdict}</h3>
         </div>
-        <div class="shrink-0 bg-slate-950/70 px-4 py-2.5 rounded-xl border border-white/10 text-right">
-          <span class="text-[10px] font-mono uppercase text-slate-400 block">Preço Justo Máximo (Candidato)</span>
-          <span class="text-lg font-mono font-black text-white">${fmtBRLShort(rel.fairMaxCandPrice)}</span>
+        <div class="ui-verdict-numbers">
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Diferença de preço</span>
+            <span class="ui-verdict-stat-value">${deltaSign}${fmtBRLShort(rel.actualDelta)}</span>
+            <span class="ui-verdict-stat-sub">${deltaSign}${deltaPct}% vs ${bName}</span>
+          </div>
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Teto justo (B)</span>
+            <span class="ui-verdict-stat-value" style="color: var(--ui-good-text);">${fmtBRLShort(rel.fairMaxCandPrice)}</span>
+            <span class="ui-verdict-stat-sub">Até +${fmtBRLShort(rel.fairMaxDelta)} de diferença</span>
+          </div>
         </div>
       </div>
+
+      <details class="ui-details">
+        <summary>Ver detalhes do cálculo</summary>
+        <div class="ui-details-body">
+          <p class="text-slate-200 leading-relaxed">${rel.summary}</p>
+        </div>
+      </details>
     `;
   }
 
