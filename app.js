@@ -2255,7 +2255,7 @@ function populateSelectors() {
     candSel.innerHTML = optionsHTML;
     if (cbRelSel) {
       cbRelSel.innerHTML = sortedGPUs.map(g =>
-        `<option value="${g.slug}">Base Relacional: ${g.name} (${fmtBRLShort(g.price_brl)})</option>`
+        `<option value="${g.slug}">${g.name} (${fmtBRLShort(g.price_brl)})</option>`
       ).join('');
     }
     if (simASel) simASel.innerHTML = optionsHTML;
