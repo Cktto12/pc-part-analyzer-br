@@ -588,7 +588,7 @@ function populateLaptopSelectors() {
 
   if (selBase) selBase.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopDuelBaseSlug);
   if (selCand) selCand.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopDuelCandSlug);
-  if (selCbBase) selCbBase.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopCbRelBaseSlug, 'Base Relacional: ');
+  if (selCbBase) selCbBase.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopCbRelBaseSlug);
   if (selSimA) selSimA.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.simLaptopASlug);
   if (selSimB) selSimB.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.simLaptopBSlug);
 
