@@ -21,7 +21,8 @@ function saveUserPrefs() {
       monitorMaxFps: STATE.monitorMaxFps,
       dlssMode: STATE.dlssMode,
       comparisonScaleMode: STATE.comparisonScaleMode,
-      wGaming: STATE.wGaming, wAI: STATE.wAI, wSoft: STATE.wSoft,
+      wGaming: STATE.wGaming, wWorkstation: STATE.wWorkstation, wAI: STATE.wAI, wSoft: STATE.wSoft,
+      workloadIntensity: STATE.workloadIntensity,
       games: STATE.games,
       bfRanges: STATE.bfRanges,
       upg: STATE.upg
@@ -38,6 +39,7 @@ function loadUserPrefs() {
   STATE.upg = { cpu: {}, mobo: {}, reuseRam: true };
   STATE.focusGameId = 'cyberpunk';
   STATE.showGameEditor = false;
+  STATE.workloadIntensity = { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null');
     if (p) {
@@ -45,13 +47,34 @@ function loadUserPrefs() {
       if (p.monitorMaxFps) STATE.monitorMaxFps = p.monitorMaxFps;
       if (p.dlssMode && ['perceived', 'sr', 'native', 'max_fg'].includes(p.dlssMode)) STATE.dlssMode = p.dlssMode;
       if (p.comparisonScaleMode && ['relative', 'absolute'].includes(p.comparisonScaleMode)) STATE.comparisonScaleMode = p.comparisonScaleMode;
-      if (typeof p.wGaming === 'number') { STATE.wGaming = p.wGaming; STATE.wAI = p.wAI; STATE.wSoft = p.wSoft; }
+      if (typeof p.wGaming === 'number') {
+        STATE.wGaming = p.wGaming;
+        if (typeof p.wWorkstation === 'number') STATE.wWorkstation = p.wWorkstation;
+        STATE.wAI = p.wAI;
+        STATE.wSoft = p.wSoft;
+      }
+      if (p.workloadIntensity && typeof p.workloadIntensity === 'object') {
+        ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(k => {
+          const v = parseInt(p.workloadIntensity[k], 10);
+          if (!isNaN(v)) STATE.workloadIntensity[k] = Math.max(1, Math.min(5, v));
+        });
+      }
       if (Array.isArray(p.games) && p.games.length) STATE.games = p.games;
       if (p.bfRanges) STATE.bfRanges = p.bfRanges;
       if (p.upg) {
         STATE.upg = Object.assign({ cpu: {}, mobo: {}, reuseRam: true }, p.upg);
         if (!STATE.upg.mobo) STATE.upg.mobo = {};
         if (!STATE.upg.cpu) STATE.upg.cpu = {};
+      }
+    }
+    const rawInt = localStorage.getItem('gca_workload_intensity');
+    if (rawInt) {
+      const wi = JSON.parse(rawInt);
+      if (wi && typeof wi === 'object') {
+        ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(k => {
+          const v = parseInt(wi[k], 10);
+          if (!isNaN(v)) STATE.workloadIntensity[k] = Math.max(1, Math.min(5, v));
+        });
       }
     }
   } catch (_) { /* ignore corrupt prefs */ }
@@ -67,12 +90,13 @@ function loadUserPrefs() {
   if (gDlss) gDlss.value = STATE.dlssMode;
   const sDlss = document.getElementById('sim-select-upscale');
   if (sDlss) sDlss.value = STATE.dlssMode;
-  [['gaming', STATE.wGaming], ['ai', STATE.wAI], ['soft', STATE.wSoft]].forEach(([k, v]) => {
+  [['gaming', STATE.wGaming], ['workstation', STATE.wWorkstation !== undefined ? STATE.wWorkstation : 35], ['ai', STATE.wAI], ['soft', STATE.wSoft]].forEach(([k, v]) => {
     const sl = document.getElementById(`slider-w-${k}`);
     if (sl) sl.value = v;
     const nm = document.getElementById(`num-w-${k}`);
     if (nm) nm.value = v;
   });
+  if (typeof syncWorkloadIntensityUI === 'function') syncWorkloadIntensityUI();
 }
 
 function onGlobalDlssModeChange(val) {

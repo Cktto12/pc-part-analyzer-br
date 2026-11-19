@@ -160,11 +160,52 @@ function getLaptopSystemQualityScore(lap) {
   )));
 }
 
+function getLaptopIntensityConfig() {
+  const src = (typeof STATE !== 'undefined' && STATE.workloadIntensity) ? STATE.workloadIntensity : {};
+  const clamp = v => {
+    const n = parseInt(v, 10);
+    return isNaN(n) ? 3 : Math.max(1, Math.min(5, n));
+  };
+  return {
+    gaming: clamp(src.gaming),
+    workstation: clamp(src.workstation),
+    localAI: clamp(src.localAI),
+    aiTraining: clamp(src.aiTraining)
+  };
+}
+
+function _intensityUtilityCurve(val, target, floor, level) {
+  const num = Number(val || 0);
+  if (num <= 0) return 0.01;
+  const ratio = num / Math.max(1, target);
+  if (ratio >= 1.0) {
+    // Tight saturation cap at Light (L1), generous flagship headroom reward at Extreme (L5)
+    const headroomGain = 0.06 + (level - 1) * 0.055;
+    return Math.min(1.38, 1.0 + headroomGain * Math.log1p(ratio - 1.0));
+  }
+  const exp = 0.85 + (level - 1) * 0.30;
+  let u = Math.pow(ratio, exp);
+  if (num < floor) {
+    u *= Math.pow(num / Math.max(1, floor), 0.65 + (level - 1) * 0.42);
+  }
+  return Math.max(0.01, u);
+}
+
+function _computeLaptopAiTrainRaw(lap) {
+  if (!lap) return 100;
+  const em = getLaptopEffectiveGpuMem(lap);
+  const cudaBonus = lap.gpu_brand === 'NVIDIA' ? 1.38 : (lap.is_apple_unified ? 0.76 : 0.22);
+  return Math.max(50, Math.round(
+    (Number(lap.gpu_fp16_tflops || 0) * 95 + Number(lap.gpu_tgp_w || 0) * 8 + em * 120) * cudaBonus +
+    Number(lap.software_score || 0) * 0.06
+  ));
+}
+
 function getLaptopCatalogExtremes() {
   const pool = getLaptopPool();
   if (!pool.length) {
     return {
-      maxGaming: 4000, maxWS: 22000, maxAI: 5000, maxSoft: 22000,
+      maxGaming: 4000, maxWS: 22000, maxAI: 5000, maxAiTrain: 5800, maxSoft: 22000,
       maxPrice: 20000, maxComposite: 9500, maxVram: 16, maxTgp: 140, maxHz: 240
     };
   }
@@ -172,6 +213,7 @@ function getLaptopCatalogExtremes() {
     maxGaming: Math.max(1000, ...pool.map(l => Number(l.gaming_score || 0))),
     maxWS: Math.max(2000, ...pool.map(l => getLaptopWorkstationScore(l))),
     maxAI: Math.max(1000, ...pool.map(l => getLaptopAIScore(l))),
+    maxAiTrain: Math.max(1000, ...pool.map(l => _computeLaptopAiTrainRaw(l))),
     maxSoft: Math.max(2000, ...pool.map(l => Number(l.software_score || 0))),
     maxPrice: Math.max(3000, ...pool.map(l => Number(l.price_brl || 0))),
     maxComposite: Math.max(3000, ...pool.map(l => Number(l._compositeScore || 5000))),
@@ -181,69 +223,131 @@ function getLaptopCatalogExtremes() {
   };
 }
 
+function _computeLaptopIntensityEvaluation(lap, customWeights = null) {
+  const st = (typeof STATE !== 'undefined') ? STATE : {};
+  const wG = customWeights ? Number(customWeights.wGaming || 0) : (st.wGaming !== undefined ? Number(st.wGaming) : 30);
+  const wWS = customWeights ? Number(customWeights.wWorkstation || 0) : (st.wWorkstation !== undefined ? Number(st.wWorkstation) : 35);
+  const wAI = customWeights ? Number(customWeights.wAI || 0) : (st.wAI !== undefined ? Number(st.wAI) : 20);
+  const wTrn = customWeights ? Number(customWeights.wSoft || 0) : (st.wSoft !== undefined ? Number(st.wSoft) : 15);
+  const totalPct = Math.max(1, wG + wWS + wAI + wTrn);
+
+  const intens = getLaptopIntensityConfig();
+  const ig = intens.gaming;
+  const iws = intens.workstation;
+  const ilai = intens.localAI;
+  const itrn = intens.aiTraining;
+
+  const ramGb = Number(lap.ram_gb || 8);
+  const baseRamSanity = ramGb < 8 ? 0.52 : 1.0;
+  const em = getLaptopEffectiveGpuMem(lap);
+  const heft = parseFloat(st.vramHeft) || 1.6;
+
+  // 1. Gaming Utility
+  const gTgt = [550, 1400, 2400, 3150, 4050][ig - 1];
+  const gFlr = [300, 850, 1550, 2350, 2950][ig - 1];
+  const uG = _intensityUtilityCurve(lap.gaming_score, gTgt, gFlr, ig);
+
+  // 2. Workstation Utility (Render / Editing / Dev profile + RAM floor)
+  const wsEff = getLaptopWorkstationScore(lap);
+  const wsTgt = [6000, 10500, 15000, 18500, 22500][iws - 1];
+  const wsFlr = [3800, 7200, 10800, 14200, 17500][iws - 1];
+  const ramWsReq = [8, 16, 16, 24, 32][iws - 1];
+  const ramWsMult = ramGb >= ramWsReq ? 1.0 : Math.max(0.35, Math.pow(ramGb / ramWsReq, 0.60 + 0.16 * iws));
+  const uWS = _intensityUtilityCurve(wsEff, wsTgt, wsFlr, iws) * ramWsMult;
+
+  // 3. Local AI Utility (LLMs Q4 tok/s + VRAM / Apple Unified capacity)
+  const aiEff = getLaptopAIScore(lap);
+  const aiRaw = (Number(lap.ai_score || 0) * (0.70 + 0.30 * (em / 8)) +
+    Number(lap.llm_8b_tok_s || 0) * 18 +
+    Number(lap.llm_14b_tok_s || 0) * 32 +
+    Number(lap.llm_32b_tok_s || 0) * 65) * (0.90 + 0.06 * heft);
+  const aiTgt = [420, 1500, 2700, 3900, 5200][ilai - 1];
+  const aiFlr = [200, 850, 1750, 2600, 3400][ilai - 1];
+  const memAiReq = [4, 6, 8, 10, 14][ilai - 1];
+  const memAiMult = em >= memAiReq ? 1.0 : Math.max(0.18, Math.pow(em / memAiReq, 0.45 + 0.30 * ilai));
+  const uLAI = _intensityUtilityCurve(aiRaw, aiTgt, aiFlr, ilai) * memAiMult;
+
+  // 4. AI Training & CUDA / Engineering Utility
+  const aiTrainEff = _computeLaptopAiTrainRaw(lap);
+  const trnTgt = [520, 1750, 3200, 4400, 5700][itrn - 1];
+  const trnFlr = [220, 950, 2100, 3100, 4000][itrn - 1];
+  const ramTrReq = [8, 16, 16, 24, 32][itrn - 1];
+  const ramTrMult = ramGb >= ramTrReq ? 1.0 : Math.max(0.28, Math.pow(ramGb / ramTrReq, 0.50 + 0.22 * itrn));
+  const uTrn = _intensityUtilityCurve(aiTrainEff, trnTgt, trnFlr, itrn) * ramTrMult;
+
+  // Blend pillars: heavier intensity naturally gives that workload slightly stronger pull
+  const pcts = [wG, wWS, wAI, wTrn];
+  const lvls = [ig, iws, ilai, itrn];
+  const utils = [uG, uWS, uLAI, uTrn];
+  const effWeights = pcts.map((pct, i) => pct * (0.60 + 0.28 * lvls[i]));
+  const totEffW = Math.max(1, effWeights.reduce((a, b) => a + b, 0));
+  const workU = effWeights.reduce((acc, ew, i) => acc + ew * utils[i], 0) / totEffW;
+
+  // Cross-pillar readiness gate: penalizes severe under-provisioning on Heavy/Extreme active pillars
+  let gate = 1.0;
+  for (let i = 0; i < 4; i++) {
+    if (pcts[i] >= 10 && lvls[i] >= 3 && utils[i] < 0.42) {
+      const severity = ((lvls[i] - 2) / 3) * Math.min(1, pcts[i] / 25);
+      gate *= Math.max(0.32, Math.pow(utils[i] / 0.42, 0.65 + 0.85 * severity));
+    }
+  }
+  gate = Math.max(0.18, gate);
+
+  const avgIntensity = pcts.reduce((acc, pct, i) => acc + pct * lvls[i], 0) / totalPct;
+  const ergW = Math.max(0.08, 0.30 - (avgIntensity - 1) * 0.055);
+  const sysQuality = getLaptopSystemQualityScore(lap);
+  const effectiveU = (workU * (1 - ergW) + (sysQuality / 100) * ergW * Math.min(1, workU * 1.4)) * gate * baseRamSanity;
+  const compositeScore = Math.max(10, Math.round(effectiveU * 8800));
+
+  return {
+    wsEff,
+    aiEff,
+    aiTrainEff,
+    sysQuality,
+    effMem: em,
+    compositeScore,
+    readinessGate: gate,
+    avgIntensity,
+    intens,
+    pillarUtils: { gaming: uG, workstation: uWS, localAI: uLAI, aiTraining: uTrn }
+  };
+}
+
 function getLaptopContextualCompositeScore(lap, customWeights = null) {
   if (!lap) return 1000;
-  const sub = getLaptopCatalogExtremes();
-  const st = (typeof STATE !== 'undefined') ? STATE : {};
-  const wg = customWeights ? customWeights.wGaming : (st.wGaming !== undefined ? st.wGaming : 30);
-  const wws = customWeights ? customWeights.wWorkstation : (st.wWorkstation !== undefined ? st.wWorkstation : 35);
-  const wa = customWeights ? customWeights.wAI : (st.wAI !== undefined ? st.wAI : 20);
-  const ws = customWeights ? customWeights.wSoft : (st.wSoft !== undefined ? st.wSoft : 15);
-  const totalW = Math.max(1, wg + wws + wa + ws);
-
-  const gScaled = (Number(lap.gaming_score || 0) / sub.maxGaming) * 10000;
-  const wsScaled = (getLaptopWorkstationScore(lap) / sub.maxWS) * 10000;
-  const aiScaled = (getLaptopAIScore(lap) / sub.maxAI) * 10000;
-  const sScaled = (Number(lap.software_score || 0) / sub.maxSoft) * 10000;
-
-  const workloadScore = (wg * gScaled + wws * wsScaled + wa * aiScaled + ws * sScaled) / totalW;
-  const sysQualityScaled = getLaptopSystemQualityScore(lap) * 100;
-
-  // 85% contextual workloads + 15% physical system ergonomics (display/battery/portability/ports/upgradeability)
-  return Math.max(250, Math.round(workloadScore * 0.85 + sysQualityScaled * 0.15));
+  return _computeLaptopIntensityEvaluation(lap, customWeights).compositeScore;
 }
 
 function enrichLaptopsWithContextualMetrics() {
   const pool = getLaptopPool();
   if (!pool.length) return;
 
-  // First pass: effective workload + full-system quality + raw composite
+  let maxComposite = 1000;
   pool.forEach(lap => {
-    lap._wsEff = getLaptopWorkstationScore(lap);
-    lap._aiEff = getLaptopAIScore(lap);
-    lap._sysQuality = getLaptopSystemQualityScore(lap);
-    lap._effGpuMem = getLaptopEffectiveGpuMem(lap);
-  });
+    const ev = _computeLaptopIntensityEvaluation(lap);
+    lap._wsEff = ev.wsEff;
+    lap._aiEff = ev.aiEff;
+    lap._aiTrainEff = ev.aiTrainEff;
+    lap._sysQuality = ev.sysQuality;
+    lap._effGpuMem = ev.effMem;
+    lap._compositeScore = ev.compositeScore;
+    lap._readinessGate = ev.readinessGate;
+    lap._avgIntensity = ev.avgIntensity;
+    lap._pillarUtils = ev.pillarUtils;
+    if (ev.compositeScore > maxComposite) maxComposite = ev.compositeScore;
 
-  // Second pass with catalog extremes cached cleanly
-  const maxG = Math.max(1000, ...pool.map(l => Number(l.gaming_score || 0)));
-  const maxWS = Math.max(2000, ...pool.map(l => l._wsEff));
-  const maxAI = Math.max(1000, ...pool.map(l => l._aiEff));
-  const maxS = Math.max(2000, ...pool.map(l => Number(l.software_score || 0)));
-
-  const st = (typeof STATE !== 'undefined') ? STATE : {};
-  const wg = st.wGaming !== undefined ? st.wGaming : 30;
-  const wws = st.wWorkstation !== undefined ? st.wWorkstation : 35;
-  const wa = st.wAI !== undefined ? st.wAI : 20;
-  const ws = st.wSoft !== undefined ? st.wSoft : 15;
-  const totalW = Math.max(1, wg + wws + wa + ws);
-
-  pool.forEach(lap => {
-    const gScaled = (Number(lap.gaming_score || 0) / maxG) * 10000;
-    const wsScaled = (lap._wsEff / maxWS) * 10000;
-    const aiScaled = (lap._aiEff / maxAI) * 10000;
-    const sScaled = (Number(lap.software_score || 0) / maxS) * 10000;
-    const workloadScore = (wg * gScaled + wws * wsScaled + wa * aiScaled + ws * sScaled) / totalW;
-
-    lap._compositeScore = Math.max(250, Math.round(workloadScore * 0.85 + lap._sysQuality * 100 * 0.15));
-    // Versus 0-100 overall score (60% contextual workload + 40% hardware ecosystem)
-    lap._overallVersusScore = Math.min(99, Math.max(15, Math.round(
-      (workloadScore / 10000) * 60 + lap._sysQuality * 0.40
-    )));
     const priceSafe = Math.max(1000, Number(lap.price_brl || 3000));
-    lap._rawCBRatio = lap._compositeScore / priceSafe;
+    const priceExp = 0.94 - (ev.avgIntensity - 1) * 0.045;
+    lap._rawCBRatio = lap._compositeScore / Math.pow(priceSafe, priceExp);
     lap._dominatedBy = null;
     lap._paretoPenalty = 1.0;
+  });
+
+  pool.forEach(lap => {
+    lap._overallVersusScore = Math.min(99, Math.max(10, Math.round(
+      (lap._compositeScore / Math.max(1, maxComposite)) * 65 +
+      lap._sysQuality * 0.35 * Math.min(1, lap._readinessGate + 0.25)
+    )));
   });
 
   // Pareto dominance check (comparing laptops where price is close or strictly lower + system/perf strictly stronger)
@@ -269,7 +373,7 @@ function enrichLaptopsWithContextualMetrics() {
     a._adjustedCB = a._rawCBRatio * a._paretoPenalty;
   });
 
-  const maxAdjCB = Math.max(0.01, ...pool.map(l => l._adjustedCB));
+  const maxAdjCB = Math.max(0.0001, ...pool.map(l => l._adjustedCB));
   pool.forEach(lap => {
     lap._myCBScore = Math.min(100, Math.max(5, Math.round((lap._adjustedCB / maxAdjCB) * 100)));
   });
@@ -284,6 +388,9 @@ function evaluateLaptopRelationalUpgrade(baseLap, candLap, basePrice, candPrice)
   const gGainPct = ((Number(candLap.gaming_score || 1) / Math.max(1, Number(baseLap.gaming_score || 1))) - 1) * 100;
   const wsGainPct = ((getLaptopWorkstationScore(candLap) / Math.max(1, getLaptopWorkstationScore(baseLap))) - 1) * 100;
   const aiGainPct = ((getLaptopAIScore(candLap) / Math.max(1, getLaptopAIScore(baseLap))) - 1) * 100;
+  const bTrn = Number(baseLap._aiTrainEff || _computeLaptopAiTrainRaw(baseLap));
+  const cTrn = Number(candLap._aiTrainEff || _computeLaptopAiTrainRaw(candLap));
+  const trnGainPct = ((cTrn / Math.max(1, bTrn)) - 1) * 100;
 
   const actualDelta = candPrice - basePrice;
   const priceDeltaPct = basePrice > 0 ? (actualDelta / basePrice) * 100 : 0;
@@ -363,7 +470,7 @@ function evaluateLaptopRelationalUpgrade(baseLap, candLap, basePrice, candPrice)
   }
 
   return {
-    perfRatio, perfGainPct, gGainPct, wsGainPct, aiGainPct,
+    perfRatio, perfGainPct, gGainPct, wsGainPct, aiGainPct, trnGainPct,
     actualDelta, priceDeltaPct,
     fairMaxDelta, stealDelta, stretchMaxDelta,
     stealCandPrice, fairMaxCandPrice, stretchCandPrice,
@@ -911,6 +1018,18 @@ function renderLaptopDuelAnalysis() {
         candName: cNameShort
       }),
       renderComparisonBarHTML({
+        title: 'AI Training & CUDA FP16',
+        iconSvg: LAP_SVGS.cpu,
+        baseVal: baseLap._aiTrainEff || _computeLaptopAiTrainRaw(baseLap),
+        candVal: candLap._aiTrainEff || _computeLaptopAiTrainRaw(candLap),
+        baseLabel: `${baseLap.gpu_fp16_tflops} TFLOPS`,
+        candLabel: `${candLap.gpu_fp16_tflops} TFLOPS`,
+        diffPct: rel.trnGainPct,
+        maxVal: ex.maxAiTrain,
+        baseName: bNameShort,
+        candName: cNameShort
+      }),
+      renderComparisonBarHTML({
         title: 'Qualidade da Tela (Hz / sRGB / Nits)',
         iconSvg: LAP_SVGS.screen,
         baseVal: baseLap.display_score,
@@ -1213,7 +1332,11 @@ function renderLaptopDuelAnalysis() {
 
   const insEl = document.getElementById('laptop-duel-system-insight');
   if (insEl) {
-    const notes = [];
+    const wi = getLaptopIntensityConfig();
+    const lvName = l => (['', 'Leve', 'Mod.', 'Pesado', 'M.Pes.', 'Extremo'][l] || 'Pesado');
+    const notes = [
+      `🎚️ <strong>Intensidade Ativa:</strong> Jogos <strong>${lvName(wi.gaming)} (${wi.gaming}/5)</strong> • Workstation <strong>${lvName(wi.workstation)} (${wi.workstation}/5)</strong> • IA Local <strong>${lvName(wi.localAI)} (${wi.localAI}/5)</strong> • AI Training <strong>${lvName(wi.aiTraining)} (${wi.aiTraining}/5)</strong>.`
+    ];
     if (baseLap.ram_soldered || candLap.ram_soldered) {
       const solderedNames = [baseLap, candLap].filter(l => l.ram_soldered).map(l => shortLaptopChipName(l));
       notes.push(`🔒 <strong>Memória Soldada:</strong> ${solderedNames.join(' e ')} não permitem upgrade de RAM após a compra — garanta a capacidade ideal já na aquisição.`);
@@ -1223,9 +1346,6 @@ function renderLaptopDuelAnalysis() {
     }
     if (baseLap.is_apple_unified || candLap.is_apple_unified) {
       notes.push(`🍎 <strong>Apple Silicon vs Windows RTX:</strong> MacBooks mantêm ~95% da potência na bateria e usam Memória Unificada via MLX, porém jogos AAA x86 e CUDA nativo favorecem notebooks RTX.`);
-    }
-    if (!notes.length) {
-      notes.push(`💡 Ambos possuem chassis Windows com características bem definidas — use a aba <strong>Upgrades</strong> para calcular o custo real com 32GB/64GB RAM e 1TB+ SSD.`);
     }
     insEl.innerHTML = notes.join('<br>');
   }
@@ -1254,6 +1374,12 @@ function renderLaptopCBTable() {
   const pool = getLaptopPool();
   if (!pool.length) return;
   enrichLaptopsWithContextualMetrics();
+
+  const intPill = document.getElementById('laptop-cb-intensity-pill');
+  if (intPill) {
+    const wi = getLaptopIntensityConfig();
+    intPill.textContent = `⚙ Carga: J${wi.gaming} · WS${wi.workstation} · IA${wi.localAI} · Trn${wi.aiTraining} (Alterar)`;
+  }
 
   const search = (document.getElementById('laptop-cb-search')?.value || '').trim().toLowerCase();
   const brandFilter = document.getElementById('laptop-cb-filter-brand')?.value || 'ALL';
@@ -1403,6 +1529,7 @@ function renderLaptopCBTable() {
             <div class="min-w-0">
               <div class="font-bold text-white truncate max-w-[240px]" title="${_escLapHtml(l.name)}">${_escLapHtml(l.name)}</div>
               <div class="text-[10px] font-mono text-slate-400">${_escLapHtml(l.cpu_name)} • <span class="text-purple-300">${_escLapHtml(l.gpu_name)}</span></div>
+              ${l._readinessGate < 0.70 ? `<div class="text-[9px] text-rose-400 font-mono font-bold">⚠ Abaixo da carga exigida</div>` : ''}
               ${l._dominatedBy ? `<div class="text-[9px] text-amber-400 font-mono">⚠ Superado por ${_escLapHtml(l._dominatedBy)}</div>` : ''}
             </div>
           </div>
@@ -1459,15 +1586,21 @@ function pickLaptopForObjective(goal) {
   if (!pool.length) return;
   enrichLaptopsWithContextualMetrics();
 
+  const wi = getLaptopIntensityConfig();
   let chosen = pool[0];
   if (goal === 'gaming') {
-    chosen = [...pool].sort((a, b) => (b.gaming_score * 0.8 + b._myCBScore * 20) - (a.gaming_score * 0.8 + a._myCBScore * 20))[0];
+    const score = l => ((l._pillarUtils?.gaming || 0.5) * (40 + wi.gaming * 15)) + l._myCBScore * 0.45;
+    chosen = [...pool].sort((a, b) => score(b) - score(a))[0];
   } else if (goal === 'ai') {
-    chosen = [...pool].sort((a, b) => (b._effGpuMem * 350 + b._aiEff) - (a._effGpuMem * 350 + a._aiEff))[0];
+    const aiLevel = Math.max(wi.localAI, wi.aiTraining);
+    const score = l => (((l._pillarUtils?.localAI || 0.5) * 0.55 + (l._pillarUtils?.aiTraining || 0.5) * 0.45) * (40 + aiLevel * 16)) + l._myCBScore * 0.40;
+    chosen = [...pool].sort((a, b) => score(b) - score(a))[0];
   } else if (goal === 'workstation') {
-    chosen = [...pool].sort((a, b) => b._wsEff - a._wsEff)[0];
+    const score = l => ((l._pillarUtils?.workstation || 0.5) * (40 + wi.workstation * 15)) + l._myCBScore * 0.45;
+    chosen = [...pool].sort((a, b) => score(b) - score(a))[0];
   } else if (goal === 'mobility') {
-    chosen = [...pool].sort((a, b) => (b.battery_score + b.portability_score) - (a.battery_score + a.portability_score))[0];
+    const score = l => (l.battery_score + l.portability_score) + l._myCBScore * 0.65;
+    chosen = [...pool].sort((a, b) => score(b) - score(a))[0];
   }
 
   STATE.laptopBuilder.slug = chosen.slug;

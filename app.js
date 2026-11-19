@@ -29,6 +29,12 @@ let STATE = {
     editing: 30,     // Video Premiere / DaVinci Resolve
     compilation: 30  // Code / Compiling / Dev / Docker
   },
+  workloadIntensity: {
+    gaming: 3,       // 1=Leve, 2=Moderado, 3=Pesado, 4=Muito Pesado, 5=Extremo
+    workstation: 3,
+    localAI: 3,
+    aiTraining: 3
+  },
   vramHeft: 1.6, // 1.0 = Light (8B), 1.6 = Medium/Heavy (14B + AI Training + Eth), 2.3 = Extreme (14B-32B + Heavy CUDA)
   duelBaseSlug: 'rtx-5060',
   duelCandSlug: 'rtx-5070',
@@ -1508,7 +1514,11 @@ function updateTopContextSummary() {
   const el = document.getElementById('top-context-summary');
   if (!el) return;
   const ws = STATE.wWorkstation !== undefined ? STATE.wWorkstation : 35;
-  el.textContent = `${STATE.monitorRes || '1440p'} @ ${STATE.monitorMaxFps || 144}Hz • Jogos ${STATE.wGaming}% • WS ${ws}% • IA ${STATE.wAI}%`;
+  const wi = STATE.workloadIntensity || { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
+  const intSuffix = STATE.context === 'laptop'
+    ? ` • Carga: J${wi.gaming || 3}/W${wi.workstation || 3}/IA${wi.localAI || 3}/Tr${wi.aiTraining || 3}`
+    : '';
+  el.textContent = `${STATE.monitorRes || '1440p'} @ ${STATE.monitorMaxFps || 144}Hz • Jogos ${STATE.wGaming}% • WS ${ws}% • IA ${STATE.wAI}%${intSuffix}`;
 }
 
 function syncLaptopContextViews() {
@@ -1785,6 +1795,107 @@ function onWeightSliderInput(evt) {
   applyWeights({ gaming: STATE.wGaming, workstation: STATE.wWorkstation, ai: STATE.wAI, soft: STATE.wSoft });
 }
 window.onWeightSliderInput = onWeightSliderInput;
+
+// 5-Step Workload Intensity Engine (1 = Light -> 5 = Extreme)
+const WORKLOAD_INTENSITY_LEVELS = {
+  1: { label: 'Leve', cls: 'bg-slate-800 text-slate-200 border-slate-600' },
+  2: { label: 'Moderado', cls: 'bg-sky-500/20 text-sky-300 border-sky-500/40' },
+  3: { label: 'Pesado', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' },
+  4: { label: 'Muito Pesado', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+  5: { label: 'Extremo', cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' }
+};
+
+const WORKLOAD_INTENSITY_DESCS = {
+  gaming: {
+    1: 'Indies, LoL, Valorant 1080p — iGPU / entrada atende',
+    2: 'E-sports 144Hz & AAA Médio 1080p — RTX 3050/4050 sobra',
+    3: 'AAA Alto/Ultra 1080p–1440p — RTX 4050/4060 ideal',
+    4: 'AAA Ultra + Ray Tracing 1440p — RTX 4060 105W+ / 4070',
+    5: 'AAA RT Máximo / 1440p–4K — exige GPU Full-TGP topo'
+  },
+  workstation: {
+    1: 'Office, navegação, Figma, código leve (8–16GB basta)',
+    2: 'Dev Full-Stack, Docker, edição leve (16GB, i5-H / M2–M4)',
+    3: 'Compilação grande, 4K, Blender médio (16–32GB, H/HX)',
+    4: 'Render 3D pesado, VMs, 4K multicam (24–32GB, HX / M4 Pro)',
+    5: 'Estúdio 3D / CAD complexo contínuo (32GB+ & CPU/GPU topo)'
+  },
+  localAI: {
+    1: 'Modelos 3B–7B Q4 / Copilot / NPU (4–6GB GPU ok)',
+    2: 'LLMs 8B Q4 fluidos no Ollama/LM Studio (6–8GB VRAM / 16GB Unif.)',
+    3: 'LLMs 8B–14B Q4 com contexto longo & RAG (8GB+ / 16–24GB Unif.)',
+    4: 'LLMs 14B–32B Q4, SDXL / Flux (10–12GB+ / 24GB Unif.)',
+    5: 'LLMs 32B+ Q4/Q6 & multi-modelos (Máx. VRAM / 24GB+ Unified)'
+  },
+  aiTraining: {
+    1: 'Experimentos PyTorch / notebooks acadêmicos pequenos',
+    2: 'Fine-tuning leve / QLoRA 7B ocasional (RTX 6–8GB / MLX)',
+    3: 'LoRA/QLoRA frequente & visão computacional (CUDA 8GB+ 85W+)',
+    4: 'Treinamento CUDA FP16 contínuo, batches maiores (RTX 100W+, 24GB+ RAM)',
+    5: 'Treinamento pesado local — exige CUDA TFLOPS/TGP máximos + 32GB RAM'
+  }
+};
+
+function _clampIntensityLevel(v) {
+  const n = parseInt(v, 10);
+  if (isNaN(n)) return 3;
+  return Math.max(1, Math.min(5, n));
+}
+
+function syncWorkloadIntensityUI() {
+  if (!STATE.workloadIntensity) {
+    STATE.workloadIntensity = { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
+  }
+  ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(key => {
+    const lvl = _clampIntensityLevel(STATE.workloadIntensity[key]);
+    STATE.workloadIntensity[key] = lvl;
+    const sld = document.getElementById(`slider-int-${key}`);
+    if (sld) sld.value = String(lvl);
+    const meta = WORKLOAD_INTENSITY_LEVELS[lvl] || WORKLOAD_INTENSITY_LEVELS[3];
+    const badge = document.getElementById(`badge-int-${key}`);
+    if (badge) {
+      badge.textContent = `${lvl}/5 • ${meta.label}`;
+      badge.className = `px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold ${meta.cls}`;
+    }
+    const desc = document.getElementById(`desc-int-${key}`);
+    if (desc && WORKLOAD_INTENSITY_DESCS[key]) {
+      desc.textContent = WORKLOAD_INTENSITY_DESCS[key][lvl] || '';
+    }
+  });
+}
+window.syncWorkloadIntensityUI = syncWorkloadIntensityUI;
+
+function _commitWorkloadIntensityUpdate() {
+  syncWorkloadIntensityUI();
+  try {
+    localStorage.setItem('gca_workload_intensity', JSON.stringify(STATE.workloadIntensity));
+  } catch (_) {}
+  if (typeof saveUserPrefs === 'function') saveUserPrefs();
+  if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+  updateTopContextSummary();
+  renderActiveTab();
+}
+
+function onWorkloadIntensityChange(key, rawVal) {
+  if (!STATE.workloadIntensity) {
+    STATE.workloadIntensity = { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
+  }
+  if (!['gaming', 'workstation', 'localAI', 'aiTraining'].includes(key)) return;
+  STATE.workloadIntensity[key] = _clampIntensityLevel(rawVal);
+  _commitWorkloadIntensityUpdate();
+}
+window.onWorkloadIntensityChange = onWorkloadIntensityChange;
+
+function setWorkloadIntensityPreset(g, ws, localAi, aiTrain) {
+  STATE.workloadIntensity = {
+    gaming: _clampIntensityLevel(g),
+    workstation: _clampIntensityLevel(ws),
+    localAI: _clampIntensityLevel(localAi),
+    aiTraining: _clampIntensityLevel(aiTrain)
+  };
+  _commitWorkloadIntensityUpdate();
+}
+window.setWorkloadIntensityPreset = setWorkloadIntensityPreset;
 
 // Workstation Sub-Profile Config Handler with Proportional Auto-Balancing to 100%
 function onWorkstationProfileInput(key, rawVal) {
@@ -5336,6 +5447,8 @@ function renderConfigTab() {
     if (num && document.activeElement !== num) num.value = v;
   });
 
+  if (typeof syncWorkloadIntensityUI === 'function') syncWorkloadIntensityUI();
+
   // 9. Sync Scale buttons
   syncComparisonScaleControls();
 
@@ -5451,6 +5564,19 @@ async function initApp() {
   if (typeof loadUserPrefs === 'function') loadUserPrefs();
   loadUserRefPrefs();
   loadUserBuildPrefs();
+  try {
+    const rawInt = localStorage.getItem('gca_workload_intensity');
+    if (rawInt) {
+      const parsedInt = JSON.parse(rawInt);
+      if (parsedInt && typeof parsedInt === 'object') {
+        if (!STATE.workloadIntensity) STATE.workloadIntensity = { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
+        ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(k => {
+          if (parsedInt[k] !== undefined) STATE.workloadIntensity[k] = _clampIntensityLevel(parsedInt[k]);
+        });
+      }
+    }
+  } catch (_) {}
+  syncWorkloadIntensityUI();
   initDatabaseSources();
   await initMarketConfig();
   if (typeof updateBackgroundMonitorUI === 'function') updateBackgroundMonitorUI();

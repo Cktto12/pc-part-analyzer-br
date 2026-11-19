@@ -1409,6 +1409,7 @@
             <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2 flex-wrap">
               <span>Ranking de Custo-Benefício — Notebooks Completos</span>
               <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">Full-System Score + Pesos</span>
+              <button type="button" id="laptop-cb-intensity-pill" onclick="toggleContextSettings()" class="px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-mono text-[10px] cursor-pointer transition" title="Ajustar intensidade das cargas nas Configurações"></button>
             </h2>
             <p class="text-xs text-slate-300 mt-0.5">
               Avalia o conjunto completo: Jogos, Workstation (Render/Edição/Dev), IA/VRAM, Tela (Hz/sRGB), Bateria, Portabilidade e Capacidade de Upgrade.
@@ -2593,6 +2594,70 @@
               </div>
             </div>
           </div>
+
+          <!-- 5-Step Workload Intensity Sliders (Light -> Extreme) -->
+          <div id="cfg-workload-intensity-panel" class="p-4 rounded-xl bg-slate-950 border border-purple-500/30 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold text-white">Intensidade Real de Cada Carga (5 Níveis: Leve → Extremo)</span>
+                  <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">Impacta Custo-Benefício &amp; Duelo</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">
+                  Os percentuais acima dividem seu tempo de uso; estes 5 níveis definem o quanto cada tarefa exige da máquina (cargas leves favorecem notebooks econômicos; extremas exigem VRAM, CUDA e TGP altos).
+                </p>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" onclick="setWorkloadIntensityPreset(1, 1, 1, 1)" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-mono cursor-pointer">🪶 Tudo Leve</button>
+                <button type="button" onclick="setWorkloadIntensityPreset(3, 3, 3, 3)" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-mono cursor-pointer">⚖️ Padrão (Pesado)</button>
+                <button type="button" onclick="setWorkloadIntensityPreset(5, 5, 5, 5)" class="px-2 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[10px] font-mono cursor-pointer">🔥 Tudo Extremo</button>
+                <button type="button" onclick="setWorkloadIntensityPreset(1, 2, 5, 2)" class="px-2 py-1 rounded bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] font-mono cursor-pointer">🤖 IA Local Extremo</button>
+                <button type="button" onclick="setWorkloadIntensityPreset(2, 3, 3, 5)" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 text-[10px] font-mono cursor-pointer">🧪 AI Training Extremo</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-emerald-500/25 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-emerald-300">🎮 Jogos</span>
+                  <span id="badge-int-gaming" class="px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border-emerald-500/40">3/5 • Pesado</span>
+                </div>
+                <input type="range" id="slider-int-gaming" min="1" max="5" step="1" value="3" oninput="onWorkloadIntensityChange('gaming', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#10b981;" />
+                <div class="flex justify-between text-[9px] font-mono text-slate-500"><span>Leve</span><span>Mod.</span><span>Pesado</span><span>M.Pes.</span><span>Extremo</span></div>
+                <p id="desc-int-gaming" class="text-[10px] text-slate-400 leading-snug">AAA Alto/Ultra 1080p–1440p — RTX 4050/4060 ideal</p>
+              </div>
+
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-amber-500/25 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-amber-300">🛠️ Workstation</span>
+                  <span id="badge-int-workstation" class="px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border-emerald-500/40">3/5 • Pesado</span>
+                </div>
+                <input type="range" id="slider-int-workstation" min="1" max="5" step="1" value="3" oninput="onWorkloadIntensityChange('workstation', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f59e0b;" />
+                <div class="flex justify-between text-[9px] font-mono text-slate-500"><span>Leve</span><span>Mod.</span><span>Pesado</span><span>M.Pes.</span><span>Extremo</span></div>
+                <p id="desc-int-workstation" class="text-[10px] text-slate-400 leading-snug">Compilação grande, 4K, Blender médio (16–32GB, H/HX)</p>
+              </div>
+
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-purple-500/25 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-purple-300">🤖 IA Local (LLMs)</span>
+                  <span id="badge-int-localAI" class="px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border-emerald-500/40">3/5 • Pesado</span>
+                </div>
+                <input type="range" id="slider-int-localAI" min="1" max="5" step="1" value="3" oninput="onWorkloadIntensityChange('localAI', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#a855f7;" />
+                <div class="flex justify-between text-[9px] font-mono text-slate-500"><span>Leve</span><span>Mod.</span><span>Pesado</span><span>M.Pes.</span><span>Extremo</span></div>
+                <p id="desc-int-localAI" class="text-[10px] text-slate-400 leading-snug">LLMs 8B–14B Q4 com contexto longo &amp; RAG (8GB+ / 16–24GB Unif.)</p>
+              </div>
+
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-sky-500/25 space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-xs font-bold text-sky-300">🧪 AI Training</span>
+                  <span id="badge-int-aiTraining" class="px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border-emerald-500/40">3/5 • Pesado</span>
+                </div>
+                <input type="range" id="slider-int-aiTraining" min="1" max="5" step="1" value="3" oninput="onWorkloadIntensityChange('aiTraining', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#38bdf8;" />
+                <div class="flex justify-between text-[9px] font-mono text-slate-500"><span>Leve</span><span>Mod.</span><span>Pesado</span><span>M.Pes.</span><span>Extremo</span></div>
+                <p id="desc-int-aiTraining" class="text-[10px] text-slate-400 leading-snug">LoRA/QLoRA frequente &amp; visão computacional (CUDA 8GB+ 85W+)</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 3. BASE DE DADOS (DATABASE CONFIGURATION & SOURCES) -->
@@ -2719,8 +2784,8 @@
   <!-- Floating Deal Notification Toast Container -->
   <div id="promo-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none"></div>
 
-  <script src="app.js?v=20261119-1"></script>
-  <script src="app_features.js?v=20261119-1"></script>
-  <script src="laptop_mode.js?v=20261119-1"></script>
+  <script src="app.js?v=20261119-2"></script>
+  <script src="app_features.js?v=20261119-2"></script>
+  <script src="laptop_mode.js?v=20261119-2"></script>
 </body>
 </html>
