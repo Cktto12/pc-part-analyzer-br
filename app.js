@@ -11,13 +11,14 @@ let DB = {
   cpus: [],
   rams: [],
   motherboards: [],
-  psus: []
+  psus: [],
+  laptops: []
 };
 window.DB = DB;
 
-// User Context Weights & Context Separation (GPU vs CPU)
+// User Context Weights & Context Separation (GPU vs CPU vs Notebook)
 let STATE = {
-  context: 'gpu', // 'gpu' | 'cpu'
+  context: 'gpu', // 'gpu' | 'cpu' | 'laptop'
   activeTab: 'versus',
   wGaming: 30,
   wWorkstation: 35,
@@ -53,6 +54,27 @@ let STATE = {
   cpuCbPlatformMode: 'isolated', // 'isolated' (só CPU) | 'bundle' (CPU + Mobo + RAM se mismatch)
   cpuCbFilterSocket: 'ALL',
   cpuCbFilterBrand: 'ALL',
+  // Laptop Duel & Full-System State
+  laptopDuelBaseSlug: '',
+  laptopDuelCandSlug: '',
+  laptopCbSortBy: 'my_cb',
+  laptopCbSortAsc: false,
+  laptopCbRelBaseSlug: '',
+  laptopCbChartMetric: 'benefit',
+  laptopBuilder: {
+    slug: '',
+    price: 0,
+    extraRamGb: 0,
+    extraRamPrice: 0,
+    extraRamOwned: false,
+    extraSsdGb: 0,
+    extraSsdPrice: 0,
+    extraSsdOwned: false,
+    accessoryName: 'Suporte / Cooling Pad + Hub USB-C',
+    accessoryPrice: 220,
+    accessoryOwned: false
+  },
+  refLaptop: { slug: '', name: '', price: 0 },
   monitorRes: '2560x1440',
   monitorMaxFps: 144,
   bfRanges: {},
@@ -1489,19 +1511,55 @@ function updateTopContextSummary() {
   el.textContent = `${STATE.monitorRes || '1440p'} @ ${STATE.monitorMaxFps || 144}Hz • Jogos ${STATE.wGaming}% • WS ${ws}% • IA ${STATE.wAI}%`;
 }
 
+function syncLaptopContextViews() {
+  const isLap = STATE.context === 'laptop';
+  const togglePair = (deskId, lapId) => {
+    const d = document.getElementById(deskId);
+    const l = document.getElementById(lapId);
+    if (d) d.classList.toggle('hidden', isLap);
+    if (l) l.classList.toggle('hidden', !isLap);
+  };
+  togglePair('builder-desktop-view', 'builder-laptop-view');
+  togglePair('upgrades-desktop-view', 'upgrades-laptop-view');
+  togglePair('sim-desktop-view', 'sim-laptop-view');
+  togglePair('cfg-ref-desktop-section', 'cfg-ref-laptop-section');
+
+  // In Live Promos tab, isolate filter pills for Laptop Mode vs Desktop Mode
+  const pills = document.querySelectorAll('#bf-cards-filter-pills button[data-bf-filter]');
+  pills.forEach(btn => {
+    const k = btn.getAttribute('data-bf-filter');
+    if (k === 'gpu' || k === 'cpu' || k === 'ram') {
+      btn.classList.toggle('hidden', isLap);
+    } else if (k === 'laptop') {
+      btn.classList.toggle('hidden', !isLap);
+    }
+  });
+}
+window.syncLaptopContextViews = syncLaptopContextViews;
+
 // Re-render only the currently visible tab
 function renderActiveTab() {
   const t = STATE.activeTab;
+  const ctx = STATE.context;
+  syncLaptopContextViews();
   try {
     if (t === 'versus') {
       const gpuView = document.getElementById('versus-gpu-view');
       const cpuView = document.getElementById('versus-cpu-view');
-      if (STATE.context === 'cpu') {
+      const lapView = document.getElementById('versus-laptop-view');
+      if (ctx === 'laptop') {
         if (gpuView) gpuView.classList.add('hidden');
+        if (cpuView) cpuView.classList.add('hidden');
+        if (lapView) lapView.classList.remove('hidden');
+        if (typeof renderLaptopDuelAnalysis === 'function') renderLaptopDuelAnalysis();
+      } else if (ctx === 'cpu') {
+        if (gpuView) gpuView.classList.add('hidden');
+        if (lapView) lapView.classList.add('hidden');
         if (cpuView) cpuView.classList.remove('hidden');
         if (typeof renderCpuDuelAnalysis === 'function') renderCpuDuelAnalysis();
       } else {
         if (cpuView) cpuView.classList.add('hidden');
+        if (lapView) lapView.classList.add('hidden');
         if (gpuView) gpuView.classList.remove('hidden');
         renderDuelAnalysis();
       }
@@ -1509,30 +1567,50 @@ function renderActiveTab() {
     if (t === 'cb') {
       const gpuView = document.getElementById('cb-gpu-view');
       const cpuView = document.getElementById('cb-cpu-view');
-      if (STATE.context === 'cpu') {
+      const lapView = document.getElementById('cb-laptop-view');
+      if (ctx === 'laptop') {
         if (gpuView) gpuView.classList.add('hidden');
+        if (cpuView) cpuView.classList.add('hidden');
+        if (lapView) lapView.classList.remove('hidden');
+        if (typeof renderLaptopCBTable === 'function') renderLaptopCBTable();
+      } else if (ctx === 'cpu') {
+        if (gpuView) gpuView.classList.add('hidden');
+        if (lapView) lapView.classList.add('hidden');
         if (cpuView) cpuView.classList.remove('hidden');
         if (typeof renderCpuCBTable === 'function') renderCpuCBTable();
       } else {
         if (cpuView) cpuView.classList.add('hidden');
+        if (lapView) lapView.classList.add('hidden');
         if (gpuView) gpuView.classList.remove('hidden');
         renderCBTable();
       }
     }
-    if (t === 'builder') renderPCBuilder();
-    if (t === 'upgrades') renderUpgradeSuggestions();
+    if (t === 'builder') {
+      if (ctx === 'laptop' && typeof renderLaptopBuilder === 'function') renderLaptopBuilder();
+      else renderPCBuilder();
+    }
+    if (t === 'upgrades') {
+      if (ctx === 'laptop' && typeof renderLaptopUpgrades === 'function') renderLaptopUpgrades();
+      else renderUpgradeSuggestions();
+    }
     if (t === 'bf') renderBlackFridayTab();
     if (t === 'bf-promos' && typeof renderBFPromosCardsTab === 'function') renderBFPromosCardsTab();
-    if (t === 'sim') renderSimulator();
-    if (t === 'config') renderConfigTab();
+    if (t === 'sim') {
+      if (ctx === 'laptop' && typeof renderLaptopSimulator === 'function') renderLaptopSimulator();
+      else renderSimulator();
+    }
+    if (t === 'config') {
+      renderConfigTab();
+      if (ctx === 'laptop' && typeof renderConfigLaptopSection === 'function') renderConfigLaptopSection();
+    }
   } catch (e) {
     console.error('Render error on tab', t, e);
   }
 }
 
-// Global Context Toggle: GPU vs CPU
+// Global Context Toggle: GPU vs CPU vs Notebook
 function setMainContext(ctx) {
-  STATE.context = (ctx === 'cpu') ? 'cpu' : 'gpu';
+  STATE.context = (ctx === 'cpu') ? 'cpu' : (ctx === 'laptop' ? 'laptop' : 'gpu');
   try {
     localStorage.setItem('gca_context', STATE.context);
   } catch (_) {}
@@ -1540,24 +1618,37 @@ function setMainContext(ctx) {
   // Update header toggle button visual state
   const btnGpu = document.getElementById('btn-ctx-gpu');
   const btnCpu = document.getElementById('btn-ctx-cpu');
+  const btnLap = document.getElementById('btn-ctx-laptop');
+  const idleCls = "px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200";
   if (btnGpu && btnCpu) {
-    if (STATE.context === 'cpu') {
-      btnCpu.className = "px-3 py-1 rounded-md font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-500 text-slate-950 shadow-sm";
-      btnGpu.className = "px-3 py-1 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200";
-    } else {
-      btnGpu.className = "px-3 py-1 rounded-md font-bold transition flex items-center gap-1.5 cursor-pointer bg-sky-500 text-slate-950 shadow-sm";
-      btnCpu.className = "px-3 py-1 rounded-md font-medium transition flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200";
+    btnGpu.className = STATE.context === 'gpu' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-sky-500 text-slate-950 shadow-sm" : idleCls;
+    btnCpu.className = STATE.context === 'cpu' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-500 text-slate-950 shadow-sm" : idleCls;
+    if (btnLap) {
+      btnLap.className = STATE.context === 'laptop' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-purple-500 text-white shadow-sm" : idleCls;
     }
   }
 
-  // Update sidebar titles
+  const brandSub = document.getElementById('header-brand-sub');
+  if (brandSub) {
+    brandSub.textContent = STATE.context === 'laptop'
+      ? 'Notebook & Full-System Analyzer'
+      : 'GPU & CPU Analyzer';
+  }
+
+  // Update sidebar titles (same tabs, context-adapted titles)
   const tVersus = document.getElementById('sidebar-tab-title-versus');
   const tCb = document.getElementById('sidebar-tab-title-cb');
   const tBuilder = document.getElementById('sidebar-tab-title-builder');
   const tUpgrades = document.getElementById('sidebar-tab-title-upgrades');
   const tBf = document.getElementById('sidebar-tab-title-bf');
 
-  if (STATE.context === 'cpu') {
+  if (STATE.context === 'laptop') {
+    if (tVersus) tVersus.textContent = 'Duelo de Notebooks';
+    if (tCb) tCb.textContent = 'Custo-Benefício Notebooks';
+    if (tBuilder) tBuilder.textContent = 'Objetivo de Compra';
+    if (tUpgrades) tUpgrades.textContent = 'Upgrades (RAM / SSD)';
+    if (tBf) tBf.textContent = 'Black Friday Notebooks';
+  } else if (STATE.context === 'cpu') {
     if (tVersus) tVersus.textContent = 'Duelo de CPUs';
     if (tCb) tCb.textContent = 'Custo-Benefício CPUs';
     if (tBuilder) tBuilder.textContent = 'Setup & Plataforma';
@@ -1571,7 +1662,18 @@ function setMainContext(ctx) {
     if (tBf) tBf.textContent = 'Black Friday GPUs';
   }
 
-  // Strictly update Black Friday family selector options according to active context
+  const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+  const regName = STATE.market?.region_name || 'Brasil';
+  const statusEl = document.getElementById('header-status');
+  if (statusEl && DB && DB.gpus) {
+    const countStr = STATE.context === 'laptop'
+      ? `${(DB.laptops || []).length} Notebooks monitorados`
+      : STATE.context === 'cpu'
+        ? `${(DB.cpus || []).length} CPUs monitoradas`
+        : `${(DB.gpus || []).length} GPUs monitoradas`;
+    statusEl.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${countStr}`;
+  }
+
   if (typeof updateBFFamilySelectorOptions === 'function') {
     updateBFFamilySelectorOptions();
   }
@@ -1627,6 +1729,7 @@ function applyWeights(w) {
 
   enrichGPUsWithContextualMetrics();
   if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+  if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
   updateTopContextSummary();
   renderActiveTab();
 }
@@ -1735,6 +1838,7 @@ function onWorkstationProfileInput(key, rawVal) {
 
   enrichGPUsWithContextualMetrics();
   if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+  if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
   renderActiveTab();
 }
 window.onWorkstationProfileInput = onWorkstationProfileInput;
@@ -1763,6 +1867,7 @@ function setWorkstationPreset(preset) {
 
   enrichGPUsWithContextualMetrics();
   if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+  if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
   renderActiveTab();
 }
 window.setWorkstationPreset = setWorkstationPreset;
@@ -1771,8 +1876,9 @@ window.setWorkstationPreset = setWorkstationPreset;
 function onWorkloadSlidersChange(evt) { onWeightSliderInput(evt); }
 function onWorkloadChange() { onWeightSliderInput(); }
 
-// Populate GPU & CPU Dropdowns
+// Populate GPU, CPU & Laptop Dropdowns
 function populateSelectors() {
+  if (typeof populateLaptopSelectors === 'function') populateLaptopSelectors();
   const sortedGPUs = [...(DB.gpus || [])].sort((a, b) => a.name.localeCompare(b.name));
   const baseSel = document.getElementById('duel-select-base');
   const candSel = document.getElementById('duel-select-cand');
@@ -4935,6 +5041,7 @@ function ensureDatabaseConvertedToActiveMarket(dbObj) {
       (dbObj.motherboards || []).forEach(convItem);
       (dbObj.rams || []).forEach(convItem);
       (dbObj.psus || []).forEach(convItem);
+      (dbObj.laptops || []).forEach(convItem);
     }
   }
 
@@ -4954,7 +5061,7 @@ function ensureDatabaseConvertedToActiveMarket(dbObj) {
       }
       it.href = it.offer_url;
     };
-    ['gpus', 'cpus', 'motherboards', 'rams', 'psus'].forEach(grp => (dbObj[grp] || []).forEach(scrubMxItem));
+    ['gpus', 'cpus', 'motherboards', 'rams', 'psus', 'laptops'].forEach(grp => (dbObj[grp] || []).forEach(scrubMxItem));
   }
 
   // Wipe Brazilian live promos if not viewing Brazil
@@ -5011,9 +5118,11 @@ async function loadHardwareDatabase() {
     const sym = STATE.market?.monetary?.currency_symbol || (targetReg === 'mx' ? '$' : 'R$');
     const regName = STATE.market?.region_name || (targetReg === 'mx' ? 'México' : 'Brasil');
     if (status) {
-      status.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${DB.gpus.length} GPUs monitoradas`;
+      status.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks`;
     }
     enrichGPUsWithContextualMetrics();
+    if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+    if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
     updateTopContextSummary();
     populateSelectors();
     updateAllCurrencyLabels();
@@ -5076,6 +5185,8 @@ async function refreshDatabase() {
       window.DB = DB;
       if (typeof backupOriginalHBPrices === 'function') backupOriginalHBPrices(true);
       enrichGPUsWithContextualMetrics();
+      if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+      if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
       updateTopContextSummary();
       populateSelectors();
       updateAllCurrencyLabels();
@@ -5083,7 +5194,7 @@ async function refreshDatabase() {
       renderPCBuilder();
       const sourceLabel = DB.source_name || (targetReg === 'mx' ? 'Cyberpuerta & DDTech MX' : 'Hardware Barato');
       if (status) {
-        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at || 'agora'} (${DB.gpus.length} GPUs monitoradas)`;
+        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at || 'agora'} (${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks)`;
       }
     }
   } catch (e) {
@@ -5347,7 +5458,9 @@ async function initApp() {
   try {
     await loadHardwareDatabase();
 
-    setMainContext(STATE.context || 'gpu');
+    const urlCtx = new URLSearchParams(window.location.search).get('mode');
+    const savedCtx = urlCtx || localStorage.getItem('gca_context') || STATE.context || 'gpu';
+    setMainContext(savedCtx);
     renderPCBuilder();
     detectMyLocalPC(null);
     if (typeof scanLivePromos === 'function') scanLivePromos(false);

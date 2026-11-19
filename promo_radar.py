@@ -35,11 +35,21 @@ DEFAULT_BR_CHANNELS = [
 ]
 
 DEFAULT_SEARCH_QUERIES = [
-    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "expirou", "acabou", "esgotou"
+    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "notebook", "macbook", "nitro", "loq", "expirou", "acabou", "esgotou"
 ]
 
+LAPTOP_CLUE_RE = re.compile(
+    r"\b(notebook|laptop|macbook|ultrabook|ideapad|vivobook|zenbook|thinkpad|inspiron|galaxy\s*book|acer\s*nitro|nitro\s*v?1[56]|lenovo\s*loq|legion\s*5|dell\s*g15|tuf\s*gaming\s*[af]1[567]|predator\s*helios|avell|victus)\b",
+    re.IGNORECASE,
+)
+
+LAPTOP_ACCESSORY_RE = re.compile(
+    r"^\s*[^a-zA-Z0-9]*(?:power\s*bank|mochila|bolsa|suporte|base\s*(?:refrigerada|cooler)|cooler\s*para|capa|case|sleeve|pel[íi]cula|carregador|fonte\s*para|hub\s*usb|mouse|teclado|pendrive)|\b(?:para|p/)\s*notebook\b",
+    re.IGNORECASE,
+)
+
 EXCLUDE_SYSTEM_RE = re.compile(
-    r"\b(notebook|laptop|macbook|computador\s*completo|pc\s*completo|pc\s*gamer\s*armada|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|silla|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
+    r"\b(computador\s*completo|pc\s*completo|pc\s*gamer\s*armada|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|silla|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
     re.IGNORECASE,
 )
 
@@ -262,7 +272,75 @@ def extract_price_and_coupon(lines):
     return round(final_price, 2), round(raw_price, 2), round(discount_applied, 2), coupon_code, coupon_info, is_conditional_voucher
 
 
+def match_laptop_catalog_item(text, db):
+    laptops = db.get("laptops") or []
+    if not laptops or LAPTOP_ACCESSORY_RE.search(text or ""):
+        return None, None
+
+    low = (text or "").lower()
+    m_gpu = re.search(r"\b(rtx\s*(?:5080|5070\s*ti|5070|5060|5050|4080|4070|4060|4050|3060|3050|2050)|gtx\s*1650)\b", low)
+    txt_gpu = re.sub(r"\s+", " ", m_gpu.group(1)).strip() if m_gpu else ""
+    m_cpu = re.search(r"\b(i[3579][-\s]*\d{4,5}[a-z]*|ultra\s*[x579][-\s]*\d{3}[a-z]*|ryzen\s*[3579][-\s]*\d{4}[a-z]*|m[1-5](?:\s*(?:pro|max))?)\b", low)
+    txt_cpu = re.sub(r"[-\s]+", "", m_cpu.group(1)).lower() if m_cpu else ""
+    m_ram = re.search(r"\b(8|16|24|32)\s*gb\b", low)
+    txt_ram = int(m_ram.group(1)) if m_ram else 0
+
+    best_score = 0
+    best_item = None
+    for lap in laptops:
+        l_name = (lap.get("name") or "").lower()
+        l_slug = (lap.get("slug") or "").lower()
+        l_brand = (lap.get("brand") or "").lower()
+        l_cpu = re.sub(r"[-\s]+", "", (lap.get("cpu_name") or "").lower())
+        l_gpu = re.sub(r"\s+", " ", (lap.get("gpu_name") or "").lower())
+        score = 0
+
+        if l_brand and l_brand in low:
+            score += 18
+        elif l_brand:
+            score -= 12
+
+        for kw in ["macbook pro", "macbook air", "galaxy book6", "galaxy book4", "vivobook go", "vivobook", "zenbook", "ideapad slim", "ideapad", "loq-e", "loq", "nitro v16", "nitro v15", "nitro", "tuf gaming", "predator helios", "alienware", "inspiron", "aspire go", "yoga", "v14", "g15"]:
+            if kw in low and (kw in l_name or kw in l_slug):
+                score += 30
+            elif kw in low and kw not in l_name and kw not in l_slug:
+                score -= 10
+
+        # Exact SKU match (e.g. 83KH0002BR, ANV15, NP750XGJ, E1504FA)
+        for sku_m in re.findall(r"\b([a-z0-9]{6,14})\b", low):
+            if any(c.isdigit() for c in sku_m) and any(c.isalpha() for c in sku_m) and sku_m in l_name:
+                score += 45
+
+        if txt_gpu:
+            if txt_gpu in l_gpu:
+                score += 36
+            else:
+                score -= 55
+        elif "rtx " in l_gpu or "gtx " in l_gpu:
+            score -= 22
+
+        if txt_cpu:
+            if txt_cpu in l_cpu or txt_cpu in re.sub(r"[-\s]+", "", l_name):
+                score += 26
+            else:
+                score -= 22
+
+        if txt_ram and lap.get("ram_gb") == txt_ram:
+            score += 10
+
+        if score > best_score:
+            best_score = score
+            best_item = lap
+
+    if best_item and best_score >= 45:
+        return "laptop", best_item
+    return None, None
+
+
 def match_catalog_item(title_and_first_lines, db):
+    if LAPTOP_CLUE_RE.search(title_and_first_lines or "") and not LAPTOP_ACCESSORY_RE.search(title_and_first_lines or ""):
+        return match_laptop_catalog_item(title_and_first_lines, db)
+
     has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|tarjeta\s*de\s*video|tarjeta\s*gr[áa]fica|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram|procesador)\b", title_and_first_lines, re.I))
     if not has_component_clue and EXCLUDE_SYSTEM_RE.search(title_and_first_lines):
         return None, None

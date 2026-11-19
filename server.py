@@ -873,7 +873,7 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
 
     if active_region == "mx":
         live_mx_gpus = fetch_cyberpuerta_live_gpu_prices()
-        for group in ("gpus", "cpus", "motherboards", "rams", "psus"):
+        for group in ("gpus", "cpus", "motherboards", "rams", "psus", "laptops"):
             for item in db.get(group, []):
                 localize_item_for_mexico(item, rate, live_mx_gpus if group == "gpus" else None)
 
