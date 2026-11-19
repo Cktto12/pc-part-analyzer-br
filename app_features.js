@@ -657,7 +657,7 @@ function getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB) {
     parts.push(`
       <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/50 text-xs text-amber-100 space-y-1.5">
         <div class="font-bold text-amber-300">💡 Análise de Arquitetura do Processador (${cpu.name})</div>
-        <ul class="list-disc pl-5 space-y-0.5 text-[11px]">
+        <ul class="list-disc pl-5 space-y-0.5 text-xs">
           <li>Este processador possui índice de jogos estimado em ${cpuIndex}/100 frente aos modelos topo de linha de alta frequência (como 7800X3D/9800X3D). Em 1080p competitivo com placas muito rápidas, o clock single-core dita o teto de quadros.</li>
           <li>Em <strong>1440p ou 4K</strong>, ou com tecnologias de upscaling ativo (<strong>DLSS / FSR</strong>), a exigência migra para a GPU, diminuindo a sensibilidade ao processador.</li>
           <li>Dica de calibração: você pode preencher o campo <strong>Meu FPS Medido</strong> na tabela abaixo para calibrar com precisão os ganhos no seu hardware real.</li>
@@ -668,7 +668,7 @@ function getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB) {
     const narrow = [gpuA, gpuB].filter(g => g && (PCIE_X8_GPUS.has(g.slug) || PCIE_X4_GPUS.has(g.slug)));
     if (narrow.length) {
       parts.push(`
-        <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-[11px] text-sky-100 mt-2">
+        <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-xs text-sky-100 mt-2">
           <strong>🔌 Interface PCIe das Placas:</strong> ${narrow.map(g => `<strong>${g.name}</strong> (${PCIE_X4_GPUS.has(g.slug) ? 'x4' : 'x8'})`).join(', ')}
           utilizam barramento elétrico reduzido (x4/x8). Em sistemas com PCIe 3.0 isso limita a largura de banda e pode impactar fluidez quando a VRAM transborda. Em placas x16 completas (RTX 5070, 9070 XT), o barramento opera folgado.
         </div>`);
@@ -687,7 +687,7 @@ function fpsBarRow(label, colorText, colorBar, fps, maxFps, bold, monitorCap) {
         <div class="h-full ${colorBar} rounded-full" style="width:${Math.min(100, (fps / maxFps) * 100)}%"></div>
         ${monitorCap < 999 ? `<div class="absolute top-0 h-full w-px bg-white/70" style="left:${Math.min(100, (monitorCap / maxFps) * 100)}%"></div>` : ''}
       </div>
-      <span class="w-20 text-right ${bold ? 'font-bold text-white' : 'text-slate-300'}">${fps} FPS${over ? '<span class="text-[9px] text-slate-500">*</span>' : ''}</span>
+      <span class="w-20 text-right ${bold ? 'font-bold text-white' : 'text-slate-300'}">${fps} FPS${over ? '<span class="text-xs text-slate-500">*</span>' : ''}</span>
     </div>`;
 }
 
@@ -708,19 +708,19 @@ function renderSimulatorControls() {
 
   // Relevant game chips + editor
   const chips = STATE.games.map(g => `
-    <button onclick="toggleRelevantGame('${g.id}')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition cursor-pointer ${g.relevant ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-slate-900 text-slate-500 border-slate-700 hover:text-slate-300'}">
+    <button onclick="toggleRelevantGame('${g.id}')" class="px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${g.relevant ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-slate-900 text-slate-500 border-slate-700 hover:text-slate-300'}">
       ${g.relevant ? '✓ ' : ''}${g.title}${g.measured ? ' 📏' : ''}
     </button>`).join('');
 
   const editor = !STATE.showGameEditor ? '' : `
     <div class="w-full mt-2 p-3 rounded-lg bg-slate-950/80 border border-slate-800 overflow-x-auto">
-      <p class="text-[10px] text-slate-400 mb-2">
+      <p class="text-xs text-slate-400 mb-2">
         <strong>FPS ref.</strong> = média numa RTX 5060 em 1440p nativo sem limite de CPU •
         <strong>Teto CPU</strong> = FPS máximo com Ryzen 7 9800X3D (escala pelo índice do seu CPU) •
         <strong>Meu FPS medido</strong> = o que você vê hoje no seu setup atual na resolução selecionada (opcional, calibra o jogo).
       </p>
-      <table class="w-full text-[11px]">
-        <thead><tr class="text-slate-400 font-mono text-[10px] uppercase">
+      <table class="w-full text-xs">
+        <thead><tr class="text-slate-400 font-mono text-xs uppercase">
           <th class="text-left py-1">Jogo</th><th>FPS ref. (5060 1440p)</th><th>Teto CPU (9800X3D)</th><th>VRAM 1440p (GB)</th><th>Meu FPS medido</th><th></th>
         </tr></thead>
         <tbody>
@@ -736,14 +736,14 @@ function renderSimulatorControls() {
         </tbody>
       </table>
       <div class="flex gap-3 mt-2">
-        <button onclick="addCustomGame()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[11px] font-semibold cursor-pointer">+ Adicionar jogo</button>
-        <button onclick="resetGamesToDefault()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[11px] cursor-pointer">Restaurar padrão</button>
+        <button onclick="addCustomGame()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs font-semibold cursor-pointer">+ Adicionar jogo</button>
+        <button onclick="resetGamesToDefault()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-xs cursor-pointer">Restaurar padrão</button>
       </div>
     </div>`;
 
   document.getElementById('sim-relevant-games-chips').innerHTML = `
     ${chips}
-    <button onclick="toggleGameEditor()" class="px-2.5 py-1 rounded-full text-[11px] font-bold border border-sky-500/50 text-sky-300 bg-sky-500/10 cursor-pointer">⚙️ ${STATE.showGameEditor ? 'Fechar editor' : 'Editar / adicionar jogos'}</button>
+    <button onclick="toggleGameEditor()" class="px-2.5 py-1 rounded-full text-xs font-bold border border-sky-500/50 text-sky-300 bg-sky-500/10 cursor-pointer">⚙️ ${STATE.showGameEditor ? 'Fechar editor' : 'Editar / adicionar jogos'}</button>
     ${editor}`;
 }
 
@@ -797,7 +797,7 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
   panel.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
       <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold tracking-wider">WORKSTATION & PRODUTIVIDADE</span>
+        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-xs font-bold tracking-wider">WORKSTATION & PRODUTIVIDADE</span>
         <h3 class="text-base font-bold text-white">Comparativo de Produtividade: Setup A vs Setup B</h3>
       </div>
       <div class="flex items-center gap-2 text-xs font-mono">
@@ -815,22 +815,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>🎨 Render 3D (Blender)</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${blenderGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${blenderGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${blenderGain >= 0 ? 'Setup A ' + blenderGain + '% +rápido' : 'Setup B +' + Math.abs(blenderGain) + '% +rápido'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Cycles Classroom 1080p c/ OptiX/HIP + CPU Tile Assist:</p>
+        <p class="text-xs text-slate-400">Cycles Classroom 1080p c/ OptiX/HIP + CPU Tile Assist:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${blenderSecA}s <span class="text-[10px] text-slate-400">(${gpuA.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
+            <span class="font-bold text-white">${blenderSecA}s <span class="text-xs text-slate-400">(${gpuA.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${blenderSecB}s <span class="text-[10px] text-slate-400">(${gpuB.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
+            <span class="font-bold text-white">${blenderSecB}s <span class="text-xs text-slate-400">(${gpuB.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           Cinebench Multi: <strong>${sA.multiBench} pts</strong> (A) vs <strong>${sB.multiBench} pts</strong> (B)
         </div>
       </div>
@@ -841,22 +841,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>🎬 Edição & Export 4K</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${exportGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${exportGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${exportGain >= 0 ? 'Setup A ' + exportGain + '% +rápido' : 'Setup B +' + Math.abs(exportGain) + '% +rápido'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Exportação de timeline 10 min 4K H.264/HEVC/ProRes:</p>
+        <p class="text-xs text-slate-400">Exportação de timeline 10 min 4K H.264/HEVC/ProRes:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${exportSecA}s <span class="text-[10px] text-slate-400">(${isDualEncA ? 'Dual NVENC' : 'Single Enc'})</span></span>
+            <span class="font-bold text-white">${exportSecA}s <span class="text-xs text-slate-400">(${isDualEncA ? 'Dual NVENC' : 'Single Enc'})</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${exportSecB}s <span class="text-[10px] text-slate-400">(${isDualEncB ? 'Dual NVENC' : 'Single Enc'})</span></span>
+            <span class="font-bold text-white">${exportSecB}s <span class="text-xs text-slate-400">(${isDualEncB ? 'Dual NVENC' : 'Single Enc'})</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           Timeline Fluida: ${sA.cores}C/${sA.threads}T (A) vs ${sB.cores}C/${sB.threads}T (B)
         </div>
       </div>
@@ -867,22 +867,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>⚙️ Compilação & Dev</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${buildGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${buildGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${buildGain >= 0 ? 'Setup A +' + buildGain + '%' : 'Setup B +' + Math.abs(buildGain) + '%'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Vazão do compilador Rust/C++ em linhas de código:</p>
+        <p class="text-xs text-slate-400">Vazão do compilador Rust/C++ em linhas de código:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${klocA} kLOC/s <span class="text-[10px] text-slate-400">(build: ${buildSecA}s)</span></span>
+            <span class="font-bold text-white">${klocA} kLOC/s <span class="text-xs text-slate-400">(build: ${buildSecA}s)</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${klocB} kLOC/s <span class="text-[10px] text-slate-400">(build: ${buildSecB}s)</span></span>
+            <span class="font-bold text-white">${klocB} kLOC/s <span class="text-xs text-slate-400">(build: ${buildSecB}s)</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           Workers paralelos: <strong>-j ${sA.threads}</strong> (A) vs <strong>-j ${sB.threads}</strong> (B)
         </div>
       </div>
@@ -893,22 +893,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>⚡ Simulação Técnica & IA</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${scnGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${scnGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${scnGain >= 0 ? 'Setup A +' + scnGain + '%' : 'Setup B +' + Math.abs(scnGain) + '%'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Matrizes esparsas OpenDSS / Monte Carlo & 14B Q4:</p>
+        <p class="text-xs text-slate-400">Matrizes esparsas OpenDSS / Monte Carlo & 14B Q4:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${scnMinA} c/min <span class="text-[10px] text-slate-400">(${tokA} tok/s)</span></span>
+            <span class="font-bold text-white">${scnMinA} c/min <span class="text-xs text-slate-400">(${tokA} tok/s)</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${scnMinB} c/min <span class="text-[10px] text-slate-400">(${tokB} tok/s)</span></span>
+            <span class="font-bold text-white">${scnMinB} c/min <span class="text-xs text-slate-400">(${tokB} tok/s)</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           VRAM + Memória: ${gpuA.vram_gb}GB + ${sA.ddr} vs ${gpuB.vram_gb}GB + ${sB.ddr}
         </div>
       </div>
@@ -1120,13 +1120,13 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
         <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full ${aWins && !bWins ? 'bg-sky-400' : (bWins && !aWins ? 'bg-emerald-400' : 'bg-slate-500')}"></span>
-            <span class="text-slate-300 font-semibold text-[11px]">${lbl}</span>
+            <span class="text-slate-300 font-semibold text-xs">${lbl}</span>
           </div>
-          <div class="flex items-center gap-2 font-mono text-[11px]">
-            <span class="${aWins ? 'text-sky-300 font-bold' : 'text-slate-400'}">${data.rawA[i]} <span class="text-[9px] text-slate-500">${data.units[i]}</span></span>
+          <div class="flex items-center gap-2 ui-mono text-xs">
+            <span class="${aWins ? 'font-bold' : 'text-slate-400'}" style="${aWins ? 'color:var(--ui-compare-a-text);' : ''}">${data.rawA[i]} <span class="text-xs text-slate-500">${data.units[i]}</span></span>
             <span class="text-slate-600">vs</span>
-            <span class="${bWins ? 'text-emerald-300 font-bold' : 'text-slate-400'}">${data.rawB[i]} <span class="text-[9px] text-slate-500">${data.units[i]}</span></span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${diffPct >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+            <span class="${bWins ? 'font-bold' : 'text-slate-400'}" style="${bWins ? 'color:var(--ui-compare-b-text);' : ''}">${data.rawB[i]} <span class="text-xs text-slate-500">${data.units[i]}</span></span>
+            <span class="ui-badge ${diffPct >= 0 ? 'ui-badge--a' : 'ui-badge--b'} ui-mono">
               ${diffPct >= 0 ? '+A ' + diffPct + '%' : '+B ' + Math.abs(diffPct) + '%'}
             </span>
           </div>
@@ -1156,10 +1156,10 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
         {
           label: `Setup B (${gpuB.name} + ${cpuB.name})`,
           data: data.valsB,
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.22)',
+          borderColor: '#a78bfa',
+          backgroundColor: 'rgba(167, 139, 250, 0.22)',
           borderWidth: 2,
-          pointBackgroundColor: '#10b981',
+          pointBackgroundColor: '#a78bfa',
           pointBorderColor: '#fff',
           pointHoverRadius: 5,
           pointRadius: 3
@@ -1178,7 +1178,7 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
           grid: { color: 'rgba(51, 65, 85, 0.35)' },
           pointLabels: {
             color: '#94a3b8',
-            font: { size: 10, family: 'JetBrains Mono, monospace', weight: 'bold' }
+            font: { size: 12, family: gcaFontFamily(), weight: 'bold' }
           }
         }
       },
@@ -1188,7 +1188,7 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
           position: 'bottom',
           labels: {
             color: '#cbd5e1',
-            font: { size: 10, family: 'JetBrains Mono, monospace' },
+            font: { size: 12, family: gcaFontFamily() },
             boxWidth: 12
           }
         },
@@ -1222,9 +1222,9 @@ function renderSimulatorResultsOnly() {
   if (adviceBanner) adviceBanner.innerHTML = `
     <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold">SETUP A: ${gpuA.name} + ${cpuA.name}</span>
+        <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-xs font-bold">SETUP A: ${gpuA.name} + ${cpuA.name}</span>
         <span class="text-slate-500">|</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">SETUP B: ${gpuB.name} + ${cpuB.name}</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold">SETUP B: ${gpuB.name} + ${cpuB.name}</span>
         <span class="text-slate-400 hidden sm:inline">• Monitor ${getMonitorLabel()} (${cap} Hz) • ${dlssMode === 'perceived' ? 'Realista DLSS 4' : dlssMode}</span>
       </div>
       <button onclick="toggleXeonDetails()" id="btn-toggle-xeon-details" class="text-xs text-sky-400 hover:text-sky-300 underline cursor-pointer">
@@ -1234,7 +1234,7 @@ function renderSimulatorResultsOnly() {
     <div id="sim-xeon-details-box" class="${STATE.showXeonDetails ? '' : 'hidden'} mt-2 space-y-2">
       ${xeonWarnA}
       ${xeonWarnB !== xeonWarnA ? xeonWarnB : ''}
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
+      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
         ✨ <strong>DLSS 4 + Multi-Frame Generation (MFG 3×/4×):</strong> A série <strong>RTX 50 (Blackwell)</strong> gera até 4× quadros via Transformer diretamente na GPU após a fila de renderização do processador, aliviando o teto de FPS da CPU para preencher monitores de alta taxa de atualização.
       </div>
     </div>`;
@@ -1254,35 +1254,35 @@ function renderSimulatorResultsOnly() {
       const limitedBy = `<span class="${r.bottleneckType === 'cpu' ? 'text-amber-300' : (r.bottleneckType === 'gpu' ? 'text-sky-300' : 'text-emerald-300')}">${r.bottleneckLabel}</span>`;
       const visible = Math.min(shown, cap);
       const fgBadge = r.canUseFG
-        ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[9px]">${r.tech.badge} (${r.activeFgMult}× ativo)</span>`
-        : `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[9px]">${r.tech.badge}</span>`;
+        ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs">${r.tech.badge} (${r.activeFgMult}× ativo)</span>`
+        : `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs">${r.tech.badge}</span>`;
       const latColor = r.latencyMs <= 24 ? 'text-emerald-400' : r.latencyMs <= 38 ? 'text-amber-300' : 'text-rose-400';
       return `
         <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
           <div class="flex flex-wrap justify-between items-center gap-1">
             <div class="flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 ${color}">${setupLabel}</span>
+              <span class="px-1.5 py-0.5 rounded text-xs font-mono font-bold bg-slate-800 ${color}">${setupLabel}</span>
               <span class="font-bold text-white text-xs">${gpu.name} + ${cpu.name}</span>
               ${fgBadge}
             </div>
-            ${mode !== 'pure' && mode !== 'gpu' ? `<span class="text-[10px]">${limitedBy}</span>` : ''}
+            ${mode !== 'pure' && mode !== 'gpu' ? `<span class="text-xs">${limitedBy}</span>` : ''}
           </div>
           <div class="grid grid-cols-4 gap-1.5 text-center">
             <div title="FPS real renderizado antes da geração de quadros (define a resposta do mouse)">
-              <span class="block text-[9px] uppercase text-slate-500 font-mono">Base Real</span>
+              <span class="block text-xs uppercase text-slate-500 font-mono">Base Real</span>
               <span class="font-mono font-bold text-slate-200 text-sm">${r.baseRenderFps}</span>
             </div>
             <div title="FPS total enviado para a tela incluindo quadros gerados por FG / MFG">
-              <span class="block text-[9px] uppercase text-slate-500 font-mono">Tela c/ FG</span>
+              <span class="block text-xs uppercase text-slate-500 font-mono">Tela c/ FG</span>
               <span class="font-mono font-extrabold text-emerald-400 text-sm">${r.displayedWithCpu}</span>
             </div>
             <div title="Desempenho Percebido (pondera fluidez visual vs latência de entrada e nitidez DLSS 4)">
-              <span class="block text-[9px] uppercase text-amber-400 font-mono">Percebido</span>
+              <span class="block text-xs uppercase text-amber-400 font-mono">Percebido</span>
               <span class="font-mono font-extrabold text-amber-300 text-base">${r.perceivedWithCpu}</span>
             </div>
             <div title="FPS efetivo aproveitado dentro do limite Hz do seu monitor e latência estimada c/ Reflex">
-              <span class="block text-[9px] uppercase text-sky-400 font-mono">Monitor / Lat.</span>
-              <span class="font-mono font-extrabold text-sky-300 text-sm">${visible} <span class="text-[10px] ${latColor}">(${r.latencyMs}ms)</span></span>
+              <span class="block text-xs uppercase text-sky-400 font-mono">Monitor / Lat.</span>
+              <span class="font-mono font-extrabold text-sky-300 text-sm">${visible} <span class="text-xs ${latColor}">(${r.latencyMs}ms)</span></span>
             </div>
           </div>
         </div>`;
@@ -1291,7 +1291,7 @@ function renderSimulatorResultsOnly() {
       <div class="space-y-2">
         ${row(gpuA, cpuA, a, 'text-sky-300', 'Setup A')}
         ${row(gpuB, cpuB, b, 'text-emerald-300', 'Setup B')}
-        <p class="text-[10px] text-slate-500">Teto CPU: ${cpuA.name} (~${a.cpuCap} FPS) vs ${cpuB.name} (~${b.cpuCap} FPS). Quadros extras via FG/MFG multiplicam acima desse limite.</p>
+        <p class="text-xs text-slate-500">Teto CPU: ${cpuA.name} (~${a.cpuCap} FPS) vs ${cpuB.name} (~${b.cpuCap} FPS). Quadros extras via FG/MFG multiplicam acima desse limite.</p>
       </div>`;
   }
 
@@ -1331,99 +1331,72 @@ function renderSimulatorResultsOnly() {
     const robotSvg = `<svg class="w-5 h-5 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01M9 11V9a3 3 0 0 1 6 0v2"/></svg>`;
     const scaleSvg = `<svg class="w-5 h-5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 9l9-6 9 6M6 14l-3-5h6l-3 5zm12 0l-3-5h6l-3 5z"/></svg>`;
 
+    const fmtGainVal = g => `${g >= 0 ? '+' : ''}${g}%`;
+    const gainClass = g => g > 0 ? 'ui-kpi-value--good' : g < 0 ? 'ui-kpi-value--bad' : '';
+    const winBadge = (aWins, label) => `<span class="ui-badge ${aWins ? 'ui-badge--a' : 'ui-badge--b'} ui-mono">${aWins ? 'Setup A' : 'Setup B'} ${label}</span>`;
+
     heroEl.innerHTML = `
       <!-- Card 1: Jogos FPS -->
-      <div class="glass-elevated rounded-2xl p-4 border border-emerald-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${speedometerSvg}
-            <span class="text-xs font-mono uppercase text-emerald-400 font-bold">Desempenho em Jogos</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">${aCpu >= bCpu ? 'Setup A' : 'Setup B'} +rápido</span>
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">Jogos (FPS)</span>
+          ${winBadge(aCpu >= bCpu, '+rápido')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${gameGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${gameGain >= 0 ? '+' : ''}${gameGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(${aCpu} FPS vs ${bCpu} FPS médios)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${gainClass(gameGain)}">${fmtGainVal(gameGain)}</span>
+          <span class="text-xs ui-mono text-slate-300">${aCpu} vs ${bCpu} FPS</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-          <div class="h-full rounded-full ${gameGain >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${gameGain >= 0 ? Math.min(100, 50 + Math.min(50, gameGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + gameGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">A: ${gpuA.name} + ${cpuA.name}</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">B: ${gpuB.name} + ${cpuB.name}</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate">A: ${aCpu} FPS</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate">B: ${bCpu} FPS</span>
         </div>
       </div>
 
-      <!-- Card 2: Workstation & Produtividade -->
-      <div class="glass-elevated rounded-2xl p-4 border border-amber-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${briefSvg}
-            <span class="text-xs font-mono uppercase text-amber-400 font-bold">Workstation</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">${wsGain >= 0 ? 'Setup A' : 'Setup B'} +produtivo</span>
+      <!-- Card 2: Workstation -->
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">Workstation</span>
+          ${winBadge(wsGain >= 0, '+produtivo')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${wsGain >= 0 ? 'text-amber-400' : 'text-rose-400'}">${wsGain >= 0 ? '+' : ''}${wsGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(Render + Edição + Dev)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${gainClass(wsGain)}">${fmtGainVal(wsGain)}</span>
+          <span class="text-xs text-slate-400">Render + Edição + Dev</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-          <div class="h-full rounded-full ${wsGain >= 0 ? 'bg-gradient-to-r from-amber-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${wsGain >= 0 ? Math.min(100, 50 + Math.min(50, wsGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + wsGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">A: ${wsA} pts</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">B: ${wsB} pts</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate">A: ${wsA} pts</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate">B: ${wsB} pts</span>
         </div>
       </div>
 
-      <!-- Card 3: Running AI -->
-      <div class="glass-elevated rounded-2xl p-4 border border-purple-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${robotSvg}
-            <span class="text-xs font-mono uppercase text-purple-400 font-bold">Executar IA (Inferência)</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">${gpuA.vram_gb >= gpuB.vram_gb ? 'Setup A' : 'Setup B'} +VRAM</span>
+      <!-- Card 3: IA Local -->
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">IA Local (14B)</span>
+          ${winBadge(gpuA.vram_gb >= gpuB.vram_gb, '+VRAM')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${aiGain >= 0 ? 'text-purple-400' : 'text-rose-400'}">${aiGain >= 0 ? '+' : ''}${aiGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(14B: ${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${gainClass(aiGain)}">${fmtGainVal(aiGain)}</span>
+          <span class="text-xs ui-mono text-slate-300">${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-          <div class="h-full rounded-full ${aiGain >= 0 ? 'bg-gradient-to-r from-purple-400 to-sky-400' : 'bg-rose-400'}" style="width: ${aiGain >= 0 ? Math.min(100, 50 + Math.min(50, aiGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + aiGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">A: ${gpuA.vram_gb}GB</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">B: ${gpuB.vram_gb}GB</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate">A: ${gpuA.vram_gb} GB VRAM</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate">B: ${gpuB.vram_gb} GB VRAM</span>
         </div>
       </div>
 
-      <!-- Card 4: Setup Sinergia & Equilíbrio (Bidirecional: Gargalo CPU ou Desperdício GPU) -->
-      <div class="glass-elevated rounded-2xl p-4 border border-sky-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${scaleSvg}
-            <span class="text-xs font-mono uppercase text-sky-400 font-bold">Equilíbrio & Sinergia</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">${synA >= synB ? 'Setup A' : 'Setup B'} +harmônico</span>
+      <!-- Card 4: Equilíbrio & Sinergia -->
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">Equilíbrio</span>
+          ${winBadge(synA >= synB, '+harmônico')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black text-sky-300">${synA}%</span>
-          <span class="text-xs text-slate-300 font-mono">(Sinergia A vs ${synB}% em B)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${synA >= 85 ? 'ui-kpi-value--good' : synA >= 70 ? 'ui-kpi-value--warn' : 'ui-kpi-value--bad'}">${synA}%</span>
+          <span class="text-xs ui-mono text-slate-300">vs ${synB}% em B</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400" style="width: ${synA}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate" title="Setup A: ${synObjA.status}">A: ${synObjA.status}</span>
-          <span class="text-slate-500 mx-1">|</span>
-          <span class="text-emerald-300 truncate" title="Setup B: ${synObjB.status}">B: ${synObjB.status}</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex flex-col gap-0.5 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate" title="Setup A: ${synObjA.status}">A: ${synObjA.status}</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate" title="Setup B: ${synObjB.status}">B: ${synObjB.status}</span>
         </div>
       </div>
     `;
@@ -1441,7 +1414,7 @@ function renderSimulatorResultsOnly() {
       (<span class="font-mono text-emerald-300">${aDisp} FPS na tela c/ FG</span> • <span class="font-mono text-sky-300">${avgVisible(gpuA, cpuA, mode === 'pure' ? 'pure' : 'withCpu')}</span> úteis no monitor)</div>
     <div><strong class="text-emerald-300">Setup B: ${gpuB.name} + ${cpuB.name}</strong>:
       <span class="font-mono text-white">${bPure}</span> → <span class="font-mono text-amber-300">${bCpu}</span> (<span class="font-mono text-emerald-300">${bDisp} c/ FG</span>)</div>
-    <div class="w-full text-[11px] ${lossA >= 15 || lossB >= 15 ? 'text-amber-300' : 'text-slate-400'}">
+    <div class="w-full text-xs ${lossA >= 15 || lossB >= 15 ? 'text-amber-300' : 'text-slate-400'}">
       Comparativo no modo (${dlssMode === 'perceived' ? 'Realista DLSS 4 + Latência' : dlssMode}):
       <strong>${bCpu > 0 ? (aCpu >= bCpu ? '+' : '') + Math.round((aCpu / bCpu - 1) * 100) : '--'}%</strong> com CPU
       (vs ${bPure > 0 ? (aPure >= bPure ? '+' : '') + Math.round((aPure / bPure - 1) * 100) : '--'}% sem gargalo de CPU).
@@ -1465,24 +1438,24 @@ function renderSimulatorResultsOnly() {
       rows.push(fpsBarRow(`Setup B: ${gpuB.name} + ${cpuB.name}`, 'text-emerald-200', 'bg-amber-600', b.withCpu, maxF, false, cap));
     }
     const fgNote = (a.canUseFG || b.canUseFG)
-      ? `<div class="text-[10px] text-emerald-300/90 font-mono">✨ Na tela c/ FG/MFG: Setup A ${a.displayedWithCpu} FPS (${a.activeFgMult}×, ~${a.latencyMs}ms) vs Setup B ${b.displayedWithCpu} FPS (${b.activeFgMult}×, ~${b.latencyMs}ms)</div>`
+      ? `<div class="text-xs text-emerald-300/90 font-mono">✨ Na tela c/ FG/MFG: Setup A ${a.displayedWithCpu} FPS (${a.activeFgMult}×, ~${a.latencyMs}ms) vs Setup B ${b.displayedWithCpu} FPS (${b.activeFgMult}×, ~${b.latencyMs}ms)</div>`
       : '';
     return `
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
         <div class="flex justify-between items-center text-xs font-semibold text-white">
-          <span class="flex items-center gap-1">${speedometerSvgSmall} ${gm.title}${a.calibrated ? ' <span class="text-[10px] text-sky-400">📏</span>' : ''}</span>
+          <span class="flex items-center gap-1">${speedometerSvgSmall} ${gm.title}${a.calibrated ? ' <span class="text-xs text-sky-400">📏</span>' : ''}</span>
           <span class="font-mono ${gain >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${gain >= 0 ? '+' : ''}${gain}%</span>
         </div>
-        <div class="space-y-1 text-[11px] font-mono">${rows.join('')}</div>
+        <div class="space-y-1 text-xs font-mono">${rows.join('')}</div>
         ${fgNote}
         ${mode !== 'pure' && mode !== 'gpu' && (a.bottleneckType !== 'balanced' || b.bottleneckType !== 'balanced') ? `
-          <div class="text-[10px] text-slate-300 flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80 font-mono">
+          <div class="text-xs text-slate-300 flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80 font-mono">
             <span title="${a.bottleneckLabel}">A: <strong class="${a.bottleneckType === 'cpu' ? 'text-amber-300' : (a.bottleneckType === 'gpu' ? 'text-sky-300' : 'text-emerald-300')}">${a.bottleneckLabel}</strong></span>
             <span class="text-slate-600">|</span>
             <span title="${b.bottleneckLabel}">B: <strong class="${b.bottleneckType === 'cpu' ? 'text-amber-300' : (b.bottleneckType === 'gpu' ? 'text-sky-300' : 'text-emerald-300')}">${b.bottleneckLabel}</strong></span>
           </div>` : ''}
       </div>`;
-  }).join('') + (cap < 999 ? `<p class="text-[10px] text-slate-500">Linha branca = limite do monitor (${cap} Hz).</p>` : '');
+  }).join('') + (cap < 999 ? `<p class="text-xs text-slate-500">Linha branca = limite do monitor (${cap} Hz).</p>` : '');
 }
 
 // ============================================================================
@@ -1785,30 +1758,30 @@ function renderUpgradeSuggestions() {
       <div class="rounded-xl p-4 border ${isBest ? 'border-emerald-400 bg-emerald-950/30 shadow-lg shadow-emerald-500/10' : (hasVrmAlert ? 'border-amber-500/50 bg-slate-900/90' : 'border-slate-800 bg-slate-900/80')} flex flex-col gap-2.5 text-xs">
         <div class="flex items-center justify-between gap-2">
           <span class="font-extrabold text-white text-sm">${pl.p.label}</span>
-          <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${memColor}">${pl.memType}</span>
+          <span class="px-2 py-0.5 rounded border text-xs font-mono font-bold ${memColor}">${pl.memType}</span>
         </div>
-        ${isBest ? '<span class="text-[10px] font-mono font-bold text-emerald-300">🏆 MELHOR RESULTADO PARA SEU PERFIL</span>' : ''}
+        ${isBest ? '<span class="text-xs font-mono font-bold text-emerald-300">🏆 MELHOR RESULTADO PARA SEU PERFIL</span>' : ''}
         
         <!-- CPU Selector -->
         <div>
-          <label class="text-[10px] font-mono text-slate-400 block mb-0.5">Processador:</label>
-          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgCpuChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-white">${cpuOptions}</select>
+          <label class="text-xs font-mono text-slate-400 block mb-0.5">Processador:</label>
+          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgCpuChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">${cpuOptions}</select>
         </div>
 
         <!-- Motherboard Selector & Compatibility Flag -->
         <div>
-          <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-0.5">
             <span>Placa-Mãe:</span>
-            ${hasVrmAlert ? `<span class="px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px]">⚠️ [!] Atenção VRM</span>` : ''}
+            ${hasVrmAlert ? `<span class="px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs">⚠️ [!] Atenção VRM</span>` : ''}
           </div>
-          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgMoboChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border ${hasVrmAlert ? 'border-amber-500/60' : 'border-slate-700'} rounded px-2 py-1 text-[11px] text-white">
+          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgMoboChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border ${hasVrmAlert ? 'border-amber-500/60' : 'border-slate-700'} rounded px-2 py-1 text-xs text-white">
             ${moboOptions}
           </select>
         </div>
 
         <!-- VRM / Compatibility Warning Alert Box -->
         ${hasVrmAlert ? `
-          <div class="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-200 text-[11px] flex items-start gap-2 leading-snug">
+          <div class="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs flex items-start gap-2 leading-snug">
             <span class="font-bold font-mono text-amber-400 shrink-0 text-xs">⚠️ [!]</span>
             <div>
               <strong class="block text-amber-300 font-semibold">${pl.comp.label}</strong>
@@ -1817,29 +1790,29 @@ function renderUpgradeSuggestions() {
           </div>
         ` : ''}
 
-        <div class="space-y-1 font-mono text-[11px] pt-1 border-t border-slate-800">
+        <div class="space-y-1 font-mono text-xs pt-1 border-t border-slate-800">
           <div class="flex justify-between"><span class="text-slate-400">CPU</span><span>${pl.p.keep ? `${formatMoneyShort(0)} (já tem)` : fmtBRLShort(pl.cpuCost)}</span></div>
           <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Placa-mãe</span><span class="truncate text-right" title="${pl.mobo.name}">${pl.p.keep ? `${formatMoneyShort(0)} (já tem)` : `${fmtBRLShort(pl.moboCost)} <span class="text-slate-500">${pl.mobo.name}</span>`}</span></div>
           <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">RAM +${pl.neededGB}GB</span><span class="truncate text-right ${pl.memType === 'DDR5' ? 'text-sky-300' : 'text-emerald-300'}" title="${pl.ram.desc}">${fmtBRLShort(pl.ram.cost)}</span></div>
-          <div class="text-[10px] text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus ' + curUserRamCap + 'GB)' : ''}</div>
+          <div class="text-xs text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus ' + curUserRamCap + 'GB)' : ''}</div>
           <div class="flex justify-between border-t border-slate-800 pt-1 font-bold"><span class="text-slate-300">Total plataforma</span><span class="text-white">${fmtBRLShort(pl.platformCost)}</span></div>
           <div class="flex justify-between"><span class="text-slate-400">Sobra p/ GPU</span><span class="${pl.gpuBudget > 0 ? 'text-amber-300' : 'text-rose-400'} font-bold">${fmtBRLShort(pl.gpuBudget)}</span></div>
         </div>
 
-        <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+        <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
           ${pl.gpu ? `
-            <div class="text-[10px] text-slate-400 uppercase font-mono">GPU sugerida com a sobra</div>
-            <div class="font-bold text-white">${pl.gpu.name} <span class="text-purple-300">${pl.gpu.vram_gb}GB</span> — ${fmtBRLShort(pl.gpu.price_brl)}</div>
-            <div class="grid grid-cols-3 gap-1 mt-1 text-center font-mono">
-              <div><span class="block text-[9px] text-slate-500">FPS c/ CPU</span><span class="font-bold text-amber-300">${pl.avgFps}</span></div>
-              <div><span class="block text-[9px] text-slate-500">14B tok/s</span><span class="font-bold text-purple-300">${pl.gpu.llm_14b_tok_s}</span></div>
-              <div><span class="block text-[9px] text-slate-500">Score</span><span class="font-bold text-white">${Math.round((pl.finalScore / bestScore) * 100)}</span></div>
+            <div class="ui-label">GPU sugerida com a sobra</div>
+            <div class="font-bold text-sm text-white">${pl.gpu.name} <span class="ui-badge ui-mono ml-1">${pl.gpu.vram_gb} GB</span></div>
+            <div class="text-xs ui-mono text-emerald-300 font-bold">${fmtBRLShort(pl.gpu.price_brl)}</div>
+            <div class="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-800/80 text-center ui-mono">
+              <div><span class="block text-xs text-slate-400">FPS</span><span class="font-extrabold text-base text-white">${pl.avgFps}</span></div>
+              <div><span class="block text-xs text-slate-400">14B tok/s</span><span class="font-extrabold text-base text-sky-300">${pl.gpu.llm_14b_tok_s}</span></div>
+              <div><span class="block text-xs text-slate-400">Score</span><span class="font-extrabold text-base text-emerald-300">${Math.round((pl.finalScore / bestScore) * 100)}</span></div>
             </div>
-            ${pl.avgPure - pl.avgFps > 5 ? `<div class="text-[10px] text-amber-300 mt-1">CPU segura ~${pl.avgPure - pl.avgFps} FPS médios dessa GPU</div>` : ''}
-          ` : '<div class="text-rose-300 text-[11px]">Orçamento não cobre nenhuma GPU após a plataforma.</div>'}
+            ${pl.avgPure - pl.avgFps > 5 ? `<div class="text-xs text-amber-300">CPU segura ~${pl.avgPure - pl.avgFps} FPS médios dessa GPU</div>` : ''}
+          ` : '<div class="text-rose-300 text-xs">Orçamento não cobre nenhuma GPU após a plataforma.</div>'}
         </div>
-        <p class="text-[10px] text-slate-400 leading-snug">${pl.p.note}</p>
-        <button onclick="applyPlatformToBuild('${pl.p.id}')" class="mt-auto px-2.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-sky-500/40 text-[11px] font-bold cursor-pointer">Aplicar na Minha Build →</button>
+        <button type="button" onclick="applyPlatformToBuild('${pl.p.id}')" class="mt-auto ui-btn ${pl.finalScore === bestScore ? 'ui-btn--primary' : ''} ui-btn--sm w-full">Aplicar na Montagem →</button>
       </div>`;
     }).join('')}`;
 
@@ -1851,36 +1824,71 @@ function renderUpgradeSuggestions() {
     const diff = d5.cost - d4.cost;
     const pct = d4.cost > 0 ? Math.round((diff / d4.cost) * 100) : 0;
     return `
-      <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-lg ${cap === targetGB ? 'bg-purple-500/10 border border-purple-500/40' : 'bg-slate-950/60 border border-slate-800'}">
-        <span class="col-span-2 font-mono font-bold text-white">${cap} GB</span>
-        <span class="col-span-4 font-mono text-emerald-300" title="${d4.desc}">DDR4 ${fmtBRLShort(d4.cost)} <span class="text-[10px] text-slate-500">(${fmtBRLShort(d4.perGB)}/GB)</span></span>
-        <span class="col-span-4 font-mono text-sky-300" title="${d5.desc}">DDR5 ${fmtBRLShort(d5.cost)} <span class="text-[10px] text-slate-500">(${fmtBRLShort(d5.perGB)}/GB)</span></span>
-        <span class="col-span-2 text-right font-mono font-bold ${diff > 0 ? 'text-rose-300' : 'text-emerald-300'}">${diff >= 0 ? '+' : ''}${pct}%</span>
-      </div>`;
+      <tr class="${cap === targetGB ? 'bg-sky-500/10' : ''}">
+        <td class="ui-mono font-bold text-white">${cap} GB</td>
+        <td class="ui-mono text-emerald-300" title="${d4.desc}">${fmtBRLShort(d4.cost)} <span class="text-xs text-slate-400">(${fmtBRLShort(d4.perGB)}/GB)</span></td>
+        <td class="ui-mono text-sky-300" title="${d5.desc}">${fmtBRLShort(d5.cost)} <span class="text-xs text-slate-400">(${fmtBRLShort(d5.perGB)}/GB)</span></td>
+        <td class="text-right ui-mono font-bold ${diff > 0 ? 'text-rose-300' : 'text-emerald-300'}">${diff >= 0 ? '+' : ''}${pct}%</td>
+      </tr>`;
   }).join('');
   document.getElementById('upg-ram-deals-table').innerHTML = `
-    <div class="grid grid-cols-12 gap-2 text-[10px] font-mono uppercase text-slate-500 px-2"><span class="col-span-2">Capac.</span><span class="col-span-4">DDR4 mais barata</span><span class="col-span-4">DDR5 mais barata</span><span class="col-span-2 text-right">Ágio DDR5</span></div>
-    ${rows}
-    <p class="text-[10px] text-slate-500 mt-1">Glitches de preço (${STATE.market?.monetary?.currency_symbol || 'R$'}/GB &gt; 2,5× a mediana) são ignorados. Use os campos manuais para cotações de usados/ECC.</p>`;
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>Capac.</th>
+            <th>DDR4 mais barata</th>
+            <th>DDR5 mais barata</th>
+            <th class="text-right">Ágio DDR5</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 
-  // Verdict
+  // Verdict: numbers & recommendation first, explanation collapsed
   const d4t = cheapestRamFor('DDR4', targetGB), d5t = cheapestRamFor('DDR5', targetGB);
   const premium = d5t.cost - d4t.cost;
+  const premPct = d4t.cost > 0 ? Math.round((premium / d4t.cost) * 100) : 0;
   const best = plans.find(pl => pl.finalScore === bestScore);
   const bestD4 = plans.filter(pl => pl.memType === 'DDR4').sort((a, b) => b.finalScore - a.finalScore)[0];
   const bestD5 = plans.filter(pl => pl.memType === 'DDR5').sort((a, b) => b.finalScore - a.finalScore)[0];
   const moboEstimate = formatMoneyShort(Math.round(700 * (STATE.market?.monetary?.exchange_rate_vs_brl || 1.0)));
   document.getElementById('upg-recommendation-verdict').innerHTML = `
-    <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">💡 Veredito de Plataforma: Placa-Mãe & RAM (${targetGB} GB, orçamento ${fmtBRLShort(budget)})</span>
-    <p class="text-slate-200">Hoje, ${targetGB} GB de <strong class="text-sky-300">DDR5</strong> custam <strong>${fmtBRLShort(premium)} a mais</strong> que ${targetGB} GB de <strong class="text-emerald-300">DDR4</strong>
-      ${d4t.cost > 0 ? `(+${Math.round((premium / d4t.cost) * 100)}%)` : ''}. Além da RAM, a transição para plataformas modernas exige uma <strong class="text-amber-300">nova placa-mãe</strong> (${bestD5 ? fmtBRLShort(bestD5.moboCost) : `${moboEstimate}+`}), pesando no bolso e reduzindo a verba restante para a GPU.</p>
-    ${bestD4 && bestD5 ? `<p class="text-slate-300">Melhor DDR4: <strong>${bestD4.p.label}</strong> → ${bestD4.gpu ? bestD4.gpu.name : 'sem GPU'} (~${bestD4.avgFps} FPS).<br/>
-      Melhor DDR5: <strong>${bestD5.p.label}</strong> → ${bestD5.gpu ? bestD5.gpu.name : 'sem GPU'} (~${bestD5.avgFps} FPS).</p>` : ''}
-    ${best ? `<div class="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-100">
-      <strong>Recomendação para seu perfil:</strong> ${best.p.label} com ${best.cpu.name}${best.gpu ? ` + ${best.gpu.name}` : ''}.
-      ${best.memType === 'DDR4' ? 'Com a placa-mãe e RAM caras no ecossistema DDR5, manter-se no DDR4 libera orçamento para uma GPU muito mais potente — gerando salto imediato em IA e FPS.' : 'Mesmo pagando o investimento da nova placa-mãe e DDR5, a plataforma moderna rende mais no seu perfil e viabiliza upgrades futuros de CPU.'}
-    </div>` : ''}
-    ${refCpu && refCpu.name ? `<p class="text-[11px] text-slate-400">Seu PC de Referência configurado atualmente: <strong>${refCpu.name}</strong> (${curUserRamCap}GB ${curUserRamType}). Você pode customizar suas peças a qualquer momento na aba <strong>Configurações do Sistema</strong>.</p>` : ''}`;
+    <div class="flex items-center justify-between gap-2">
+      <span class="ui-label">Veredito de Plataforma</span>
+      <span class="ui-badge ui-badge--brand ui-mono">${targetGB} GB • ${fmtBRLShort(budget)}</span>
+    </div>
+
+    ${best ? `
+      <div class="ui-card ui-card--compact ui-card--good space-y-1">
+        <span class="ui-badge ui-badge--good">Melhor escolha no seu orçamento</span>
+        <div class="text-base font-extrabold text-white mt-1">${best.p.label}</div>
+        <div class="text-xs ui-mono text-emerald-300">${best.cpu.name}${best.gpu ? ` + ${best.gpu.name} (${best.avgFps} FPS)` : ''}</div>
+      </div>
+    ` : ''}
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="ui-kpi !p-3">
+        <span class="ui-kpi-label">Ágio DDR5 (${targetGB}GB)</span>
+        <span class="text-xl ui-mono font-extrabold ${premium > 0 ? 'text-rose-300' : 'text-emerald-300'}">${premium >= 0 ? '+' : ''}${fmtBRLShort(premium)}</span>
+        <span class="text-xs ui-mono text-slate-400">${premPct >= 0 ? '+' : ''}${premPct}% vs DDR4</span>
+      </div>
+      <div class="ui-kpi !p-3">
+        <span class="ui-kpi-label">DDR4 vs DDR5 (FPS)</span>
+        <span class="text-xl ui-mono font-extrabold text-white">${bestD4 ? bestD4.avgFps : '—'} <span class="text-slate-500 text-sm">vs</span> ${bestD5 ? bestD5.avgFps : '—'}</span>
+        <span class="text-xs text-slate-400 truncate">${bestD4 && bestD4.gpu ? bestD4.gpu.name : '—'} / ${bestD5 && bestD5.gpu ? bestD5.gpu.name : '—'}</span>
+      </div>
+    </div>
+
+    <details class="ui-details">
+      <summary class="ui-details-summary">Ver detalhes da recomendação</summary>
+      <div class="ui-details-body space-y-2 text-xs text-slate-300">
+        <p>Além da diferença na RAM, migrar para DDR5 exige nova placa-mãe (${bestD5 ? fmtBRLShort(bestD5.moboCost) : `${moboEstimate}+`}), reduzindo a verba disponível para a GPU.</p>
+        ${best ? `<p>${best.memType === 'DDR4' ? 'Manter-se no DDR4 libera orçamento para uma GPU mais forte, gerando salto imediato em IA e FPS.' : 'Mesmo pagando o investimento da plataforma DDR5, ela entrega mais desempenho no seu perfil e viabiliza upgrades futuros de CPU.'}</p>` : ''}
+        ${refCpu && refCpu.name ? `<p class="text-slate-400">PC de Referência atual: <strong>${refCpu.name}</strong> (${curUserRamCap}GB ${curUserRamType}).</p>` : ''}
+      </div>
+    </details>`;
 }
 
 // ============================================================================
@@ -2062,7 +2070,7 @@ function renderBFCustomModelsCheckboxes() {
       <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/70 border ${checked ? 'border-sky-500/50 text-sky-200' : 'border-slate-800 text-slate-400'} text-xs font-mono cursor-pointer hover:border-slate-700 transition">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="onBFCustomModelToggle('${item.slug}', this.checked)" class="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0">
         <span class="truncate" title="${item.name}">${item.name}</span>
-        <span class="text-[9px] text-slate-500 shrink-0">(${sub})</span>
+        <span class="text-xs text-slate-500 shrink-0">(${sub})</span>
       </label>
     `;
   }).join('');
@@ -2289,12 +2297,12 @@ function renderBlackFridayTab() {
   const chipsEl = document.getElementById('bf-model-filter-chips');
   if (chipsEl) {
     chipsEl.innerHTML = `
-      <span class="text-[10px] font-mono text-slate-400 mr-1 uppercase">Modelos no Gráfico:</span>
+      <span class="ui-label mr-1">Modelos no Gráfico:</span>
       ${stats.map(s => {
         const active = !STATE.bfVisibleSlugs || STATE.bfVisibleSlugs.has(s.item.slug);
-        return `<button onclick="toggleBFModel('${s.item.slug}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono transition cursor-pointer border ${active ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'bg-slate-900/60 text-slate-500 border-slate-800'}">${s.item.name}</button>`;
+        return `<button type="button" onclick="toggleBFModel('${s.item.slug}')" class="ui-chip ${active ? 'is-active' : ''}">${s.item.name}</button>`;
       }).join('')}
-      <button onclick="STATE.bfVisibleSlugs = null; renderBlackFridayTab();" class="text-[10px] text-sky-400 hover:underline ml-1">Exibir Todos</button>
+      <button type="button" onclick="STATE.bfVisibleSlugs = null; renderBlackFridayTab();" class="ui-btn ui-btn--sm ui-btn--ghost ml-1">Exibir Todos</button>
     `;
   }
 
@@ -2312,50 +2320,43 @@ function renderBlackFridayTab() {
   const yoys = stats.map(s => s.yoyPct).filter(v => v != null);
   const bestValue = [...stats].sort((a, b) => (a.brlPerContextualPerf || a.brlPerPerf) - (b.brlPerContextualPerf || b.brlPerPerf))[0];
   document.getElementById('bf-multiyear-summary').innerHTML = `
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Desconto mediano BF ${curYear - 1}</span>
-        <span class="text-xl font-mono font-extrabold text-amber-300">${Math.round(familyMedianDisc * 100)}%</span>
-        <span class="block text-[10px] text-slate-500">mín. de Nov vs média Set–Out (${discs.length} modelos)</span>
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Desconto mediano BF ${curYear - 1}</span>
+        <span class="ui-kpi-value ui-kpi-value--warn">${Math.round(familyMedianDisc * 100)}%</span>
+        <span class="ui-kpi-sub">mín. de Nov vs média Set–Out (${discs.length} modelos)</span>
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-mono uppercase text-slate-400 block">Ficou mais barato DEPOIS da BF?</span>
-          <span class="text-xl font-mono font-extrabold ${postLowerCount > withPost / 2 ? 'text-sky-300' : 'text-emerald-300'}">${postLowerCount}/${withPost}</span>
-        </div>
-        <span class="block text-[10px] text-slate-500 mt-0.5">modelos com preço menor entre Dez–Mar</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Caiu depois da BF?</span>
+        <span class="ui-kpi-value ${postLowerCount > withPost / 2 ? 'ui-kpi-value--brand' : 'ui-kpi-value--good'}">${postLowerCount}/${withPost}</span>
+        <span class="ui-kpi-sub">modelos mais baratos entre Dez–Mar</span>
         ${postLowerModels.length ? `
-          <div class="mt-2 pt-1.5 border-t border-slate-800/80">
-            <span class="text-[9px] text-slate-400 block font-mono mb-1">Modelos que caíram pós-BF:</span>
-            <div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto pr-0.5">
-              ${postLowerModels.map(s => {
-                const py = s.years[curYear - 1] || {};
-                const dropPct = py.bfMin && py.postMin ? Math.round((1 - py.postMin / py.bfMin) * 100) : 0;
-                return `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 font-mono text-[9px]" title="Piso BF: ${fmtBRLShort(py.bfMin)} → Menor Pós-BF: ${fmtBRLShort(py.postMin)}">
-                  ${s.item.name} ${dropPct > 0 ? `(-${dropPct}%)` : ''}
-                </span>`;
-              }).join('')}
-            </div>
+          <div class="mt-1.5 flex flex-wrap gap-1 max-h-16 overflow-y-auto pr-0.5">
+            ${postLowerModels.map(s => {
+              const py = s.years[curYear - 1] || {};
+              const dropPct = py.bfMin && py.postMin ? Math.round((1 - py.postMin / py.bfMin) * 100) : 0;
+              return `<span class="ui-badge ui-badge--brand ui-mono" title="Piso BF: ${fmtBRLShort(py.bfMin)} → Menor Pós-BF: ${fmtBRLShort(py.postMin)}">${s.item.name}${dropPct > 0 ? ` −${dropPct}%` : ''}</span>`;
+            }).join('')}
           </div>
-        ` : `<span class="block text-[9px] text-emerald-400/80 mt-1">Nenhum modelo caiu mais no pós-BF</span>`}
+        ` : ''}
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Variação em 12 meses (mediana)</span>
-        <span class="text-xl font-mono font-extrabold ${(median(yoys) || 0) > 0 ? 'text-rose-300' : 'text-emerald-300'}">${yoys.length ? ((median(yoys) > 0 ? '+' : '') + Math.round(median(yoys)) + '%') : '--'}</span>
-        <span class="block text-[10px] text-slate-500">hoje vs mesma época de ${curYear - 1}</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Variação em 12 meses</span>
+        <span class="ui-kpi-value ${(median(yoys) || 0) > 0 ? 'ui-kpi-value--bad' : 'ui-kpi-value--good'}">${yoys.length ? ((median(yoys) > 0 ? '+' : '') + Math.round(median(yoys)) + '%') : '--'}</span>
+        <span class="ui-kpi-sub">hoje vs mesma época de ${curYear - 1}</span>
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Alerta "metade do dobro"</span>
-        <span class="text-xl font-mono font-extrabold ${inflated.length ? 'text-rose-300' : 'text-emerald-300'}">${inflated.length}</span>
-        <span class="block text-[10px] text-slate-500 truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >6% desde Set: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Alerta "metade do dobro"</span>
+        <span class="ui-kpi-value ${inflated.length ? 'ui-kpi-value--bad' : 'ui-kpi-value--good'}">${inflated.length}</span>
+        <span class="ui-kpi-sub truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >6%: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Melhor custo por desempenho hoje</span>
-        <span class="text-sm font-extrabold text-emerald-300">${bestValue ? bestValue.item.name : '--'}</span>
-        <span class="block text-[10px] text-slate-500">${bestValue ? fmtBRLShort(bestValue.brlPerContextualPerf || bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Melhor custo-desempenho</span>
+        <span class="text-base font-bold text-emerald-300 leading-snug">${bestValue ? bestValue.item.name : '--'}</span>
+        <span class="ui-kpi-sub">${bestValue ? fmtBRLShort(bestValue.brlPerContextualPerf || bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
       </div>
     </div>
-    <p class="text-[10px] text-slate-500 mt-2">📅 Histórico disponível na Database: desde ${firstDates[0] || '--'} (≈ ${firstDates[0] ? Math.round((new Date(bfToday()) - new Date(firstDates[0])) / 86400000) : 0} dias).</p>`;
+    <p class="text-xs text-slate-400 mt-2">Histórico disponível: desde ${firstDates[0] || '--'} (≈ ${firstDates[0] ? Math.round((new Date(bfToday()) - new Date(firstDates[0])) / 86400000) : 0} dias).</p>`;
 
   // Target item selector
   const sel = document.getElementById('bf-target-item');
@@ -2368,53 +2369,73 @@ function renderBlackFridayTab() {
     onBFTargetItemChange(true);
   }
 
-  // Table
+  // Table with inline visual BF range mini-gauge
   const yPrev = curYear - 1;
   document.getElementById('bf-table-body').innerHTML = stats.map(s => {
     const py = s.years[yPrev] || {};
     const r = s.range;
-    let diag, diagColor;
-    // 1. Check EOL Scarcity / Severe Price Spike FIRST (Argon Drop-in)
+    let diag, badgeTone, dotColor;
     if (s.yoyPct != null && s.yoyPct > 15 && s.effectiveCurrent > s.allMin * 1.25) {
-      diag = `Encarecendo (+${Math.round(s.yoyPct)}% a/a) — estoque saindo?`;
-      diagColor = 'amber';
-    }
-    // 2. Check Pre-BF Inflation SECOND
-    else if (s.preBfInflationPct != null && s.preBfInflationPct > 6 && s.effectiveCurrent > r.high) {
-      diag = `Inflado +${Math.round(s.preBfInflationPct)}% vs Pré-BF`;
-      diagColor = 'rose';
-    }
-    // 3. Declare "Já em preço de BF" if inside the expected promo range
-    else if (s.effectiveCurrent <= r.high) {
-      diag = s.effectiveCurrent <= r.low ? 'Pechincha / Abaixo do Piso BF' : 'Já em preço de BF';
-      diagColor = 'emerald';
-    }
-    else if (py.postLower) {
-      diag = 'Caiu mais depois da BF passada';
-      diagColor = 'sky';
+      diag = `Encarecendo (+${Math.round(s.yoyPct)}% a/a)`;
+      badgeTone = 'warn';
+      dotColor = 'var(--ui-warn)';
+    } else if (s.preBfInflationPct != null && s.preBfInflationPct > 6 && s.effectiveCurrent > r.high) {
+      diag = `Inflado +${Math.round(s.preBfInflationPct)}%`;
+      badgeTone = 'bad';
+      dotColor = 'var(--ui-bad)';
+    } else if (s.effectiveCurrent <= r.high) {
+      diag = s.effectiveCurrent <= r.low ? 'Abaixo do piso BF' : 'Já em preço de BF';
+      badgeTone = 'good';
+      dotColor = 'var(--ui-good)';
+    } else if (s.effectiveCurrent <= r.high * 1.07) {
+      diag = `Perto (+${fmtBRLShort(s.effectiveCurrent - r.high)})`;
+      badgeTone = 'warn';
+      dotColor = 'var(--ui-warn)';
+    } else if (py.postLower) {
+      diag = 'Caiu pós-BF';
+      badgeTone = 'warn';
+      dotColor = 'var(--ui-warn)';
     } else {
-      diag = `Aguarde cair ~${fmtBRLShort(s.effectiveCurrent - r.high)}`;
-      diagColor = 'sky';
+      diag = `Aguarde −${fmtBRLShort(s.effectiveCurrent - r.high)}`;
+      badgeTone = 'bad';
+      dotColor = 'var(--ui-bad)';
     }
+
+    // Mini-gauge geometry
+    const mLo = Math.min(s.allMin || r.low, r.low, s.effectiveCurrent) * 0.94;
+    const mHi = Math.max(s.effectiveCurrent, r.high, py.preAvg || r.high) * 1.06;
+    const mPos = v => Math.max(2, Math.min(98, ((v - mLo) / Math.max(1, mHi - mLo)) * 100));
+    const rLeft = mPos(r.low);
+    const rWidth = Math.max(8, mPos(r.high) - rLeft);
+    const curPos = mPos(s.effectiveCurrent);
+
     return `
-      <tr class="hover:bg-slate-800/50 cursor-pointer" onclick="document.getElementById('bf-target-item').value='${s.item.slug}'; onBFTargetItemChange();">
-        <td class="py-2.5 px-3">
+      <tr class="cursor-pointer" onclick="document.getElementById('bf-target-item').value='${s.item.slug}'; onBFTargetItemChange();">
+        <td>
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-bold text-white">${s.item.name}</span>
             ${s.kind === 'laptop'
-              ? `<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30 text-[10px] font-mono">${s.item.ram_gb}GB / ${s.item.storage_gb >= 1024 ? (s.item.storage_gb / 1024) + 'TB' : s.item.storage_gb + 'GB'}</span>`
-              : (s.item.vram_gb ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-mono">${s.item.vram_gb} GB</span>` : '')}
-            ${s.item.coupon ? `<button onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono hover:bg-amber-500/40 transition cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
+              ? `<span class="ui-badge ui-mono">${s.item.ram_gb}GB / ${s.item.storage_gb >= 1024 ? (s.item.storage_gb / 1024) + 'TB' : s.item.storage_gb + 'GB'}</span>`
+              : (s.item.vram_gb ? `<span class="ui-badge ui-mono">${s.item.vram_gb} GB</span>` : '')}
+            ${s.item.coupon ? `<button type="button" onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="ui-badge ui-badge--warn ui-mono cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
           </div>
-          <div class="text-[10px] text-slate-400 font-mono mt-0.5">${s.kind === 'laptop' ? `${s.item.cpu_name} • ${s.item.gpu_name} • ${s.item.screen_hz}Hz` : (s.kind === 'gpu' ? `${s.item.vram_gb}GB • score ${Math.round(s.perf)}` : `índice jogo ${getCpuGamingIndex(s.item)}`)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
+          <div class="text-xs text-slate-400 ui-mono mt-0.5">${s.kind === 'laptop' ? `${s.item.cpu_name} • ${s.item.gpu_name}` : (s.kind === 'gpu' ? `Score ${Math.round(s.perf)}` : `Índice ${getCpuGamingIndex(s.item)}`)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
         </td>
-        <td class="py-2.5 px-3 text-right font-mono font-bold text-white">${fmtBRLShort(s.current)}</td>
-        <td class="py-2.5 px-3 text-right font-mono text-slate-300">${py.preAvg ? fmtBRLShort(py.preAvg) : '<span class="text-slate-600">sem dado</span>'}</td>
-        <td class="py-2.5 px-3 text-right font-mono text-amber-300">${py.bfMin ? fmtBRLShort(py.bfMin) : '<span class="text-slate-600">—</span>'}</td>
-        <td class="py-2.5 px-3 text-right font-mono text-emerald-300">${fmtBRLShort(s.allMin)}</td>
-        <td class="py-2.5 px-3 text-center font-mono">${py.discount != null ? `<span class="text-amber-300 font-bold">−${Math.round(py.discount * 100)}%</span>` : `<span class="text-slate-500" title="Produto sem BF anterior — usa mediana da família">~${Math.round(BF_CACHE.familyMedianDisc * 100)}%*</span>`}</td>
-        <td class="py-2.5 px-3 text-right font-mono"><span class="text-emerald-300 font-bold">${fmtBRLShort(r.low)}</span> – <span class="text-sky-300">${fmtBRLShort(r.high)}</span></td>
-        <td class="py-2.5 px-3 text-center"><span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-${diagColor}-500/15 text-${diagColor}-300 border border-${diagColor}-500/30">${diag}</span></td>
+        <td class="text-right ui-mono font-bold text-white whitespace-nowrap">${fmtBRLShort(s.current)}</td>
+        <td>
+          <div class="ui-bf-mini-gauge mx-auto" title="Hoje: ${fmtBRLShort(s.effectiveCurrent)} | Faixa esperada BF: ${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}">
+            <div class="ui-bf-mini-track">
+              <div class="ui-bf-mini-range" style="left:${rLeft}%; width:${rWidth}%"></div>
+              <div class="ui-bf-mini-dot" style="left:${curPos}%; background:${dotColor}"></div>
+            </div>
+          </div>
+        </td>
+        <td class="text-right ui-mono whitespace-nowrap"><span class="text-emerald-300 font-bold">${fmtBRLShort(r.low)}</span> – <span class="text-slate-300">${fmtBRLShort(r.high)}</span></td>
+        <td class="text-right ui-mono text-emerald-300 whitespace-nowrap">${fmtBRLShort(s.allMin)}</td>
+        <td class="text-right ui-mono text-slate-300 hidden 2xl:table-cell whitespace-nowrap">${py.preAvg ? fmtBRLShort(py.preAvg) : '<span class="text-slate-600">—</span>'}</td>
+        <td class="text-right ui-mono text-amber-300 hidden 2xl:table-cell whitespace-nowrap">${py.bfMin ? fmtBRLShort(py.bfMin) : '<span class="text-slate-600">—</span>'}</td>
+        <td class="text-center ui-mono hidden md:table-cell whitespace-nowrap">${py.discount != null ? `<span class="text-amber-300 font-bold">−${Math.round(py.discount * 100)}%</span>` : `<span class="text-slate-400" title="Produto sem BF anterior — usa mediana da família">~${Math.round(BF_CACHE.familyMedianDisc * 100)}%*</span>`}</td>
+        <td class="text-center whitespace-nowrap"><span class="ui-badge ui-badge--${badgeTone}">${diag}</span></td>
       </tr>`;
   }).join('');
 
@@ -2481,7 +2502,7 @@ function renderBFChart(stats, yPrev) {
         c.fillStyle = 'rgba(245, 158, 11, 0.08)';
         c.fillRect(x0, chartArea.top, Math.max(2, x1 - x0), chartArea.bottom - chartArea.top);
         c.fillStyle = 'rgba(245, 158, 11, 0.7)';
-        c.font = '10px JetBrains Mono, monospace';
+        c.font = '600 12px ' + gcaFontFamily();
         c.fillText(`BF ${y}`, x0 + 3, chartArea.top + 11);
 
         // Exact Black Friday Date marker (4th Friday of November)
@@ -2501,7 +2522,7 @@ function renderBFChart(stats, yPrev) {
             c.restore();
 
             c.fillStyle = '#ef4444';
-            c.font = 'bold 9px JetBrains Mono, monospace';
+            c.font = 'bold 12px ' + gcaFontFamily();
             const dayStr = exactBf.slice(8);
             c.fillText(`📍 Dia BF (${dayStr}/11)`, xBf - 24, chartArea.top + 23);
           }
@@ -2635,7 +2656,7 @@ function renderBFTargetChart(st, uMin, uMax, testPrice) {
             c.restore();
 
             c.fillStyle = '#ef4444';
-            c.font = 'bold 9px JetBrains Mono, monospace';
+            c.font = 'bold 12px ' + gcaFontFamily();
             c.fillText(`📍 BF (${exactBf.slice(8)}/11)`, xBf - 20, chartArea.top + 14);
           }
         }
@@ -2702,25 +2723,25 @@ function onBFTargetItemChange(silent) {
     if (st.kind === 'laptop') {
       const l = st.item;
       pillEl.innerHTML = `
-        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-mono font-bold">${l.cpu_name}</span>
-        <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[11px] font-mono">${l.gpu_name}</span>
-        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${l.ram_gb}GB • ${l.screen_inches}" ${l.screen_hz}Hz</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono font-bold">${l.cpu_name}</span>
+        <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-xs font-mono">${l.gpu_name}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">${l.ram_gb}GB • ${l.screen_inches}" ${l.screen_hz}Hz</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
       `;
     } else if (st.kind === 'gpu') {
       const g = st.item;
       pillEl.innerHTML = `
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 font-mono text-[11px] font-bold border border-sky-500/30">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 font-mono text-xs font-bold border border-sky-500/30">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
           ${g.vram_gb} GB ${g.memory_type || 'GDDR6'} (${g.bandwidth_gbs || 288} GB/s)
         </span>
-        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${g.arch || 'GPU'}</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">${g.arch || 'GPU'}</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
       `;
     } else {
       pillEl.innerHTML = `
-        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${st.item.socket || 'Processador'}</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">${st.item.socket || 'Processador'}</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
       `;
     }
   }
@@ -2814,17 +2835,17 @@ function onBFTargetItemChange(silent) {
 
       let freshBadge = '';
       if (isExpired) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
       } else if (isVerifiedActive) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO EM ESTOQUE NA LOJA'}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO EM ESTOQUE NA LOJA'}</span>`;
       } else if (isUnverifiedCoupon) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Depende do cupom aplicar no carrinho da loja'}">⚠️ DEPENDE DE CUPOM NO CARRINHO${liveStorePrice ? ` (Sem cupom: ${formatMoney(liveStorePrice)})` : ''}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Depende do cupom aplicar no carrinho da loja'}">⚠️ DEPENDE DE CUPOM NO CARRINHO${liveStorePrice ? ` (Sem cupom: ${formatMoney(liveStorePrice)})` : ''}</span>`;
       } else if (best.age_hours <= 2) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
       } else if (best.age_hours <= 8) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">🟡 ${activeReg === 'mx' ? 'Moderado' : 'Moderado'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold">🟡 ${activeReg === 'mx' ? 'Moderado' : 'Moderado'} (${best.age_hours}h)</span>`;
       } else {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">🔴 ${activeReg === 'mx' ? 'Riesgo de Expirado' : 'Risco de Expirado'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs font-bold">🔴 ${activeReg === 'mx' ? 'Riesgo de Expirado' : 'Risco de Expirado'} (${best.age_hours}h)</span>`;
       }
 
       let titleHtml = '';
@@ -2838,7 +2859,7 @@ function onBFTargetItemChange(silent) {
         titleHtml = `
           <span class="font-mono text-emerald-400 font-bold">⚡ ${activeReg === 'mx' ? 'Oferta Directa (Sin Cupón)' : 'Oferta Direta (Sem Cupom)'}:</span>
           <span class="text-white font-mono font-bold">${formatMoney(best.price_brl)}</span>
-          <span class="text-slate-400 font-mono text-[10px]">(${activeReg === 'mx' ? 'Precio de contado en enlace' : 'Preço à vista no link'})</span>
+          <span class="text-slate-400 font-mono text-xs">(${activeReg === 'mx' ? 'Precio de contado en enlace' : 'Preço à vista no link'})</span>
         `;
       }
 
@@ -2850,29 +2871,29 @@ function onBFTargetItemChange(silent) {
             ${freshBadge}
           </div>
           <div class="flex items-center gap-1 flex-wrap">
-            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl}, '${best.matched_slug || slug}', '${best.matched_kind || st.kind}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testar status">
+            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl}, '${best.matched_slug || slug}', '${best.matched_kind || st.kind}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-xs cursor-pointer flex items-center gap-1" title="Testar status">
               <span>🧪 ${activeReg === 'mx' ? 'Probar' : 'Testar'}</span>
             </button>
             ${hasRealCoupon ? `
-              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer" title="Copiar cupom">
+              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-xs cursor-pointer" title="Copiar cupom">
                 📋 ${activeReg === 'mx' ? 'Copiar Cupón' : 'Copiar Cupom'}
               </button>
             ` : ''}
-            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Abrir loja">
+            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-xs cursor-pointer flex items-center gap-1" title="Abrir loja">
               ↗ ${activeReg === 'mx' ? 'Abrir Tienda' : 'Abrir Loja'}
             </a>
-            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[11px] font-bold hover:bg-amber-300 transition cursor-pointer" title="Simular preço">
+            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-bold hover:bg-amber-300 transition cursor-pointer" title="Simular preço">
               ⚡ ${activeReg === 'mx' ? 'Simular Precio' : 'Simular Preço'}
             </button>
           </div>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
+        <div class="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
           <span>${activeReg === 'mx' ? 'Fuente' : 'Canal'}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${activeReg === 'mx' ? 'Tienda' : 'Loja'}: ${resolvedStore} • Modelo: ${(best.title || '').slice(0, 55)}</span>
           <div class="flex items-center gap-1">
-            <span class="text-slate-400 text-[10px]">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
-            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
+            <span class="text-slate-400 text-xs">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-xs cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-xs cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
+            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
           </div>
         </div>
       `;
@@ -2884,9 +2905,9 @@ function onBFTargetItemChange(silent) {
         ctnActive.innerHTML = `
           <div class="flex items-center justify-between gap-1.5 flex-wrap">
             <span class="font-mono text-rose-300 font-bold">❌ ${activeReg === 'mx' ? 'Ninguna promoción activa en México' : 'Nenhuma promoção ativa no momento'}</span>
-            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-[10px]">${activeReg === 'mx' ? 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' terminada' : 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' encerrada'}</span>
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-xs">${activeReg === 'mx' ? 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' terminada' : 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' encerrada'}</span>
           </div>
-          <div class="text-[11px] text-slate-400 font-mono">${activeReg === 'mx' ? 'Precio de referencia en México: ' + formatMoney(st.current) : 'Preço mantido no catálogo oficial: ' + formatMoney(st.current)}.</div>
+          <div class="text-xs text-slate-400 font-mono">${activeReg === 'mx' ? 'Precio de referencia en México: ' + formatMoney(st.current) : 'Preço mantido no catálogo oficial: ' + formatMoney(st.current)}.</div>
         `;
       } else {
         ctnActive.innerHTML = '';
@@ -3011,16 +3032,16 @@ function recalcBFCoupon(skipSave) {
         <div class="flex items-center justify-between">
           <span><strong>Dedução Aplicada:</strong> ${fmtBRL(basePrice)} com cupom ${coupLabel} = 
           <span class="text-white font-black underline text-xs">${fmtBRL(finalPrice)}</span>!</span>
-          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-[10px]">⚠️ MARCADO EXPIRADO</span>' : ''}
+          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-xs">⚠️ MARCADO EXPIRADO</span>' : ''}
         </div>
-        ${isMarkedExpired ? '<div class="text-rose-300 text-[10px] mt-1">⚠️ Você ou o sistema marcaram este cupom como EXPIRADO. A loja pode recusar o desconto no carrinho real.</div>' : ''}
+        ${isMarkedExpired ? '<div class="text-rose-300 text-xs mt-1">⚠️ Você ou o sistema marcaram este cupom como EXPIRADO. A loja pode recusar o desconto no carrinho real.</div>' : ''}
       `;
     } else if (coupRaw && !/^(OFERTAFLASH|OFERTA FLASH)$/i.test(coupRaw)) {
       summaryEl.classList.remove('hidden');
       summaryEl.innerHTML = `
         <div class="flex items-center justify-between text-xs text-slate-300">
           <span>🎟️ Cupom <strong>${cleanCoup}</strong> inserido. O preço anunciado de <strong>${fmtBRL(basePrice)}</strong> já é o valor final com este cupom na loja.</span>
-          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-[10px]">⚠️ MARCADO EXPIRADO</span>' : ''}
+          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-xs">⚠️ MARCADO EXPIRADO</span>' : ''}
         </div>
       `;
     } else {
@@ -3047,37 +3068,117 @@ function updateBFPromoEvaluator(skipSave, overrideTestPrice) {
   renderBFTargetChart(st, uMin, uMax, test);
 
   const r = st.range;
-  let verdict, color;
-  if (test <= Math.min(r.low, uMin)) { verdict = '🟢 COMPRE AGORA — abaixo da faixa esperada e do seu mínimo. Raro de ver.'; color = 'emerald'; }
-  else if (test <= uMin) { verdict = '🟢 ÓTIMO — abaixo do seu preço esperado mínimo.'; color = 'emerald'; }
-  else if (test <= r.mid) { verdict = '🔵 BOM — dentro da faixa típica de BF (metade mais barata).'; color = 'sky'; }
-  else if (test <= uMax) { verdict = '🟡 ACEITÁVEL — dentro do seu teto, mas é possível achar mais barato na BF.'; color = 'amber'; }
-  else { verdict = '🔴 ESPERE — acima do seu teto. Não é promoção real para este produto.'; color = 'rose'; }
+  let badgeText, verdictMsg, tone;
+  if (test <= Math.min(r.low, uMin)) {
+    badgeText = 'COMPRE AGORA';
+    verdictMsg = 'Abaixo da faixa esperada de Black Friday e do seu mínimo.';
+    tone = 'good';
+  } else if (test <= uMin) {
+    badgeText = 'ÓTIMO PREÇO';
+    verdictMsg = 'Abaixo do seu preço mínimo esperado.';
+    tone = 'good';
+  } else if (test <= r.high) {
+    badgeText = 'DENTRO DA FAIXA BF';
+    verdictMsg = 'Dentro da faixa esperada de Black Friday.';
+    tone = 'good';
+  } else if (test <= uMax) {
+    badgeText = 'ACEITÁVEL';
+    verdictMsg = 'Dentro do seu teto, mas pode cair mais na Black Friday.';
+    tone = 'warn';
+  } else {
+    badgeText = 'AGUARDE';
+    verdictMsg = `Acima do teto em ${fmtBRLShort(test - uMax)}. Não é preço de Black Friday.`;
+    tone = 'bad';
+  }
 
-  const lo = Math.min(st.allMin, uMin, r.low, test) * 0.95;
-  const hi = Math.max(st.current, uMax, r.high, test, st.recentAvg) * 1.05;
-  const pos = v => Math.max(0, Math.min(100, ((v - lo) / (hi - lo)) * 100));
+  const lo = Math.min(st.allMin || r.low, uMin, r.low, test, st.current) * 0.94;
+  const hi = Math.max(st.current, uMax, r.high, test, st.recentAvg || r.high) * 1.06;
+  const span = Math.max(1, hi - lo);
+  const pos = v => Math.max(2, Math.min(98, ((v - lo) / span) * 100));
+
+  const pLow = pos(r.low);
+  const pHigh = pos(r.high);
+  const pWarnEnd = Math.min(98, pos(Math.max(uMax, r.high * 1.08)));
+  const pToday = pos(st.current);
+  const pTest = pos(test);
+  const pUserLow = pos(uMin);
+  const pUserHigh = pos(uMax);
+  const hasDistinctTest = Math.abs(test - st.current) >= 1;
   const py = st.years[parseInt(bfToday().slice(0, 4)) - 1] || {};
 
-  document.getElementById('bf-test-verdict').innerHTML = `
-    <div class="p-2.5 rounded-lg bg-${color}-950/50 border border-${color}-500/50 text-${color}-100 font-semibold">${verdict}</div>
-    <div class="relative h-12 mt-3">
-      <div class="absolute top-4 left-0 right-0 h-2 rounded-full bg-slate-800"></div>
-      <div class="absolute top-4 h-2 rounded-full bg-emerald-500/50" style="left:${pos(r.low)}%; width:${Math.max(1, pos(r.high) - pos(r.low))}%" title="Faixa esperada BF (${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)})"></div>
-      <div class="absolute top-3 h-4 rounded-md border-2 border-sky-400 bg-sky-400/25 pointer-events-none transition-all duration-300 shadow-sm" style="left:${pos(uMin)}%; width:${Math.max(2, pos(uMax) - pos(uMin))}%" title="Sua Faixa de Alvo: ${fmtBRLShort(uMin)} a ${fmtBRLShort(uMax)}"></div>
-      <div class="absolute top-0 -translate-x-1/2 text-[9px] font-mono text-white font-bold" style="left:${pos(test)}%">▼ teste</div>
-      <div class="absolute top-7 -translate-x-1/2 text-[9px] font-mono text-emerald-400 font-semibold" style="left:${pos(st.allMin)}%">mín</div>
-      <div class="absolute top-7 -translate-x-1/2 text-[9px] font-mono text-slate-400" style="left:${pos(st.current)}%">hoje</div>
-    </div>
-    <div class="grid grid-cols-2 gap-1.5 text-[11px] font-mono mt-1">
-      <span class="text-slate-400">Faixa esperada BF:</span><span class="text-right text-emerald-300">${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}</span>
-      <span class="text-slate-400">Base (média pré-BF):</span><span class="text-right">${fmtBRLShort(r.base)}</span>
-      <span class="text-slate-400">Desconto usado:</span><span class="text-right">${Math.round(r.disc * 100)}% ${r.ownData ? '(BF passada deste modelo)' : '(mediana da família)'}</span>
-      <span class="text-slate-400">Piso BF passada:</span><span class="text-right text-amber-300">${py.bfMin ? fmtBRLShort(py.bfMin) : '—'}</span>
-      <span class="text-slate-400">Menor preço histórico:</span><span class="text-right text-emerald-300">${fmtBRLShort(st.allMin)}</span>
-      <span class="text-slate-400">Teste vs mínimo:</span><span class="text-right ${test <= st.allMin ? 'text-emerald-300' : 'text-slate-200'}">${test <= st.allMin ? 'NOVO MÍNIMO' : '+' + Math.round((test / st.allMin - 1) * 100) + '%'}</span>
-    </div>
-    <p class="text-[10px] text-slate-500 mt-1.5">Sua faixa (contorno azul) fica salva por produto. Barra verde = faixa estatística esperada.</p>`;
+  // Clamp floating pin tag horizontally so it never clips on narrow mobile screens
+  const tagShift = p => (p < 22 ? 'translateX(-15%)' : p > 78 ? 'translateX(-85%)' : 'translateX(-50%)');
+
+  const gaugeEl = document.getElementById('bf-test-verdict');
+  if (!gaugeEl) return;
+
+  gaugeEl.innerHTML = `
+    <div class="ui-bf-gauge-card ui-bf-gauge-card--${tone}">
+      <!-- Verdict First -->
+      <div class="ui-bf-gauge-verdict">
+        <span class="ui-badge ui-badge--${tone} font-bold">${badgeText}</span>
+        <span class="ui-mono font-extrabold text-lg text-white">${fmtBRL(test)}</span>
+      </div>
+      <p class="ui-body-sm text-slate-200">${verdictMsg}</p>
+
+      <!-- Visual 3-Zone Price Gauge -->
+      <div class="ui-bf-gauge-wrap">
+        <div class="ui-bf-gauge-track">
+          <div class="ui-bf-gauge-zone ui-bf-gauge-zone--good" style="left:0%; width:${pHigh}%"></div>
+          <div class="ui-bf-gauge-zone ui-bf-gauge-zone--warn" style="left:${pHigh}%; width:${Math.max(0, pWarnEnd - pHigh)}%"></div>
+          <div class="ui-bf-gauge-zone ui-bf-gauge-zone--bad" style="left:${pWarnEnd}%; width:${Math.max(0, 100 - pWarnEnd)}%"></div>
+
+          <!-- Expected BF Range Band -->
+          <div class="ui-bf-gauge-expected" style="left:${pLow}%; width:${Math.max(4, pHigh - pLow)}%" title="Faixa esperada BF: ${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}"></div>
+
+          <!-- User Custom Range Bracket -->
+          <div class="ui-bf-gauge-user" style="left:${pUserLow}%; width:${Math.max(4, pUserHigh - pUserLow)}%" title="Sua faixa alvo: ${fmtBRLShort(uMin)} – ${fmtBRLShort(uMax)}"></div>
+
+          <!-- Today Pin -->
+          <div class="ui-bf-gauge-pin ui-bf-gauge-pin--today" style="left:${pToday}%" title="Preço hoje: ${fmtBRL(st.current)}">
+            ${!hasDistinctTest ? `<span class="ui-bf-gauge-pin-tag" style="transform:${tagShift(pToday)}">Hoje • ${fmtBRLShort(st.current)}</span>` : ''}
+          </div>
+
+          <!-- Simulated / Coupon Pin (when user tests another price) -->
+          ${hasDistinctTest ? `
+            <div class="ui-bf-gauge-pin ui-bf-gauge-pin--test" style="left:${pTest}%" title="Preço simulado: ${fmtBRL(test)}">
+              <span class="ui-bf-gauge-pin-tag" style="transform:${tagShift(pTest)}; border-color:var(--ui-brand-border); color:var(--ui-brand-hover);">Simulado • ${fmtBRLShort(test)}</span>
+            </div>
+          ` : ''}
+        </div>
+        <div class="ui-bf-gauge-axis">
+          <span class="text-emerald-400">Mín ${fmtBRLShort(st.allMin || r.low)}</span>
+          <span class="text-slate-400">Teto ${fmtBRLShort(Math.max(uMax, r.high, st.current))}</span>
+        </div>
+      </div>
+
+      <!-- Compact Key Numbers -->
+      <div class="grid grid-cols-2 gap-2 text-xs ui-mono pt-1 border-t border-slate-800/80">
+        <div>
+          <span class="text-slate-400 block">Faixa esperada BF</span>
+          <span class="text-emerald-300 font-bold">${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}</span>
+        </div>
+        <div class="text-right">
+          <span class="text-slate-400 block">Menor histórico</span>
+          <span class="text-slate-100 font-bold">${fmtBRLShort(st.allMin)}</span>
+        </div>
+      </div>
+
+      <!-- Collapsible Statistical Details -->
+      <details class="ui-details">
+        <summary class="ui-details-summary">Ver detalhes do cálculo</summary>
+        <div class="ui-details-body">
+          <div class="grid grid-cols-2 gap-y-1.5 text-xs ui-mono">
+            <span class="text-slate-400">Preço hoje:</span><span class="text-right text-white font-semibold">${fmtBRLShort(st.current)}</span>
+            <span class="text-slate-400">Base (média pré-BF):</span><span class="text-right text-slate-200">${fmtBRLShort(r.base)}</span>
+            <span class="text-slate-400">Desconto usado:</span><span class="text-right text-slate-200">${Math.round(r.disc * 100)}% ${r.ownData ? '(BF passada)' : '(mediana)'}</span>
+            <span class="text-slate-400">Piso BF passada:</span><span class="text-right text-amber-300">${py.bfMin ? fmtBRLShort(py.bfMin) : '—'}</span>
+            <span class="text-slate-400">Preço vs mínimo:</span><span class="text-right ${test <= st.allMin ? 'text-emerald-300 font-bold' : 'text-slate-200'}">${test <= st.allMin ? 'NOVO MÍNIMO' : '+' + Math.round((test / st.allMin - 1) * 100) + '%'}</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Borda verde = faixa estatística esperada. Tracejado azul = sua faixa salva por produto.</p>
+        </div>
+      </details>
+    </div>`;
 }
 
 function syncBFTargetRangeToExpected() {
@@ -3176,6 +3277,35 @@ function enableMobileBackgroundKeepAlive(enable) {
   }
 }
 
+// ===== Disjuntor dos proxies públicos do Telegram =====
+// Os proxies gratuitos (codetabs, allorigins, corsproxy) caem com frequência. Quando
+// falham em sequência, paramos de tentar por um tempo em vez de disparar dezenas de
+// requisições que demoram 4s cada. O robô do GitHub Actions continua trazendo as
+// promoções pelo promos_cache.json.
+const TG_PROXY_BREAKER_KEY = 'gca-tg-proxy-down-until';
+const TG_PROXY_FAIL_LIMIT = 3;            // canais seguidos sem resposta
+const TG_PROXY_COOLDOWN_MS = 30 * 60000;  // pausa de 30 min
+let _tgProxyFailStreak = 0;
+
+function isTgProxyDown() {
+  let until = 0;
+  try { until = Number(sessionStorage.getItem(TG_PROXY_BREAKER_KEY)) || 0; } catch (_) {}
+  return Date.now() < until;
+}
+function _tgProxyResult(ok) {
+  if (ok) {
+    _tgProxyFailStreak = 0;
+    try { sessionStorage.removeItem(TG_PROXY_BREAKER_KEY); } catch (_) {}
+    return;
+  }
+  _tgProxyFailStreak++;
+  if (_tgProxyFailStreak >= TG_PROXY_FAIL_LIMIT) {
+    try { sessionStorage.setItem(TG_PROXY_BREAKER_KEY, String(Date.now() + TG_PROXY_COOLDOWN_MS)); } catch (_) {}
+    _tgProxyFailStreak = 0;
+  }
+}
+window.isTgProxyDown = isTgProxyDown;
+
 async function fetchTelegramChannelHTML(chId, query) {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   if (!isStatic) {
@@ -3184,6 +3314,7 @@ async function fetchTelegramChannelHTML(chId, query) {
       if (r.ok) return await r.text();
     } catch (_) {}
   }
+  if (isTgProxyDown()) return '';
   // Static GitHub Pages fallback: race CORS proxies concurrently with 4s timeout
   const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
   const proxies = [
@@ -3192,21 +3323,27 @@ async function fetchTelegramChannelHTML(chId, query) {
     `https://corsproxy.io/?${encodeURIComponent(tgUrl)}`
   ];
   try {
-    return await Promise.any(proxies.map(async (pUrl) => {
+    const html = await Promise.any(proxies.map(async (pUrl) => {
       const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4000);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const txt = await r.text();
       if (!txt || !txt.includes('tgme_widget_message')) throw new Error('Empty TG feed');
       return txt;
     }));
+    _tgProxyResult(true);
+    return html;
   } catch (_) {}
   try {
     const rJson = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4000);
     if (rJson.ok) {
       const j = await rJson.json();
-      if (j && j.contents && j.contents.includes('tgme_widget_message')) return j.contents;
+      if (j && j.contents && j.contents.includes('tgme_widget_message')) {
+        _tgProxyResult(true);
+        return j.contents;
+      }
     }
   } catch (_) {}
+  _tgProxyResult(false);
   return '';
 }
 
@@ -4233,17 +4370,17 @@ async function subscribeToBackgroundPush() {
     if (daemonOnline && perm === 'granted') {
       setStatus(
         `✅ Inscrito! Monitor PC ativo (30s) + Service Worker${periodicOk ? ' + PeriodicSync' : ''} inscritos no tópico <code>${topic}</code>. Para push web nativo em qualquer aba/celular: <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300">ntfy.sh/${topic}</a>`,
-        'text-[11px] text-emerald-400 font-mono mt-1'
+        'text-xs text-emerald-400 font-mono mt-1'
       );
     } else if (perm === 'granted') {
       setStatus(
         `✅ Service Worker ativo! Para push instantâneo 24/7 com a aba 100% fechada, clique em <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300 font-bold">ntfy.sh/${topic} → Subscribe</a> (ou deixe o monitor do PC rodando).`,
-        'text-[11px] text-sky-300 font-mono mt-1'
+        'text-xs text-sky-300 font-mono mt-1'
       );
     } else {
       setStatus(
         `⚠️ Permissão de notificação do navegador: ${perm}. Libere notificações no cadeado da URL ou assine direto em <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300">ntfy.sh/${topic}</a>.`,
-        'text-[11px] text-amber-300 font-mono mt-1'
+        'text-xs text-amber-300 font-mono mt-1'
       );
     }
     try { localStorage.setItem('gca_push_subscribed_v1', '1'); } catch (_) {}
@@ -4252,7 +4389,7 @@ async function subscribeToBackgroundPush() {
       btn.disabled = false;
       btn.textContent = '📲 Inscrever-se em Push (Aba Fechada)';
     }
-    setStatus(`Erro ao inscrever push: ${e.message}`, 'text-[11px] text-rose-400 font-mono mt-1');
+    setStatus(`Erro ao inscrever push: ${e.message}`, 'text-xs text-rose-400 font-mono mt-1');
   }
 }
 window.subscribeToBackgroundPush = subscribeToBackgroundPush;
@@ -4268,7 +4405,7 @@ function updateBackgroundMonitorUI() {
   if (isStatic) {
     if (badge) {
       badge.textContent = '🌐 GitHub Pages (Push Sync)';
-      badge.className = 'px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold';
+      badge.className = 'px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-xs font-bold';
     }
     if (desc) {
       desc.innerHTML = 'No GitHub Pages, clique em <strong>Inscrever-se em Push</strong> para ativar o Service Worker + sincronizar suas metas com o monitor Python do PC (30s) e receber alertas em <code>ntfy.sh/' + topic + '</code> mesmo com a aba fechada.';
@@ -4276,7 +4413,7 @@ function updateBackgroundMonitorUI() {
   } else {
     if (badge) {
       badge.textContent = '● Ativo no PC (30s)';
-      badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold';
+      badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold';
     }
   }
 }
@@ -4290,7 +4427,7 @@ async function testBackgroundAlertNow() {
     if (bgStatusEl) { bgStatusEl.textContent = msg; bgStatusEl.className = cls; }
   };
 
-  updateStatus('Verificando monitor de segundo plano...', 'text-[11px] text-amber-300 font-mono');
+  updateStatus('Verificando monitor de segundo plano...', 'text-xs text-amber-300 font-mono');
 
   let serverSuccess = false;
 
@@ -4320,7 +4457,7 @@ async function testBackgroundAlertNow() {
   } catch (_) {}
 
   if (serverSuccess) {
-    updateStatus('✓ Alerta em segundo plano disparado pelo servidor local (Windows + Celular)!', 'text-[11px] text-emerald-400 font-mono font-bold');
+    updateStatus('✓ Alerta em segundo plano disparado pelo servidor local (Windows + Celular)!', 'text-xs text-emerald-400 font-mono font-bold');
     playDealAlertChime();
     return;
   }
@@ -4364,12 +4501,12 @@ async function testBackgroundAlertNow() {
   if (isStatic) {
     updateStatus(
       '✓ Alerta testado com sucesso no navegador e celular (ntfy.sh)! Nota: O monitoramento com navegador FECHADO requer o servidor Python local rodando no PC ("python server.py").',
-      'text-[11px] text-sky-300 font-mono font-bold'
+      'text-xs text-sky-300 font-mono font-bold'
     );
   } else {
     updateStatus(
       '✓ Alerta testado no navegador e celular via ntfy.sh! (Inicie "python server.py" para segundo plano nativo no Windows).',
-      'text-[11px] text-amber-300 font-mono font-bold'
+      'text-xs text-amber-300 font-mono font-bold'
     );
   }
 }
@@ -4713,67 +4850,71 @@ function evaluateDealsForAlerts() {
   return qualifying;
 }
 
+let _dealToastTimer = null;
+
 function showDealToastNotification(deal) {
   if (!PROMO_STATE.notifyWebToast) return;
   const container = document.getElementById('promo-toast-container');
   if (!container) return;
 
+  if (_dealToastTimer) {
+    clearTimeout(_dealToastTimer);
+    _dealToastTimer = null;
+  }
+
+  // Max 1 compact offer alert at a time (replaces any previous alert)
+  container.innerHTML = '';
+
   const toastId = 'toast-' + Math.random().toString(36).slice(2, 9);
-  const couponBadge = (deal.coupon_code || deal.coupon_info)
-    ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px]">🎟️ ${deal.coupon_code || deal.coupon_info}</span>`
+  const firstReason = (deal.alert_reasons && deal.alert_reasons[0]) || 'Oferta';
+  const couponTag = (deal.coupon_code || deal.coupon_info)
+    ? `<span class="ui-badge ui-badge--warn ui-mono">${deal.coupon_code || deal.coupon_info}</span>`
     : '';
-  const reasonsHtml = (deal.alert_reasons || []).map(r =>
-    `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono font-bold text-[10px]">${r}</span>`
-  ).join(' ');
 
   const div = document.createElement('div');
   div.id = toastId;
-  div.className = 'pointer-events-auto rounded-2xl bg-slate-950/95 border-2 border-amber-400/80 shadow-2xl shadow-amber-500/20 p-3.5 text-xs space-y-2 transition-all duration-300';
+  div.className = 'ui-deal-toast';
   div.innerHTML = `
-    <div class="flex items-start justify-between gap-2">
-      <div class="flex flex-wrap items-center gap-1.5">
-        <span class="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px]">🔔 ALERTA DE OFERTA</span>
-        ${reasonsHtml}
-      </div>
-      <button onclick="document.getElementById('${toastId}')?.remove()" class="text-slate-400 hover:text-white font-bold px-1 cursor-pointer">✕</button>
+    <div class="flex items-center justify-between gap-2">
+      <span class="ui-badge ui-badge--good">${firstReason}</span>
+      <button type="button" onclick="document.getElementById('${toastId}')?.remove()" class="text-slate-400 hover:text-white text-sm leading-none px-1 cursor-pointer" aria-label="Fechar aviso">✕</button>
     </div>
     <div class="flex items-baseline justify-between gap-2">
-      <span class="font-extrabold text-white text-sm">${deal.matched_name}</span>
-      <div class="flex items-center gap-1.5">
-        ${deal.hb_price_brl > deal.price_brl ? `<span class="text-[11px] font-mono text-slate-500 line-through">${fmtBRLShort(deal.hb_price_brl)}</span>` : ''}
-        <span class="font-mono font-extrabold text-base text-emerald-400">${fmtBRL(deal.price_brl)}</span>
-      </div>
+      <span class="font-bold text-slate-100 text-sm truncate">${deal.matched_name}</span>
+      <span class="ui-mono font-bold text-base text-emerald-400 shrink-0">${fmtBRL(deal.price_brl)}</span>
     </div>
-    ${deal.bf_alert_banner ? `
-      <div class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-emerald-500/25 border border-amber-400 text-amber-200 font-mono font-extrabold text-[11px] tracking-wide">
-        ${deal.bf_alert_banner}
+    <div class="flex items-center justify-between gap-2 pt-1">
+      <div class="flex items-center gap-1.5 min-w-0 truncate">
+        ${couponTag}
       </div>
-    ` : ''}
-    <div class="text-[11px] text-slate-300 line-clamp-2">${deal.title}</div>
-    <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800">
-      <div class="flex items-center gap-1.5">
-        ${couponBadge}
-        <span class="text-[10px] font-mono text-slate-400">@${deal.channel_id}</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <button onclick="sendPromoToDuelOrBF('${deal.matched_kind}', '${deal.matched_slug}', ${deal.price_brl}); document.getElementById('${toastId}')?.remove();" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-bold text-[11px] cursor-pointer">
-          ${deal.matched_kind === 'gpu' ? 'Ver Duelo' : 'Ver BF'}
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button type="button" onclick="sendPromoToDuelOrBF('${deal.matched_kind}', '${deal.matched_slug}', ${deal.price_brl}); document.getElementById('${toastId}')?.remove();" class="ui-btn ui-btn--sm ui-btn--ghost">
+          ${deal.matched_kind === 'gpu' ? 'Duelo' : 'Ver'}
         </button>
-        <a href="${deal.buy_url}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">
-          Ir p/ Oferta ↗
+        <a href="${deal.buy_url}" target="_blank" rel="noopener" class="ui-btn ui-btn--sm ui-btn--good">
+          Oferta ↗
         </a>
       </div>
     </div>
   `;
 
-  container.prepend(div);
-  while (container.children.length > 3) {
-    container.lastElementChild.remove();
-  }
-  setTimeout(() => {
-    const el = document.getElementById(toastId);
-    if (el) el.remove();
-  }, 18000);
+  const scheduleDismiss = () => {
+    _dealToastTimer = setTimeout(() => {
+      const el = document.getElementById(toastId);
+      if (el) el.remove();
+    }, 7000);
+  };
+
+  div.addEventListener('mouseenter', () => {
+    if (_dealToastTimer) {
+      clearTimeout(_dealToastTimer);
+      _dealToastTimer = null;
+    }
+  });
+  div.addEventListener('mouseleave', scheduleDismiss);
+
+  container.appendChild(div);
+  scheduleDismiss();
 }
 
 function fireWindowsNativeNotification(deal) {
@@ -5050,7 +5191,7 @@ function checkAndFireDealNotifications(forceTest = false) {
       fireWindowsNativeNotification(deal);
     });
     if (document.hidden) {
-      document.title = `🔥 (${newAlerts.length}) PECHINCHA! | Build & GPU Analyzer Pro`;
+      document.title = `🔥 (${newAlerts.length}) Pechincha! · GCA`;
     }
   } else if (forceTest) {
     const activeReg = getActiveRegionId();
@@ -5094,7 +5235,7 @@ function checkAndFireDealNotifications(forceTest = false) {
 
 window.addEventListener('focus', () => {
   if (document.title.startsWith('🔥')) {
-    document.title = 'GPU & Build Analyzer Pro — Duelo Relacional, IA, Engenharia & Custo-Benefício';
+    document.title = 'GCA · Preços de Hardware & Black Friday';
   }
 });
 
@@ -5123,10 +5264,11 @@ async function requestAndTestPromoNotification() {
 }
 
 function togglePromoRadarPanel() {
-  PROMO_STATE.open = !PROMO_STATE.open;
-  const panel = document.getElementById('promo-radar-panel');
-  if (panel) panel.classList.toggle('hidden', !PROMO_STATE.open);
-  if (PROMO_STATE.open && !PROMO_STATE.lastData) {
+  PROMO_STATE.open = true;
+  if (typeof switchTab === 'function') {
+    switchTab('bf-promos');
+  }
+  if (!PROMO_STATE.lastData && typeof scanLivePromos === 'function') {
     scanLivePromos(false);
   }
 }
@@ -5211,11 +5353,9 @@ function applyFlashPromosToCatalog() {
     });
   });
 
-  const badge = document.getElementById('promo-radar-badge');
-  if (badge) {
-    const totalDeals = (lastDataReg === activeReg && PROMO_STATE.lastData && PROMO_STATE.lastData.matched_count) || 0;
-    badge.textContent = appliedCount > 0 ? `${appliedCount} abaixo do Catálogo` : `${totalDeals} ofertas`;
-  }
+  // Contagem única de ofertas (topo, Início e Promoções mostram o mesmo número)
+  PROMO_STATE.activeOfferCtx = null;
+  getActiveOfferCount();
 
   enrichGPUsWithContextualMetrics();
   if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
@@ -5603,6 +5743,10 @@ function renderPromoRadarPanel() {
   const data = PROMO_STATE.lastData;
   if (!data) return;
 
+  if (typeof renderHomeTab === 'function' && typeof STATE !== 'undefined' && STATE.activeTab === 'home') {
+    renderHomeTab();
+  }
+
   const matchedEl = document.getElementById('promo-matched-list');
   const feedEl = document.getElementById('promo-general-feed');
   const sumEl = document.getElementById('promo-matched-summary');
@@ -5688,57 +5832,57 @@ function renderPromoRadarPanel() {
             }
 
             couponBadge = `
-              <button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-1.5 py-0.5 rounded ${isExp ? 'bg-rose-500/20 text-rose-300 line-through border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'} font-mono text-[10px] cursor-pointer inline-flex items-center gap-1" title="Clique para copiar cupom e testar na loja">
+              <button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-1.5 py-0.5 rounded ${isExp ? 'bg-rose-500/20 text-rose-300 line-through border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'} font-mono text-xs cursor-pointer inline-flex items-center gap-1" title="Clique para copiar cupom e testar na loja">
                 🎟️ ${cleanCoup} 📋 ${freshTag}
               </button>
             `;
           } else if (!isOutOfStock) {
             if (d.stock_verified && d.deal_status === 'active') {
-              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta confirmada em estoque'}">✅ Em Estoque (Sem Cupom)</span>`;
+              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-xs font-semibold" title="${d.deal_status_reason || 'Oferta direta confirmada em estoque'}">✅ Em Estoque (Sem Cupom)</span>`;
             } else {
-              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta no link'}">⚡ Oferta Direta</span>`;
+              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-xs font-semibold" title="${d.deal_status_reason || 'Oferta direta no link'}">⚡ Oferta Direta</span>`;
             }
           }
           const cbBadge = d.cb_score != null
-            ? `<span class="px-1.5 py-0.5 rounded ${d.is_high_cb ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50 font-extrabold' : 'bg-slate-800 text-slate-300'} font-mono text-[10px]">${d.is_high_cb ? '🏆 ' : ''}CB ${d.cb_score}/100</span>`
+            ? `<span class="px-1.5 py-0.5 rounded ${d.is_high_cb ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50 font-extrabold' : 'bg-slate-800 text-slate-300'} font-mono text-xs">${d.is_high_cb ? '🏆 ' : ''}CB ${d.cb_score}/100</span>`
             : '';
           const pechBadge = d.is_pechincha
-            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/50 font-mono font-extrabold text-[10px]">🔥 PECHINCHA</span>`
+            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/50 font-mono font-extrabold text-xs">🔥 PECHINCHA</span>`
             : '';
           const statusBadge = isOutOfStock
-            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ ${d.deal_status === 'out_of_stock' ? 'Esgotado' : 'Encerrado'}</span>`
+            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-xs font-bold">⚠️ ${d.deal_status === 'out_of_stock' ? 'Esgotado' : 'Encerrado'}</span>`
             : (isCouponExpired && d.coupon_discount_revoked
-              ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-semibold">Preço Sem Cupom</span>`
+              ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-xs font-semibold">Preço Sem Cupom</span>`
               : '');
           const safeId = (d.post_id || '').replace(/[^a-zA-Z0-9]/g, '_');
           const cleanCoupCode = (d.coupon_code || '').replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
           const isVerifiedActive = !isOutOfStock && !isCouponExpired && d.stock_verified && (reqCoup ? d.coupon_status === 'verified' : d.deal_status === 'active');
           const isUnverifiedCoup = !isOutOfStock && !isCouponExpired && !isVerifiedActive && (reqCoup || d.deal_status === 'unverified_coupon');
           const testBtnClass = isVerifiedActive
-            ? 'px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
+            ? 'px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 font-semibold text-xs cursor-pointer inline-flex items-center gap-1'
             : isUnverifiedCoup
-              ? 'px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
-              : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1';
+              ? 'px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-semibold text-xs cursor-pointer inline-flex items-center gap-1'
+              : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-xs cursor-pointer inline-flex items-center gap-1';
           const testBtnLabel = isVerifiedActive ? '✅ Em Estoque' : isUnverifiedCoup ? '⚠️ Testar Cupom' : '🧪 Testar';
           return `
             <div class="p-3 rounded-xl bg-slate-950/80 border ${isOutOfStock ? 'border-rose-900/60 opacity-75' : isHot ? 'border-amber-400/60 shadow-md shadow-amber-500/10' : isCheaper ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold text-[10px]">${d.matched_name}</span>
+                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold text-xs">${d.matched_name}</span>
                   <span class="font-mono font-extrabold text-sm ${isOutOfStock ? 'text-slate-400 line-through' : isCheaper ? 'text-emerald-400' : 'text-white'}">
                     ${d.coupon_discount_revoked && d.promo_price_brl ? `<span class="line-through text-slate-500 text-xs mr-1">${fmtBRL(d.promo_price_brl)}</span>` : ''}
                     ${fmtBRL(d.price_brl)}
                   </span>
                   ${isCheaper && !isOutOfStock
-                    ? `<span class="text-[10px] font-mono text-emerald-300 font-bold">(−${fmtBRLShort(d.savings_vs_hb_brl)} vs Ref ${fmtBRLShort(d.hb_price_brl)})</span>`
-                    : `<span class="text-[10px] font-mono text-slate-500">(Ref: ${fmtBRLShort(d.hb_price_brl)})</span>`}
+                    ? `<span class="text-xs font-mono text-emerald-300 font-bold">(−${fmtBRLShort(d.savings_vs_hb_brl)} vs Ref ${fmtBRLShort(d.hb_price_brl)})</span>`
+                    : `<span class="text-xs font-mono text-slate-500">(Ref: ${fmtBRLShort(d.hb_price_brl)})</span>`}
                   ${cbBadge}
                   ${pechBadge}
                   ${statusBadge}
                   ${couponBadge}
                 </div>
-                <div class="text-[11px] text-slate-300 truncate max-w-xl" title="${d.title}">${d.title}</div>
-                <div class="text-[10px] font-mono text-slate-500">
+                <div class="text-xs text-slate-300 truncate max-w-xl" title="${d.title}">${d.title}</div>
+                <div class="text-xs font-mono text-slate-500">
                   Canal: <a href="${d.post_url}" target="_blank" class="text-sky-400 hover:underline">@${d.channel_id} ↗</a> • há ${d.age_hours}h${d.store_name && d.store_name !== 'E-commerce' ? ` • Loja: <span class="text-slate-300">${d.store_name}</span>` : ''}
                   ${d.coupon_url ? ` • <a href="${d.coupon_url}" target="_blank" class="text-amber-300 hover:underline">Resgatar Cupom ↗</a>` : ''}
                   ${d.deal_status_reason ? ` • <span class="${isOutOfStock ? 'text-rose-400/90' : isVerifiedActive ? 'text-emerald-400/90' : 'text-amber-400/90'}">${d.deal_status_reason}</span>` : ''}
@@ -5748,10 +5892,10 @@ function renderPromoRadarPanel() {
                 <button id="btn-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoupCode}', ${d.promo_price_brl || d.price_brl}, '${d.matched_slug || ''}', '${d.matched_kind || 'gpu'}')" class="${testBtnClass}" title="Testar se o produto está em estoque e se o cupom aplica na loja">
                   ${testBtnLabel}
                 </button>
-                <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-semibold text-[11px] cursor-pointer">
+                <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-semibold text-xs cursor-pointer">
                   ${d.matched_kind === 'gpu' ? 'Duelo' : 'Testar BF'}
                 </button>
-                <a href="${d.buy_url}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">
+                <a href="${d.buy_url}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs">
                   Oferta ↗
                 </a>
               </div>
@@ -5766,12 +5910,12 @@ function renderPromoRadarPanel() {
         <div class="min-w-0">
           <div class="flex items-center gap-1.5">
             <span class="font-mono font-bold text-emerald-400">${fmtBRL(f.price_brl)}</span>
-            ${f.coupon_code ? `<span class="px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-[9px]">🎟️ ${f.coupon_code}</span>` : ''}
-            <span class="text-[10px] font-mono text-slate-500">@${f.channel_id} • ${f.age_hours}h</span>
+            ${f.coupon_code ? `<span class="px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-xs">🎟️ ${f.coupon_code}</span>` : ''}
+            <span class="text-xs font-mono text-slate-500">@${f.channel_id} • ${f.age_hours}h</span>
           </div>
-          <div class="text-[11px] text-slate-300 truncate" title="${f.title}">${f.title}</div>
+          <div class="text-xs text-slate-300 truncate" title="${f.title}">${f.title}</div>
         </div>
-        <a href="${f.buy_url}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 text-[10px] font-semibold shrink-0">Abrir ↗</a>
+        <a href="${f.buy_url}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 text-xs font-semibold shrink-0">Abrir ↗</a>
       </div>
     `).join('');
   }
@@ -5995,7 +6139,7 @@ function _applyDealStatusInMemory(postId, buyUrl, couponCode, res, isStatic, not
     }
     if (btn) {
       btn.disabled = false;
-      btn.className = "px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold text-[11px]";
+      btn.className = "px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold text-xs";
       btn.innerHTML = res.status === 'out_of_stock' ? `⚠️ Esgotado` : `❌ Expirado`;
       btn.title = res.reason;
     }
@@ -6026,7 +6170,7 @@ function _applyDealStatusInMemory(postId, buyUrl, couponCode, res, isStatic, not
     }
     if (btn) {
       btn.disabled = false;
-      btn.className = "px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold text-[11px]";
+      btn.className = "px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold text-xs";
       btn.innerHTML = `⚠️ No Carrinho`;
       btn.title = res.reason;
     }
@@ -6051,7 +6195,7 @@ function _applyDealStatusInMemory(postId, buyUrl, couponCode, res, isStatic, not
     }
     if (btn) {
       btn.disabled = false;
-      btn.className = "px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold text-[11px]";
+      btn.className = "px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold text-xs";
       btn.innerHTML = `✅ Em Estoque`;
       btn.title = res.reason;
     }
@@ -6262,9 +6406,7 @@ function setBFCardsFilter(filterKey) {
   const pills = document.querySelectorAll('#bf-cards-filter-pills button[data-bf-filter]');
   pills.forEach(b => {
     const isSelected = b.getAttribute('data-bf-filter') === BF_CARDS_FILTER;
-    b.className = isSelected
-      ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer shadow-sm'
-      : 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer';
+    b.classList.toggle('is-active', isSelected);
   });
   renderBFPromosCardsTab();
 }
@@ -6329,7 +6471,13 @@ async function pollBFLiveCardsFeed(manual) {
     }
     if (statusEl) {
       const nowStr = new Date().toLocaleTimeString('pt-BR');
-      statusEl.textContent = _bfLiveEnabled ? `🟢 Ao vivo • 10s (${nowStr})` : `⏸️ Pausado (${nowStr})`;
+      const proxyDown = typeof isTgProxyDown === 'function' && isTgProxyDown();
+      statusEl.textContent = !_bfLiveEnabled
+        ? `⏸️ Pausado (${nowStr})`
+        : (proxyDown ? `🟡 Dados do robô • leitura direta indisponível (${nowStr})` : `🟢 Ao vivo • 10s (${nowStr})`);
+      statusEl.title = proxyDown
+        ? 'Os serviços públicos usados para ler o Telegram direto do navegador estão fora do ar. As ofertas continuam vindo do robô que atualiza o site a cada poucas horas. Nova tentativa em até 30 min.'
+        : '';
     }
   } catch (e) {
     if (statusEl) statusEl.textContent = '⚠️ Reconectando (10s)...';
@@ -6364,19 +6512,38 @@ function toggleBFLivePolling() {
   const btn = document.getElementById('btn-bf-live-toggle');
   const statusEl = document.getElementById('bf-cards-live-status');
   if (btn) {
-    btn.textContent = _bfLiveEnabled ? '⏸️ Pausar Auto (10s)' : '▶️ Retomar Auto (10s)';
-    btn.className = _bfLiveEnabled
-      ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition cursor-pointer'
-      : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition cursor-pointer';
+    btn.textContent = _bfLiveEnabled ? 'Pausar Auto (10s)' : 'Retomar Auto (10s)';
+    btn.className = _bfLiveEnabled ? 'ui-btn ui-btn--sm' : 'ui-btn ui-btn--sm ui-btn--ghost';
   }
   if (_bfLiveEnabled) {
     startBFLivePolling();
   } else {
     stopBFLivePolling();
-    if (statusEl) statusEl.textContent = '⏸️ Auto-poll pausado';
+    if (statusEl) statusEl.textContent = 'Auto-poll pausado';
   }
 }
 window.toggleBFLivePolling = toggleBFLivePolling;
+
+// ===== Contagem única de ofertas ativas =====
+// Ofertas ativas = cards da aba Promoções (grupos + lojas) em estoque, no contexto atual.
+function syncOfferCounters() {
+  const n = PROMO_STATE.activeOfferCount;
+  if (n == null) return;
+  const label = `${n} ${n === 1 ? 'oferta' : 'ofertas'}`;
+  const badge = document.getElementById('promo-radar-badge');
+  if (badge) badge.textContent = label;
+  const kpi = document.getElementById('home-kpi-deals');
+  if (kpi) kpi.textContent = String(n);
+}
+
+function getActiveOfferCount() {
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  if (PROMO_STATE.activeOfferCount == null || PROMO_STATE.activeOfferCtx !== ctx) {
+    try { renderBFPromosCardsTab(); } catch (_) { /* sem dados ainda */ }
+  }
+  return PROMO_STATE.activeOfferCount;
+}
+window.getActiveOfferCount = getActiveOfferCount;
 
 function renderBFPromosCardsTab() {
   const grid = document.getElementById('bf-promos-cards-grid');
@@ -6393,6 +6560,7 @@ function renderBFPromosCardsTab() {
   });
 
   const searchQ = (document.getElementById('bf-cards-search')?.value || '').trim().toLowerCase();
+  const sortMode = (document.getElementById('bf-cards-sort')?.value || 'recent');
   const nowMs = Date.now();
 
   const _enrichCard = (d) => {
@@ -6427,6 +6595,7 @@ function renderBFPromosCardsTab() {
       }
     }
 
+    const isOutOfStock = Boolean(d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired');
     const isHistoricalMin = Boolean(allMin && d.price_brl <= allMin * 1.015);
     const isBFLow = Boolean(targetLow && d.price_brl <= targetLow);
     const isBFRange = Boolean(targetHigh && d.price_brl <= targetHigh);
@@ -6434,6 +6603,14 @@ function renderBFPromosCardsTab() {
     const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
     const drop30Pct = (avg30 && avg30 > 0) ? ((avg30 - d.price_brl) / avg30) * 100 : 0;
     const isInBFPrice = isHistoricalMin || isBFLow || isBFRange || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5);
+
+    // Best reference price to compute prominent discount %
+    const refCandidates = [
+      (!d._isStoreDirect && d.hb_price_brl > d.price_brl) ? d.hb_price_brl : 0,
+      (avg30 && avg30 > d.price_brl) ? avg30 : 0
+    ].filter(v => v > 0);
+    const refPrice = refCandidates.length ? Math.max(...refCandidates) : 0;
+    const discountPct = refPrice > 0 ? Math.round(((refPrice - d.price_brl) / refPrice) * 100) : 0;
 
     return {
       ...d,
@@ -6443,6 +6620,9 @@ function renderBFPromosCardsTab() {
       allMin,
       avg30,
       drop30Pct,
+      refPrice,
+      discountPct,
+      isOutOfStock,
       isHistoricalMin,
       isBFLow,
       isBFRange,
@@ -6462,7 +6642,7 @@ function renderBFPromosCardsTab() {
     seenKeys.add(`${d.matched_slug}_${(d.store_name || '').toLowerCase()}_${Math.round(d.price_brl || 0)}`);
   });
 
-  // 2. Direct Store Catalog deals (eliminates Telegram blind spots: RTX 3080, 3070 Ti, Shopee drops, etc.)
+  // 2. Direct Store Catalog deals
   const storeCatalogCards = [];
   const dbTs = (typeof DB !== 'undefined' && DB.updated_at) ? Date.parse(DB.updated_at.replace(' ', 'T')) : nowMs;
   const storeAgeHrs = !isNaN(dbTs) ? Math.max(0.05, (nowMs - dbTs) / 3600000) : 0.5;
@@ -6488,7 +6668,6 @@ function renderBFPromosCardsTab() {
         timestamp: !isNaN(dbTs) ? new Date(dbTs).toISOString() : '',
         _isStoreDirect: true
       });
-      // Include if in BF pricing, near BF (within 5%), or >= 3% below 30d avg
       if (baseCard.isInBFPrice || baseCard.isNearBF || baseCard.drop30Pct >= 3) {
         const sig = `${baseCard.matched_slug}_${(baseCard.store_name || '').toLowerCase()}_${Math.round(baseCard.price_brl || 0)}`;
         if (!seenKeys.has(sig)) {
@@ -6501,15 +6680,23 @@ function renderBFPromosCardsTab() {
   const allCards = [...groupCards, ...storeCatalogCards];
   const isLapCtx = (typeof STATE !== 'undefined' && STATE.context === 'laptop');
 
+  // Fonte única da contagem de ofertas ativas no contexto atual
+  const activeInCtx = allCards.filter(d =>
+    (isLapCtx ? d.matched_kind === 'laptop' : d.matched_kind !== 'laptop') && !d.isOutOfStock);
+  PROMO_STATE.activeOfferCount = activeInCtx.length;
+  PROMO_STATE.activeOfferCtx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  syncOfferCounters();
+
   const items = allCards.filter(d => {
     if (isLapCtx && d.matched_kind !== 'laptop') return false;
     if (!isLapCtx && d.matched_kind === 'laptop') return false;
+    if (BF_CARDS_FILTER === 'hist_min' && !d.isHistoricalMin) return false;
     if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
     if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
     if (BF_CARDS_FILTER === 'ram' && d.matched_kind !== 'ram') return false;
     if (BF_CARDS_FILTER === 'laptop' && d.matched_kind !== 'laptop') return false;
     if (BF_CARDS_FILTER === 'store_direct' && !d._isStoreDirect) return false;
-    if (BF_CARDS_FILTER === 'in_stock' && (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired')) return false;
+    if (BF_CARDS_FILTER === 'in_stock' && d.isOutOfStock) return false;
     if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice && !d.isNearBF) return false;
 
     if (searchQ) {
@@ -6518,23 +6705,44 @@ function renderBFPromosCardsTab() {
     }
     return true;
   }).sort((a, b) => {
-    // Keep very fresh Telegram drops (<= 1.5h) at the top, then prioritize BF-priced deals, then age
+    if (sortMode === 'discount') {
+      if (b.discountPct !== a.discountPct) return b.discountPct - a.discountPct;
+      return (a.price_brl || 0) - (b.price_brl || 0);
+    }
+    if (sortMode === 'price_asc') {
+      return (a.price_brl || 0) - (b.price_brl || 0);
+    }
     const aFreshGroup = !a._isStoreDirect && a.ageHrs <= 1.5;
     const bFreshGroup = !b._isStoreDirect && b.ageHrs <= 1.5;
     if (aFreshGroup !== bFreshGroup) return aFreshGroup ? -1 : 1;
     if (aFreshGroup && bFreshGroup) return (b.tsMs || 0) - (a.tsMs || 0);
+    if (a.isHistoricalMin !== b.isHistoricalMin) return a.isHistoricalMin ? -1 : 1;
     if (a.isInBFPrice !== b.isInBFPrice) return a.isInBFPrice ? -1 : 1;
     if (a.tsMs && b.tsMs && a.tsMs !== b.tsMs) return b.tsMs - a.tsMs;
     return a.ageHrs - b.ageHrs;
   });
 
-  if (countBadge) countBadge.textContent = `${items.length} ofertas`;
+  if (countBadge) countBadge.textContent = `${activeInCtx.length} ofertas ativas`;
+
+  // Populate KPI strip
+  const setKpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
+  setKpi('promos-kpi-total', items.length);
+  setKpi('promos-kpi-histmin', items.filter(d => d.isHistoricalMin && !d.isOutOfStock).length);
+  setKpi('promos-kpi-bf', items.filter(d => (d.isBFLow || d.isBFRange) && !d.isOutOfStock).length);
+  setKpi('promos-kpi-coupons', items.filter(d => Boolean((d.coupon_code || '').trim()) && !d.isOutOfStock).length);
 
   if (!items.length) {
     grid.innerHTML = `
-      <div class="p-6 rounded-xl bg-slate-950/80 border border-slate-800 text-center space-y-2">
-        <div class="text-slate-300 font-semibold text-sm">Nenhuma promoção recente encontrada para este filtro.</div>
-        <div class="text-xs text-slate-500">Aguardando a próxima atualização automática (10s) ou clique em "🔄 Puxar Agora".</div>
+      <div class="col-span-full ui-empty-state">
+        <div class="ui-empty-state-icon">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <div class="ui-empty-state-title">Nenhuma promoção encontrada</div>
+        <p class="ui-empty-state-desc">Nenhum item corresponde ao filtro ou busca atual. Limpe os filtros ou atualize o Radar.</p>
+        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+          <button type="button" onclick="const s=document.getElementById('bf-cards-search'); if(s) s.value=''; setBFCardsFilter('all');" class="ui-btn ui-btn--sm">Limpar filtros</button>
+          <button type="button" onclick="pollBFLiveCardsFeed(true); scanLivePromos(true);" class="ui-btn ui-btn--primary ui-btn--sm">Atualizar agora</button>
+        </div>
       </div>`;
     return;
   }
@@ -6545,75 +6753,108 @@ function renderBFPromosCardsTab() {
       ? `${Math.max(1, Math.round(d.ageHrs * 60))}m`
       : `${d.ageHrs.toFixed(1)}h`;
 
+    const cardModifier = d.isOutOfStock
+      ? 'ui-promo-card--oos'
+      : d.isHistoricalMin
+        ? 'ui-promo-card--hist'
+        : (d.isBFLow || d.isBFRange)
+          ? 'ui-promo-card--bf'
+          : d.isNearBF
+            ? 'ui-promo-card--warn'
+            : '';
+
+    const ribbonHtml = d.isOutOfStock
+      ? `<div class="ui-promo-ribbon ui-promo-ribbon--oos"><span>Esgotado / Encerrado</span><span class="ui-mono">há ${ageLabel}</span></div>`
+      : d.isHistoricalMin
+        ? `<div class="ui-promo-ribbon ui-promo-ribbon--hist"><span>★ Mínimo Histórico</span><span class="ui-mono">há ${ageLabel}</span></div>`
+        : d.isBFLow
+          ? `<div class="ui-promo-ribbon ui-promo-ribbon--bf"><span>Piso Black Friday</span><span class="ui-mono">há ${ageLabel}</span></div>`
+          : '';
+
     const bfVerdictBadge = d.isHistoricalMin
-      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🔥 MÍNIMO HISTÓRICO BF</span>`
+      ? `<span class="ui-badge ui-badge--good">Mínimo histórico</span>`
       : d.isBFLow
-      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">✅ PISO BLACK FRIDAY</span>`
-      : d.isBFRange
-      ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🎯 PREÇO DE BLACK FRIDAY</span>`
-      : d.isNearBF
-      ? `<span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-mono text-[11px] font-bold whitespace-nowrap">⚡ Perto da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
-      : d.targetHigh
-      ? `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-rose-300 border border-rose-500/30 font-mono text-[11px] font-semibold whitespace-nowrap">⏳ Acima da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
-      : `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-700 font-mono text-[11px] whitespace-nowrap">ℹ️ Sem faixa BF</span>`;
+        ? `<span class="ui-badge ui-badge--good">Piso BF</span>`
+        : d.isBFRange
+          ? `<span class="ui-badge ui-badge--good">Preço BF</span>`
+          : d.isNearBF
+            ? `<span class="ui-badge ui-badge--warn">Perto da BF (+${fmtBRLShort(d.price_brl - d.targetHigh)})</span>`
+            : d.targetHigh
+              ? `<span class="ui-badge ui-badge--bad">Acima da BF (+${fmtBRLShort(d.price_brl - d.targetHigh)})</span>`
+              : '';
 
     const targetText = d.targetLow && d.targetHigh
-      ? `${fmtBRL(d.targetLow)} – ${fmtBRL(d.targetHigh)}`
-      : (d.targetLow ? fmtBRL(d.targetLow) : '—');
+      ? `${fmtBRLShort(d.targetLow)} – ${fmtBRLShort(d.targetHigh)}`
+      : (d.targetLow ? fmtBRLShort(d.targetLow) : '—');
 
     const thumbHtml = d.imgUrl
-      ? `<img src="${d.imgUrl}" alt="" loading="lazy" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-contain bg-slate-950 border border-slate-800 p-1 shrink-0" onerror="this.style.display='none'" />`
-      : `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-[10px] font-mono shrink-0 uppercase">${d.matched_kind || 'HW'}</div>`;
+      ? `<img src="${d.imgUrl}" alt="" loading="lazy" class="ui-promo-thumb" onerror="this.style.display='none'" />`
+      : `<div class="ui-promo-thumb ui-promo-thumb--placeholder">${d.matched_kind || 'HW'}</div>`;
+
+    const discountHtml = (!d.isOutOfStock && d.discountPct >= 3)
+      ? `<span class="ui-promo-discount" title="Desconto estimado frente à referência/média 30d (${fmtBRLShort(d.refPrice)})">−${d.discountPct}%</span>`
+      : '';
 
     return `
-      <div class="p-3 sm:px-4 sm:py-3 rounded-xl bg-slate-950/90 border ${d.isInBFPrice ? 'border-emerald-500/40 shadow-sm shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'} flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition">
-        <!-- Left: Small Image + Title + Group/Store -->
-        <div class="flex items-center gap-3 min-w-0 flex-1">
-          ${thumbHtml}
-          <div class="min-w-0 flex-1 space-y-1">
-            <div class="flex items-center gap-2 flex-wrap text-[11px] font-mono">
-              <span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-bold">${d.matched_name || d.matched_slug || ''}</span>
-              ${d._isStoreDirect
-                ? `<span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold">🏬 Catálogo Lojas</span>`
-                : `<span class="text-amber-300 font-semibold">@${d.channel_id || 'grupo'}</span>`}
-              <span class="text-slate-400">• ${d.store_name || 'Loja BR'}</span>
-              <span class="text-emerald-400 font-bold">• há ${ageLabel}</span>
-              ${cleanCoup ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🎟️ ${cleanCoup}</span>` : ''}
+      <article class="ui-promo-card ${cardModifier}">
+        ${ribbonHtml}
+        <div class="ui-promo-body">
+          <!-- Top: Thumb + Model/Store + Discount % -->
+          <div class="ui-promo-head">
+            ${thumbHtml}
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="ui-badge ui-badge--brand ui-mono truncate max-w-[170px]">${d.matched_name || d.matched_slug || ''}</span>
+                ${discountHtml}
+              </div>
+              <div class="text-xs text-slate-400 flex items-center flex-wrap gap-1.5">
+                <span class="text-slate-200 font-semibold">${d.store_name || 'Loja BR'}</span>
+                <span>•</span>
+                <span>${d._isStoreDirect ? 'Catálogo' : '@' + (d.channel_id || 'grupo')}</span>
+                ${!ribbonHtml ? `<span>• há ${ageLabel}</span>` : ''}
+              </div>
             </div>
-            <div class="text-xs sm:text-sm font-semibold text-slate-100 truncate" title="${d.title}">${d.title}</div>
+          </div>
+
+          <!-- Title -->
+          <div class="ui-promo-title" title="${d.title}">${d.title}</div>
+
+          <!-- Price Box -->
+          <div class="ui-promo-price-box">
+            <div>
+              <div class="flex items-baseline gap-2 flex-wrap">
+                <span class="ui-promo-price ${d.isInBFPrice && !d.isOutOfStock ? 'ui-promo-price--good' : ''}">${fmtBRL(d.price_brl)}</span>
+                ${d.refPrice > d.price_brl ? `<span class="ui-promo-ref-price">${fmtBRLShort(d.refPrice)}</span>` : ''}
+              </div>
+              <div class="text-xs ui-mono text-slate-400 mt-1">
+                Alvo BF: <span class="text-slate-200 font-semibold">${targetText}</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              ${bfVerdictBadge}
+            </div>
+          </div>
+
+          <!-- Coupon Pill (if present) -->
+          ${cleanCoup ? `
+            <button type="button" onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="w-full ui-btn ui-btn--sm justify-between" style="background:var(--ui-warn-soft); border-color:var(--ui-warn-border); color:var(--ui-warn-text);" title="Copiar cupom e abrir loja">
+              <span class="ui-mono font-bold">🎟️ Cupom: ${cleanCoup}</span>
+              <span class="text-xs">Copiar ↗</span>
+            </button>
+          ` : ''}
+
+          <!-- Actions Footer -->
+          <div class="ui-promo-footer">
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="ui-btn ui-btn--sm">
+                ${d.matched_kind === 'gpu' ? 'Duelo' : 'Ver BF'}
+              </button>
+              <a href="${d.post_url}" target="_blank" class="ui-btn ui-btn--sm ui-btn--ghost">Post ↗</a>
+            </div>
+            <a href="${d.buy_url}" target="_blank" class="ui-btn ui-btn--good ui-btn--sm">Ver oferta ↗</a>
           </div>
         </div>
-
-        <!-- Right: Current Price + Target Price + BF Verdict + Actions -->
-        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-4 shrink-0 border-t lg:border-t-0 border-slate-800/80 pt-2 lg:pt-0">
-          <div class="text-left lg:text-right">
-            <span class="text-[10px] font-mono uppercase text-slate-400 block">Preço Anunciado</span>
-            <span class="text-lg font-mono font-extrabold ${d.isInBFPrice ? 'text-emerald-400' : 'text-white'}">${fmtBRL(d.price_brl)}</span>
-            ${!d._isStoreDirect && d.hb_price_brl > 0 ? (
-              d.price_brl < d.hb_price_brl
-                ? `<span class="block text-[10px] font-mono text-emerald-400">✅ −${fmtBRL(d.hb_price_brl - d.price_brl)} vs menor loja</span>`
-                : (d.price_brl > d.hb_price_brl + 1
-                    ? `<span class="block text-[10px] font-mono text-rose-400">⚠️ +${fmtBRL(d.price_brl - d.hb_price_brl)} vs menor loja (${fmtBRL(d.hb_price_brl)})</span>`
-                    : '')
-            ) : ''}
-          </div>
-
-          <div class="text-left lg:text-right min-w-[130px]">
-            <span class="text-[10px] font-mono uppercase text-slate-400 block">Alvo Black Friday</span>
-            <span class="text-xs font-mono font-bold text-amber-300">${targetText}</span>
-            ${d.allMin ? `<span class="block text-[10px] font-mono text-slate-500">Piso Hist: ${fmtBRL(d.allMin)}</span>` : ''}
-          </div>
-
-          <div>${bfVerdictBadge}</div>
-
-          <div class="flex items-center gap-1.5">
-            ${cleanCoup ? `<button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold cursor-pointer" title="Copiar cupom e abrir">📋</button>` : ''}
-            <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">BF</button>
-            <a href="${d.post_url}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-semibold text-[11px]">Post ↗</a>
-            <a href="${d.buy_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">Loja 🛒</a>
-          </div>
-        </div>
-      </div>
+      </article>
     `;
   }).join('');
 }

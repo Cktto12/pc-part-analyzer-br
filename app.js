@@ -19,7 +19,7 @@ window.DB = DB;
 // User Context Weights & Context Separation (GPU vs CPU vs Notebook)
 let STATE = {
   context: 'gpu', // 'gpu' | 'cpu' | 'laptop'
-  activeTab: 'versus',
+  activeTab: 'home',
   wGaming: 30,
   wWorkstation: 35,
   wAI: 20,
@@ -46,7 +46,7 @@ let STATE = {
   cbColumns: {
     vram: true,
     target: true,
-    trend: false,       // Default hidden to keep table clean
+    trend: true,        // Visível por padrão (minigráfico de tendência — Fase 4)
     hb_cb: false,       // Default hidden to keep table clean
     rel_verdict: true,
     actions: true
@@ -388,39 +388,24 @@ function syncComparisonScaleControls() {
   const btnRelDuel = document.getElementById('btn-scale-rel-duel');
   const btnAbsDuel = document.getElementById('btn-scale-abs-duel');
   if (btnRelDuel && btnAbsDuel) {
-    if (isAbs) {
-      btnRelDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
-      btnAbsDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
-    } else {
-      btnRelDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
-      btnAbsDuel.className = 'px-2.5 py-1 rounded font-bold transition cursor-pointer text-slate-400 hover:text-slate-200';
-    }
+    btnRelDuel.classList.toggle('is-active', !isAbs);
+    btnAbsDuel.classList.toggle('is-active', isAbs);
   }
 
   // Cost-Benefit Table segmented buttons
   const btnRelCB = document.getElementById('btn-scale-rel-cb');
   const btnAbsCB = document.getElementById('btn-scale-abs-cb');
   if (btnRelCB && btnAbsCB) {
-    if (isAbs) {
-      btnRelCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200';
-      btnAbsCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
-    } else {
-      btnRelCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
-      btnAbsCB.className = 'px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200';
-    }
+    btnRelCB.classList.toggle('is-active', !isAbs);
+    btnAbsCB.classList.toggle('is-active', isAbs);
   }
 
-  // Config tab buttons
+  // Config tab buttons (.ui-segmented-btn)
   const btnRelCfg = document.getElementById('btn-scale-rel-cfg');
   const btnAbsCfg = document.getElementById('btn-scale-abs-cfg');
   if (btnRelCfg && btnAbsCfg) {
-    if (isAbs) {
-      btnRelCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200';
-      btnAbsCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
-    } else {
-      btnRelCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
-      btnAbsCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200';
-    }
+    btnRelCfg.classList.toggle('is-active', !isAbs);
+    btnAbsCfg.classList.toggle('is-active', isAbs);
   }
 
   // Fallback for checkboxes & labels
@@ -483,13 +468,14 @@ function renderComparisonBarHTML({
   const isAbs = STATE.comparisonScaleMode === 'absolute';
   const extremes = typeof getCatalogExtremes === 'function' ? getCatalogExtremes() : null;
 
-  // Relative difference vs Base GPU
   const diff = diffPct != null ? diffPct : (baseVal > 0 ? ((candVal / baseVal) - 1) * 100 : 0);
   const sign = diff > 0 ? '+' : '';
-  const diffText = `${sign}${Math.round(diff)}%`;
-  const badgeColor = isPrice
-    ? (diff <= 0 ? 'text-emerald-300' : 'text-amber-300')
-    : (diff >= 0 ? 'text-emerald-300' : 'text-rose-300');
+  const diffText = Math.abs(diff) < 0.5 ? 'Igual' : `${sign}${Math.round(diff)}%`;
+  const diffBadgeClass = Math.abs(diff) < 0.5
+    ? 'ui-badge'
+    : (isPrice
+        ? (diff <= 0 ? 'ui-badge ui-badge--good' : 'ui-badge ui-badge--warn')
+        : (diff > 0 ? 'ui-badge ui-badge--good' : 'ui-badge ui-badge--bad'));
 
   let baseWidthPct = 50;
   let candWidthPct = 50;
@@ -497,60 +483,44 @@ function renderComparisonBarHTML({
   let candRightLabel = '';
 
   if (isAbs) {
-    // 1. MODO ABSOLUTO: O teto (100% da barra) é o registro máximo absoluto do catálogo (ex: RTX 5090)
     const ceiling = maxVal && maxVal > 0 ? maxVal : Math.max(baseVal, candVal, 1);
-    baseWidthPct = Math.min(100, Math.max(3, (baseVal / ceiling) * 100));
-    candWidthPct = Math.min(100, Math.max(3, (candVal / ceiling) * 100));
-
-    baseRightLabel = `${baseWidthPct.toFixed(0)}% do Topo`;
-    candRightLabel = `${candWidthPct.toFixed(0)}% do Topo (${diffText} vs Base)`;
+    baseWidthPct = Math.min(100, Math.max(4, (baseVal / ceiling) * 100));
+    candWidthPct = Math.min(100, Math.max(4, (candVal / ceiling) * 100));
+    baseRightLabel = `${baseWidthPct.toFixed(0)}% topo`;
+    candRightLabel = `${candWidthPct.toFixed(0)}% topo`;
   } else {
-    // 2. MODO RELATIVO: Ancorado na placa base como referência direta (100% de si)
     const headToHeadMax = Math.max(baseVal, candVal, 1);
     baseWidthPct = Math.min(100, Math.max(4, (baseVal / headToHeadMax) * 100));
     candWidthPct = Math.min(100, Math.max(4, (candVal / headToHeadMax) * 100));
-
-    baseRightLabel = '100% (Base)';
-    candRightLabel = Math.abs(diff) < 0.5 ? '100% (Igual)' : `${diffText} vs Base`;
+    baseRightLabel = baseLabel != null ? String(baseLabel) : String(baseVal);
+    candRightLabel = candLabel != null ? String(candLabel) : String(candVal);
   }
 
-  const baseBarColor = 'bg-emerald-500';
-  const candBarColor = isPrice
-    ? (diff <= 0 ? 'bg-emerald-400' : 'bg-amber-400')
-    : (diff >= 0 ? 'bg-sky-400' : 'bg-rose-400');
-
   return `
-    <div class="space-y-1.5 p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
-      <div class="flex items-center justify-between text-xs">
-        <div class="flex items-center gap-1.5 text-slate-300 font-medium">
+    <div class="ui-comp-bar">
+      <div class="ui-comp-bar-head">
+        <div class="flex items-center gap-2 text-slate-200 font-semibold">
           ${iconSvg}
-          <span class="font-bold">${title}</span>
+          <span>${title}</span>
         </div>
-        <div class="flex items-center gap-2 font-mono text-[11px]">
-          <span class="text-emerald-400 font-semibold">${baseLabel != null ? baseLabel : baseVal}</span>
-          <span class="text-slate-600">vs</span>
-          <span class="font-bold ${badgeColor}">${candLabel != null ? candLabel : candVal} <span class="text-[10px] opacity-80">(${diffText})</span></span>
-        </div>
+        <span class="${diffBadgeClass} ui-mono">${diffText}</span>
       </div>
 
-      <div class="space-y-1 pt-0.5">
-        <!-- Barra 1: Placa Base -->
-        <div class="flex items-center gap-2 text-[10px] font-mono">
-          <span class="w-16 truncate text-slate-400 shrink-0 text-right" title="${baseName}">${baseName}</span>
-          <div class="h-2 flex-1 bg-slate-900 rounded-full relative overflow-hidden border border-slate-800/80" title="${baseName}: ${baseLabel != null ? baseLabel : baseVal} (${baseWidthPct.toFixed(0)}%)">
-            <div class="h-full rounded-full transition-all duration-300 ${baseBarColor}" style="width: ${baseWidthPct.toFixed(1)}%;"></div>
+      <div class="space-y-1.5">
+        <div class="ui-comp-bar-track-row">
+          <span class="ui-comp-bar-name" style="color: var(--ui-compare-a-text);" title="${baseName}">${baseName}</span>
+          <div class="ui-meter flex-1 relative" title="${baseName}: ${baseLabel != null ? baseLabel : baseVal} (${baseWidthPct.toFixed(0)}%)">
+            <div class="ui-meter-fill ui-meter-fill--a" style="width: ${baseWidthPct.toFixed(1)}%;"></div>
           </div>
-          <span class="w-28 text-right text-emerald-400 font-bold shrink-0">${baseRightLabel}</span>
+          <span class="ui-comp-bar-val" style="color: var(--ui-compare-a-text);">${baseRightLabel}</span>
         </div>
 
-        <!-- Barra 2: Candidata -->
-        <div class="flex items-center gap-2 text-[10px] font-mono">
-          <span class="w-16 truncate text-sky-300 font-bold shrink-0 text-right" title="${candName}">${candName}</span>
-          <div class="h-2 flex-1 bg-slate-900 rounded-full relative overflow-hidden border border-slate-800/80" title="${candName}: ${candLabel != null ? candLabel : candVal} (${candWidthPct.toFixed(0)}%)">
-            <div class="absolute top-0 bottom-0 w-0.5 bg-emerald-500/70 z-20 pointer-events-none" style="left: ${baseWidthPct.toFixed(1)}%;" title="Ponto da Placa Base (${baseName})"></div>
-            <div class="h-full rounded-full transition-all duration-300 ${candBarColor}" style="width: ${candWidthPct.toFixed(1)}%;"></div>
+        <div class="ui-comp-bar-track-row">
+          <span class="ui-comp-bar-name" style="color: var(--ui-compare-b-text);" title="${candName}">${candName}</span>
+          <div class="ui-meter flex-1 relative" title="${candName}: ${candLabel != null ? candLabel : candVal} (${candWidthPct.toFixed(0)}%)">
+            <div class="ui-meter-fill ui-meter-fill--b" style="width: ${candWidthPct.toFixed(1)}%;"></div>
           </div>
-          <span class="w-28 text-right font-bold ${badgeColor} shrink-0">${candRightLabel}</span>
+          <span class="ui-comp-bar-val" style="color: var(--ui-compare-b-text);">${candRightLabel}</span>
         </div>
       </div>
     </div>
@@ -1441,33 +1411,120 @@ function getPriceStatusBadgeHTML(gpu) {
   const st = gpu.price_stats || {};
   const vsAvg = st.vs_avg_90d_pct || 0;
   if (st.status === 'great') {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🟢 No Preço Alvo (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🟢 No Preço Alvo (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
   } else if (st.status === 'normal') {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">🔵 Preço Estável (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">🔵 Preço Estável (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
   } else if (st.status === 'rising') {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ Subiu +${vsAvg}% vs Média 90d</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ Subiu +${vsAvg}% vs Média 90d</span>`;
   } else {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">🚨 Alta Forte (+${vsAvg}% vs Média 90d)</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">🚨 Alta Forte (+${vsAvg}% vs Média 90d)</span>`;
   }
 }
+
+// Navigation Areas (4 Areas: Início, Comparar, Preços, Montar) + Config
+const NAV_AREAS = {
+  home: { label: 'Início', tabs: [{ id: 'home', label: 'Início' }] },
+  compare: {
+    label: 'Comparar',
+    tabs: [
+      { id: 'versus', label: 'Duelo' },
+      { id: 'sim', label: 'Simulador' }
+    ]
+  },
+  prices: {
+    label: 'Preços',
+    tabs: [
+      { id: 'cb', label: 'Custo-benefício' },
+      { id: 'bf', label: 'Black Friday' },
+      { id: 'bf-promos', label: 'Promoções' }
+    ]
+  },
+  build: {
+    label: 'Montar',
+    tabs: [
+      { id: 'builder', label: 'Montagem' },
+      { id: 'upgrades', label: 'Upgrades' }
+    ]
+  }
+};
+
+const TAB_TO_AREA = {
+  home: 'home',
+  versus: 'compare',
+  sim: 'compare',
+  cb: 'prices',
+  bf: 'prices',
+  'bf-promos': 'prices',
+  builder: 'build',
+  upgrades: 'build',
+  config: null
+};
+
+const LAST_TAB_BY_AREA = {
+  home: 'home',
+  compare: 'versus',
+  prices: 'cb',
+  build: 'builder'
+};
+
+function renderAreaSubnav(tabId) {
+  const wrap = document.getElementById('area-subnav-wrap');
+  const nav = document.getElementById('area-subnav');
+  if (!wrap || !nav) return;
+
+  const areaKey = TAB_TO_AREA[tabId];
+  const area = areaKey ? NAV_AREAS[areaKey] : null;
+  if (!area || area.tabs.length <= 1) {
+    wrap.classList.add('hidden');
+    nav.innerHTML = '';
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  nav.innerHTML = area.tabs.map(t => {
+    const active = t.id === tabId ? 'is-active' : '';
+    return `<button type="button" onclick="switchTab('${t.id}')" class="ui-subnav-btn ${active}" role="tab" aria-selected="${t.id === tabId ? 'true' : 'false'}">${t.label}</button>`;
+  }).join('');
+}
+
+function switchArea(areaId) {
+  const target = LAST_TAB_BY_AREA[areaId] || (NAV_AREAS[areaId]?.tabs?.[0]?.id) || 'home';
+  switchTab(target);
+}
+window.switchArea = switchArea;
 
 // Switch Main Tabs
 function switchTab(tabId) {
   STATE.activeTab = tabId;
+  const areaKey = TAB_TO_AREA[tabId];
+  if (areaKey) LAST_TAB_BY_AREA[areaKey] = tabId;
 
-  ['versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'config'].forEach(id => {
+  const allTabs = ['home', 'versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'config'];
+  allTabs.forEach(id => {
     const sec = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`tab-btn-${id}`);
-    if (!sec || !btn) return;
-    if (id === tabId) {
-      sec.classList.remove('hidden');
-      btn.className = 'tab-btn w-full px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-3 bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm shadow-sky-500/10 transition-all text-left';
-    } else {
-      sec.classList.add('hidden');
-      btn.className = 'tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left';
+    if (sec) sec.classList.toggle('hidden', id !== tabId);
+    if (btn) {
+      btn.classList.toggle('is-active', id === tabId);
+      if (id === tabId) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
     }
   });
 
+  // Update mobile bottom navigation active area
+  ['home', 'compare', 'prices', 'build'].forEach(a => {
+    const b = document.getElementById(`bnav-${a}`);
+    if (b) b.classList.toggle('is-active', a === areaKey);
+  });
+
+  // Highlight header gear button when in config
+  const gearBtn = document.getElementById('btn-header-config');
+  if (gearBtn) {
+    gearBtn.style.borderColor = tabId === 'config' ? 'var(--ui-brand-border)' : '';
+    gearBtn.style.color = tabId === 'config' ? 'var(--ui-brand)' : '';
+  }
+
+  renderAreaSubnav(tabId);
   closeSidebar();
   renderActiveTab();
   if (tabId === 'bf-promos' && typeof startBFLivePolling === 'function') {
@@ -1478,24 +1535,11 @@ function switchTab(tabId) {
 }
 
 function toggleSidebar() {
-  const sb = document.getElementById('app-sidebar');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (!sb) return;
-  const isClosed = sb.classList.contains('-translate-x-full');
-  if (isClosed) {
-    sb.classList.remove('-translate-x-full');
-    if (bd) bd.classList.remove('hidden');
-  } else {
-    sb.classList.add('-translate-x-full');
-    if (bd) bd.classList.add('hidden');
-  }
+  // Sidebar is always visible on desktop (>= 1024px); mobile uses bottom navigation.
 }
 
 function closeSidebar() {
-  const sb = document.getElementById('app-sidebar');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (sb) sb.classList.add('-translate-x-full');
-  if (bd) bd.classList.add('hidden');
+  // Kept for backward compatibility with existing onclick handlers.
 }
 
 function toggleContextSettings() {
@@ -1503,6 +1547,7 @@ function toggleContextSettings() {
   setTimeout(() => {
     const target = document.getElementById('cfg-section-display-workloads');
     if (target) {
+      if (target.tagName === 'DETAILS') target.open = true;
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       target.classList.add('ring-2', 'ring-sky-400');
       setTimeout(() => target.classList.remove('ring-2', 'ring-sky-400'), 1500);
@@ -1553,6 +1598,9 @@ function renderActiveTab() {
   const ctx = STATE.context;
   syncLaptopContextViews();
   try {
+    if (t === 'home') {
+      renderHomeTab();
+    }
     if (t === 'versus') {
       const gpuView = document.getElementById('versus-gpu-view');
       const cpuView = document.getElementById('versus-cpu-view');
@@ -1618,6 +1666,213 @@ function renderActiveTab() {
   }
 }
 
+// ============================================================================
+// TAB 0: PÁGINA INICIAL (FASE 2 — KPIs, TOP 5 OFERTAS, TOP CUSTO-BENEFÍCIO)
+// ============================================================================
+function getNextBlackFridayCountdown() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const computeBF = (yr) => {
+    if (typeof window.getExactBlackFridayDate === 'function') {
+      const d = window.getExactBlackFridayDate(yr);
+      if (d instanceof Date && !isNaN(d)) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    const nov30 = new Date(yr, 10, 30);
+    const day = nov30.getDay();
+    const diff = (day >= 5) ? (day - 5) : (day + 2);
+    return new Date(yr, 10, 30 - diff);
+  };
+  let bf = computeBF(today.getFullYear());
+  if (bf < today) bf = computeBF(today.getFullYear() + 1);
+  const days = Math.round((bf - today) / 86400000);
+  const dateLabel = bf.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return { days, dateLabel };
+}
+
+function openHomeItemInDuel(kind, slug) {
+  if (kind === 'cpu') {
+    setMainContext('cpu');
+    if (typeof setCpuDuelPair === 'function') {
+      setCpuDuelPair(slug, STATE.cpuBaseSlug || null);
+      return;
+    }
+  } else if (kind === 'laptop') {
+    setMainContext('laptop');
+    switchTab('versus');
+    const candSel = document.getElementById('laptop-duel-select-cand');
+    if (candSel && [...candSel.options].some(o => o.value === slug)) {
+      candSel.value = slug;
+      if (typeof onLaptopDuelSelectionChange === 'function') onLaptopDuelSelectionChange();
+    }
+    return;
+  } else {
+    setMainContext('gpu');
+    if (typeof setDuelPair === 'function') {
+      setDuelPair(slug, STATE.cbRelBaseSlug || null);
+      return;
+    }
+  }
+  switchTab('versus');
+}
+window.openHomeItemInDuel = openHomeItemInDuel;
+
+function renderHomeTab() {
+  const ctx = STATE.context || 'gpu';
+  const ctxLabel = ctx === 'laptop' ? 'Notebooks' : (ctx === 'cpu' ? 'CPUs' : 'GPUs');
+
+  // 1. KPI: Dias até a Black Friday
+  const bfInfo = getNextBlackFridayCountdown();
+  const kpiBf = document.getElementById('home-kpi-bf');
+  const kpiBfSub = document.getElementById('home-kpi-bf-sub');
+  if (kpiBf) kpiBf.textContent = bfInfo.days === 0 ? 'HOJE!' : `${bfInfo.days} dias`;
+  if (kpiBfSub) kpiBfSub.textContent = `Próxima Black Friday: ${bfInfo.dateLabel}`;
+
+  // 2. KPI: Produtos no mínimo histórico hoje (no contexto atual)
+  const items = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || []));
+  const validItems = items.filter(it => it && it.price_brl > 0 && !it.is_xeon);
+  const atMinItems = validItems.filter(it => {
+    const ps = it.price_stats || {};
+    const minRef = ps.min_all_time || ps.min_90d || 0;
+    return minRef > 0 && it.price_brl <= minRef * 1.02;
+  });
+  const kpiMin = document.getElementById('home-kpi-min');
+  const kpiMinSub = document.getElementById('home-kpi-min-sub');
+  if (kpiMin) kpiMin.textContent = String(atMinItems.length);
+  if (kpiMinSub) {
+    kpiMinSub.textContent = validItems.length > 0
+      ? `de ${validItems.length} ${ctxLabel} monitorados`
+      : 'Carregando catálogo...';
+  }
+
+  // 3. KPI: Ofertas ativas hoje + Top 5 melhores ofertas do dia
+  const promoData = (typeof PROMO_STATE !== 'undefined' && PROMO_STATE.lastData) ? PROMO_STATE.lastData : null;
+  const activeDeals = (promoData && Array.isArray(promoData.matched_deals))
+    ? promoData.matched_deals.filter(d => d && d.price_brl > 0 && !d.is_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired')
+    : [];
+
+  const kpiDeals = document.getElementById('home-kpi-deals');
+  const kpiDealsSub = document.getElementById('home-kpi-deals-sub');
+  const offerCount = (typeof getActiveOfferCount === 'function') ? getActiveOfferCount() : null;
+  if (kpiDeals) kpiDeals.textContent = offerCount != null ? String(offerCount) : '--';
+  if (kpiDealsSub) {
+    kpiDealsSub.textContent = offerCount != null
+      ? (offerCount > 0 ? 'Em estoque agora, de grupos e lojas' : 'Nenhuma oferta ativa agora')
+      : 'Carregando radar de ofertas...';
+  }
+
+  const dealsWrap = document.getElementById('home-top-deals');
+  if (dealsWrap) {
+    if (!promoData) {
+      dealsWrap.innerHTML = `<div class="ui-skeleton h-16 w-full"></div><div class="ui-skeleton h-16 w-full"></div><div class="ui-skeleton h-16 w-full"></div>`;
+    } else if (activeDeals.length === 0) {
+      dealsWrap.innerHTML = `<div class="ui-empty">Nenhuma oferta ativa no Radar no momento. Clique em <strong>Sync</strong> ou abra o Radar para escanear.</div>`;
+    } else {
+      // Deduplicate by slug keeping lowest price, then sort by best real discount
+      const bestByKey = new Map();
+      activeDeals.forEach(d => {
+        const key = d.matched_slug || d.matched_name || d.title;
+        const prev = bestByKey.get(key);
+        if (!prev || d.price_brl < prev.price_brl) bestByKey.set(key, d);
+      });
+      const rankedDeals = Array.from(bestByKey.values()).map(d => {
+        const ref = d.hb_price_brl > d.price_brl ? d.hb_price_brl : (d.avg_30d > d.price_brl ? d.avg_30d : 0);
+        const pct = ref > 0 ? Math.round(((ref - d.price_brl) / ref) * 100) : (d.discount_pct || 0);
+        return { deal: d, ref, pct };
+      }).sort((a, b) => (b.pct - a.pct) || (a.deal.price_brl - b.deal.price_brl)).slice(0, 5);
+
+      dealsWrap.innerHTML = rankedDeals.map(({ deal: d, ref, pct }) => {
+        const badgeHtml = pct >= 5
+          ? `<span class="ui-badge ui-badge--good ui-mono">-${pct}%</span>`
+          : `<span class="ui-badge ui-badge--brand">Oferta</span>`;
+        const couponHtml = (d.coupon_code || d.coupon_info)
+          ? `<span class="ui-badge ui-badge--warn ui-mono">${d.coupon_code || d.coupon_info}</span>`
+          : '';
+        const buyHref = d.buy_url || d.post_url || '#';
+        const canDuel = d.matched_slug && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu' || d.matched_kind === 'laptop');
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/65 border border-slate-800/90 hover:border-slate-700 transition">
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                ${badgeHtml}
+                ${couponHtml}
+                <span class="text-sm font-bold text-slate-100 truncate">${d.matched_name || d.title}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span class="ui-mono font-bold text-base text-emerald-400">${fmtBRL(d.price_brl)}</span>
+                ${ref > d.price_brl ? `<span class="ui-mono line-through text-slate-500">${fmtBRLShort(ref)}</span>` : ''}
+                ${d.channel_id ? `<span class="truncate">@${d.channel_id}</span>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${canDuel ? `<button type="button" onclick="openHomeItemInDuel('${d.matched_kind}', '${d.matched_slug}')" class="ui-btn ui-btn--sm ui-btn--ghost">Duelo</button>` : ''}
+              <a href="${buyHref}" target="_blank" rel="noopener" class="ui-btn ui-btn--sm ui-btn--good">Oferta ↗</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 4. Top 5 Custo-Benefício do contexto atual
+  const cbTitle = document.getElementById('home-cb-title');
+  if (cbTitle) cbTitle.textContent = `Top custo-benefício (${ctxLabel})`;
+
+  if (ctx === 'gpu' && typeof enrichGPUsWithContextualMetrics === 'function') enrichGPUsWithContextualMetrics();
+  else if (ctx === 'cpu' && typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+  else if (ctx === 'laptop' && typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+
+  const cbWrap = document.getElementById('home-top-cb');
+  if (cbWrap) {
+    if (validItems.length === 0) {
+      cbWrap.innerHTML = `<div class="ui-empty">Carregando ranking de ${ctxLabel}...</div>`;
+    } else {
+      const top5 = validItems
+        .slice()
+        .sort((a, b) => (b._myCBScore || 0) - (a._myCBScore || 0))
+        .slice(0, 5);
+
+      cbWrap.innerHTML = top5.map((it, idx) => {
+        const score = Math.round(it._myCBScore || 0);
+        const tgt = it.price_stats?.target_price || 0;
+        let priceBadge = `<span class="ui-badge">Preço médio</span>`;
+        if (tgt > 0) {
+          if (it.price_brl <= tgt) priceBadge = `<span class="ui-badge ui-badge--good">Abaixo do alvo</span>`;
+          else if (it.price_brl <= tgt * 1.08) priceBadge = `<span class="ui-badge ui-badge--warn">No alvo</span>`;
+          else priceBadge = `<span class="ui-badge ui-badge--bad">Acima do alvo</span>`;
+        }
+        const cpuSp = it._specs || {};
+        const specShort = ctx === 'gpu'
+          ? `${it.vram_gb || '?'}GB VRAM`
+          : ctx === 'cpu'
+            ? `${cpuSp.cores || it.cores || '?'}c/${cpuSp.threads || it.threads || '?'}t • ${cpuSp.socket || it.socket || ''}`
+            : `${it.gpu_name || it.cpu_name || ''}`;
+        return `
+          <button type="button" onclick="openHomeItemInDuel('${ctx}', '${it.slug}')" class="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/65 border border-slate-800/90 hover:border-sky-500/40 transition cursor-pointer">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-slate-800 text-sky-300 ui-mono font-bold text-xs flex items-center justify-center shrink-0">#${idx + 1}</span>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-sm font-bold text-slate-100 truncate">${it.name}</span>
+                  ${priceBadge}
+                </div>
+                <div class="text-xs text-slate-400 truncate mt-0.5">${specShort}</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+              <div class="text-right">
+                <div class="ui-mono font-bold text-sm text-slate-100">${fmtBRL(it.price_brl)}</div>
+                <div class="text-xs text-emerald-400 ui-mono font-semibold">CB ${score}/100</div>
+              </div>
+              <span class="text-xs font-semibold text-sky-400">Duelo →</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+  }
+}
+window.renderHomeTab = renderHomeTab;
+
 // Global Context Toggle: GPU vs CPU vs Notebook
 function setMainContext(ctx) {
   STATE.context = (ctx === 'cpu') ? 'cpu' : (ctx === 'laptop' ? 'laptop' : 'gpu');
@@ -1625,52 +1880,47 @@ function setMainContext(ctx) {
     localStorage.setItem('gca_context', STATE.context);
   } catch (_) {}
 
-  // Update header toggle button visual state
+  // Update header toggle button visual state (unified brand accent)
   const btnGpu = document.getElementById('btn-ctx-gpu');
   const btnCpu = document.getElementById('btn-ctx-cpu');
   const btnLap = document.getElementById('btn-ctx-laptop');
-  const idleCls = "px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200";
-  if (btnGpu && btnCpu) {
-    btnGpu.className = STATE.context === 'gpu' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-sky-500 text-slate-950 shadow-sm" : idleCls;
-    btnCpu.className = STATE.context === 'cpu' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-500 text-slate-950 shadow-sm" : idleCls;
-    if (btnLap) {
-      btnLap.className = STATE.context === 'laptop' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-purple-500 text-white shadow-sm" : idleCls;
-    }
+  if (btnGpu) {
+    btnGpu.className = `ui-segmented-btn${STATE.context === 'gpu' ? ' is-active' : ''}`;
+    btnGpu.setAttribute('aria-selected', STATE.context === 'gpu' ? 'true' : 'false');
+  }
+  if (btnCpu) {
+    btnCpu.className = `ui-segmented-btn${STATE.context === 'cpu' ? ' is-active' : ''}`;
+    btnCpu.setAttribute('aria-selected', STATE.context === 'cpu' ? 'true' : 'false');
+  }
+  if (btnLap) {
+    btnLap.className = `ui-segmented-btn${STATE.context === 'laptop' ? ' is-active' : ''}`;
+    btnLap.setAttribute('aria-selected', STATE.context === 'laptop' ? 'true' : 'false');
   }
 
+  const subText = STATE.context === 'laptop'
+    ? 'Notebooks Completos'
+    : STATE.context === 'cpu'
+      ? 'Processadores & Plataforma'
+      : 'Placas de Vídeo';
   const brandSub = document.getElementById('header-brand-sub');
-  if (brandSub) {
-    brandSub.textContent = STATE.context === 'laptop'
-      ? 'Notebook & Full-System Analyzer'
-      : 'GPU & CPU Analyzer';
-  }
+  if (brandSub) brandSub.textContent = subText;
+  const sbBrandSub = document.getElementById('sidebar-brand-sub');
+  if (sbBrandSub) sbBrandSub.textContent = subText;
 
-  // Update sidebar titles (same tabs, context-adapted titles)
+  // Keep concise sidebar labels across contexts
   const tVersus = document.getElementById('sidebar-tab-title-versus');
   const tCb = document.getElementById('sidebar-tab-title-cb');
   const tBuilder = document.getElementById('sidebar-tab-title-builder');
   const tUpgrades = document.getElementById('sidebar-tab-title-upgrades');
   const tBf = document.getElementById('sidebar-tab-title-bf');
 
-  if (STATE.context === 'laptop') {
-    if (tVersus) tVersus.textContent = 'Duelo de Notebooks';
-    if (tCb) tCb.textContent = 'Custo-Benefício Notebooks';
-    if (tBuilder) tBuilder.textContent = 'Objetivo de Compra';
-    if (tUpgrades) tUpgrades.textContent = 'Upgrades (RAM / SSD)';
-    if (tBf) tBf.textContent = 'Black Friday Notebooks';
-  } else if (STATE.context === 'cpu') {
-    if (tVersus) tVersus.textContent = 'Duelo de CPUs';
-    if (tCb) tCb.textContent = 'Custo-Benefício CPUs';
-    if (tBuilder) tBuilder.textContent = 'Setup & Plataforma';
-    if (tUpgrades) tUpgrades.textContent = 'Upgrades CPU & RAM';
-    if (tBf) tBf.textContent = 'Black Friday CPUs';
-  } else {
-    if (tVersus) tVersus.textContent = 'Duelo de GPUs';
-    if (tCb) tCb.textContent = 'Custo-Benefício GPUs';
-    if (tBuilder) tBuilder.textContent = 'Objetivo de Compra';
-    if (tUpgrades) tUpgrades.textContent = 'Upgrades de Plataforma';
-    if (tBf) tBf.textContent = 'Black Friday GPUs';
-  }
+  if (tVersus) tVersus.textContent = 'Duelo';
+  if (tCb) tCb.textContent = 'Custo-benefício';
+  if (tBuilder) tBuilder.textContent = STATE.context === 'laptop' ? 'Objetivo' : 'Montagem';
+  if (tUpgrades) tUpgrades.textContent = STATE.context === 'laptop' ? 'Upgrades (RAM/SSD)' : 'Upgrades';
+  if (tBf) tBf.textContent = 'Black Friday';
+
+  renderAreaSubnav(STATE.activeTab || 'versus');
 
   const sym = STATE.market?.monetary?.currency_symbol || 'R$';
   const regName = STATE.market?.region_name || 'Brasil';
@@ -1855,7 +2105,7 @@ function syncWorkloadIntensityUI() {
     const badge = document.getElementById(`badge-int-${key}`);
     if (badge) {
       badge.textContent = `${lvl}/5 • ${meta.label}`;
-      badge.className = `px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold ${meta.cls}`;
+      badge.className = `px-1.5 py-0.5 rounded border text-xs font-mono font-bold ${meta.cls}`;
     }
     const desc = document.getElementById(`desc-int-${key}`);
     if (desc && WORKLOAD_INTENSITY_DESCS[key]) {
@@ -2006,7 +2256,7 @@ function populateSelectors() {
     candSel.innerHTML = optionsHTML;
     if (cbRelSel) {
       cbRelSel.innerHTML = sortedGPUs.map(g =>
-        `<option value="${g.slug}">Base Relacional: ${g.name} (${fmtBRLShort(g.price_brl)})</option>`
+        `<option value="${g.slug}">${g.name} (${fmtBRLShort(g.price_brl)})</option>`
       ).join('');
     }
     if (simASel) simASel.innerHTML = optionsHTML;
@@ -2151,20 +2401,18 @@ function renderDuelAnalysis() {
   const baseEffGaming = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(baseGpu) : baseGpu.gaming_score;
   const candEffGaming = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(candGpu) : candGpu.gaming_score;
   document.getElementById('duel-specs-base').innerHTML = `
-    <span>🧠 <strong>${baseGpu.vram_gb}GB</strong> ${baseGpu.memory_type} (${baseGpu.bandwidth_gbs} GB/s)</span>
-    ${baseTech ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px]">✨ ${baseTech}</span>` : ''}
-    <span>🤖 Inf. 14B: <strong class="text-purple-300">${baseGpu.llm_14b_tok_s} tok/s</strong> (8B: ${baseGpu.llm_8b_tok_s})</span>
-    <span>⚡ Treinamento: <strong class="text-amber-300">${getEffectiveEngineeringScore(baseGpu)}</strong></span>
-    <span>🎮 Jogos Efetivo: <strong class="text-emerald-300">${baseEffGaming}</strong> <span class="text-slate-500">(Raster: ${baseGpu.gaming_score})</span></span>
-    <a href="${baseGpu.offer_url}" target="_blank" class="text-emerald-400 hover:underline font-semibold">Loja (${baseGpu.store_name}) ↗</a>
+    <span><strong>${baseGpu.vram_gb}GB</strong> ${baseGpu.memory_type}</span>
+    ${baseTech ? `<span class="ui-badge ui-badge--a">${baseTech}</span>` : ''}
+    <span>IA 14B: <strong class="text-slate-100">${baseGpu.llm_14b_tok_s} tok/s</strong></span>
+    <span>Jogos: <strong class="text-slate-100">${baseEffGaming}</strong></span>
+    <a href="${baseGpu.offer_url}" target="_blank" class="text-sky-300 hover:underline font-semibold">Loja (${baseGpu.store_name}) ↗</a>
   `;
   document.getElementById('duel-specs-cand').innerHTML = `
-    <span>🧠 <strong>${candGpu.vram_gb}GB</strong> ${candGpu.memory_type} (${candGpu.bandwidth_gbs} GB/s)</span>
-    ${candTech ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-[10px]">✨ ${candTech}</span>` : ''}
-    <span>🤖 Inf. 14B: <strong class="text-purple-300">${candGpu.llm_14b_tok_s} tok/s</strong> (8B: ${candGpu.llm_8b_tok_s})</span>
-    <span>⚡ Treinamento: <strong class="text-amber-300">${getEffectiveEngineeringScore(candGpu)}</strong></span>
-    <span>🎮 Jogos Efetivo: <strong class="text-emerald-300">${candEffGaming}</strong> <span class="text-slate-500">(Raster: ${candGpu.gaming_score})</span></span>
-    <a href="${candGpu.offer_url}" target="_blank" class="text-sky-400 hover:underline font-semibold">Loja (${candGpu.store_name}) ↗</a>
+    <span><strong>${candGpu.vram_gb}GB</strong> ${candGpu.memory_type}</span>
+    ${candTech ? `<span class="ui-badge ui-badge--b">${candTech}</span>` : ''}
+    <span>IA 14B: <strong class="text-slate-100">${candGpu.llm_14b_tok_s} tok/s</strong></span>
+    <span>Jogos: <strong class="text-slate-100">${candEffGaming}</strong></span>
+    <a href="${candGpu.offer_url}" target="_blank" class="text-violet-300 hover:underline font-semibold">Loja (${candGpu.store_name}) ↗</a>
   `;
 
   // Evaluate relational compensation
@@ -2278,41 +2526,39 @@ function renderDuelAnalysis() {
   const bAvgRadar = Math.round((bScoreGame + bScoreTech + bScoreAI + bScoreTrain + bScoreEff + bScoreCB) / 6);
   const cAvgRadar = Math.round((cScoreGame + cScoreTech + cScoreAI + cScoreTrain + cScoreEff + cScoreCB) / 6);
 
-  // Render Score Hero Cards (Versus-Style)
+  // Render Score Hero Cards (A = Cyan, B = Violet)
   const versusRatingsEl = document.getElementById('duel-versus-ratings');
   if (versusRatingsEl) {
-    const candWinsPerf = cOverallPerf > bOverallPerf;
-
     versusRatingsEl.innerHTML = `
-      <div class="bg-slate-900/90 rounded-xl p-3.5 border border-emerald-500/40 space-y-1 relative overflow-hidden shadow-sm">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-mono text-emerald-400 font-bold uppercase tracking-wider">PLACA BASE</span>
-          <span class="text-[10px] font-mono text-slate-400 font-semibold">${fmtBRL(basePrice)}</span>
+      <div class="ui-score-card ui-score-card--a">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--a">A · Base</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(basePrice)}</span>
         </div>
-        <div class="text-sm font-extrabold text-white truncate" title="${baseGpu.name}">${baseGpu.name}</div>
-        <div class="flex items-baseline gap-2 pt-1">
-          <span class="text-2xl font-mono font-black text-emerald-400">${bScoreCB}</span>
-          <span class="text-[11px] font-mono text-slate-400">/ 100 Custo-Benefício</span>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${baseGpu.name}">${baseGpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-a-text);">${bScoreCB}</span>
+          <span class="text-xs text-slate-400">/ 100 Custo-benefício</span>
         </div>
-        <div class="text-[11px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-          <span>Desempenho Geral:</span>
-          <strong class="text-slate-200">${bOverallPerf} pts</strong>
+        <div class="text-xs ui-mono text-slate-400 flex items-center justify-between pt-1.5 border-t border-slate-800">
+          <span>Desempenho geral</span>
+          <strong class="text-slate-100">${bOverallPerf} pts</strong>
         </div>
       </div>
 
-      <div class="bg-slate-900/90 rounded-xl p-3.5 border border-sky-500/40 space-y-1 relative overflow-hidden shadow-sm">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-mono text-sky-400 font-bold uppercase tracking-wider">CANDIDATA UPGRADE</span>
-          <span class="text-[10px] font-mono text-slate-400 font-semibold">${fmtBRL(candPrice)}</span>
+      <div class="ui-score-card ui-score-card--b">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--b">B · Candidata</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(candPrice)}</span>
         </div>
-        <div class="text-sm font-extrabold text-white truncate" title="${candGpu.name}">${candGpu.name}</div>
-        <div class="flex items-baseline gap-2 pt-1">
-          <span class="text-2xl font-mono font-black text-sky-400">${cScoreCB}</span>
-          <span class="text-[11px] font-mono text-slate-400">/ 100 Custo-Benefício</span>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${candGpu.name}">${candGpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-b-text);">${cScoreCB}</span>
+          <span class="text-xs text-slate-400">/ 100 Custo-benefício</span>
         </div>
-        <div class="text-[11px] font-mono text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
-          <span>Desempenho Geral:</span>
-          <strong class="${candWinsPerf ? 'text-sky-300 font-bold' : 'text-slate-200'}">${cOverallPerf} pts</strong>
+        <div class="text-xs ui-mono text-slate-400 flex items-center justify-between pt-1.5 border-t border-slate-800">
+          <span>Desempenho geral</span>
+          <strong class="text-slate-100">${cOverallPerf} pts</strong>
         </div>
       </div>
     `;
@@ -2408,26 +2654,26 @@ function renderDuelAnalysis() {
 
     const datasets = [
       {
-        label: `${baseGpu.name} (${bAvgRadar}/100)`,
+        label: `A · ${baseGpu.name} (${bAvgRadar}/100)`,
         data: radarDataB,
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.22)',
-        pointBackgroundColor: '#10b981',
-        pointBorderColor: '#ffffff',
-        pointHoverBackgroundColor: '#ffffff',
-        pointHoverBorderColor: '#10b981',
-        borderWidth: 2,
-        pointRadius: 3
-      },
-      {
-        label: `${candGpu.name} (${cAvgRadar}/100)`,
-        data: radarDataC,
         borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.25)',
+        backgroundColor: 'rgba(56, 189, 248, 0.22)',
         pointBackgroundColor: '#38bdf8',
         pointBorderColor: '#ffffff',
         pointHoverBackgroundColor: '#ffffff',
         pointHoverBorderColor: '#38bdf8',
+        borderWidth: 2,
+        pointRadius: 3
+      },
+      {
+        label: `B · ${candGpu.name} (${cAvgRadar}/100)`,
+        data: radarDataC,
+        borderColor: '#a78bfa',
+        backgroundColor: 'rgba(167, 139, 250, 0.24)',
+        pointBackgroundColor: '#a78bfa',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: '#a78bfa',
         borderWidth: 2,
         pointRadius: 3
       }
@@ -2437,17 +2683,17 @@ function renderDuelAnalysis() {
       const topData = [100, 100, 100, 100, topScoreEff, topScoreCB];
       const topAvg = Math.round((100 + 100 + 100 + 100 + topScoreEff + topScoreCB) / 6);
       datasets.push({
-        label: `${topGpu.name} (Topo 100 Absoluto Ref - ${topAvg}/100)`,
+        label: `${topGpu.name} (Ref Topo 100 - ${topAvg}/100)`,
         data: topData,
-        borderColor: '#a855f7',
+        borderColor: '#94a3b8',
         borderDash: [5, 4],
-        backgroundColor: 'rgba(168, 85, 247, 0.08)',
-        pointBackgroundColor: '#a855f7',
+        backgroundColor: 'rgba(148, 163, 184, 0.08)',
+        pointBackgroundColor: '#94a3b8',
         pointBorderColor: '#ffffff',
         pointHoverBackgroundColor: '#ffffff',
-        pointHoverBorderColor: '#a855f7',
-        borderWidth: 2,
-        pointRadius: 3
+        pointHoverBorderColor: '#94a3b8',
+        borderWidth: 1.75,
+        pointRadius: 2.5
       });
     }
 
@@ -2489,22 +2735,22 @@ function renderDuelAnalysis() {
     const radarLegendEl = document.getElementById('duel-radar-legend');
     if (radarLegendEl) {
       const topLegend = (isAbs && topGpu) ? `
-        <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-2">
-          <span class="w-3 h-3 rounded-full bg-purple-400 inline-block shadow-sm"></span>
-          <span class="text-purple-300 font-bold">${topGpu.name}</span>
-          <span class="text-slate-400 text-[10px]">(Topo 100 Ref)</span>
+        <div class="flex items-center gap-1.5 border-l border-slate-700/80 pl-3">
+          <span class="w-2.5 h-2.5 rounded-full bg-slate-400 inline-block"></span>
+          <span class="text-slate-300 font-semibold">${topGpu.name}</span>
+          <span class="text-slate-500">(Topo)</span>
         </div>
       ` : '';
 
       radarLegendEl.innerHTML = `
         <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-emerald-400 inline-block shadow-sm"></span>
-          <span class="text-white font-bold">${baseGpu.name}</span>
+          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--ui-compare-a);"></span>
+          <span class="text-white font-semibold">${baseGpu.name}</span>
           <span class="text-slate-400">(${bAvgRadar}/100)</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="w-3 h-3 rounded-full bg-sky-400 inline-block shadow-sm"></span>
-          <span class="text-white font-bold">${candGpu.name}</span>
+          <span class="w-2.5 h-2.5 rounded-full inline-block" style="background: var(--ui-compare-b);"></span>
+          <span class="text-white font-semibold">${candGpu.name}</span>
           <span class="text-slate-400">(${cAvgRadar}/100)</span>
         </div>
         ${topLegend}
@@ -2513,38 +2759,72 @@ function renderDuelAnalysis() {
   }
 
   const vBox = document.getElementById('duel-verdict-box');
-  vBox.className = `mt-6 rounded-2xl p-5 border transition-all ${colorMap[rel.color]}`;
-  vBox.innerHTML = `
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-      <div class="space-y-1.5 max-w-4xl">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <span class="px-3 py-1 rounded-lg text-xs font-mono font-black uppercase ${badgeMap[rel.color]}">${rel.label}</span>
-          <span class="text-sm font-mono font-bold text-white">
-            Diferença Atual: <span class="underline">${rel.actualDelta >= 0 ? '+' : ''}${fmtBRL(rel.actualDelta)}</span>
-            (${((rel.actualDelta / Math.max(1, basePrice)) * 100).toFixed(0)}% mais cara que a ${baseGpu.name})
-          </span>
+  if (vBox) {
+    const isGood = rel.tier === 'steal' || rel.tier === 'fair';
+    const isWarn = rel.tier === 'stretch';
+    const tone = isGood ? 'good' : (isWarn ? 'warn' : 'bad');
+    const badgeLabel = rel.tier === 'steal' ? 'Vale muito' : (isGood ? 'Vale a pena' : (isWarn ? 'Aguarde' : 'Não compensa'));
+    const deltaPct = Math.round((rel.actualDelta / Math.max(1, basePrice)) * 100);
+    const deltaSign = rel.actualDelta >= 0 ? '+' : '';
+    const perfSign = rel.perfGainPct >= 0 ? '+' : '';
+    const excessOverFair = Math.max(0, rel.actualDelta - rel.fairMaxDelta);
+
+    let oneLineVerdict = '';
+    if (isGood) {
+      if (rel.actualDelta <= 0 && rel.perfGainPct >= 0) {
+        oneLineVerdict = `Vale muito: ${candGpu.name} entrega ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho custando menos.`;
+      } else if (rel.perfGainPct < 0) {
+        oneLineVerdict = `Vale pela economia: ${candGpu.name} economiza ${fmtBRLShort(Math.abs(rel.actualDelta))} com perda proporcional.`;
+      } else {
+        oneLineVerdict = `Vale a pena pagar ${deltaSign}${fmtBRLShort(rel.actualDelta)} pela ${candGpu.name} por ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho.`;
+      }
+    } else if (isWarn) {
+      oneLineVerdict = `Aguarde: a ${candGpu.name} está ${fmtBRLShort(excessOverFair)} acima do teto justo para ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho.`;
+    } else {
+      oneLineVerdict = rel.perfGainPct <= 0
+        ? `Não compensa: a ${candGpu.name} entrega menos desempenho (${rel.perfGainPct.toFixed(0)}%) para o seu perfil.`
+        : `Não compensa: ${deltaSign}${fmtBRLShort(rel.actualDelta)} a mais por ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho está caro.`;
+    }
+
+    vBox.className = `ui-verdict ui-verdict--${tone} space-y-4`;
+    vBox.innerHTML = `
+      <div class="ui-verdict-grid">
+        <div class="space-y-2 max-w-3xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ui-badge ui-badge--${tone} font-bold uppercase tracking-wide">${badgeLabel}</span>
+            <span class="ui-badge">${rel.label}</span>
+          </div>
+          <h3 class="ui-verdict-headline">${oneLineVerdict}</h3>
         </div>
-        <h3 class="text-lg font-extrabold text-white pt-1">${rel.summary}</h3>
-        <p class="text-xs opacity-90 leading-relaxed">
-          Para o seu perfil (<strong>${STATE.wGaming}% Jogos / ${STATE.wAI}% Inferência IA Local / ${STATE.wSoft}% AI Training, Eth & OpenDSS</strong> • monitor ${typeof getMonitorLabel === 'function' ? getMonitorLabel() : ''}),
-          a <strong>${candGpu.name}</strong> entrega <strong>${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(1)}% de ganho ponderado real</strong>:
-          Inferência IA Local (tok/s & KV-Cache): <strong>${rel.aiGainPct >= 0 ? '+' : ''}${rel.aiGainPct.toFixed(0)}%</strong> (${candGpu.llm_14b_tok_s} vs ${baseGpu.llm_14b_tok_s} tok/s em 14B) •
-          AI Training / Eth Frames / OpenDSS: <strong>${rel.softGainPct >= 0 ? '+' : ''}${rel.softGainPct.toFixed(0)}%</strong> •
-          Jogos (FPS): <strong>${rel.gamingGainPct >= 0 ? '+' : ''}${rel.gamingGainPct.toFixed(0)}%</strong>.
-        </p>
+        <div class="ui-verdict-numbers">
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Diferença de preço</span>
+            <span class="ui-verdict-stat-value">${deltaSign}${fmtBRLShort(rel.actualDelta)}</span>
+            <span class="ui-verdict-stat-sub">${deltaSign}${deltaPct}% vs ${baseGpu.name}</span>
+          </div>
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Teto justo (B)</span>
+            <span class="ui-verdict-stat-value" style="color: var(--ui-good-text);">${fmtBRLShort(rel.fairMaxCandPrice)}</span>
+            <span class="ui-verdict-stat-sub">Até +${fmtBRLShort(rel.fairMaxDelta)} de diferença</span>
+          </div>
+        </div>
       </div>
-      <div class="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 text-right">
-        <div>
-          <span class="text-[10px] font-mono uppercase text-emerald-400 block">Teto p/ Ser "Pechincha"</span>
-          <span class="text-sm font-mono font-bold text-white">Até +${fmtBRLShort(rel.stealDelta)} <span class="text-slate-400">(${candGpu.name} ≤ ${fmtBRLShort(rel.stealCandPrice)})</span></span>
+
+      <details class="ui-details">
+        <summary>Ver detalhes do cálculo e perfil de uso</summary>
+        <div class="ui-details-body space-y-2">
+          <p class="text-slate-200 leading-relaxed">${rel.summary}</p>
+          <p class="text-slate-400 leading-relaxed">
+            Perfil ativo (<strong>${STATE.wGaming}% Jogos • ${STATE.wAI}% IA Local • ${STATE.wSoft}% Engenharia</strong>${typeof getMonitorLabel === 'function' ? ` • Monitor ${getMonitorLabel()}` : ''}):
+            Jogos <strong>${rel.gamingGainPct >= 0 ? '+' : ''}${rel.gamingGainPct.toFixed(0)}%</strong> •
+            IA 14B <strong>${rel.aiGainPct >= 0 ? '+' : ''}${rel.aiGainPct.toFixed(0)}%</strong> (${candGpu.llm_14b_tok_s} vs ${baseGpu.llm_14b_tok_s} tok/s) •
+            Engenharia <strong>${rel.softGainPct >= 0 ? '+' : ''}${rel.softGainPct.toFixed(0)}%</strong> •
+            Pechincha: ${candGpu.name} ≤ <strong>${fmtBRLShort(rel.stealCandPrice)}</strong>.
+          </p>
         </div>
-        <div class="border-t border-slate-800 pt-1.5">
-          <span class="text-[10px] font-mono uppercase text-sky-400 block">Teto Máximo Justo (Vale a Pena)</span>
-          <span class="text-sm font-mono font-bold text-white">Até +${fmtBRLShort(rel.fairMaxDelta)} <span class="text-slate-400">(${candGpu.name} ≤ ${fmtBRLShort(rel.fairMaxCandPrice)})</span></span>
-        </div>
-      </div>
-    </div>
-  `;
+      </details>
+    `;
+  }
 
   // Update Thermometer Labels & Marker Position (Reflects true shelf price ceiling accounting for forced PSU upgrade)
   const stretchShelfPrice = Math.max(0, basePrice + rel.stretchMaxDelta - ((candGpu._psuUpgradeCost || 0) - (baseGpu._psuUpgradeCost || 0)));
@@ -2581,27 +2861,27 @@ function renderDuelAnalysis() {
 
   document.getElementById('duel-scenarios-grid').innerHTML = `
     <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-      <span class="text-[10px] font-mono uppercase text-slate-400 block">Cenário 1: Preços de Hoje nas Lojas</span>
+      <span class="text-xs font-mono uppercase text-slate-400 block">Cenário 1: Preços de Hoje nas Lojas</span>
       <div class="text-xs font-bold text-white mt-1">${candGpu.name} (${fmtBRLShort(candPrice)}) vs ${baseGpu.name} (${fmtBRLShort(basePrice)})</div>
       <div class="mt-1.5 flex items-center justify-between">
         <span class="font-mono text-xs text-slate-300">Diferença: <strong>+${fmtBRLShort(rel.actualDelta)}</strong></span>
-        <span class="text-[11px] font-mono font-bold text-${rel.color}-400">${rel.label}</span>
+        <span class="text-xs font-mono font-bold text-${rel.color}-400">${rel.label}</span>
       </div>
     </div>
     <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-      <span class="text-[10px] font-mono uppercase text-sky-400 block">Cenário 2: Ambas no Preço Alvo (Histórico)</span>
+      <span class="text-xs font-mono uppercase text-sky-400 block">Cenário 2: Ambas no Preço Alvo (Histórico)</span>
       <div class="text-xs font-bold text-white mt-1">${candGpu.name} (${fmtBRLShort(candGpu.price_stats.target_price)}) vs ${baseGpu.name} (${fmtBRLShort(baseGpu.price_stats.target_price)})</div>
       <div class="mt-1.5 flex items-center justify-between">
         <span class="font-mono text-xs text-slate-300">Diferença: <strong>+${fmtBRLShort(relTarget.actualDelta)}</strong></span>
-        <span class="text-[11px] font-mono font-bold text-${relTarget.color}-400">${relTarget.label}</span>
+        <span class="text-xs font-mono font-bold text-${relTarget.color}-400">${relTarget.label}</span>
       </div>
     </div>
     <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-      <span class="text-[10px] font-mono uppercase text-emerald-400 block">Cenário 3: ${candGpu.name} na Menor Promo 90d</span>
+      <span class="text-xs font-mono uppercase text-emerald-400 block">Cenário 3: ${candGpu.name} na Menor Promo 90d</span>
       <div class="text-xs font-bold text-white mt-1">${candGpu.name} (${fmtBRLShort(candGpu.price_stats.min_90d)}) vs ${baseGpu.name} Hoje (${fmtBRLShort(basePrice)})</div>
       <div class="mt-1.5 flex items-center justify-between">
         <span class="font-mono text-xs text-slate-300">Diferença: <strong>+${fmtBRLShort(relPromoCand.actualDelta)}</strong></span>
-        <span class="text-[11px] font-mono font-bold text-${relPromoCand.color}-400">${relPromoCand.label}</span>
+        <span class="text-xs font-mono font-bold text-${relPromoCand.color}-400">${relPromoCand.label}</span>
       </div>
     </div>
   `;
@@ -2713,15 +2993,15 @@ function renderDuelAlternatives(baseGpu, candGpu, basePrice, candPrice) {
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-white text-xs">${g.name}</span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300">${g.vram_gb}GB</span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300">Seu CB: ${g._myCBScore}/100</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-purple-500/20 text-purple-300">${g.vram_gb}GB</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-emerald-500/20 text-emerald-300">Seu CB: ${g._myCBScore}/100</span>
           </div>
-          <div class="text-[11px] text-slate-400 mt-0.5">
+          <div class="text-xs text-slate-400 mt-0.5">
             Hoje: <strong class="text-slate-200 font-mono">${fmtBRL(g.price_brl)}</strong> (Alvo: ${fmtBRLShort(g.price_stats.target_price)}) •
             vs ${baseGpu.name}: <span class="text-${relVsBase.color}-400 font-semibold">${relVsBase.perfGainPct >= 0 ? '+' : ''}${relVsBase.perfGainPct.toFixed(0)}% perf por ${relVsBase.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(relVsBase.actualDelta)}</span>
           </div>
         </div>
-        <button onclick="setDuelPair('${g.slug}', '${baseGpu.slug}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 transition shrink-0 cursor-pointer">
+        <button onclick="setDuelPair('${g.slug}', '${baseGpu.slug}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 transition shrink-0 cursor-pointer">
           Comparar
         </button>
       </div>
@@ -2731,8 +3011,8 @@ function renderDuelAlternatives(baseGpu, candGpu, basePrice, candPrice) {
   // Explain why VRAM, Local Inference, and CUDA matter for AI Training, Ethernet Frame processing & OpenDSS
   const insightEl = document.getElementById('duel-ram-ai-insight');
   insightEl.innerHTML = `
-    <span class="font-mono uppercase text-[10px] text-purple-400 font-bold block mb-1">💡 Cálculo de Inferência Local + AI Training / Ethernet / OpenDSS (${candGpu.name} vs ${baseGpu.name})</span>
-    <ul class="space-y-1 text-[11px] list-disc pl-4">
+    <span class="font-mono uppercase text-xs text-purple-400 font-bold block mb-1">💡 Cálculo de Inferência Local + AI Training / Ethernet / OpenDSS (${candGpu.name} vs ${baseGpu.name})</span>
+    <ul class="space-y-1 text-xs list-disc pl-4">
       <li><strong>Inferência Local no Cálculo:</strong> A <strong>${candGpu.name}</strong> (${candGpu.vram_gb}GB, ${candGpu.bandwidth_gbs} GB/s) roda modelos <strong>14B Q4 + KV-Cache</strong> direto na VRAM a <strong>~${candGpu.llm_14b_tok_s} tok/s</strong>, enquanto a <strong>${baseGpu.name}</strong> (${baseGpu.vram_gb}GB, ${baseGpu.bandwidth_gbs} GB/s) faz <strong>~${baseGpu.llm_14b_tok_s} tok/s</strong> ${baseGpu.vram_gb <= 8 ? '(sofre gargalo severo de PCIe por offload na RAM DDR4)' : ''}.</li>
       <li><strong>AI Training, Eth Frames & OpenDSS:</strong> Co-simulação simultânea (ex: cena 3D Omniverse + agente LLM local + buffer GPU de pacotes Ethernet via CuPy/RAPIDS + matrizes esparsas do OpenDSS) exige <strong>CUDA/Tensor nativo</strong> e pelo menos <strong>12GB–16GB de VRAM</strong> para não estourar a memória de vídeo.</li>
     </ul>
@@ -2826,20 +3106,20 @@ function renderCpuDuelRadarChart(baseCpu, candCpu) {
       labels: ['Jogos', 'Workstation', 'Single-Core', 'Compilação/IA', 'Eficiência Térmica', 'Custo-Benefício'],
       datasets: [
         {
-          label: baseCpu.name,
+          label: `A · ${baseCpu.name}`,
           data: [bGame, bWS, bSingle, bAI, bEff, bCB],
-          backgroundColor: 'rgba(16, 185, 129, 0.25)',
-          borderColor: '#10b981',
-          pointBackgroundColor: '#10b981',
+          backgroundColor: 'rgba(56, 189, 248, 0.22)',
+          borderColor: '#38bdf8',
+          pointBackgroundColor: '#38bdf8',
           pointBorderColor: '#fff',
           borderWidth: 2
         },
         {
-          label: candCpu.name,
+          label: `B · ${candCpu.name}`,
           data: [cGame, cWS, cSingle, cAI, cEff, cCB],
-          backgroundColor: 'rgba(56, 189, 248, 0.25)',
-          borderColor: '#38bdf8',
-          pointBackgroundColor: '#38bdf8',
+          backgroundColor: 'rgba(167, 139, 250, 0.24)',
+          borderColor: '#a78bfa',
+          pointBackgroundColor: '#a78bfa',
           pointBorderColor: '#fff',
           borderWidth: 2
         }
@@ -2858,7 +3138,7 @@ function renderCpuDuelRadarChart(baseCpu, candCpu) {
           angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
           pointLabels: {
             color: '#cbd5e1',
-            font: { size: 10, family: 'Inter, sans-serif', weight: '600' }
+            font: { size: 12, family: 'Inter, sans-serif', weight: '600' }
           }
         }
       }
@@ -2868,8 +3148,8 @@ function renderCpuDuelRadarChart(baseCpu, candCpu) {
   const legendEl = document.getElementById('cpu-duel-radar-legend');
   if (legendEl) {
     legendEl.innerHTML = `
-      <span class="inline-flex items-center gap-1.5 text-emerald-400 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>${baseCpu.name}</span>
-      <span class="inline-flex items-center gap-1.5 text-sky-400 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>${candCpu.name}</span>
+      <span class="inline-flex items-center gap-1.5 text-white font-semibold"><span class="w-2.5 h-2.5 rounded-full" style="background: var(--ui-compare-a);"></span>${baseCpu.name}</span>
+      <span class="inline-flex items-center gap-1.5 text-white font-semibold"><span class="w-2.5 h-2.5 rounded-full" style="background: var(--ui-compare-b);"></span>${candCpu.name}</span>
     `;
   }
 }
@@ -2983,15 +3263,15 @@ function renderCpuDuelAlternatives(baseCpu, candCpu) {
         <div class="space-y-0.5">
           <div class="flex items-center gap-2">
             <span class="font-bold text-white text-xs">${a.name}</span>
-            <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[10px]">${s.socket}</span>
+            <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-xs">${s.socket}</span>
           </div>
-          <div class="text-[11px] text-slate-400 font-mono">
+          <div class="text-xs text-slate-400 font-mono">
             ${s.cores}C/${s.threads}T • Jogos: <span class="text-emerald-400 font-bold">${a._gamingScore || getCpuGamingScore(a)}</span> • WS: <span class="text-amber-400 font-bold">${a._workstationScore || getCpuWorkstationScore(a)}</span> • CB: <span class="text-purple-300 font-bold">${a._myCBScore || 70}/100</span>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <span class="font-mono font-bold text-white text-xs">${fmtBRL(a.price_brl)}</span>
-          <button onclick="setCpuDuelPair('${a.slug}', '${baseCpu.slug}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-[10px] font-bold cursor-pointer">Comparar ⚔️</button>
+          <button onclick="setCpuDuelPair('${a.slug}', '${baseCpu.slug}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-bold cursor-pointer">Comparar ⚔️</button>
         </div>
       </div>
     `;
@@ -3027,53 +3307,53 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
     const border = isBase ? 'border-emerald-500/40' : 'border-sky-500/40';
     const bgBadge = isBase ? 'bg-emerald-500/20 text-emerald-300' : 'bg-sky-500/20 text-sky-300';
     const hybridBadge = s.eCores > 0
-      ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">Híbrido: ${s.pCores}P + ${s.eCores}E</span>`
-      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] font-bold">${s.cores} Núcleos Uniformes</span>`;
+      ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-xs font-bold">Híbrido: ${s.pCores}P + ${s.eCores}E</span>`
+      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs font-bold">${s.cores} Núcleos Uniformes</span>`;
 
     return `
       <div class="rounded-xl p-4 bg-slate-900/90 border ${border} space-y-3">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div>
-            <span class="text-[10px] font-mono uppercase text-${color}-400 font-bold block">${isBase ? 'CPU BASE (REFERÊNCIA)' : 'CPU CANDIDATO (UPGRADE)'}</span>
+            <span class="text-xs font-mono uppercase text-${color}-400 font-bold block">${isBase ? 'CPU BASE (REFERÊNCIA)' : 'CPU CANDIDATO (UPGRADE)'}</span>
             <h4 class="text-sm font-bold text-white">${cpu.name}</h4>
           </div>
           <div class="text-right">
-            <span class="px-2 py-0.5 rounded ${bgBadge} font-mono text-[11px] font-bold">${s.socket} • ${s.ddr}</span>
-            <span class="block text-[10px] text-slate-400 font-mono mt-0.5">${s.nodeNm}</span>
+            <span class="px-2 py-0.5 rounded ${bgBadge} font-mono text-xs font-bold">${s.socket} • ${s.ddr}</span>
+            <span class="block text-xs text-slate-400 font-mono mt-0.5">${s.nodeNm}</span>
           </div>
         </div>
 
         <!-- Big Core & Thread Count -->
         <div class="grid grid-cols-2 gap-2 text-center">
           <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-            <span class="block text-[10px] uppercase font-mono text-slate-400">Núcleos Físicos</span>
+            <span class="block text-xs uppercase font-mono text-slate-400">Núcleos Físicos</span>
             <span class="text-xl font-mono font-black text-white">${s.cores} Cores</span>
             <div class="mt-1">${hybridBadge}</div>
           </div>
           <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-            <span class="block text-[10px] uppercase font-mono text-slate-400">Threads Lógicas</span>
+            <span class="block text-xs uppercase font-mono text-slate-400">Threads Lógicas</span>
             <span class="text-xl font-mono font-black text-${color}-400">${s.threads} Threads</span>
-            <span class="block text-[10px] font-mono text-slate-400 mt-1">${(s.threads / s.cores).toFixed(1)}T / Núcleo</span>
+            <span class="block text-xs font-mono text-slate-400 mt-1">${(s.threads / s.cores).toFixed(1)}T / Núcleo</span>
           </div>
         </div>
 
         <!-- SMT / Hyper-Threading Details -->
         <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800 space-y-1 text-xs">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Topologia / Microarquitetura:</span>
-            <span class="font-mono font-bold text-slate-200 text-[11px]">${s.archName}</span>
+            <span class="text-slate-400 text-xs font-medium">Topologia / Microarquitetura:</span>
+            <span class="font-mono font-bold text-slate-200 text-xs">${s.archName}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Tecnologia Multithread:</span>
-            <span class="font-mono font-bold text-slate-200 text-[11px]">${s.smtType}</span>
+            <span class="text-slate-400 text-xs font-medium">Tecnologia Multithread:</span>
+            <span class="font-mono font-bold text-slate-200 text-xs">${s.smtType}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Ganho de Vazão SMT/HT:</span>
-            <span class="font-mono font-bold text-emerald-400 text-[11px]">${s.smtGainPct > 0 ? '+' + s.smtGainPct + '% vazão paralela' : 'Nativo 1:1 (Zero Contenção)'}</span>
+            <span class="text-slate-400 text-xs font-medium">Ganho de Vazão SMT/HT:</span>
+            <span class="font-mono font-bold text-emerald-400 text-xs">${s.smtGainPct > 0 ? '+' + s.smtGainPct + '% vazão paralela' : 'Nativo 1:1 (Zero Contenção)'}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Subsistema Cache L3:</span>
-            <span class="font-mono font-bold ${s.isX3D ? 'text-purple-300' : 'text-slate-200'} text-[11px]">${s.l3CacheMB} MB ${s.isX3D ? '🔥 (3D V-Cache)' : ''}</span>
+            <span class="text-slate-400 text-xs font-medium">Subsistema Cache L3:</span>
+            <span class="font-mono font-bold ${s.isX3D ? 'text-purple-300' : 'text-slate-200'} text-xs">${s.l3CacheMB} MB ${s.isX3D ? '🔥 (3D V-Cache)' : ''}</span>
           </div>
         </div>
       </div>
@@ -3083,7 +3363,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
   container.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
       <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold tracking-wider">ARQUITETURA & MULTI-CORE</span>
+        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-xs font-bold tracking-wider">ARQUITETURA & MULTI-CORE</span>
         <h3 class="text-base font-bold text-white">Topologia de Núcleos, Threads e Escalabilidade Multi-Core</h3>
       </div>
       <span class="text-xs text-slate-400 font-mono">Cores Físicos vs Threads • SMT / Hyper-Threading • Eficiência por Watt</span>
@@ -3099,37 +3379,37 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
       <!-- Card 1: Multi-Core Score -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Cinebench Multi-Core</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Cinebench Multi-Core</span>
         <span class="text-lg font-mono font-black text-white mt-0.5 block">${c.multiBench.toLocaleString()} pts</span>
-        <span class="text-[11px] font-mono font-bold ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${multiGain >= 0 ? '+' : ''}${multiGain}% vs base</span>
+        <span class="text-xs font-mono font-bold ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${multiGain >= 0 ? '+' : ''}${multiGain}% vs base</span>
       </div>
 
       <!-- Card 2: Single-Core IPC -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Single-Core & IPC</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Single-Core & IPC</span>
         <span class="text-lg font-mono font-black text-white mt-0.5 block">${c.singleBench} pts</span>
-        <span class="text-[11px] font-mono font-bold ${singleGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${singleGain >= 0 ? '+' : ''}${singleGain}% vs base</span>
+        <span class="text-xs font-mono font-bold ${singleGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${singleGain >= 0 ? '+' : ''}${singleGain}% vs base</span>
       </div>
 
       <!-- Card 3: Multi-Threading Speedup -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Escalabilidade Paralela</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Escalabilidade Paralela</span>
         <span class="text-lg font-mono font-black text-sky-300 mt-0.5 block">${c.speedupRatio}×</span>
-        <span class="text-[10px] font-mono text-slate-400">vs ${b.speedupRatio}× na base</span>
+        <span class="text-xs font-mono text-slate-400">vs ${b.speedupRatio}× na base</span>
       </div>
 
       <!-- Card 4: Score per Core -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Pontos por Núcleo</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Pontos por Núcleo</span>
         <span class="text-lg font-mono font-black text-amber-300 mt-0.5 block">${c.scorePerCore} pts/core</span>
-        <span class="text-[10px] font-mono text-slate-400">Base: ${b.scorePerCore} pts/c</span>
+        <span class="text-xs font-mono text-slate-400">Base: ${b.scorePerCore} pts/c</span>
       </div>
 
       <!-- Card 5: Efficiency per Watt -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Eficiência Multithread</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Eficiência Multithread</span>
         <span class="text-lg font-mono font-black text-emerald-400 mt-0.5 block">${c.scorePerWatt} pts/W</span>
-        <span class="text-[11px] font-mono font-bold ${effGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${effGain >= 0 ? '+' : ''}${effGain}% vs base</span>
+        <span class="text-xs font-mono font-bold ${effGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${effGain >= 0 ? '+' : ''}${effGain}% vs base</span>
       </div>
     </div>
 
@@ -3141,7 +3421,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>🎨 Render 3D (Blender)</span>
           <span class="font-mono ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${multiGain >= 0 ? '-' + Math.round(multiGain / (1 + multiGain / 100)) + '% tempo' : '+tempo'}</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Com <strong>${c.threads} threads</strong>, a renderização divide a imagem em mais tiles paralelos, reduzindo a fila de exportação.
         </p>
       </div>
@@ -3152,7 +3432,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>⚙️ Compilação (Rust/C++)</span>
           <span class="font-mono text-sky-300 font-bold">${c.threads} workers (-j ${c.threads})</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Compiladores modernos escalam linearmente com threads. Ganho de até <strong>${Math.round(threadGain)}%</strong> em builds limpos.
         </p>
       </div>
@@ -3163,7 +3443,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>🎬 Edição 4K (Premiere/DaVinci)</span>
           <span class="font-mono text-amber-300 font-bold">Timeline Fluida</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Decodificação em tempo real de H.264/HEVC 10-bit e efeitos pesados sem perder quadros durante a pré-visualização.
         </p>
       </div>
@@ -3174,7 +3454,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>🛡️ Frame Pacing & 1% Lows</span>
           <span class="font-mono text-purple-300 font-bold">Zero Stutter</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Núcleos sobressalentes absorvem Discord, OBS e navegador sem disputar ciclos com o jogo em execução.
         </p>
       </div>
@@ -3198,8 +3478,8 @@ function renderCpuDuelAnalysis() {
   // Badges & Target Prices
   const bBadge = document.getElementById('cpu-base-status-badge');
   const cBadge = document.getElementById('cpu-cand-status-badge');
-  if (bBadge) bBadge.innerHTML = `<span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">${baseCpu.store_name || 'loja'}</span>`;
-  if (cBadge) cBadge.innerHTML = `<span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-mono">${candCpu.store_name || 'loja'}</span>`;
+  if (bBadge) bBadge.innerHTML = `<span class="ui-badge">${baseCpu.store_name || 'loja'}</span>`;
+  if (cBadge) cBadge.innerHTML = `<span class="ui-badge">${candCpu.store_name || 'loja'}</span>`;
 
   const bTarget = baseCpu.price_stats?.target_price || Math.round(baseCpu.price_brl * 0.90);
   const cTarget = candCpu.price_stats?.target_price || Math.round(candCpu.price_brl * 0.90);
@@ -3222,20 +3502,18 @@ function renderCpuDuelAnalysis() {
   const specsCandEl = document.getElementById('cpu-duel-specs-cand');
   if (specsBaseEl) {
     specsBaseEl.innerHTML = `
-      <span>⚡ <strong>${bSpecs.cores}C / ${bSpecs.threads}T</strong> (${bSpecs.socket} • ${bSpecs.ddr})</span>
-      <span>🔥 TDP: <strong>${bSpecs.tdp}W</strong></span>
-      <span>🎮 Jogos: <strong class="text-emerald-300">${baseCpu._gamingScore || getCpuGamingScore(baseCpu)} pts</strong></span>
-      <span>💼 Workstation: <strong class="text-amber-300">${baseCpu._workstationScore || getCpuWorkstationScore(baseCpu)} pts</strong></span>
-      <a href="${baseCpu.offer_url}" target="_blank" class="text-emerald-400 hover:underline font-semibold">Loja (${baseCpu.store_name || 'loja'}) ↗</a>
+      <span><strong>${bSpecs.cores}C / ${bSpecs.threads}T</strong> (${bSpecs.socket} • ${bSpecs.ddr})</span>
+      <span>TDP: <strong>${bSpecs.tdp}W</strong></span>
+      <span>Jogos: <strong class="text-slate-100">${baseCpu._gamingScore || getCpuGamingScore(baseCpu)}</strong></span>
+      <a href="${baseCpu.offer_url}" target="_blank" class="text-sky-300 hover:underline font-semibold">Loja (${baseCpu.store_name || 'loja'}) ↗</a>
     `;
   }
   if (specsCandEl) {
     specsCandEl.innerHTML = `
-      <span>⚡ <strong>${cSpecs.cores}C / ${cSpecs.threads}T</strong> (${cSpecs.socket} • ${cSpecs.ddr})</span>
-      <span>🔥 TDP: <strong>${cSpecs.tdp}W</strong></span>
-      <span>🎮 Jogos: <strong class="text-sky-300">${candCpu._gamingScore || getCpuGamingScore(candCpu)} pts</strong></span>
-      <span>💼 Workstation: <strong class="text-amber-300">${candCpu._workstationScore || getCpuWorkstationScore(candCpu)} pts</strong></span>
-      <a href="${candCpu.offer_url}" target="_blank" class="text-sky-400 hover:underline font-semibold">Loja (${candCpu.store_name || 'loja'}) ↗</a>
+      <span><strong>${cSpecs.cores}C / ${cSpecs.threads}T</strong> (${cSpecs.socket} • ${cSpecs.ddr})</span>
+      <span>TDP: <strong>${cSpecs.tdp}W</strong></span>
+      <span>Jogos: <strong class="text-slate-100">${candCpu._gamingScore || getCpuGamingScore(candCpu)}</strong></span>
+      <a href="${candCpu.offer_url}" target="_blank" class="text-violet-300 hover:underline font-semibold">Loja (${candCpu.store_name || 'loja'}) ↗</a>
     `;
   }
 
@@ -3252,7 +3530,7 @@ function renderCpuDuelAnalysis() {
           <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-lg">✅</div>
           <div>
             <span class="font-bold text-sm text-white block">Mesmo Socket (${bSpecs.socket}) & Plataforma 100% Compatível</span>
-            <p class="text-[11px] text-slate-300 mt-0.5">Você não precisa trocar placa-mãe nem memórias RAM. Todo o investimento vai 100% para o salto de processamento!</p>
+            <p class="text-xs text-slate-300 mt-0.5">Você não precisa trocar placa-mãe nem memórias RAM. Todo o investimento vai 100% para o salto de processamento!</p>
           </div>
         </div>
         <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs">Custo Plataforma: ${fmtBRL(0)}</span>
@@ -3261,19 +3539,19 @@ function renderCpuDuelAnalysis() {
       platformBox.className = "mt-5 p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs text-slate-300 space-y-2";
       let partsHTML = [];
       if (rel.migration.needsMobo) {
-        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-[11px] text-amber-300">🔲 Placa-Mãe ${cSpecs.socket}: +${fmtBRL(rel.migration.moboCost)}</span>`);
+        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-xs text-amber-300">🔲 Placa-Mãe ${cSpecs.socket}: +${fmtBRL(rel.migration.moboCost)}</span>`);
       }
       if (rel.migration.needsRam) {
-        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-[11px] text-sky-300">💾 32GB DDR5: +${fmtBRL(rel.migration.ramCost)}</span>`);
+        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-xs text-sky-300">💾 32GB DDR5: +${fmtBRL(rel.migration.ramCost)}</span>`);
       }
       if (rel.migration.needsCooler) {
-        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-[11px] text-purple-300">❄️ Cooler 105W+: +${fmtBRL(rel.migration.coolerCost)}</span>`);
+        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-xs text-purple-300">❄️ Cooler 105W+: +${fmtBRL(rel.migration.coolerCost)}</span>`);
       }
       platformBox.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <span class="text-amber-400 font-bold text-sm">📦 Requer Migração de Plataforma:</span>
-            <span class="text-[11px] text-slate-400">Mudança de socket (${bSpecs.socket} → ${cSpecs.socket}) ou memórias</span>
+            <span class="text-xs text-slate-400">Mudança de socket (${bSpecs.socket} → ${cSpecs.socket}) ou memórias</span>
           </div>
           <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold text-xs">Total Plataforma: +${fmtBRL(rel.migration.totalCost)}</span>
         </div>
@@ -3289,21 +3567,33 @@ function renderCpuDuelAnalysis() {
     renderCpuArchitectureComparison(baseCpu, candCpu);
   }
 
-  // Versus Ratings
+  // Versus Ratings (A = Cyan, B = Violet)
   const bOverall = Math.round(baseCpu._compositeScore / 100);
   const cOverall = Math.round(candCpu._compositeScore / 100);
   const ratingsEl = document.getElementById('cpu-duel-versus-ratings');
   if (ratingsEl) {
     ratingsEl.innerHTML = `
-      <div class="bg-slate-900/90 p-3 rounded-xl border border-emerald-500/30 text-center">
-        <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">${baseCpu.name}</span>
-        <div class="text-2xl font-black text-white mt-0.5 font-mono">${bOverall}<span class="text-xs text-slate-400">/100</span></div>
-        <span class="text-[10px] text-slate-400">Desempenho Geral</span>
+      <div class="ui-score-card ui-score-card--a">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--a">A · Base</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(basePrice)}</span>
+        </div>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${baseCpu.name}">${baseCpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-a-text);">${bOverall}</span>
+          <span class="text-xs text-slate-400">/ 100 Desempenho geral</span>
+        </div>
       </div>
-      <div class="bg-slate-900/90 p-3 rounded-xl border border-sky-500/30 text-center">
-        <span class="text-[10px] font-mono uppercase text-sky-400 font-bold">${candCpu.name}</span>
-        <div class="text-2xl font-black text-white mt-0.5 font-mono">${cOverall}<span class="text-xs text-slate-400">/100</span></div>
-        <span class="text-[10px] text-slate-400">Desempenho Geral</span>
+      <div class="ui-score-card ui-score-card--b">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-badge ui-badge--b">B · Candidato</span>
+          <span class="text-xs ui-mono text-slate-400 font-semibold">${fmtBRL(candPrice)}</span>
+        </div>
+        <div class="text-sm font-bold text-white truncate mt-1" title="${candCpu.name}">${candCpu.name}</div>
+        <div class="flex items-baseline gap-1.5 pt-1">
+          <span class="text-2xl ui-mono font-black" style="color: var(--ui-compare-b-text);">${cOverall}</span>
+          <span class="text-xs text-slate-400">/ 100 Desempenho geral</span>
+        </div>
       </div>
     `;
   }
@@ -3377,31 +3667,64 @@ function renderCpuDuelAnalysis() {
   // Radar Chart
   renderCpuDuelRadarChart(baseCpu, candCpu);
 
-  // Verdict Box
+  // Verdict Box (Veredito Primeiro)
   const verdictBox = document.getElementById('cpu-duel-verdict-box');
   if (verdictBox) {
     const isGood = rel.verdictType === 'steal' || rel.verdictType === 'fair';
-    const borderCls = isGood ? 'border-emerald-500/40 bg-emerald-950/20' : (rel.verdictType === 'enthusiast' ? 'border-amber-500/40 bg-amber-950/20' : 'border-rose-500/40 bg-rose-950/20');
-    verdictBox.className = `mt-6 rounded-2xl p-5 border ${borderCls} transition-all`;
+    const isWarn = rel.verdictType === 'enthusiast';
+    const tone = isGood ? 'good' : (isWarn ? 'warn' : 'bad');
+    const badgeLabel = rel.verdictType === 'steal' ? 'Vale muito' : (isGood ? 'Vale a pena' : (isWarn ? 'Aguarde' : 'Não compensa'));
+    const deltaSign = rel.actualTotalDelta >= 0 ? '+' : '';
+    const perfSign = rel.perfGainPct >= 0 ? '+' : '';
+    const migBadge = rel.migration.isSamePlatform
+      ? `<span class="ui-badge ui-badge--good">Mesmo socket (${bSpecs.socket})</span>`
+      : `<span class="ui-badge ui-badge--warn">Migração ${bSpecs.socket} → ${cSpecs.socket}: +${fmtBRLShort(rel.migration.totalCost)}</span>`;
+
+    let oneLineVerdict = '';
+    if (isGood) {
+      oneLineVerdict = `Vale a pena investir ${deltaSign}${fmtBRLShort(rel.actualTotalDelta)} pelo ${candCpu.name} (${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho).`;
+    } else if (isWarn) {
+      const excess = Math.max(0, rel.actualTotalDelta - rel.fairMaxDelta);
+      oneLineVerdict = `Aguarde: o ${candCpu.name} está ${fmtBRLShort(excess)} acima do teto justo para ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho.`;
+    } else {
+      oneLineVerdict = `Não compensa: ${deltaSign}${fmtBRLShort(rel.actualTotalDelta)} no total por ${perfSign}${rel.perfGainPct.toFixed(0)}% de desempenho está caro.`;
+    }
+
+    verdictBox.className = `ui-verdict ui-verdict--${tone} space-y-4`;
     verdictBox.innerHTML = `
-      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-        <div class="flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded-full font-mono font-bold text-xs uppercase bg-${rel.badgeColor}-500/20 text-${rel.badgeColor}-300 border border-${rel.badgeColor}-500/40">${rel.badgeLabel}</span>
-          <h3 class="text-base font-bold text-white">${rel.headline}</h3>
+      <div class="ui-verdict-grid">
+        <div class="space-y-2 max-w-3xl">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ui-badge ui-badge--${tone} font-bold uppercase tracking-wide">${badgeLabel}</span>
+            ${migBadge}
+          </div>
+          <h3 class="ui-verdict-headline">${oneLineVerdict}</h3>
         </div>
-        <div class="text-right">
-          <span class="text-xs text-slate-400 block font-mono">Diferença Total (CPU + Plataforma):</span>
-          <span class="text-sm font-mono font-bold text-white">${fmtBRL(rel.actualTotalDelta)}</span>
+        <div class="ui-verdict-numbers">
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Diferença total</span>
+            <span class="ui-verdict-stat-value">${deltaSign}${fmtBRLShort(rel.actualTotalDelta)}</span>
+            <span class="ui-verdict-stat-sub">${rel.migration.isSamePlatform ? 'Só o processador' : `CPU + ${fmtBRLShort(rel.migration.totalCost)} plataforma`}</span>
+          </div>
+          <div class="ui-verdict-stat">
+            <span class="ui-verdict-stat-label">Teto justo</span>
+            <span class="ui-verdict-stat-value" style="color: var(--ui-good-text);">+${fmtBRLShort(rel.fairMaxDelta)}</span>
+            <span class="ui-verdict-stat-sub">Pechincha: ≤ +${fmtBRLShort(rel.stealDelta)}</span>
+          </div>
         </div>
       </div>
-      <p class="text-xs text-slate-300 mt-3 leading-relaxed">
-        ${rel.summary}
-      </p>
-      <div class="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs font-mono text-slate-400 gap-2">
-        <span>Teto Justo Linear: <strong class="text-sky-300">+${fmtBRL(rel.fairMaxDelta)}</strong></span>
-        <span>Zona Pechincha: <strong class="text-emerald-300">≤ +${fmtBRL(rel.stealDelta)}</strong></span>
-        <span>Custo Plataforma (Mobo/RAM): <strong class="text-amber-300">+${fmtBRL(rel.migration.totalCost)}</strong></span>
-      </div>
+
+      <details class="ui-details">
+        <summary>Ver detalhes do cálculo</summary>
+        <div class="ui-details-body space-y-2">
+          <p class="text-slate-200 leading-relaxed">${rel.summary}</p>
+          <p class="text-slate-400">
+            Jogos: <strong>${rel.gamingGainPct >= 0 ? '+' : ''}${rel.gamingGainPct.toFixed(0)}%</strong> •
+            Workstation: <strong>${rel.wsGainPct >= 0 ? '+' : ''}${rel.wsGainPct.toFixed(0)}%</strong> •
+            IA/Compilação: <strong>${rel.aiGainPct >= 0 ? '+' : ''}${rel.aiGainPct.toFixed(0)}%</strong>
+          </p>
+        </div>
+      </details>
     `;
   }
 
@@ -3434,17 +3757,17 @@ function renderCpuDuelAnalysis() {
       <div class="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs">
         <span class="text-emerald-300 font-bold block">Pechincha / Excelente</span>
         <span class="font-mono text-white text-sm">≤ +${fmtBRL(rel.stealDelta)}</span>
-        <p class="text-[10px] text-slate-400 mt-0.5">Ganho de performance a custo proporcionalmente menor que o da base.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Ganho de performance a custo proporcionalmente menor que o da base.</p>
       </div>
       <div class="p-2.5 rounded-lg bg-sky-950/30 border border-sky-500/30 text-xs">
         <span class="text-sky-300 font-bold block">Paridade Justa Linear</span>
         <span class="font-mono text-white text-sm">≤ +${fmtBRL(rel.fairMaxDelta)}</span>
-        <p class="text-[10px] text-slate-400 mt-0.5">Preço adicional estritamente correspondente a +${rel.perfGainPct.toFixed(1)}% de performance.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Preço adicional estritamente correspondente a +${rel.perfGainPct.toFixed(1)}% de performance.</p>
       </div>
       <div class="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/30 text-xs">
         <span class="text-amber-300 font-bold block">Ágio de Entusiasta</span>
         <span class="font-mono text-white text-sm">≤ +${fmtBRL(rel.stretchMaxDelta)}</span>
-        <p class="text-[10px] text-slate-400 mt-0.5">Ágio de até 25% aceitável se você necessita de pico de FPS imediatamente.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Ágio de até 25% aceitável se você necessita de pico de FPS imediatamente.</p>
       </div>
     `;
   }
@@ -3468,21 +3791,106 @@ function setCBSort(col) {
   renderCBTable();
 }
 
+// Phase 4 Helpers: Clickable filter chips, price target status badge & inline SVG sparklines
+function setFilterChip(selectId, value, callback) {
+  const sel = document.getElementById(selectId);
+  if (sel) sel.value = value;
+  const group = document.querySelector(`[data-chip-target="${selectId}"]`);
+  if (group) {
+    group.querySelectorAll('.ui-chip').forEach(btn => {
+      const onclickStr = btn.getAttribute('onclick') || '';
+      const isMatch = onclickStr.includes(`'${value}'`) || onclickStr.includes(`"${value}"`);
+      btn.classList.toggle('is-active', isMatch);
+    });
+  }
+  if (typeof callback === 'function') callback();
+}
+window.setFilterChip = setFilterChip;
+
+function getPriceTargetStatus(price, target, min90d) {
+  const p = Number(price) || 0;
+  const t = Number(target) || p;
+  if (p <= 0 || t <= 0) {
+    return { key: 'warn', label: 'No alvo', badgeHtml: '<span class="ui-badge ui-badge--warn">No alvo</span>' };
+  }
+  if (p <= t * 1.005) {
+    const isHistLow = min90d && p <= Number(min90d) * 1.01;
+    const lbl = isHistLow ? 'Mínimo 90d' : 'Abaixo do alvo';
+    return { key: 'good', label: lbl, badgeHtml: `<span class="ui-badge ui-badge--good">${lbl}</span>` };
+  }
+  if (p <= t * 1.08) {
+    return { key: 'warn', label: 'No alvo', badgeHtml: '<span class="ui-badge ui-badge--warn">No alvo</span>' };
+  }
+  return { key: 'bad', label: 'Caro', badgeHtml: '<span class="ui-badge ui-badge--bad">Caro</span>' };
+}
+window.getPriceTargetStatus = getPriceTargetStatus;
+
+function renderPriceSparklineSVG(item, currentPrice, targetPrice) {
+  const cur = Number(currentPrice || item?.price_brl) || 0;
+  const tgt = Number(targetPrice || item?.price_stats?.target_price) || cur;
+  const avg = Number(item?.price_stats?.avg_90d) || cur;
+  const min90 = Number(item?.price_stats?.min_90d) || cur;
+
+  let pts = [];
+  if (Array.isArray(item?.history) && item.history.length >= 2) {
+    const raw = item.history.slice(-20).map(h => Number(h.price)).filter(v => v > 0);
+    if (raw.length >= 2) pts = raw;
+  }
+  if (pts.length < 2) {
+    pts = [avg, min90, cur].filter(v => v > 0);
+    if (pts.length < 2) pts = [cur || 1, cur || 1];
+  } else if (cur > 0 && Math.abs(pts[pts.length - 1] - cur) > 1) {
+    pts.push(cur);
+  }
+
+  const W = 84;
+  const H = 26;
+  const padY = 4;
+  const allVals = tgt > 0 ? [...pts, tgt] : pts;
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+  const span = Math.max(1, maxV - minV);
+
+  const toX = (i) => (pts.length <= 1 ? W : (i / (pts.length - 1)) * (W - 6) + 2);
+  const toY = (v) => H - padY - ((v - minV) / span) * (H - padY * 2);
+
+  const polyPoints = pts.map((v, i) => `${toX(i).toFixed(1)},${toY(v).toFixed(1)}`).join(' ');
+  const lastX = toX(pts.length - 1).toFixed(1);
+  const lastY = toY(pts[pts.length - 1]).toFixed(1);
+  const tgtY = toY(tgt).toFixed(1);
+
+  const vsAvgPct = avg > 0 ? ((cur - avg) / avg) * 100 : 0;
+  const status = getPriceTargetStatus(cur, tgt, min90);
+  const stroke = status.key === 'good' ? '#34d399' : (status.key === 'warn' ? '#fbbf24' : '#f87171');
+  const pctText = Math.abs(vsAvgPct) < 0.5 ? 'estável' : `${vsAvgPct > 0 ? '+' : ''}${Math.round(vsAvgPct)}% vs 90d`;
+  const pctColor = vsAvgPct <= -2 ? 'text-emerald-400' : (vsAvgPct >= 4 ? 'text-rose-400' : 'text-slate-400');
+
+  return `
+    <div class="ui-sparkline-cell" title="Tendência recente • Linha pontilhada = Preço Alvo (${fmtBRLShort(tgt)})">
+      <svg class="ui-sparkline-svg" viewBox="0 0 ${W} ${H}" aria-hidden="true">
+        <line x1="2" y1="${tgtY}" x2="${W - 2}" y2="${tgtY}" stroke="rgba(148,163,184,0.35)" stroke-width="1" stroke-dasharray="2 2" />
+        <polyline fill="none" stroke="${stroke}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" points="${polyPoints}" />
+        <circle cx="${lastX}" cy="${lastY}" r="2.5" fill="${stroke}" />
+      </svg>
+      <span class="text-xs ui-mono ${pctColor}">${pctText}</span>
+    </div>
+  `;
+}
+window.renderPriceSparklineSVG = renderPriceSparklineSVG;
+
 function setCBChartMetric(metric) {
   STATE.cbChartMetric = metric;
   const btnBenefit = document.getElementById('cb-chart-btn-benefit');
   const btnBench = document.getElementById('cb-chart-btn-benchmark');
   const title = document.getElementById('cb-chart-title');
-  if (metric === 'benefit') {
-    if (btnBenefit) btnBenefit.className = 'px-2.5 py-1 rounded text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-500/30';
-    if (btnBench) btnBench.className = 'px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200';
-    const sym = STATE.market?.monetary?.currency_symbol || 'R$';
-    if (title) title.textContent = `Mapa de Eficiência: Preço Atual (${sym}) vs Custo-Benefício (Índice 0–100)`;
-  } else {
-    if (btnBenefit) btnBenefit.className = 'px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200';
-    if (btnBench) btnBench.className = 'px-2.5 py-1 rounded text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-500/30';
-    const sym = STATE.market?.monetary?.currency_symbol || 'R$';
-    if (title) title.textContent = `Mapa de Eficiência: Preço Atual (${sym}) vs Desempenho Bruto (Score Contextual)`;
+  const isBenefit = metric === 'benefit';
+  if (btnBenefit) btnBenefit.classList.toggle('is-active', isBenefit);
+  if (btnBench) btnBench.classList.toggle('is-active', !isBenefit);
+  const sym = STATE.market?.monetary?.currency_symbol || 'R$';
+  if (title) {
+    title.textContent = isBenefit
+      ? `Mapa de Eficiência: Preço Atual (${sym}) vs Custo-Benefício (0–100)`
+      : `Mapa de Eficiência: Preço Atual (${sym}) vs Desempenho Bruto (Score Contextual)`;
   }
   renderCBTable();
 }
@@ -3500,7 +3908,7 @@ function toggleCBCol(colName, isChecked) {
 }
 
 function applyCBColVisibility() {
-  const cols = STATE.cbColumns || { target: true, trend: false, hb_cb: false, rel_verdict: true, actions: true };
+  const cols = STATE.cbColumns || { target: true, trend: true, hb_cb: false, rel_verdict: true, actions: true };
   const thMap = {
     target: 'th-target',
     trend: 'th-trend',
@@ -3526,10 +3934,11 @@ function renderCBTable() {
   enrichGPUsWithContextualMetrics();
   applyCBColVisibility();
   syncComparisonScaleControls();
-  const search = (document.getElementById('cb-search').value || '').toLowerCase().trim();
-  const brand = document.getElementById('cb-filter-brand').value;
-  const minVram = parseInt(document.getElementById('cb-filter-vram').value) || 0;
-  STATE.cbRelBaseSlug = document.getElementById('cb-filter-base-rel').value || 'rtx-5060';
+  const search = (document.getElementById('cb-search')?.value || '').toLowerCase().trim();
+  const brand = document.getElementById('cb-filter-brand')?.value || 'ALL';
+  const minVram = parseInt(document.getElementById('cb-filter-vram')?.value) || 0;
+  const priceStatusFilter = document.getElementById('cb-filter-price-status')?.value || 'ALL';
+  STATE.cbRelBaseSlug = document.getElementById('cb-filter-base-rel')?.value || 'rtx-5060';
 
   const baseGpu = DB.gpus.find(g => g.slug === STATE.cbRelBaseSlug) || DB.gpus[0];
   const isAbs = STATE.comparisonScaleMode === 'absolute';
@@ -3559,6 +3968,10 @@ function renderCBTable() {
     if (search && !g.name.toLowerCase().includes(search) && !g.slug.toLowerCase().includes(search)) return false;
     if (brand !== 'ALL' && g.brand !== brand) return false;
     if (g.vram_gb < minVram) return false;
+    if (priceStatusFilter !== 'ALL') {
+      const st = getPriceTargetStatus(g.price_brl, g.price_stats?.target_price, g.price_stats?.min_90d);
+      if (st.key !== priceStatusFilter) return false;
+    }
     return true;
   });
 
@@ -3577,7 +3990,7 @@ function renderCBTable() {
     return STATE.cbSortAsc ? (va - vb) : (vb - va);
   });
 
-  const cols = STATE.cbColumns || { target: true, trend: false, hb_cb: false, rel_verdict: true, actions: true };
+  const cols = STATE.cbColumns || { target: true, trend: true, hb_cb: false, rel_verdict: true, actions: true };
   const tbody = document.getElementById('cb-table-body');
   tbody.innerHTML = rows.map((g, idx) => {
     const rel = g.slug === baseGpu.slug
@@ -3586,8 +3999,8 @@ function renderCBTable() {
 
     const diffCB = g._myCBScore - (g.hb_cb_score || 0);
     const diffCBHtml = diffCB > 0
-      ? `<span class="text-[10px] text-emerald-400 font-mono">(+${diffCB} c/ IA)</span>`
-      : (diffCB < 0 ? `<span class="text-[10px] text-rose-400 font-mono">(${diffCB} c/ IA)</span>` : '');
+      ? `<span class="text-xs text-emerald-400 font-mono">(+${diffCB} c/ IA)</span>`
+      : (diffCB < 0 ? `<span class="text-xs text-rose-400 font-mono">(${diffCB} c/ IA)</span>` : '');
 
     const dotClass = g.vram_gb >= 24 ? 'bg-amber-400 ring-2 ring-amber-500/40' :
                      g.vram_gb >= 16 ? 'bg-purple-400 ring-2 ring-purple-500/40' :
@@ -3595,16 +4008,16 @@ function renderCBTable() {
                      g.vram_gb >= 8  ? 'bg-emerald-400 ring-2 ring-emerald-500/40' :
                                        'bg-slate-400 ring-2 ring-slate-500/40';
 
-    const vramCloudBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-sm ml-2">
+    const vramCloudBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-sm ml-2">
       <span class="w-2 h-2 rounded-full ${dotClass}"></span>
       ${g.vram_gb} GB ${g.memory_type}
-      <span class="text-slate-400 font-normal text-[10px]">(${g.bandwidth_gbs} GB/s)</span>
+      <span class="text-slate-400 font-normal text-xs">(${g.bandwidth_gbs} GB/s)</span>
     </span>`;
 
-    const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-[10px]">✨ ${getGpuTechProfile(g).badge}</span>` : '';
-    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px]" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
+    const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-xs">✨ ${getGpuTechProfile(g).badge}</span>` : '';
+    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
     const couponBadge = g.coupon
-      ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[10px] hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
+      ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-xs hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
       : '';
 
     const gComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(g) : (g.gaming_score || 1000);
@@ -3617,12 +4030,12 @@ function renderCBTable() {
       const isBaseCard = g.slug === baseGpu.slug;
 
       verdictCellHTML = `
-        <div class="space-y-1.5 w-56 ml-auto font-mono text-right">
-          <div class="flex items-center justify-between gap-1 text-[10px]">
+        <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
+          <div class="flex items-center justify-between gap-1 text-xs">
             <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${isBaseCard ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : (badgeMap[rel.color] || 'bg-slate-800 text-slate-300')}">
               ${isBaseCard ? 'PLACA BASE' : (rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA')))}
             </span>
-            <span class="text-[9px] text-slate-400 font-mono">Topo: ${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'}</span>
+            <span class="text-xs text-slate-400 font-mono">Topo: ${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'}</span>
           </div>
 
           <!-- Bar 1: Desempenho Absoluto (vs Topo) -->
@@ -3631,7 +4044,7 @@ function renderCBTable() {
             <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho Absoluto: ${absPerfPct.toFixed(0)}% do Topo (${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'})">
               <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300" style="width: ${absPerfPct.toFixed(1)}%;"></div>
             </div>
-            <span class="text-[9px] font-mono text-slate-400 w-7 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
+            <span class="text-xs font-mono text-slate-400 w-7 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
           </div>
 
           <!-- Bar 2: Preço Absoluto (vs Teto) -->
@@ -3640,10 +4053,10 @@ function renderCBTable() {
             <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${absPricePct.toFixed(0)}% do Teto (${fmtBRLShort(extremes.maxPrice)})">
               <div class="h-full rounded-full ${absPricePct < 25 ? 'bg-emerald-400' : (absPricePct < 50 ? 'bg-sky-400' : (absPricePct < 75 ? 'bg-amber-400' : 'bg-rose-400'))} transition-all duration-300" style="width: ${absPricePct.toFixed(1)}%;"></div>
             </div>
-            <span class="text-[9px] font-mono text-slate-400 w-7 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
+            <span class="text-xs font-mono text-slate-400 w-7 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
           </div>
 
-          <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+          <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
             <span class="font-bold ${isBaseCard ? 'text-emerald-400' : (rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400')}">
               ${isBaseCard ? '100% Base' : `${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% vs Base`}
             </span>
@@ -3658,8 +4071,8 @@ function renderCBTable() {
       if (g.slug === baseGpu.slug) {
         verdictCellHTML = `
           <div class="flex flex-col items-end gap-1 font-mono">
-            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold">100% BASE</span>
-            <span class="text-[10px] text-slate-500">Referência</span>
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-xs font-bold">100% BASE</span>
+            <span class="text-xs text-slate-500">Referência</span>
           </div>
         `;
       } else {
@@ -3678,12 +4091,12 @@ function renderCBTable() {
         }
 
         verdictCellHTML = `
-          <div class="space-y-1.5 w-56 ml-auto font-mono text-right">
-            <div class="flex items-center justify-between gap-1 text-[10px]">
+          <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
+            <div class="flex items-center justify-between gap-1 text-xs">
               <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">
                 ${rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA'))}
               </span>
-              <span class="text-[9px] text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
+              <span class="text-xs text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
             </div>
 
             <!-- Bar 1: Desempenho Relativo -->
@@ -3704,7 +4117,7 @@ function renderCBTable() {
               </div>
             </div>
 
-            <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+            <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
               <span class="font-bold ${rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400'}">
                 ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf
               </span>
@@ -3717,57 +4130,62 @@ function renderCBTable() {
       }
     }
 
+    const priceStatus = getPriceTargetStatus(g.price_brl, g.price_stats?.target_price, g.price_stats?.min_90d);
+    const sparklineHtml = renderPriceSparklineSVG(g, g.price_brl, g.price_stats?.target_price);
+    const cbTone = g._myCBScore >= 80 ? 'ui-badge--good' : (g._myCBScore >= 65 ? 'ui-badge--brand' : 'ui-badge--warn');
+    const effGaming = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(g) : g.gaming_score;
+
     return `
-      <tr class="hover:bg-slate-800/50 transition">
-        <td class="py-3 px-3 font-mono text-slate-400">${idx + 1}</td>
-        <td class="py-3 px-3">
-          <div class="font-bold text-white text-sm flex flex-wrap items-center">
+      <tr>
+        <td class="ui-mono text-slate-400 font-semibold">${idx + 1}</td>
+        <td>
+          <div class="font-bold text-white text-sm flex flex-wrap items-center gap-1.5">
             <span>${g.name}</span>
-            ${vramCloudBadge}
+            <span class="ui-badge ui-mono">${g.vram_gb} GB ${g.memory_type}</span>
           </div>
-          ${(techBadge || flashBadge || couponBadge) ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5">${techBadge} ${flashBadge} ${couponBadge}</div>` : ''}
-          <div class="text-[11px] text-slate-400 font-mono mt-1">
-            ${g.brand} ${g.arch} • TDP ${g.tdp_w}W • Jogos Efetivo: <span class="text-emerald-300 font-bold">${typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(g) : g.gaming_score}</span> | IA: <span class="text-purple-300">${g._effectiveAI}</span> (~${g.llm_14b_tok_s} tok/s 14B)
-          </div>
-        </td>
-        <td class="py-3 px-3 text-right font-mono">
-          <span class="font-bold ${g._flashPromo ? 'text-emerald-400' : 'text-white'} text-sm block">${fmtBRL(g.price_brl)}</span>
-          ${g._flashPromo ? `<span class="text-[10px] text-slate-500 line-through block">Base: ${fmtBRLShort(g._hbPrice)}</span>` : ''}
-          <a href="${g.offer_url}" target="_blank" class="text-[10px] text-sky-400 hover:underline">${g.store_name} ↗</a>
-        </td>
-        <td class="py-3 px-3 text-right font-mono ${cols.target ? '' : 'hidden'}">
-          <span class="font-bold text-emerald-300 text-xs block">${fmtBRL(g.price_stats.target_price)}</span>
-          <span class="text-[10px] text-sky-400 font-medium block">BF: ${fmtBRLShort(g.price_stats.min_90d * 0.95)} ~ ${fmtBRLShort(g.price_stats.target_price)}</span>
-          <span class="text-[9px] text-slate-500">Mín 90d: ${fmtBRLShort(g.price_stats.min_90d)}</span>
-        </td>
-        <td class="py-3 px-3 text-center ${cols.trend ? '' : 'hidden'}">
-          ${getPriceStatusBadgeHTML(g)}
-        </td>
-        <td class="py-3 px-3 text-center">
-          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700">
-            <span class="font-mono font-extrabold text-sm ${g._myCBScore >= 80 ? 'text-emerald-400' : (g._myCBScore >= 65 ? 'text-sky-400' : 'text-amber-400')}">${g._myCBScore}/100</span>
-            ${diffCBHtml}
+          ${(flashBadge || couponBadge) ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5">${flashBadge} ${couponBadge}</div>` : ''}
+          <div class="text-xs text-slate-400 ui-mono mt-1">
+            ${g.brand} • Jogos <strong class="text-slate-200">${effGaming}</strong> • IA 14B <strong class="text-slate-200">${g.llm_14b_tok_s} tok/s</strong>
           </div>
         </td>
-        <td class="py-3 px-3 text-center font-mono text-slate-400 ${cols.hb_cb ? '' : 'hidden'}">
+        <td class="text-right ui-mono">
+          <span class="font-bold text-white text-sm block">${fmtBRL(g.price_brl)}</span>
+          <div class="mt-1 flex justify-end">${priceStatus.badgeHtml}</div>
+          <a href="${g.offer_url}" target="_blank" class="text-xs text-sky-400 hover:underline mt-1 inline-block">${g.store_name} ↗</a>
+        </td>
+        <td class="text-right ui-mono ${cols.target ? '' : 'hidden'}">
+          <span class="font-bold text-slate-200 text-sm block">${fmtBRLShort(g.price_stats.target_price)}</span>
+          <span class="text-xs text-slate-400 block mt-0.5">Mín 90d: ${fmtBRLShort(g.price_stats.min_90d)}</span>
+        </td>
+        <td class="text-center ${cols.trend ? '' : 'hidden'}">
+          ${sparklineHtml}
+        </td>
+        <td class="text-center">
+          <span class="ui-badge ${cbTone} ui-mono font-bold text-sm px-2.5 py-1">${g._myCBScore}/100</span>
+        </td>
+        <td class="text-center ui-mono text-slate-400 ${cols.hb_cb ? '' : 'hidden'}">
           ${g.hb_cb_score || '--'}/100
         </td>
-        <td class="py-3 px-3 text-right font-mono ${cols.rel_verdict ? '' : 'hidden'}">
+        <td class="text-right ui-mono ${cols.rel_verdict ? '' : 'hidden'}">
           ${verdictCellHTML}
         </td>
-        <td class="py-3 px-3 text-center ${cols.actions ? '' : 'hidden'}">
-          <div class="flex items-center justify-center gap-1">
-            <button onclick="setDuelPair('${g.slug}', '${baseGpu.slug}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 text-[11px] font-semibold transition cursor-pointer" title="Analisar no Duelo Relacional">
+        <td class="text-center ${cols.actions ? '' : 'hidden'}">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="setDuelPair('${g.slug}', '${baseGpu.slug}')" class="ui-btn ui-btn--sm" title="Analisar no Duelo">
               Duelo
             </button>
-            <button onclick="selectGPUForBuild('${g.slug}')" class="px-2 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500 hover:text-slate-950 text-emerald-300 text-[11px] font-semibold transition cursor-pointer" title="Usar esta GPU no Meu PC">
-              Usar no PC
+            <button type="button" onclick="selectGPUForBuild('${g.slug}')" class="ui-btn ui-btn--sm ui-btn--ghost" title="Usar esta GPU na Montagem">
+              + PC
             </button>
           </div>
         </td>
       </tr>
     `;
   }).join('');
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="py-8 text-center text-slate-400">Nenhuma GPU encontrada para os filtros selecionados.</td></tr>`;
+  }
 
   renderCBScatterChart(rows);
 }
@@ -3860,13 +4278,8 @@ function setCpuPlatformMode(mode) {
   const btnIso = document.getElementById('btn-cpu-mode-isolated');
   const btnBun = document.getElementById('btn-cpu-mode-bundle');
   if (btnIso && btnBun) {
-    if (STATE.cpuCbPlatformMode === 'bundle') {
-      btnBun.className = "px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-emerald-500 text-slate-950 shadow-sm";
-      btnIso.className = "px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200";
-    } else {
-      btnIso.className = "px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-emerald-500 text-slate-950 shadow-sm";
-      btnBun.className = "px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200";
-    }
+    btnIso.classList.toggle('is-active', STATE.cpuCbPlatformMode !== 'bundle');
+    btnBun.classList.toggle('is-active', STATE.cpuCbPlatformMode === 'bundle');
   }
   enrichCPUsWithContextualMetrics();
   renderCpuCBTable();
@@ -4036,56 +4449,54 @@ function renderCpuCBTable() {
       }
 
       const cb = c._myCBScore || 70;
-      let cbBarColor = 'bg-slate-500';
-      if (cb >= 85) cbBarColor = 'bg-emerald-500';
-      else if (cb >= 70) cbBarColor = 'bg-sky-400';
-      else if (cb >= 50) cbBarColor = 'bg-amber-400';
-      else cbBarColor = 'bg-rose-500';
+      const cbTone = cb >= 80 ? 'ui-badge--good' : (cb >= 65 ? 'ui-badge--brand' : 'ui-badge--warn');
+      const priceStatus = getPriceTargetStatus(c.price_brl, targetPrice, c.price_stats?.min_90d);
+      const sparklineHtml = renderPriceSparklineSVG(c, c.price_brl, targetPrice);
 
       const bundleNote = (isBundle && c._effectiveUpgradePrice > c.price_brl)
-        ? `<span class="block text-[9px] font-mono text-amber-400 mt-0.5" title="Inclui migração de placa-mãe/RAM">+${fmtBRLShort(c._effectiveUpgradePrice - c.price_brl)} kit</span>`
+        ? `<span class="block text-xs ui-mono text-amber-300 mt-0.5" title="Inclui migração de placa-mãe/RAM">+${fmtBRLShort(c._effectiveUpgradePrice - c.price_brl)} kit</span>`
         : '';
 
       return `
-        <tr class="hover:bg-slate-800/40 transition ${isBase ? 'bg-emerald-950/20' : ''}">
-          <td class="py-2.5 px-3 font-mono text-slate-500 text-xs">${idx + 1}</td>
-          <td class="py-2.5 px-3">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-xs">${c.name}</span>
-              ${isBase ? '<span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[9px] font-bold">BASE</span>' : ''}
-              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[9px]">${s.socket}</span>
-              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono text-[9px]">${s.ddr}</span>
+        <tr class="${isBase ? 'bg-sky-950/20' : ''}">
+          <td class="ui-mono text-slate-400 font-semibold">${idx + 1}</td>
+          <td>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="font-bold text-white text-sm">${c.name}</span>
+              ${isBase ? '<span class="ui-badge ui-badge--a">Base</span>' : ''}
+              <span class="ui-badge ui-mono">${s.socket} • ${s.ddr}</span>
             </div>
-            <div class="text-[10px] text-slate-400 font-mono mt-0.5">
-              Score: <strong class="text-white">${Math.round(c._compositeScore / 100)}</strong> • Loja: ${c.store_name || 'loja'}
+            <div class="text-xs text-slate-400 ui-mono mt-1">
+              TDP ${s.tdp}W • ${c.store_name || 'loja'}
             </div>
           </td>
-          <td class="py-2.5 px-2 text-center font-mono text-slate-300">${s.cores}C / ${s.threads}T</td>
-          <td class="py-2.5 px-2 text-right font-mono font-bold text-emerald-400">${c._gamingScore || getCpuGamingScore(c)}</td>
-          <td class="py-2.5 px-2 text-right font-mono font-bold text-amber-400">${c._workstationScore || getCpuWorkstationScore(c)}</td>
-          <td class="py-2.5 px-2 text-center font-mono text-slate-400">${s.tdp}W</td>
-          <td class="py-2.5 px-3 text-right">
-            <span class="font-mono font-bold text-white">${fmtBRL(priceVal)}</span>
+          <td class="text-center ui-mono text-slate-200">${s.cores}C / ${s.threads}T</td>
+          <td class="text-right ui-mono">
+            <div class="font-bold text-slate-100">${c._gamingScore || getCpuGamingScore(c)} <span class="text-slate-400 font-normal">Jogos</span></div>
+            <div class="text-xs text-slate-400">${c._workstationScore || getCpuWorkstationScore(c)} WS</div>
+          </td>
+          <td class="text-right ui-mono">
+            <span class="font-bold text-white text-sm block">${fmtBRL(priceVal)}</span>
+            <div class="mt-1 flex justify-end">${priceStatus.badgeHtml}</div>
             ${bundleNote}
           </td>
-          <td class="py-2.5 px-3 text-right font-mono text-sky-300">${fmtBRL(targetPrice)}</td>
-          <td class="py-2.5 px-3 text-center">
-            <div class="flex items-center justify-center gap-2">
-              <div class="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                <div class="h-full rounded-full ${cbBarColor}" style="width: ${cb}%;"></div>
-              </div>
-              <span class="font-mono font-bold text-xs ${cb >= 80 ? 'text-emerald-300' : 'text-slate-300'}">${cb}</span>
-            </div>
+          <td class="text-right ui-mono text-slate-200">${fmtBRLShort(targetPrice)}</td>
+          <td class="text-center">${sparklineHtml}</td>
+          <td class="text-center">
+            <span class="ui-badge ${cbTone} ui-mono font-bold text-sm px-2.5 py-1">${cb}/100</span>
           </td>
-          <td class="py-2.5 px-3 text-right font-mono text-xs">${relLabel}</td>
-          <td class="py-2.5 px-3 text-center">
-            <button onclick="sendCpuToDuel('${c.slug}')" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition cursor-pointer">
-              Duelo ⚔️
+          <td class="text-right ui-mono text-xs">${relLabel}</td>
+          <td class="text-center">
+            <button type="button" onclick="sendCpuToDuel('${c.slug}')" class="ui-btn ui-btn--sm">
+              Duelo
             </button>
           </td>
         </tr>
       `;
     }).join('');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">Nenhum processador encontrado para esses filtros.</td></tr>`;
+    }
   }
 
   renderCpuCBScatterChart(rows);
@@ -4241,7 +4652,7 @@ function renderPCBuilder() {
     <!-- GPU ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-sky-500/40 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-sky-400 font-bold block">Placa de Vídeo (GPU)</span>
+        <span class="text-xs font-mono uppercase text-sky-400 font-bold block">Placa de Vídeo (GPU)</span>
         <span class="text-xs text-slate-300 font-semibold">Peça Principal</span>
       </div>
       <div class="md:col-span-5">
@@ -4249,15 +4660,15 @@ function renderPCBuilder() {
         <input type="text" value="${curGpu.name || ''}" oninput="updateBuildField('gpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" placeholder="Nome customizado da GPU" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">TDP / Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">TDP / Consumo (W)</label>
         <input type="number" value="${curGpu.tdp || 0}" oninput="updateBuildField('gpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curGpu.price || 0}" oninput="updateBuildField('gpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curGpu.owned ? 'checked' : ''} onchange="updateBuildField('gpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4265,7 +4676,7 @@ function renderPCBuilder() {
     <!-- CPU ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block">Processador (CPU)</span>
+        <span class="text-xs font-mono uppercase text-slate-400 font-bold block">Processador (CPU)</span>
         <span class="text-xs text-slate-300 font-semibold">Cérebro / Socket</span>
       </div>
       <div class="md:col-span-5">
@@ -4273,15 +4684,15 @@ function renderPCBuilder() {
         <input type="text" value="${curCpu.name || ''}" oninput="updateBuildField('cpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">TDP / Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">TDP / Consumo (W)</label>
         <input type="number" value="${curCpu.tdp || 0}" oninput="updateBuildField('cpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curCpu.price || 0}" oninput="updateBuildField('cpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curCpu.owned ? 'checked' : ''} onchange="updateBuildField('cpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4289,7 +4700,7 @@ function renderPCBuilder() {
     <!-- MOTHERBOARD ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block">Placa-Mãe</span>
+        <span class="text-xs font-mono uppercase text-slate-400 font-bold block">Placa-Mãe</span>
         <span class="text-xs text-slate-300 font-semibold">Chipset / VRM</span>
       </div>
       <div class="md:col-span-5">
@@ -4297,15 +4708,15 @@ function renderPCBuilder() {
         <input type="text" value="${curMobo.name || ''}" oninput="updateBuildField('mobo', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">Consumo (W)</label>
         <input type="number" value="${curMobo.tdp || 0}" oninput="updateBuildField('mobo', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curMobo.price || 0}" oninput="updateBuildField('mobo', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curMobo.owned ? 'checked' : ''} onchange="updateBuildField('mobo', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4313,7 +4724,7 @@ function renderPCBuilder() {
     <!-- RAM ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-purple-400 font-bold block">Memória RAM</span>
+        <span class="text-xs font-mono uppercase text-purple-400 font-bold block">Memória RAM</span>
         <span class="text-xs text-slate-300 font-semibold">Crítico p/ IA & Multitarefa</span>
       </div>
       <div class="md:col-span-5">
@@ -4321,15 +4732,15 @@ function renderPCBuilder() {
         <input type="text" value="${curRam.name || ''}" oninput="updateBuildField('ram', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">Consumo (W)</label>
         <input type="number" value="${curRam.tdp || 0}" oninput="updateBuildField('ram', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curRam.price || 0}" oninput="updateBuildField('ram', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curRam.owned ? 'checked' : ''} onchange="updateBuildField('ram', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4337,7 +4748,7 @@ function renderPCBuilder() {
     <!-- PSU ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-amber-500/40 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-amber-400 font-bold block">Fonte (PSU)</span>
+        <span class="text-xs font-mono uppercase text-amber-400 font-bold block">Fonte (PSU)</span>
         <span class="text-xs text-slate-300 font-semibold">Potência Total (W)</span>
       </div>
       <div class="md:col-span-5">
@@ -4345,15 +4756,15 @@ function renderPCBuilder() {
         <input type="text" value="${curPsu.name || ''}" oninput="updateBuildField('psu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-amber-300 block">Potência Fonte (W)</label>
+        <label class="text-xs font-mono text-amber-300 block">Potência Fonte (W)</label>
         <input type="number" value="${curPsu.watts || 0}" oninput="updateBuildField('psu', 'watts', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-300" step="50" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curPsu.price || 0}" oninput="updateBuildField('psu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curPsu.owned ? 'checked' : ''} onchange="updateBuildField('psu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4361,22 +4772,22 @@ function renderPCBuilder() {
     <!-- STORAGE & COOLING ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block">SSD, Cooler & Fans</span>
+        <span class="text-xs font-mono uppercase text-slate-400 font-bold block">SSD, Cooler & Fans</span>
         <span class="text-xs text-slate-300 font-semibold">Restante do Setup</span>
       </div>
       <div class="md:col-span-5">
         <input type="text" value="${curStorage.name || ''}" oninput="updateBuildField('storage', 'name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">Consumo (W)</label>
         <input type="number" value="${(curStorage.tdp || 0) + (curCooling.tdp || 0)}" oninput="updateBuildField('storage', 'tdp', parseFloat(this.value)||0); if (STATE.build.cooling) STATE.build.cooling.tdp=0;" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curStorage.price || 0}" oninput="updateBuildField('storage', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curStorage.owned ? 'checked' : ''} onchange="updateBuildField('storage', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4502,17 +4913,17 @@ function updateBuilderPowerAndDiagnostics() {
   if (pill && advice && bar) {
     if (psuWatts >= recommendedPSU) {
       bar.className = 'h-full rounded-full transition-all duration-300 bg-emerald-500';
-      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
       pill.textContent = '✅ FOLGA SEGURA';
       advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> opera com <strong>${loadPct}% de carga típica</strong> (${typicalLoad}W), suportando com folga picos transientes de até ${peakTransient}W.`;
     } else if (psuWatts >= peakTransient) {
       bar.className = 'h-full rounded-full transition-all duration-300 bg-amber-500';
-      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
       pill.textContent = '⚠️ NO LIMITE';
       advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> aguenta os ${typicalLoad}W, mas fica apertada para picos transientes (${peakTransient}W). Recomendamos uma fonte de <strong>${recommendedPSU}W</strong>.`;
     } else {
       bar.className = 'h-full rounded-full transition-all duration-300 bg-rose-600';
-      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
       pill.textContent = '🚨 FONTE INSUFICIENTE';
       advice.innerHTML = `<strong>Perigo de desligamento:</strong> O consumo de pico (${peakTransient}W) supera sua fonte de ${psuWatts}W! Troque por uma fonte de pelo menos <strong>${recommendedPSU}W</strong>.`;
     }
@@ -4543,11 +4954,11 @@ function updateBuilderPowerAndDiagnostics() {
         <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
           <div>
             <span class="text-xs font-bold text-white block">${p.name}</span>
-            <span class="text-[10px] font-mono text-amber-300">${p.watts}W • ${p.efficiency || '80 Plus Bronze'}</span>
+            <span class="text-xs font-mono text-amber-300">${p.watts}W • ${p.efficiency || '80 Plus Bronze'}</span>
           </div>
           <div class="text-right">
             <span class="text-xs font-mono font-bold text-emerald-400 block">${fmtBRL(p.price_brl)}</span>
-            ${p.offer_url ? `<a href="${p.offer_url}" target="_blank" class="text-[10px] text-sky-400 hover:underline">Ver Oferta ↗</a>` : ''}
+            ${p.offer_url ? `<a href="${p.offer_url}" target="_blank" class="text-xs text-sky-400 hover:underline">Ver Oferta ↗</a>` : ''}
           </div>
         </div>
       `).join('');
@@ -4574,7 +4985,7 @@ function updateBuilderPowerAndDiagnostics() {
       missingHTML.push(`
         <div class="flex items-center justify-between py-1.5 px-2.5 rounded bg-slate-900/50 border border-slate-800/70 opacity-75">
           <span>✅ <strong>${p.label}:</strong> ${p.item.name}</span>
-          <span class="font-mono text-[11px] text-emerald-400">Já Possui</span>
+          <span class="font-mono text-xs text-emerald-400">Já Possui</span>
         </div>
       `);
     } else {
@@ -4678,7 +5089,7 @@ function renderSimulatorLegacy() {
           <span>${gm.title}</span>
           <span class="font-mono text-emerald-400">+${Math.round(((fpsA / Math.max(1, fpsB)) - 1) * 100)}%</span>
         </div>
-        <div class="space-y-1 text-[11px] font-mono">
+        <div class="space-y-1 text-xs font-mono">
           <div class="flex items-center gap-2">
             <span class="w-24 truncate text-sky-300">${gpuA.name}:</span>
             <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
@@ -4741,8 +5152,8 @@ function renderSimulatorLegacy() {
         <span class="flex items-center gap-1">${robotSvg} ${w.title}</span>
         <span class="font-mono text-purple-300 font-bold">${w.gain >= 0 ? '+' : ''}${w.gain}%</span>
       </div>
-      <div class="text-[11px] text-slate-400">${w.desc}</div>
-      <div class="space-y-1 text-[11px] font-mono pt-1">
+      <div class="text-xs text-slate-400">${w.desc}</div>
+      <div class="space-y-1 text-xs font-mono pt-1">
         <div class="flex items-center gap-2">
           <span class="w-24 truncate text-sky-300">${gpuA.name}:</span>
           <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
@@ -4758,7 +5169,7 @@ function renderSimulatorLegacy() {
           <span class="w-28 text-right text-slate-300">${w.valB}</span>
         </div>
       </div>
-      <div class="text-[10px] text-purple-300/90 pt-0.5">${w.note}</div>
+      <div class="text-xs text-purple-300/90 pt-0.5">${w.note}</div>
     </div>
   `).join('');
 
@@ -4804,8 +5215,8 @@ function renderSimulatorLegacy() {
           <span class="flex items-center gap-1">${circuitSvg} ${sf.title}</span>
           <span class="font-mono text-amber-400 font-bold">${gain >= 0 ? '+' : ''}${gain}%</span>
         </div>
-        <div class="text-[11px] text-slate-400">${sf.desc}</div>
-        <div class="space-y-1 text-[11px] font-mono pt-1">
+        <div class="text-xs text-slate-400">${sf.desc}</div>
+        <div class="space-y-1 text-xs font-mono pt-1">
           <div class="flex items-center gap-2">
             <span class="w-24 truncate text-sky-300">${gpuA.name}:</span>
             <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
@@ -4821,7 +5232,7 @@ function renderSimulatorLegacy() {
             <span class="w-28 text-right text-slate-300">${sB}${sf.unit}</span>
           </div>
         </div>
-        <div class="text-[10px] text-amber-300/90 pt-0.5">${sf.note}</div>
+        <div class="text-xs text-amber-300/90 pt-0.5">${sf.note}</div>
       </div>
     `;
   }).join('');
@@ -5619,3 +6030,32 @@ async function initApp() {
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
+
+// ===================== Modo claro / escuro =====================
+function applyTheme(theme) {
+  const t = theme === 'light' ? 'light' : 'dark';
+  const root = document.documentElement;
+  root.classList.add('ui-theme-switching');
+  root.setAttribute('data-theme', t);
+  root.classList.toggle('dark', t === 'dark');
+  const lbl = document.getElementById('theme-toggle-label');
+  if (lbl) lbl.textContent = t === 'dark' ? 'Modo claro' : 'Modo escuro';
+  const btn = document.getElementById('btn-theme-toggle');
+  if (btn) btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  if (window.GCA_CHART_THEME && typeof window.GCA_CHART_THEME.refresh === 'function') {
+    window.GCA_CHART_THEME.refresh();
+  }
+  void root.offsetHeight; // aplica as cores novas antes de religar as transições
+  setTimeout(() => root.classList.remove('ui-theme-switching'), 50);
+}
+
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('gca-theme', next); } catch (_) {}
+  applyTheme(next);
+}
+window.toggleTheme = toggleTheme;
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(document.documentElement.getAttribute('data-theme'));
+});

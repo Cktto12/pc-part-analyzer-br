@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- GCA: um chip de hardware com a curva de preço caindo dentro -->
+  <style>
+    .bg { fill: #5b5bf0; }
+    .ink { stroke: #ffffff; fill: none; }
+    .pin { fill: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #ffcc00; }
+      .ink { stroke: #1a1400; }
+      .pin { fill: #1a1400; }
+    }
+  </style>
+  <rect class="bg" width="32" height="32" rx="8"/>
+  <g class="pin">
+    <rect x="11" y="4" width="2" height="3.5" rx="1"/><rect x="15" y="4" width="2" height="3.5" rx="1"/><rect x="19" y="4" width="2" height="3.5" rx="1"/>
+    <rect x="11" y="24.5" width="2" height="3.5" rx="1"/><rect x="15" y="24.5" width="2" height="3.5" rx="1"/><rect x="19" y="24.5" width="2" height="3.5" rx="1"/>
+    <rect x="4" y="11" width="3.5" height="2" rx="1"/><rect x="4" y="15" width="3.5" height="2" rx="1"/><rect x="4" y="19" width="3.5" height="2" rx="1"/>
+    <rect x="24.5" y="11" width="3.5" height="2" rx="1"/><rect x="24.5" y="15" width="3.5" height="2" rx="1"/><rect x="24.5" y="19" width="3.5" height="2" rx="1"/>
+  </g>
+  <rect class="ink" x="8" y="8" width="16" height="16" rx="3.5" stroke-width="2"/>
+  <path class="ink" d="M11.5 12.5l3.5 3.5 2.5-2.5 3.5 4.5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="ink" d="M21 14.5V18h-3.5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
