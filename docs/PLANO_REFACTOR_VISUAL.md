@@ -40,9 +40,9 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 ## 4. Fases (um commit por fase)
 
 ### Fase 0 — Base visual
-- [ ] Criar `styles/ui.css` com as variáveis de cor e a escala de fontes
-- [ ] Componentes: card, bloco de número em destaque, selo, botão, seletor segmentado, ícone ⓘ com dica
-- [ ] Tema único para todos os gráficos do Chart.js
+- [x] Criar `styles/ui.css` com as variáveis de cor e a escala de fontes
+- [x] Componentes: card, bloco de número em destaque, selo, botão, seletor segmentado, ícone ⓘ com dica
+- [x] Tema único para todos os gráficos do Chart.js
 
 ### Fase 1 — Navegação
 - [ ] Trocar o hambúrguer por um menu sempre visível: barra lateral no desktop, barra inferior no celular
