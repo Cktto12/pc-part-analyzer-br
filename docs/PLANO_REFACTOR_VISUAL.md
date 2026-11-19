@@ -75,8 +75,8 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Aba Black Friday: medidor visual de onde o preço de hoje está dentro da faixa esperada
 
 ### Fase 6 — Simulador, Montagem e Upgrades
-- [ ] Aplicar os mesmos componentes
-- [ ] Números em destaque em vez de texto corrido
+- [x] Aplicar os mesmos componentes
+- [x] Números em destaque em vez de texto corrido
 
 ### Fase 7 — Configurações e acabamento
 - [ ] Configurações agrupadas em seções recolhíveis

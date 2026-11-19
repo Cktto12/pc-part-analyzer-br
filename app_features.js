@@ -1122,11 +1122,11 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
             <span class="w-1.5 h-1.5 rounded-full ${aWins && !bWins ? 'bg-sky-400' : (bWins && !aWins ? 'bg-emerald-400' : 'bg-slate-500')}"></span>
             <span class="text-slate-300 font-semibold text-[11px]">${lbl}</span>
           </div>
-          <div class="flex items-center gap-2 font-mono text-[11px]">
-            <span class="${aWins ? 'text-sky-300 font-bold' : 'text-slate-400'}">${data.rawA[i]} <span class="text-[9px] text-slate-500">${data.units[i]}</span></span>
+          <div class="flex items-center gap-2 ui-mono text-xs">
+            <span class="${aWins ? 'font-bold' : 'text-slate-400'}" style="${aWins ? 'color:var(--ui-compare-a-text);' : ''}">${data.rawA[i]} <span class="text-xs text-slate-500">${data.units[i]}</span></span>
             <span class="text-slate-600">vs</span>
-            <span class="${bWins ? 'text-emerald-300 font-bold' : 'text-slate-400'}">${data.rawB[i]} <span class="text-[9px] text-slate-500">${data.units[i]}</span></span>
-            <span class="text-[10px] px-1.5 py-0.5 rounded font-bold ${diffPct >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+            <span class="${bWins ? 'font-bold' : 'text-slate-400'}" style="${bWins ? 'color:var(--ui-compare-b-text);' : ''}">${data.rawB[i]} <span class="text-xs text-slate-500">${data.units[i]}</span></span>
+            <span class="ui-badge ${diffPct >= 0 ? 'ui-badge--a' : 'ui-badge--b'} ui-mono">
               ${diffPct >= 0 ? '+A ' + diffPct + '%' : '+B ' + Math.abs(diffPct) + '%'}
             </span>
           </div>
@@ -1156,10 +1156,10 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
         {
           label: `Setup B (${gpuB.name} + ${cpuB.name})`,
           data: data.valsB,
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.22)',
+          borderColor: '#a78bfa',
+          backgroundColor: 'rgba(167, 139, 250, 0.22)',
           borderWidth: 2,
-          pointBackgroundColor: '#10b981',
+          pointBackgroundColor: '#a78bfa',
           pointBorderColor: '#fff',
           pointHoverRadius: 5,
           pointRadius: 3
@@ -1331,99 +1331,72 @@ function renderSimulatorResultsOnly() {
     const robotSvg = `<svg class="w-5 h-5 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 16h.01M16 16h.01M9 11V9a3 3 0 0 1 6 0v2"/></svg>`;
     const scaleSvg = `<svg class="w-5 h-5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 9l9-6 9 6M6 14l-3-5h6l-3 5zm12 0l-3-5h6l-3 5z"/></svg>`;
 
+    const fmtGainVal = g => `${g >= 0 ? '+' : ''}${g}%`;
+    const gainClass = g => g > 0 ? 'ui-kpi-value--good' : g < 0 ? 'ui-kpi-value--bad' : '';
+    const winBadge = (aWins, label) => `<span class="ui-badge ${aWins ? 'ui-badge--a' : 'ui-badge--b'} ui-mono">${aWins ? 'Setup A' : 'Setup B'} ${label}</span>`;
+
     heroEl.innerHTML = `
       <!-- Card 1: Jogos FPS -->
-      <div class="glass-elevated rounded-2xl p-4 border border-emerald-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${speedometerSvg}
-            <span class="text-xs font-mono uppercase text-emerald-400 font-bold">Desempenho em Jogos</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold">${aCpu >= bCpu ? 'Setup A' : 'Setup B'} +rápido</span>
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">Jogos (FPS)</span>
+          ${winBadge(aCpu >= bCpu, '+rápido')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${gameGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${gameGain >= 0 ? '+' : ''}${gameGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(${aCpu} FPS vs ${bCpu} FPS médios)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${gainClass(gameGain)}">${fmtGainVal(gameGain)}</span>
+          <span class="text-xs ui-mono text-slate-300">${aCpu} vs ${bCpu} FPS</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-          <div class="h-full rounded-full ${gameGain >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${gameGain >= 0 ? Math.min(100, 50 + Math.min(50, gameGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + gameGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">A: ${gpuA.name} + ${cpuA.name}</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">B: ${gpuB.name} + ${cpuB.name}</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate">A: ${aCpu} FPS</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate">B: ${bCpu} FPS</span>
         </div>
       </div>
 
-      <!-- Card 2: Workstation & Produtividade -->
-      <div class="glass-elevated rounded-2xl p-4 border border-amber-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${briefSvg}
-            <span class="text-xs font-mono uppercase text-amber-400 font-bold">Workstation</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">${wsGain >= 0 ? 'Setup A' : 'Setup B'} +produtivo</span>
+      <!-- Card 2: Workstation -->
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">Workstation</span>
+          ${winBadge(wsGain >= 0, '+produtivo')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${wsGain >= 0 ? 'text-amber-400' : 'text-rose-400'}">${wsGain >= 0 ? '+' : ''}${wsGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(Render + Edição + Dev)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${gainClass(wsGain)}">${fmtGainVal(wsGain)}</span>
+          <span class="text-xs text-slate-400">Render + Edição + Dev</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-          <div class="h-full rounded-full ${wsGain >= 0 ? 'bg-gradient-to-r from-amber-400 to-emerald-400' : 'bg-rose-400'}" style="width: ${wsGain >= 0 ? Math.min(100, 50 + Math.min(50, wsGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + wsGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">A: ${wsA} pts</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">B: ${wsB} pts</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate">A: ${wsA} pts</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate">B: ${wsB} pts</span>
         </div>
       </div>
 
-      <!-- Card 3: Running AI -->
-      <div class="glass-elevated rounded-2xl p-4 border border-purple-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${robotSvg}
-            <span class="text-xs font-mono uppercase text-purple-400 font-bold">Executar IA (Inferência)</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">${gpuA.vram_gb >= gpuB.vram_gb ? 'Setup A' : 'Setup B'} +VRAM</span>
+      <!-- Card 3: IA Local -->
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">IA Local (14B)</span>
+          ${winBadge(gpuA.vram_gb >= gpuB.vram_gb, '+VRAM')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black ${aiGain >= 0 ? 'text-purple-400' : 'text-rose-400'}">${aiGain >= 0 ? '+' : ''}${aiGain}%</span>
-          <span class="text-xs text-slate-300 font-mono">(14B: ${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${gainClass(aiGain)}">${fmtGainVal(aiGain)}</span>
+          <span class="text-xs ui-mono text-slate-300">${gpuA.llm_14b_tok_s} vs ${gpuB.llm_14b_tok_s} tok/s</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20"></div>
-          <div class="h-full rounded-full ${aiGain >= 0 ? 'bg-gradient-to-r from-purple-400 to-sky-400' : 'bg-rose-400'}" style="width: ${aiGain >= 0 ? Math.min(100, 50 + Math.min(50, aiGain * 0.7)).toFixed(1) : Math.max(10, 50 * Math.max(0.2, 1 + aiGain / 100)).toFixed(1)}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate">A: ${gpuA.vram_gb}GB</span>
-          <span class="text-slate-500">vs</span>
-          <span class="text-emerald-300 truncate">B: ${gpuB.vram_gb}GB</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate">A: ${gpuA.vram_gb} GB VRAM</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate">B: ${gpuB.vram_gb} GB VRAM</span>
         </div>
       </div>
 
-      <!-- Card 4: Setup Sinergia & Equilíbrio (Bidirecional: Gargalo CPU ou Desperdício GPU) -->
-      <div class="glass-elevated rounded-2xl p-4 border border-sky-500/30 flex flex-col justify-between shadow-sm">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            ${scaleSvg}
-            <span class="text-xs font-mono uppercase text-sky-400 font-bold">Equilíbrio & Sinergia</span>
-          </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-bold">${synA >= synB ? 'Setup A' : 'Setup B'} +harmônico</span>
+      <!-- Card 4: Equilíbrio & Sinergia -->
+      <div class="ui-kpi justify-between">
+        <div class="flex items-center justify-between gap-2">
+          <span class="ui-kpi-label">Equilíbrio</span>
+          ${winBadge(synA >= synB, '+harmônico')}
         </div>
-        <div class="mt-3 flex items-baseline gap-2">
-          <span class="text-3xl font-mono font-black text-sky-300">${synA}%</span>
-          <span class="text-xs text-slate-300 font-mono">(Sinergia A vs ${synB}% em B)</span>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="ui-kpi-value ${synA >= 85 ? 'ui-kpi-value--good' : synA >= 70 ? 'ui-kpi-value--warn' : 'ui-kpi-value--bad'}">${synA}%</span>
+          <span class="text-xs ui-mono text-slate-300">vs ${synB}% em B</span>
         </div>
-        <div class="h-2 w-full bg-slate-950 rounded-full relative overflow-hidden border border-slate-800 my-2">
-          <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400" style="width: ${synA}%;"></div>
-        </div>
-        <div class="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono">
-          <span class="text-sky-300 truncate" title="Setup A: ${synObjA.status}">A: ${synObjA.status}</span>
-          <span class="text-slate-500 mx-1">|</span>
-          <span class="text-emerald-300 truncate" title="Setup B: ${synObjB.status}">B: ${synObjB.status}</span>
+        <div class="mt-2 pt-2 border-t border-slate-800/80 flex flex-col gap-0.5 text-xs ui-mono">
+          <span style="color:var(--ui-compare-a-text);" class="truncate" title="Setup A: ${synObjA.status}">A: ${synObjA.status}</span>
+          <span style="color:var(--ui-compare-b-text);" class="truncate" title="Setup B: ${synObjB.status}">B: ${synObjB.status}</span>
         </div>
       </div>
     `;
@@ -1826,20 +1799,20 @@ function renderUpgradeSuggestions() {
           <div class="flex justify-between"><span class="text-slate-400">Sobra p/ GPU</span><span class="${pl.gpuBudget > 0 ? 'text-amber-300' : 'text-rose-400'} font-bold">${fmtBRLShort(pl.gpuBudget)}</span></div>
         </div>
 
-        <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+        <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
           ${pl.gpu ? `
-            <div class="text-[10px] text-slate-400 uppercase font-mono">GPU sugerida com a sobra</div>
-            <div class="font-bold text-white">${pl.gpu.name} <span class="text-purple-300">${pl.gpu.vram_gb}GB</span> — ${fmtBRLShort(pl.gpu.price_brl)}</div>
-            <div class="grid grid-cols-3 gap-1 mt-1 text-center font-mono">
-              <div><span class="block text-[9px] text-slate-500">FPS c/ CPU</span><span class="font-bold text-amber-300">${pl.avgFps}</span></div>
-              <div><span class="block text-[9px] text-slate-500">14B tok/s</span><span class="font-bold text-purple-300">${pl.gpu.llm_14b_tok_s}</span></div>
-              <div><span class="block text-[9px] text-slate-500">Score</span><span class="font-bold text-white">${Math.round((pl.finalScore / bestScore) * 100)}</span></div>
+            <div class="ui-label">GPU sugerida com a sobra</div>
+            <div class="font-bold text-sm text-white">${pl.gpu.name} <span class="ui-badge ui-mono ml-1">${pl.gpu.vram_gb} GB</span></div>
+            <div class="text-xs ui-mono text-emerald-300 font-bold">${fmtBRLShort(pl.gpu.price_brl)}</div>
+            <div class="grid grid-cols-3 gap-1.5 pt-1.5 border-t border-slate-800/80 text-center ui-mono">
+              <div><span class="block text-xs text-slate-400">FPS</span><span class="font-extrabold text-base text-white">${pl.avgFps}</span></div>
+              <div><span class="block text-xs text-slate-400">14B tok/s</span><span class="font-extrabold text-base text-sky-300">${pl.gpu.llm_14b_tok_s}</span></div>
+              <div><span class="block text-xs text-slate-400">Score</span><span class="font-extrabold text-base text-emerald-300">${Math.round((pl.finalScore / bestScore) * 100)}</span></div>
             </div>
-            ${pl.avgPure - pl.avgFps > 5 ? `<div class="text-[10px] text-amber-300 mt-1">CPU segura ~${pl.avgPure - pl.avgFps} FPS médios dessa GPU</div>` : ''}
-          ` : '<div class="text-rose-300 text-[11px]">Orçamento não cobre nenhuma GPU após a plataforma.</div>'}
+            ${pl.avgPure - pl.avgFps > 5 ? `<div class="text-xs text-amber-300">CPU segura ~${pl.avgPure - pl.avgFps} FPS médios dessa GPU</div>` : ''}
+          ` : '<div class="text-rose-300 text-xs">Orçamento não cobre nenhuma GPU após a plataforma.</div>'}
         </div>
-        <p class="text-[10px] text-slate-400 leading-snug">${pl.p.note}</p>
-        <button onclick="applyPlatformToBuild('${pl.p.id}')" class="mt-auto px-2.5 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-sky-500/40 text-[11px] font-bold cursor-pointer">Aplicar na Minha Build →</button>
+        <button type="button" onclick="applyPlatformToBuild('${pl.p.id}')" class="mt-auto ui-btn ${pl.finalScore === bestScore ? 'ui-btn--primary' : ''} ui-btn--sm w-full">Aplicar na Montagem →</button>
       </div>`;
     }).join('')}`;
 
@@ -1851,36 +1824,71 @@ function renderUpgradeSuggestions() {
     const diff = d5.cost - d4.cost;
     const pct = d4.cost > 0 ? Math.round((diff / d4.cost) * 100) : 0;
     return `
-      <div class="grid grid-cols-12 gap-2 items-center p-2 rounded-lg ${cap === targetGB ? 'bg-purple-500/10 border border-purple-500/40' : 'bg-slate-950/60 border border-slate-800'}">
-        <span class="col-span-2 font-mono font-bold text-white">${cap} GB</span>
-        <span class="col-span-4 font-mono text-emerald-300" title="${d4.desc}">DDR4 ${fmtBRLShort(d4.cost)} <span class="text-[10px] text-slate-500">(${fmtBRLShort(d4.perGB)}/GB)</span></span>
-        <span class="col-span-4 font-mono text-sky-300" title="${d5.desc}">DDR5 ${fmtBRLShort(d5.cost)} <span class="text-[10px] text-slate-500">(${fmtBRLShort(d5.perGB)}/GB)</span></span>
-        <span class="col-span-2 text-right font-mono font-bold ${diff > 0 ? 'text-rose-300' : 'text-emerald-300'}">${diff >= 0 ? '+' : ''}${pct}%</span>
-      </div>`;
+      <tr class="${cap === targetGB ? 'bg-sky-500/10' : ''}">
+        <td class="ui-mono font-bold text-white">${cap} GB</td>
+        <td class="ui-mono text-emerald-300" title="${d4.desc}">${fmtBRLShort(d4.cost)} <span class="text-xs text-slate-400">(${fmtBRLShort(d4.perGB)}/GB)</span></td>
+        <td class="ui-mono text-sky-300" title="${d5.desc}">${fmtBRLShort(d5.cost)} <span class="text-xs text-slate-400">(${fmtBRLShort(d5.perGB)}/GB)</span></td>
+        <td class="text-right ui-mono font-bold ${diff > 0 ? 'text-rose-300' : 'text-emerald-300'}">${diff >= 0 ? '+' : ''}${pct}%</td>
+      </tr>`;
   }).join('');
   document.getElementById('upg-ram-deals-table').innerHTML = `
-    <div class="grid grid-cols-12 gap-2 text-[10px] font-mono uppercase text-slate-500 px-2"><span class="col-span-2">Capac.</span><span class="col-span-4">DDR4 mais barata</span><span class="col-span-4">DDR5 mais barata</span><span class="col-span-2 text-right">Ágio DDR5</span></div>
-    ${rows}
-    <p class="text-[10px] text-slate-500 mt-1">Glitches de preço (${STATE.market?.monetary?.currency_symbol || 'R$'}/GB &gt; 2,5× a mediana) são ignorados. Use os campos manuais para cotações de usados/ECC.</p>`;
+    <div class="ui-table-wrap">
+      <table class="ui-table">
+        <thead>
+          <tr>
+            <th>Capac.</th>
+            <th>DDR4 mais barata</th>
+            <th>DDR5 mais barata</th>
+            <th class="text-right">Ágio DDR5</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 
-  // Verdict
+  // Verdict: numbers & recommendation first, explanation collapsed
   const d4t = cheapestRamFor('DDR4', targetGB), d5t = cheapestRamFor('DDR5', targetGB);
   const premium = d5t.cost - d4t.cost;
+  const premPct = d4t.cost > 0 ? Math.round((premium / d4t.cost) * 100) : 0;
   const best = plans.find(pl => pl.finalScore === bestScore);
   const bestD4 = plans.filter(pl => pl.memType === 'DDR4').sort((a, b) => b.finalScore - a.finalScore)[0];
   const bestD5 = plans.filter(pl => pl.memType === 'DDR5').sort((a, b) => b.finalScore - a.finalScore)[0];
   const moboEstimate = formatMoneyShort(Math.round(700 * (STATE.market?.monetary?.exchange_rate_vs_brl || 1.0)));
   document.getElementById('upg-recommendation-verdict').innerHTML = `
-    <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">💡 Veredito de Plataforma: Placa-Mãe & RAM (${targetGB} GB, orçamento ${fmtBRLShort(budget)})</span>
-    <p class="text-slate-200">Hoje, ${targetGB} GB de <strong class="text-sky-300">DDR5</strong> custam <strong>${fmtBRLShort(premium)} a mais</strong> que ${targetGB} GB de <strong class="text-emerald-300">DDR4</strong>
-      ${d4t.cost > 0 ? `(+${Math.round((premium / d4t.cost) * 100)}%)` : ''}. Além da RAM, a transição para plataformas modernas exige uma <strong class="text-amber-300">nova placa-mãe</strong> (${bestD5 ? fmtBRLShort(bestD5.moboCost) : `${moboEstimate}+`}), pesando no bolso e reduzindo a verba restante para a GPU.</p>
-    ${bestD4 && bestD5 ? `<p class="text-slate-300">Melhor DDR4: <strong>${bestD4.p.label}</strong> → ${bestD4.gpu ? bestD4.gpu.name : 'sem GPU'} (~${bestD4.avgFps} FPS).<br/>
-      Melhor DDR5: <strong>${bestD5.p.label}</strong> → ${bestD5.gpu ? bestD5.gpu.name : 'sem GPU'} (~${bestD5.avgFps} FPS).</p>` : ''}
-    ${best ? `<div class="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-100">
-      <strong>Recomendação para seu perfil:</strong> ${best.p.label} com ${best.cpu.name}${best.gpu ? ` + ${best.gpu.name}` : ''}.
-      ${best.memType === 'DDR4' ? 'Com a placa-mãe e RAM caras no ecossistema DDR5, manter-se no DDR4 libera orçamento para uma GPU muito mais potente — gerando salto imediato em IA e FPS.' : 'Mesmo pagando o investimento da nova placa-mãe e DDR5, a plataforma moderna rende mais no seu perfil e viabiliza upgrades futuros de CPU.'}
-    </div>` : ''}
-    ${refCpu && refCpu.name ? `<p class="text-[11px] text-slate-400">Seu PC de Referência configurado atualmente: <strong>${refCpu.name}</strong> (${curUserRamCap}GB ${curUserRamType}). Você pode customizar suas peças a qualquer momento na aba <strong>Configurações do Sistema</strong>.</p>` : ''}`;
+    <div class="flex items-center justify-between gap-2">
+      <span class="ui-label">Veredito de Plataforma</span>
+      <span class="ui-badge ui-badge--brand ui-mono">${targetGB} GB • ${fmtBRLShort(budget)}</span>
+    </div>
+
+    ${best ? `
+      <div class="ui-card ui-card--compact ui-card--good space-y-1">
+        <span class="ui-badge ui-badge--good">Melhor escolha no seu orçamento</span>
+        <div class="text-base font-extrabold text-white mt-1">${best.p.label}</div>
+        <div class="text-xs ui-mono text-emerald-300">${best.cpu.name}${best.gpu ? ` + ${best.gpu.name} (${best.avgFps} FPS)` : ''}</div>
+      </div>
+    ` : ''}
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div class="ui-kpi !p-3">
+        <span class="ui-kpi-label">Ágio DDR5 (${targetGB}GB)</span>
+        <span class="text-xl ui-mono font-extrabold ${premium > 0 ? 'text-rose-300' : 'text-emerald-300'}">${premium >= 0 ? '+' : ''}${fmtBRLShort(premium)}</span>
+        <span class="text-xs ui-mono text-slate-400">${premPct >= 0 ? '+' : ''}${premPct}% vs DDR4</span>
+      </div>
+      <div class="ui-kpi !p-3">
+        <span class="ui-kpi-label">DDR4 vs DDR5 (FPS)</span>
+        <span class="text-xl ui-mono font-extrabold text-white">${bestD4 ? bestD4.avgFps : '—'} <span class="text-slate-500 text-sm">vs</span> ${bestD5 ? bestD5.avgFps : '—'}</span>
+        <span class="text-xs text-slate-400 truncate">${bestD4 && bestD4.gpu ? bestD4.gpu.name : '—'} / ${bestD5 && bestD5.gpu ? bestD5.gpu.name : '—'}</span>
+      </div>
+    </div>
+
+    <details class="ui-details">
+      <summary class="ui-details-summary">Ver detalhes da recomendação</summary>
+      <div class="ui-details-body space-y-2 text-xs text-slate-300">
+        <p>Além da diferença na RAM, migrar para DDR5 exige nova placa-mãe (${bestD5 ? fmtBRLShort(bestD5.moboCost) : `${moboEstimate}+`}), reduzindo a verba disponível para a GPU.</p>
+        ${best ? `<p>${best.memType === 'DDR4' ? 'Manter-se no DDR4 libera orçamento para uma GPU mais forte, gerando salto imediato em IA e FPS.' : 'Mesmo pagando o investimento da plataforma DDR5, ela entrega mais desempenho no seu perfil e viabiliza upgrades futuros de CPU.'}</p>` : ''}
+        ${refCpu && refCpu.name ? `<p class="text-slate-400">PC de Referência atual: <strong>${refCpu.name}</strong> (${curUserRamCap}GB ${curUserRamType}).</p>` : ''}
+      </div>
+    </details>`;
 }
 
 // ============================================================================

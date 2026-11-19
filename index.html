@@ -1407,38 +1407,36 @@
     <!-- ===================================================================== -->
     <!-- TAB 3: MEU PC, CONSUMO DE ENERGIA (WATTS) & O QUE FALTA                -->
     <!-- ===================================================================== -->
-    <section id="tab-builder" class="hidden space-y-6">
-      <div id="builder-desktop-view" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-8 glass-card rounded-2xl p-5 space-y-5">
+    <section id="tab-builder" class="hidden space-y-5">
+      <div id="builder-desktop-view" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-8 ui-card space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div>
-              <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>🎯 Objetivo de Compra & Montagem</span>
-              </h2>
-              <p class="text-xs text-slate-300 mt-0.5">
-                Monte sua máquina desejada ou planeje o próximo upgrade sem alterar o seu PC de Referência configurado no sistema.
-              </p>
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-lg">Montagem & Objetivo de Compra</h2>
+              <span class="ui-tooltip" tabindex="0">
+                <span class="ui-info-icon">i</span>
+                <span class="ui-tooltip-content">Monte sua máquina desejada ou planeje o próximo upgrade sem alterar o seu PC de Referência configurado no sistema.</span>
+              </span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="copyRefPCToTargetBuild()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Preencher com os dados do seu PC de Referência configurado na Aba Configurações">
-                <span>📋 Copiar do Meu PC de Referência</span>
+              <button type="button" onclick="copyRefPCToTargetBuild()" class="ui-btn ui-btn--sm" title="Preencher com os dados do seu PC de Referência configurado na Aba Configurações">
+                Copiar do Meu PC
               </button>
-              <button type="button" onclick="clearTargetBuild()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-rose-950/60 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Limpar todas as peças para planejar uma máquina do zero">
-                <span>🗑️ Limpar Peças</span>
+              <button type="button" onclick="clearTargetBuild()" class="ui-btn ui-btn--sm ui-btn--ghost" title="Limpar todas as peças para planejar uma máquina do zero">
+                Limpar Peças
               </button>
-              <button type="button" onclick="detectMyLocalPC(false)" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1.5 cursor-pointer" title="Detectar hardware físico via API Windows e carregar no Objetivo de Compra">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <span>Detectar (WMI)</span>
+              <button type="button" onclick="detectMyLocalPC(false)" class="ui-btn ui-btn--primary ui-btn--sm" title="Detectar hardware físico via API Windows e carregar no Objetivo de Compra">
+                Detectar (WMI)
               </button>
             </div>
           </div>
 
-          <div id="detected-pc-banner" class="rounded-xl p-3.5 bg-slate-900/90 border border-emerald-500/30 text-xs flex flex-wrap items-center justify-between gap-3">
+          <div id="detected-pc-banner" class="rounded-xl p-3.5 bg-slate-900/90 border border-slate-800 text-xs flex flex-wrap items-center justify-between gap-3">
             <div>
-              <span class="font-mono uppercase text-[10px] text-emerald-400 font-bold block">Hardware Detectado na Sua Máquina</span>
-              <span id="detected-pc-summary" class="text-slate-200 font-medium">Clique em "Detectar Meu PC Atual" ou edite os componentes abaixo.</span>
+              <span class="ui-label text-emerald-400 block">Hardware Detectado</span>
+              <span id="detected-pc-summary" class="text-slate-200 font-medium text-sm">Clique em "Detectar (WMI)" ou edite os componentes abaixo.</span>
             </div>
-            <span class="text-[11px] font-mono text-slate-400">Você pode alterar qualquer peça, TDP ou preço abaixo</span>
+            <span class="text-xs ui-mono text-slate-400">Edite peça, TDP ou preço abaixo</span>
           </div>
 
           <!-- Socket Compatibility & VRM Throttling Alert Banner -->
@@ -1447,92 +1445,87 @@
           <div class="space-y-3" id="builder-parts-container"></div>
         </div>
 
-        <div class="lg:col-span-4 space-y-6">
-          <div class="glass-card rounded-2xl p-5 border border-amber-500/30">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-mono uppercase text-amber-400 font-bold">Consistência de Energia & Fonte (PSU)</span>
-              <span id="power-status-pill" class="text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full"></span>
+        <div class="lg:col-span-4 space-y-5">
+          <div class="ui-card space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="ui-title-md">Consumo & Fonte (PSU)</h3>
+              <span id="power-status-pill" class="ui-badge ui-mono"></span>
             </div>
-            <h3 class="text-lg font-extrabold text-white mt-1">Consumo Estimado vs Fonte</h3>
 
-            <div class="grid grid-cols-3 gap-2 my-4 text-center">
-              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 uppercase font-mono block">Consumo Típico</span>
-                <span id="pwr-typical-val" class="text-lg font-mono font-extrabold text-white">0W</span>
+            <div class="grid grid-cols-3 gap-2.5 text-center">
+              <div class="ui-kpi !p-2.5 items-center">
+                <span class="ui-kpi-label">Típico</span>
+                <span id="pwr-typical-val" class="text-lg ui-mono font-extrabold text-white">0W</span>
               </div>
-              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 uppercase font-mono block">Pico + Transientes</span>
-                <span id="pwr-peak-val" class="text-lg font-mono font-extrabold text-amber-400">0W</span>
+              <div class="ui-kpi !p-2.5 items-center">
+                <span class="ui-kpi-label">Pico</span>
+                <span id="pwr-peak-val" class="text-lg ui-mono font-extrabold text-amber-400">0W</span>
               </div>
-              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                <span class="text-[10px] text-slate-400 uppercase font-mono block">Fonte Recomendada</span>
-                <span id="pwr-rec-val" class="text-lg font-mono font-extrabold text-sky-400">0W</span>
+              <div class="ui-kpi !p-2.5 items-center">
+                <span class="ui-kpi-label">Indicada</span>
+                <span id="pwr-rec-val" class="text-lg ui-mono font-extrabold text-sky-400">0W</span>
               </div>
             </div>
 
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs">
-                <span class="text-slate-400">Uso da Fonte Selecionada (<span id="pwr-psu-watts">600W</span>):</span>
-                <span id="pwr-load-pct" class="font-mono font-bold text-white">0%</span>
+                <span class="text-slate-400">Uso da Fonte (<span id="pwr-psu-watts">600W</span>)</span>
+                <span id="pwr-load-pct" class="ui-mono font-bold text-white">0%</span>
               </div>
               <div class="h-3 w-full rounded-full bg-slate-900 overflow-hidden border border-slate-800">
                 <div id="pwr-load-bar" class="h-full rounded-full transition-all duration-300" style="width: 50%;"></div>
               </div>
-              <p id="pwr-advice-text" class="text-xs text-slate-300 mt-2 leading-relaxed"></p>
+              <p id="pwr-advice-text" class="ui-body-sm mt-2"></p>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-800">
-              <span class="text-[11px] font-mono uppercase text-slate-400 block mb-2">Melhores Ofertas de Fontes Compatíveis Hoje:</span>
+            <div class="pt-3 border-t border-slate-800">
+              <span class="ui-label block mb-2">Ofertas de Fontes Compatíveis</span>
               <div id="pwr-recommended-psus" class="space-y-1.5 text-xs"></div>
             </div>
           </div>
 
-          <div class="glass-card rounded-2xl p-5 space-y-4">
-            <div>
-              <span class="text-xs font-mono uppercase text-emerald-400 font-bold">Diagnóstico da Build & Orçamento</span>
-              <h3 class="text-lg font-extrabold text-white mt-0.5">O Que Falta Para Finalizar</h3>
+          <div class="ui-card space-y-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="ui-title-md">Resumo & Orçamento</h3>
+              <span class="text-xs text-slate-400" id="builder-owned-summary">Peças que já tenho: 0</span>
+            </div>
+
+            <div class="ui-kpi">
+              <span class="ui-kpi-label">Total das Peças a Comprar</span>
+              <span id="builder-total-to-buy" class="ui-kpi-value ui-kpi-value--good">0</span>
             </div>
 
             <div id="builder-missing-list" class="space-y-2 text-xs"></div>
 
-            <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
-              <div>
-                <span class="text-xs text-slate-400 block">Total das Peças a Comprar:</span>
-                <span class="text-[11px] text-slate-500" id="builder-owned-summary">Peças que já tenho: 0</span>
-              </div>
-              <span id="builder-total-to-buy" class="text-2xl font-mono font-extrabold text-emerald-400">0</span>
-            </div>
-
-            <div id="builder-diagnostics-box" class="space-y-2 pt-2"></div>
+            <div id="builder-diagnostics-box" class="space-y-2 pt-2 border-t border-slate-800"></div>
           </div>
         </div>
       </div>
 
       <!-- LAPTOP PURCHASE GOAL & POWER / BATTERY PLANNER -->
-      <div id="builder-laptop-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-8 glass-card rounded-2xl p-5 space-y-5 border border-purple-500/25">
+      <div id="builder-laptop-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-8 ui-card space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-            <div>
-              <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                <span>🎯 Objetivo de Compra — Notebook & Ecossistema</span>
-              </h2>
-              <p class="text-xs text-slate-300 mt-0.5">
-                Escolha o notebook ideal por objetivo de uso e planeje upgrades de RAM SO-DIMM, SSD NVMe extra, monitor ou hub sem custos ocultos.
-              </p>
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-lg">Montagem — Notebook & Ecossistema</h2>
+              <span class="ui-tooltip" tabindex="0">
+                <span class="ui-info-icon">i</span>
+                <span class="ui-tooltip-content">Escolha o notebook ideal por objetivo de uso e planeje upgrades de RAM SO-DIMM, SSD NVMe extra, monitor ou hub sem custos ocultos.</span>
+              </span>
             </div>
             <div class="flex flex-wrap items-center gap-1.5" id="laptop-builder-presets">
-              <button type="button" onclick="pickLaptopForObjective('gaming')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 cursor-pointer">🎮 Melhor Gamer</button>
-              <button type="button" onclick="pickLaptopForObjective('ai')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 hover:bg-purple-500/30 cursor-pointer">🤖 Melhor IA / LLM</button>
-              <button type="button" onclick="pickLaptopForObjective('workstation')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 cursor-pointer">🎬 Edição / 3D / Dev</button>
-              <button type="button" onclick="pickLaptopForObjective('mobility')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30 cursor-pointer">✈️ Bateria & Mobilidade</button>
+              <button type="button" onclick="pickLaptopForObjective('gaming')" class="ui-chip ui-chip--good">Melhor Gamer</button>
+              <button type="button" onclick="pickLaptopForObjective('ai')" class="ui-chip">Melhor IA / LLM</button>
+              <button type="button" onclick="pickLaptopForObjective('workstation')" class="ui-chip ui-chip--warn">Edição / 3D / Dev</button>
+              <button type="button" onclick="pickLaptopForObjective('mobility')" class="ui-chip">Bateria & Mobilidade</button>
             </div>
           </div>
           <div id="laptop-builder-parts-container" class="space-y-3"></div>
         </div>
 
-        <div class="lg:col-span-4 space-y-6">
-          <div id="laptop-builder-power-card" class="glass-card rounded-2xl p-5 border border-amber-500/30 space-y-4"></div>
-          <div id="laptop-builder-summary-card" class="glass-card rounded-2xl p-5 space-y-4"></div>
+        <div class="lg:col-span-4 space-y-5">
+          <div id="laptop-builder-power-card" class="ui-card space-y-4"></div>
+          <div id="laptop-builder-summary-card" class="ui-card space-y-4"></div>
         </div>
       </div>
     </section>
@@ -1540,112 +1533,118 @@
     <!-- ===================================================================== -->
     <!-- TAB 4: SUGESTÕES DE MUDANÇA (DDR4 vs DDR5 & OTIMIZADOR DE RAM/KIT)     -->
     <!-- ===================================================================== -->
-    <section id="tab-upgrades" class="hidden space-y-6">
-      <div id="upgrades-desktop-view" class="glass-card rounded-2xl p-5 border border-purple-500/30">
+    <section id="tab-upgrades" class="hidden space-y-5">
+      <div id="upgrades-desktop-view" class="ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Sugestões de Upgrade de Plataforma</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Compare a transição DDR4 (X99 / AM4) versus DDR5 (AM5 / LGA1700) e o impacto orçamentário real.
-            </p>
+          <div class="flex items-center gap-2">
+            <h2 class="ui-title-lg">Upgrades de Plataforma (DDR4 vs DDR5)</h2>
+            <span class="ui-tooltip" tabindex="0">
+              <span class="ui-info-icon">i</span>
+              <span class="ui-tooltip-content">Compare a transição DDR4 (X99 / AM4) versus DDR5 (AM5 / LGA1700) e veja quanto sobra do orçamento para a GPU.</span>
+            </span>
           </div>
-          <div class="flex flex-wrap items-center gap-3 bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+          <div class="flex flex-wrap items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">Capacidade de RAM Alvo</label>
-              <select id="upg-select-ram-cap" onchange="renderUpgradeSuggestions()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-purple-500/40">
-                <option value="32" selected>32 GB Totais (Recomendado IA / OpenDSS)</option>
-                <option value="64">64 GB Totais (Pesado AI Training / LLMs)</option>
+              <label for="upg-select-ram-cap" class="ui-label block mb-1">RAM Alvo</label>
+              <select id="upg-select-ram-cap" onchange="renderUpgradeSuggestions()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
+                <option value="32" selected>32 GB (Recomendado IA / Jogos)</option>
+                <option value="64">64 GB (Pesado IA / Workstation)</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">Estratégia de Plataforma</label>
-              <select id="upg-select-mode" onchange="renderUpgradeSuggestions()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-sky-500/40">
+              <label for="upg-select-mode" class="ui-label block mb-1">Estratégia</label>
+              <select id="upg-select-mode" onchange="renderUpgradeSuggestions()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
                 <option value="ALL" selected>Comparar Todas (DDR4 vs DDR5)</option>
-                <option value="DDR4">Foco Economia Máxima (Manter/Usar DDR4)</option>
-                <option value="DDR5">Foco Longevidade & Banda (Migrar p/ DDR5)</option>
+                <option value="DDR4">Foco Economia (DDR4)</option>
+                <option value="DDR5">Foco Longevidade (DDR5)</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block" title="Deixe vazio para usar o menor preço/GB ao vivo. Útil p/ DDR4 ECC REG usada (X99) ou cotação própria."><span class="currency-sym">R$</span>/GB DDR4 (manual)</label>
-              <input type="number" id="upg-override-ddr4" oninput="renderUpgradeSuggestions()" placeholder="auto" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-emerald-400" step="1" />
+              <label for="upg-override-ddr4" class="ui-label block mb-1" title="Deixe vazio para usar o menor preço/GB ao vivo."><span class="currency-sym">R$</span>/GB DDR4</label>
+              <input type="number" id="upg-override-ddr4" oninput="renderUpgradeSuggestions()" placeholder="auto" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs ui-mono font-bold text-emerald-400" step="1" />
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block" title="Deixe vazio para usar o menor preço/GB ao vivo."><span class="currency-sym">R$</span>/GB DDR5 (manual)</label>
-              <input type="number" id="upg-override-ddr5" oninput="renderUpgradeSuggestions()" placeholder="auto" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-sky-400" step="1" />
+              <label for="upg-override-ddr5" class="ui-label block mb-1" title="Deixe vazio para usar o menor preço/GB ao vivo."><span class="currency-sym">R$</span>/GB DDR5</label>
+              <input type="number" id="upg-override-ddr5" oninput="renderUpgradeSuggestions()" placeholder="auto" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs ui-mono font-bold text-sky-400" step="1" />
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">Orçamento Total (<span class="currency-sym">R$</span>)</label>
-              <input type="number" id="upg-budget" oninput="renderUpgradeSuggestions()" value="7000" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-amber-400" step="100" />
+              <label for="upg-budget" class="ui-label block mb-1">Orçamento (<span class="currency-sym">R$</span>)</label>
+              <input type="number" id="upg-budget" oninput="renderUpgradeSuggestions()" value="7000" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs ui-mono font-bold text-amber-400" step="100" />
             </div>
           </div>
         </div>
 
         <!-- 4 Side-by-Side Platform Comparison Cards -->
-        <div id="upg-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mt-5"></div>
+        <div id="upg-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
 
-        <!-- RAM Price Analyzer Table (Live DDR4 vs DDR5 Deals from Database) -->
-        <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 bg-slate-900/80 rounded-xl p-4 border border-slate-800">
-            <h3 class="text-sm font-bold text-white mb-1">Comparativo Real de Preços de Memória RAM Hoje (Database)</h3>
-            <p class="text-xs text-slate-400 mb-3">Veja a diferença real por Gigabyte entre módulos DDR4 e DDR5 ativos nas lojas agora:</p>
+        <!-- RAM Price Analyzer Table + Verdict -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-7 ui-card ui-card--compact space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="ui-title-md">Preço Real de RAM Hoje (DDR4 vs DDR5)</h3>
+              <span class="ui-tooltip" tabindex="0">
+                <span class="ui-info-icon">i</span>
+                <span class="ui-tooltip-content">Glitches de preço (&gt; 2,5× a mediana) são ignorados. Use os campos manuais acima para cotações de usados ou ECC.</span>
+              </span>
+            </div>
             <div id="upg-ram-deals-table" class="space-y-2 text-xs"></div>
           </div>
-          <div class="lg:col-span-5 bg-slate-900/80 rounded-xl p-4 border border-purple-500/30 flex flex-col justify-between">
-            <div id="upg-recommendation-verdict" class="space-y-2 text-xs"></div>
+          <div class="lg:col-span-5 ui-card ui-card--compact flex flex-col justify-between">
+            <div id="upg-recommendation-verdict" class="space-y-3"></div>
           </div>
         </div>
       </div>
 
       <!-- LAPTOP UPGRADEABILITY (SO-DIMM RAM & NVME SSD) MATRIX -->
-      <div id="upgrades-laptop-view" class="hidden glass-card rounded-2xl p-5 border border-purple-500/30 space-y-5">
+      <div id="upgrades-laptop-view" class="hidden ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Upgrades em Notebooks (RAM Expansível vs Soldada & SSD M.2)</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Compare o custo real final após expandir memória RAM (SO-DIMM) e armazenamento (SSD NVMe) versus modelos com memória soldada de fábrica.
-            </p>
+          <div class="flex items-center gap-2">
+            <h2 class="ui-title-lg">Upgrades em Notebooks (RAM & SSD)</h2>
+            <span class="ui-tooltip" tabindex="0">
+              <span class="ui-info-icon">i</span>
+              <span class="ui-tooltip-content">Compare o custo real final após expandir memória RAM (SO-DIMM) e armazenamento (SSD NVMe) versus modelos com memória soldada de fábrica.</span>
+            </span>
           </div>
-          <div class="flex flex-wrap items-center gap-3 bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+          <div class="flex flex-wrap items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">RAM Total Desejada</label>
-              <select id="laptop-upg-ram-cap" onchange="renderLaptopUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-purple-500/40">
+              <label for="laptop-upg-ram-cap" class="ui-label block mb-1">RAM Alvo</label>
+              <select id="laptop-upg-ram-cap" onchange="renderLaptopUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
                 <option value="16">16 GB RAM</option>
                 <option value="32" selected>32 GB RAM (IA / Dev / Edição)</option>
                 <option value="64">64 GB RAM (Workstation Máx.)</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">SSD Alvo</label>
-              <select id="laptop-upg-ssd-cap" onchange="renderLaptopUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-sky-500/40">
+              <label for="laptop-upg-ssd-cap" class="ui-label block mb-1">SSD Alvo</label>
+              <select id="laptop-upg-ssd-cap" onchange="renderLaptopUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
                 <option value="512">512 GB NVMe</option>
                 <option value="1024" selected>1 TB NVMe</option>
                 <option value="2048">2 TB NVMe</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">Estratégia</label>
-              <select id="laptop-upg-strategy" onchange="renderLaptopUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-emerald-500/40">
+              <label for="laptop-upg-strategy" class="ui-label block mb-1">Estratégia</label>
+              <select id="laptop-upg-strategy" onchange="renderLaptopUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
                 <option value="ALL" selected>Todos (Expansível + Soldada)</option>
                 <option value="EXPANDABLE">Só Notebooks Expansíveis</option>
-                <option value="SOLDERED">Só Ultrabooks/Macs Prontos de Fábrica</option>
+                <option value="SOLDERED">Só Ultrabooks/Macs Prontos</option>
               </select>
             </div>
             <div>
-              <label class="text-[10px] font-mono uppercase text-slate-400 block">Orçamento Máx (<span class="currency-sym">R$</span>)</label>
-              <input type="number" id="laptop-upg-budget" oninput="renderLaptopUpgrades()" value="8500" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs font-mono font-bold text-amber-400" step="250" />
+              <label for="laptop-upg-budget" class="ui-label block mb-1">Orçamento Máx (<span class="currency-sym">R$</span>)</label>
+              <input type="number" id="laptop-upg-budget" oninput="renderLaptopUpgrades()" value="8500" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs ui-mono font-bold text-amber-400" step="250" />
             </div>
           </div>
         </div>
 
         <div id="laptop-upg-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div class="lg:col-span-7 bg-slate-900/80 rounded-xl p-4 border border-slate-800">
-            <h3 class="text-sm font-bold text-white mb-1">Custo Estimado de Upgrades (SO-DIMM & NVMe no Brasil)</h3>
-            <p class="text-xs text-slate-400 mb-3">Acrécimos considerados sobre modelos expansíveis vs compra já configurada de fábrica:</p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-7 ui-card ui-card--compact space-y-2.5">
+            <h3 class="ui-title-md">Custo Estimado de Upgrades (SO-DIMM & NVMe)</h3>
             <div id="laptop-upg-costs-table" class="space-y-2 text-xs"></div>
           </div>
-          <div class="lg:col-span-5 bg-slate-900/80 rounded-xl p-4 border border-purple-500/30 flex flex-col justify-between">
+          <div class="lg:col-span-5 ui-card ui-card--compact flex flex-col justify-between">
             <div id="laptop-upg-verdict" class="space-y-2 text-xs"></div>
           </div>
         </div>
@@ -2293,45 +2292,46 @@
     <!-- ===================================================================== -->
     <!-- TAB 6: SIMULADOR DE JOGOS (SEM/COM CPU & XEON WARNING), IA & OPENDSS  -->
     <!-- ===================================================================== -->
-    <section id="tab-sim" class="hidden space-y-6">
-      <div id="sim-desktop-view" class="glass-card rounded-2xl p-5">
+    <section id="tab-sim" class="hidden space-y-5">
+      <div id="sim-desktop-view" class="ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Simulador de Desempenho Real</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.
-            </p>
+          <div class="flex items-center gap-2">
+            <h2 class="ui-title-lg">Simulador de Desempenho Real</h2>
+            <span class="ui-tooltip" tabindex="0">
+              <span class="ui-info-icon">i</span>
+              <span class="ui-tooltip-content">Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.</span>
+            </span>
           </div>
-          <!-- Controls: Setup A (GPU A + CPU A) vs Setup B (GPU B + CPU B) + Upscaling & Modes -->
-          <div class="flex flex-wrap items-center gap-3">
-            <!-- Setup A Group (Sky) -->
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-sky-950/40 border border-sky-500/40">
-              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-extrabold uppercase">Setup A</span>
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] text-slate-400 font-mono">GPU:</span>
-                <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+          <!-- Controls: Setup A (Azul) vs Setup B (Roxo) + Upscaling & Modes -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Setup A Group (Fixed Compare A — Blue) -->
+            <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-900/90 border w-full sm:w-auto" style="border-color: var(--ui-compare-a-border);">
+              <span class="ui-badge ui-badge--a ui-mono">Setup A</span>
+              <div class="flex items-center gap-1 min-w-0">
+                <span class="text-xs text-slate-400 ui-mono">GPU:</span>
+                <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
               </div>
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] text-slate-400 font-mono">CPU:</span>
-                <select id="sim-select-cpu-a" onchange="onSimCpuChange(this.value, 'a')" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              <div class="flex items-center gap-1 min-w-0">
+                <span class="text-xs text-slate-400 ui-mono">CPU:</span>
+                <select id="sim-select-cpu-a" onchange="onSimCpuChange(this.value, 'a')" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
               </div>
             </div>
 
             <!-- Swap Button -->
-            <button type="button" onclick="swapSimulatorSetups()" title="Inverter Setup A e Setup B" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer text-xs font-bold">
+            <button type="button" onclick="swapSimulatorSetups()" title="Inverter Setup A e Setup B" class="ui-btn ui-btn--icon">
               ⇄
             </button>
 
-            <!-- Setup B Group (Emerald) -->
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
-              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-extrabold uppercase">Setup B</span>
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] text-slate-400 font-mono">GPU:</span>
-                <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+            <!-- Setup B Group (Fixed Compare B — Purple) -->
+            <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-900/90 border w-full sm:w-auto" style="border-color: var(--ui-compare-b-border);">
+              <span class="ui-badge ui-badge--b ui-mono">Setup B</span>
+              <div class="flex items-center gap-1 min-w-0">
+                <span class="text-xs text-slate-400 ui-mono">GPU:</span>
+                <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
               </div>
-              <div class="flex items-center gap-1">
-                <span class="text-[10px] text-slate-400 font-mono">CPU:</span>
-                <select id="sim-select-cpu-b" onchange="onSimCpuChange(this.value, 'b')" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[130px] sm:max-w-[170px] truncate"></select>
+              <div class="flex items-center gap-1 min-w-0">
+                <span class="text-xs text-slate-400 ui-mono">CPU:</span>
+                <select id="sim-select-cpu-b" onchange="onSimCpuChange(this.value, 'b')" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
               </div>
             </div>
 
@@ -2339,13 +2339,13 @@
             <select id="sim-select-cpu" class="hidden"></select>
 
             <!-- Mode & Upscaling -->
-            <div class="flex items-center gap-2">
-              <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
+            <div class="flex flex-wrap items-center gap-2">
+              <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-100">
                 <option value="both" selected>GPU + CPU (Setup Completo)</option>
                 <option value="gpu">Apenas GPU (Gráficos Puros)</option>
                 <option value="cpu">Apenas CPU (Processamento Puro)</option>
               </select>
-              <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-800 border border-amber-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-amber-300">
+              <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
                 <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
                 <option value="sr">Só Upscaling Qualidade (DLSS / FSR)</option>
                 <option value="native">Raster Nativo Puro (Sem DLSS / Sem FG)</option>
@@ -2356,17 +2356,17 @@
         </div>
 
         <!-- XEON / LEGACY ARCHITECTURE ENGINE WARNING BANNER -->
-        <div id="sim-xeon-warning-banner" class="mt-4"></div>
+        <div id="sim-xeon-warning-banner"></div>
 
-        <!-- VERSUS / RTINGS DIRECT HEAD-TO-HEAD HERO CARDS (4 Cards: Jogos, Workstation, IA Local, Equilíbrio) -->
-        <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-5"></div>
+        <!-- HERO KPI CARDS (4 Cards: Jogos, Workstation, IA Local, Equilíbrio) -->
+        <div id="sim-versus-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
         <!-- RADAR / HEXAGON SYSTEM CAPABILITIES COMPARISON (Setup A vs Setup B) -->
-        <div id="sim-radar-hexagon-container" class="mt-5 glass-elevated rounded-2xl p-5 border border-sky-500/30 shadow-lg">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+        <div id="sim-radar-hexagon-container" class="ui-card ui-card--elevated space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div>
-              <span class="text-[10px] font-mono uppercase text-sky-400 font-bold">Radar Hexagonal de Capacidades</span>
-              <h3 class="text-sm font-bold text-white mt-0.5">Comparativo Multidimensional: Setup A (Azul) vs Setup B (Verde)</h3>
+              <span class="ui-label">Radar Hexagonal de Capacidades</span>
+              <h3 class="ui-title-md mt-0.5">Comparativo Multidimensional: Setup A vs Setup B</h3>
             </div>
             <div id="sim-radar-winner-badge" class="flex items-center gap-2"></div>
           </div>
@@ -2376,105 +2376,73 @@
                 <canvas id="chart-sim-radar"></canvas>
               </div>
             </div>
-            <div id="sim-radar-metrics-breakdown" class="lg:col-span-5 space-y-2 text-xs font-mono"></div>
+            <div id="sim-radar-metrics-breakdown" class="lg:col-span-5 space-y-2 text-xs ui-mono"></div>
           </div>
         </div>
 
-        <!-- DEDICATED WORKSTATION & PRODUTIVIDADE COMPARISON PANEL (Render 3D, Edição 4K, Compilação de Código, Simulação Física) -->
-        <div id="sim-workstation-panel" class="mt-5 glass-elevated rounded-2xl p-5 border border-amber-500/30 shadow-lg space-y-4"></div>
+        <!-- DEDICATED WORKSTATION & PRODUTIVIDADE COMPARISON PANEL -->
+        <div id="sim-workstation-panel" class="ui-card ui-card--elevated space-y-4"></div>
 
         <!-- COLLAPSIBLE: SINGLE GAME DEEP-DIVE INSPECTOR & RELEVANT GAMES FILTER -->
-        <details class="mt-5 bg-slate-900/70 rounded-2xl border border-slate-800 p-4 transition-all">
-          <summary class="cursor-pointer text-xs font-semibold text-slate-300 flex items-center justify-between select-none">
-            <div class="flex items-center gap-2">
-              <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-              <span>Configurar Jogos Específicos & Filtros da Média</span>
-            </div>
-            <span class="text-[11px] text-sky-400 font-mono hover:underline">Expandir / Configurar ▼</span>
+        <details class="ui-details">
+          <summary class="ui-details-summary">
+            <span>Configurar Jogos Específicos & Filtros da Média</span>
           </summary>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4 pt-4 border-t border-slate-800">
-            <div class="lg:col-span-5 space-y-2 border-r border-slate-800 pr-4">
+          <div class="ui-details-body grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-5 space-y-2.5 lg:border-r lg:border-slate-800 lg:pr-4">
               <div class="flex items-center justify-between">
-                <span class="text-[10px] font-mono uppercase text-sky-400 font-bold">Jogo em Foco</span>
-                <span id="sim-focus-res-label" class="text-[10px] font-mono text-slate-400"></span>
+                <span class="ui-label text-sky-400">Jogo em Foco</span>
+                <span id="sim-focus-res-label" class="text-xs ui-mono text-slate-400"></span>
               </div>
-              <select id="sim-select-focus-game" onchange="renderSimulator()" class="w-full bg-slate-950 border border-sky-500/40 rounded-lg px-3 py-2 text-xs font-bold text-white"></select>
+              <select id="sim-select-focus-game" onchange="renderSimulator()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"></select>
               <div id="sim-focus-game-card" class="pt-1"></div>
             </div>
-            <div class="lg:col-span-7 space-y-2">
+            <div class="lg:col-span-7 space-y-2.5">
               <div class="flex items-center justify-between">
-                <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">Jogos Relevantes para a Média</span>
-                <button onclick="toggleAllRelevantGames(true)" class="text-[11px] text-sky-400 hover:underline cursor-pointer">Marcar Todos</button>
+                <span class="ui-label text-emerald-400">Jogos na Média Personalizada</span>
+                <button type="button" onclick="toggleAllRelevantGames(true)" class="ui-btn ui-btn--sm ui-btn--ghost">Marcar Todos</button>
               </div>
-              <p class="text-[11px] text-slate-400">Os jogos selecionados compõem a sua Média de FPS Personalizada:</p>
-              <div id="sim-relevant-games-chips" class="flex flex-wrap gap-1.5 pt-1"></div>
+              <div id="sim-relevant-games-chips" class="flex flex-wrap gap-1.5"></div>
               <div id="sim-average-fps-summary" class="mt-2 pt-2 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs"></div>
             </div>
           </div>
         </details>
 
         <!-- 3-Column Performance Breakdown: Games FPS | Running AI | AI Training & Engineering -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-5">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <!-- Column 1: Gaming FPS -->
-          <div class="glass-elevated rounded-2xl p-4 space-y-3 border border-emerald-500/20">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center border border-emerald-500/30">
-                  <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M2 12h2M16 12a4 4 0 1 1-8 0M14 10l3-3M4 18a10 10 0 0 1 16 0"/>
-                  </svg>
-                </div>
-                <div>
-                  <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">Taxa de Quadros (FPS)</span>
-                  <h3 class="text-sm font-bold text-white">Jogos & Fluidez Real</h3>
-                </div>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div>
+                <span class="ui-label">Taxa de Quadros (FPS)</span>
+                <h3 class="ui-title-md">Jogos & Fluidez</h3>
               </div>
-              <span id="sim-cpu-factor-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300"></span>
+              <span id="sim-cpu-factor-badge" class="ui-badge ui-mono"></span>
             </div>
             <div id="sim-games-list" class="space-y-2.5"></div>
           </div>
 
           <!-- Column 2: Running AI (LLMs & Vision) -->
-          <div class="glass-elevated rounded-2xl p-4 space-y-3 border border-purple-500/30">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center border border-purple-500/30">
-                  <svg class="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="10" rx="2"/>
-                    <circle cx="12" cy="5" r="2"/>
-                    <path d="M12 7v4M8 16h.01M16 16h.01M9 11V9a3 3 0 0 1 6 0v2"/>
-                  </svg>
-                </div>
-                <div>
-                  <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">Executar IA (Inferência)</span>
-                  <h3 class="text-sm font-bold text-white">LLMs Locais & Visão</h3>
-                </div>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div>
+                <span class="ui-label">Inferência Local</span>
+                <h3 class="ui-title-md">LLMs & Visão</h3>
               </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">Tokens/s & VRAM</span>
+              <span class="ui-badge ui-mono">Tokens/s & VRAM</span>
             </div>
             <div id="sim-ai-list" class="space-y-2.5"></div>
           </div>
 
           <!-- Column 3: AI Training & Redes Técnicas -->
-          <div class="glass-elevated rounded-2xl p-4 space-y-3 border border-amber-500/30">
-            <div class="flex items-center justify-between border-b border-slate-700/80 pb-2">
-              <div class="flex items-center gap-2">
-                <div class="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center border border-amber-500/30">
-                  <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="4" width="16" height="16" rx="2"/>
-                    <rect x="9" y="9" width="6" height="6"/>
-                    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
-                  </svg>
-                </div>
-                <div>
-                  <span class="text-[10px] font-mono uppercase text-amber-400 font-bold">AI Training & Engenharia</span>
-                  <h3 class="text-sm font-bold text-white">Treinamento de IA & Redes</h3>
-                </div>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+              <div>
+                <span class="ui-label">Treino & Engenharia</span>
+                <h3 class="ui-title-md">AI Training & Redes</h3>
               </div>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">CUDA / TFLOPS / RAPIDS</span>
+              <span class="ui-badge ui-mono">CUDA / TFLOPS</span>
             </div>
             <div id="sim-soft-list" class="space-y-2.5"></div>
           </div>
@@ -2482,31 +2450,32 @@
       </div>
 
       <!-- LAPTOP REAL-WORLD PERFORMANCE SIMULATOR (FULL SYSTEM + BATTERY/TGP + SCREEN HZ) -->
-      <div id="sim-laptop-view" class="hidden glass-card rounded-2xl p-5 border border-purple-500/30 space-y-5">
+      <div id="sim-laptop-view" class="hidden ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Simulador de Desempenho Real — Notebooks (Sistema Completo)</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Simulação em Jogos (considerando TGP móvel, limite de CPU, tela nativa em Hz e bateria vs tomada), Workstation e IA Local (CUDA / Apple MLX).
-            </p>
+          <div class="flex items-center gap-2">
+            <h2 class="ui-title-lg">Simulador de Notebooks</h2>
+            <span class="ui-tooltip" tabindex="0">
+              <span class="ui-info-icon">i</span>
+              <span class="ui-tooltip-content">Simulação em Jogos (considerando TGP móvel, limite de CPU, tela nativa em Hz e bateria vs tomada), Workstation e IA Local (CUDA / Apple MLX).</span>
+            </span>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-sky-950/40 border border-sky-500/40">
-              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-extrabold">NOTEBOOK A</span>
-              <select id="sim-select-laptop-a" onchange="renderLaptopSimulator()" class="bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[230px]"></select>
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-a-border);">
+              <span class="ui-badge ui-badge--a ui-mono">Notebook A</span>
+              <select id="sim-select-laptop-a" onchange="renderLaptopSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[220px]"></select>
             </div>
-            <button type="button" onclick="swapSimulatorLaptops()" title="Inverter Notebook A e Notebook B" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition cursor-pointer text-xs font-bold">⇄</button>
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
-              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-extrabold">NOTEBOOK B</span>
-              <select id="sim-select-laptop-b" onchange="renderLaptopSimulator()" class="bg-slate-900 border border-emerald-500/50 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[230px]"></select>
+            <button type="button" onclick="swapSimulatorLaptops()" title="Inverter Notebook A e Notebook B" class="ui-btn ui-btn--icon">⇄</button>
+            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-b-border);">
+              <span class="ui-badge ui-badge--b ui-mono">Notebook B</span>
+              <select id="sim-select-laptop-b" onchange="renderLaptopSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[220px]"></select>
             </div>
-            <select id="sim-laptop-power-mode" onchange="renderLaptopSimulator()" class="bg-slate-800 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-300">
+            <select id="sim-laptop-power-mode" onchange="renderLaptopSimulator()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-100">
               <option value="ac" selected>🔌 Na Tomada (TGP Máximo)</option>
               <option value="battery">🔋 Na Bateria (Eco / Throttling Real)</option>
             </select>
-            <select id="sim-laptop-res-mode" onchange="renderLaptopSimulator()" class="bg-slate-800 border border-purple-500/40 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-purple-300">
-              <option value="native" selected>📺 Resolução & Hz Nativos do Notebook</option>
-              <option value="external">🖥️ Monitor Externo Configurado</option>
+            <select id="sim-laptop-res-mode" onchange="renderLaptopSimulator()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
+              <option value="native" selected>📺 Resolução & Hz Nativos</option>
+              <option value="external">🖥️ Monitor Externo</option>
             </select>
           </div>
         </div>
@@ -2514,11 +2483,11 @@
         <div id="sim-laptop-status-banner"></div>
         <div id="sim-laptop-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
-        <div class="glass-elevated rounded-2xl p-5 border border-purple-500/30 shadow-lg">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+        <div class="ui-card ui-card--elevated space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div>
-              <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">Radar Full-System do Simulador</span>
-              <h3 class="text-sm font-bold text-white mt-0.5">Notebook A (Azul) vs Notebook B (Verde) — 6 Dimensões Reais</h3>
+              <span class="ui-label">Radar Full-System</span>
+              <h3 class="ui-title-md mt-0.5">Notebook A vs Notebook B — 6 Dimensões Reais</h3>
             </div>
             <div id="sim-laptop-radar-winner-badge" class="flex items-center gap-2"></div>
           </div>
@@ -2528,31 +2497,31 @@
                 <canvas id="chart-sim-laptop-radar"></canvas>
               </div>
             </div>
-            <div id="sim-laptop-radar-metrics-breakdown" class="lg:col-span-6 space-y-2 text-xs font-mono"></div>
+            <div id="sim-laptop-radar-metrics-breakdown" class="lg:col-span-6 space-y-2 text-xs ui-mono"></div>
           </div>
         </div>
 
-        <div id="sim-laptop-workstation-panel" class="glass-elevated rounded-2xl p-5 border border-amber-500/30 shadow-lg space-y-4"></div>
+        <div id="sim-laptop-workstation-panel" class="ui-card ui-card--elevated space-y-4"></div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div class="glass-elevated rounded-2xl p-4 space-y-3 border border-emerald-500/20">
-            <div class="border-b border-slate-700/80 pb-2">
-              <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">FPS Estimado em Jogos</span>
-              <h3 class="text-sm font-bold text-white">Jogos & Aproveitamento da Tela (Hz)</h3>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="border-b border-slate-800 pb-2.5">
+              <span class="ui-label">FPS Estimado</span>
+              <h3 class="ui-title-md">Jogos & Tela (Hz)</h3>
             </div>
             <div id="sim-laptop-games-list" class="space-y-2.5"></div>
           </div>
-          <div class="glass-elevated rounded-2xl p-4 space-y-3 border border-purple-500/30">
-            <div class="border-b border-slate-700/80 pb-2">
-              <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">Inferência IA Local</span>
-              <h3 class="text-sm font-bold text-white">LLMs Locais & Memória GPU / Unificada</h3>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="border-b border-slate-800 pb-2.5">
+              <span class="ui-label">Inferência IA Local</span>
+              <h3 class="ui-title-md">LLMs & Memória</h3>
             </div>
             <div id="sim-laptop-ai-list" class="space-y-2.5"></div>
           </div>
-          <div class="glass-elevated rounded-2xl p-4 space-y-3 border border-amber-500/30">
-            <div class="border-b border-slate-700/80 pb-2">
-              <span class="text-[10px] font-mono uppercase text-amber-400 font-bold">AI Training & Engenharia</span>
-              <h3 class="text-sm font-bold text-white">Treinamento, Simulação & Bateria</h3>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="border-b border-slate-800 pb-2.5">
+              <span class="ui-label">Treino & Engenharia</span>
+              <h3 class="ui-title-md">Simulação & Bateria</h3>
             </div>
             <div id="sim-laptop-soft-list" class="space-y-2.5"></div>
           </div>
