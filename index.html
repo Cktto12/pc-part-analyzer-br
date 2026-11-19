@@ -6,8 +6,8 @@
   <title>GCA — GPU & CPU Analyzer: Duelo Relacional, Workstation, Black Friday & Custo-Benefício</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261119-1" />
-  <script src="styles/chart-theme.js?v=20261119-1"></script>
+  <link rel="stylesheet" href="styles/ui.css?v=20261119-2" />
+  <script src="styles/chart-theme.js?v=20261119-2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -93,165 +93,186 @@
 </head>
 <body class="min-h-screen flex flex-col selection:bg-sky-500 selection:text-slate-950">
 
-  <!-- SIDEBAR BACKDROP (CLICK OUTSIDE TO CLOSE) -->
-  <div id="sidebar-backdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden transition-opacity duration-300"></div>
-
-  <!-- SIDEBAR DRAWER (ACCESSED VIA 3 LINES / HAMBURGER) -->
-  <aside id="app-sidebar" class="fixed top-0 left-0 h-full w-72 bg-slate-950/95 border-r border-slate-800/80 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
-    <!-- Sidebar Header -->
-    <div class="h-16 px-5 flex items-center justify-between border-b border-slate-800/80">
-      <div class="flex items-center gap-3">
-        <div id="sidebar-brand-badge" class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-md shadow-sky-500/20">
-          GCA
-        </div>
-        <div>
-          <h2 class="text-sm font-bold text-white tracking-tight leading-none">GCA Pro</h2>
-          <span class="text-[10px] font-mono text-sky-400">GPU & CPU Analyzer</span>
-        </div>
+  <!-- DESKTOP PERMANENT SIDEBAR (ALWAYS VISIBLE ON >= 1024px) -->
+  <aside id="app-sidebar" class="ui-sidebar" aria-label="Navegação principal">
+    <!-- Sidebar Brand -->
+    <div class="ui-sidebar-brand">
+      <div id="sidebar-brand-badge" class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-md shadow-sky-500/20 shrink-0">
+        GCA
       </div>
-      <button onclick="closeSidebar()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition cursor-pointer" title="Fechar Menu">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-      </button>
-    </div>
-
-    <!-- Navigation List (Tabs with Clean SVGs, No Emojis) -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-1.5">
-      <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 px-3 block mb-2 font-semibold">Análise & Comparativos</span>
-
-      <!-- Tab 1: Duelo Relacional -->
-      <button onclick="switchTab('versus')" id="tab-btn-versus" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-3 bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm shadow-sky-500/10 transition-all text-left">
-        <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
-        <span id="sidebar-tab-title-versus">Duelo Relacional</span>
-      </button>
-
-      <!-- Tab 2: Custo-Benefício -->
-      <button onclick="switchTab('cb')" id="tab-btn-cb" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-        <span id="sidebar-tab-title-cb">Custo-Benefício & Alvos</span>
-      </button>
-
-      <!-- Tab 3: Objetivo de Compra & Consumo -->
-      <button onclick="switchTab('builder')" id="tab-btn-builder" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-        <span id="sidebar-tab-title-builder">Objetivo de Compra & Consumo</span>
-      </button>
-
-      <!-- Tab 4: Upgrades de Plataforma -->
-      <button onclick="switchTab('upgrades')" id="tab-btn-upgrades" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        <span id="sidebar-tab-title-upgrades">Upgrades de Plataforma (RAM)</span>
-      </button>
-
-      <!-- Tab 5: Black Friday & Sazonalidade -->
-      <button onclick="switchTab('bf')" id="tab-btn-bf" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
-        <span id="sidebar-tab-title-bf">Black Friday & Sazonalidade</span>
-      </button>
-
-      <!-- Tab 5B: Promoções Black Friday (Cards Ao Vivo) -->
-      <button onclick="switchTab('bf-promos')" id="tab-btn-bf-promos" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-        <span>Promoções BF (Cards ao Vivo)</span>
-      </button>
-
-      <!-- Tab 6: Simulador Real -->
-      <button onclick="switchTab('sim')" id="tab-btn-sim" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span>Simulador de Desempenho Real</span>
-      </button>
-
-      <!-- Tab 7: Configurações do Sistema -->
-      <button onclick="switchTab('config')" id="tab-btn-config" class="tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left">
-        <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-        <span>Configurações do Sistema</span>
-      </button>
-
-      <!-- Quick Actions in Sidebar -->
-      <div class="pt-4 mt-4 border-t border-slate-800/80 space-y-1.5">
-        <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 px-3 block font-semibold">Configurações & Painéis</span>
-        <button onclick="toggleContextSettings(); closeSidebar();" class="w-full px-4 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-900 flex items-center gap-3 transition cursor-pointer">
-          <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-          <span>Ajustar Cargas & Monitor</span>
-        </button>
-        <button onclick="togglePromoRadarPanel(); closeSidebar();" class="w-full px-4 py-2.5 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-900 flex items-center gap-3 transition cursor-pointer">
-          <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          <span>Radar de Ofertas</span>
-        </button>
+      <div class="min-w-0">
+        <h2 class="text-sm font-bold text-white tracking-tight leading-none truncate">GCA Pro</h2>
+        <span id="sidebar-brand-sub" class="text-xs font-mono text-sky-400 block mt-0.5 truncate">GPU & CPU Analyzer</span>
       </div>
     </div>
 
-    <!-- Sidebar Footer -->
-    <div class="p-4 border-t border-slate-800/80 bg-slate-950/60">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-        <p class="text-[11px] text-slate-300 font-medium truncate">Database Live</p>
+    <!-- Navigation List grouped into 4 Areas -->
+    <nav class="ui-sidebar-nav">
+      <!-- Área 1: Início -->
+      <div class="ui-nav-group">
+        <button type="button" onclick="switchTab('home')" id="tab-btn-home" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Início</span>
+        </button>
       </div>
-      <p class="text-[10px] text-slate-500 font-mono mt-0.5 truncate" id="sidebar-status">Histórico de até 600 dias</p>
+
+      <!-- Área 2: Comparar -->
+      <div class="ui-nav-group">
+        <span class="ui-nav-group-label">Comparar</span>
+        <button type="button" onclick="switchTab('versus')" id="tab-btn-versus" class="tab-btn ui-nav-item is-active">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+          <span id="sidebar-tab-title-versus">Duelo</span>
+        </button>
+        <button type="button" onclick="switchTab('sim')" id="tab-btn-sim" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Simulador</span>
+        </button>
+      </div>
+
+      <!-- Área 3: Preços -->
+      <div class="ui-nav-group">
+        <span class="ui-nav-group-label">Preços</span>
+        <button type="button" onclick="switchTab('cb')" id="tab-btn-cb" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          <span id="sidebar-tab-title-cb">Custo-benefício</span>
+        </button>
+        <button type="button" onclick="switchTab('bf')" id="tab-btn-bf" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+          <span id="sidebar-tab-title-bf">Black Friday</span>
+        </button>
+        <button type="button" onclick="switchTab('bf-promos')" id="tab-btn-bf-promos" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span>Promoções</span>
+        </button>
+      </div>
+
+      <!-- Área 4: Montar -->
+      <div class="ui-nav-group">
+        <span class="ui-nav-group-label">Montar</span>
+        <button type="button" onclick="switchTab('builder')" id="tab-btn-builder" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          <span id="sidebar-tab-title-builder">Montagem</span>
+        </button>
+        <button type="button" onclick="switchTab('upgrades')" id="tab-btn-upgrades" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          <span id="sidebar-tab-title-upgrades">Upgrades</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Sidebar Footer: Live Status + Config shortcut -->
+    <div class="ui-sidebar-footer space-y-2.5">
+      <button type="button" onclick="switchTab('config')" id="tab-btn-config" class="tab-btn ui-nav-item">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        <span>Configurações</span>
+      </button>
+      <div class="px-2 pt-2 border-t border-slate-800/80">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
+          <p class="text-xs text-slate-300 font-medium truncate">Database Live</p>
+        </div>
+        <p class="text-xs text-slate-500 font-mono mt-0.5 truncate" id="sidebar-status">Histórico de até 600 dias</p>
+      </div>
     </div>
   </aside>
 
-  <!-- TOP HEADER (CLEAN, MINIMAL & BREATHABLE) -->
-  <header class="sticky top-0 z-40 glass-card border-b border-slate-800/80 shadow-md">
-    <div class="max-w-[1640px] mx-auto px-4 py-3 flex items-center justify-between gap-4">
-      <!-- Left: Hamburger (3 Lines) + Brand -->
-      <div class="flex items-center gap-3">
-        <button id="btn-toggle-sidebar" onclick="toggleSidebar()" class="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/80 transition cursor-pointer" title="Abrir Menu de Abas (3 Linhas)">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-        <div class="flex items-center gap-2.5">
-          <div id="header-brand-badge" class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-sm">
+  <!-- APP SHELL CONTENT (OFFSET BY SIDEBAR ON DESKTOP) -->
+  <div class="ui-shell-content">
+
+    <!-- TOP HEADER (CLEAN, RESPONSIVE, CONTEXT TOGGLE IN HIGHLIGHT) -->
+    <header class="ui-topbar">
+      <div class="ui-topbar-inner">
+        <!-- Left: Brand (mobile) + Live status -->
+        <div class="ui-topbar-brand">
+          <div id="header-brand-badge" class="ui-topbar-brand-mobile w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center font-mono font-bold text-slate-950 text-xs shadow-sm shrink-0">
             GCA
           </div>
-          <div>
-            <h1 class="text-sm font-bold text-white tracking-tight leading-none">GCA <span id="header-brand-sub" class="text-sky-400 font-semibold text-xs">GPU & CPU Analyzer</span></h1>
-            <p class="text-[10px] text-slate-400 font-mono mt-0.5" id="header-status">Carregando dados...</p>
+          <div class="min-w-0">
+            <h1 class="ui-topbar-brand-mobile text-sm font-bold text-white tracking-tight leading-none truncate">
+              GCA <span id="header-brand-sub" class="text-sky-400 font-semibold text-xs">GPU & CPU Analyzer</span>
+            </h1>
+            <p class="text-xs text-slate-400 font-mono truncate" id="header-status">Carregando dados...</p>
           </div>
         </div>
-      </div>
 
-      <!-- Right: Action Buttons (Context Toggle, Radar, Sync, Configurações sem labels) -->
-      <div class="flex items-center gap-2 sm:gap-2.5">
-        <!-- THE CONTEXT TOGGLE: GPU vs CPU vs Notebook -->
-        <div class="inline-flex p-0.5 bg-slate-900 border border-slate-700/80 rounded-xl text-xs font-mono shadow-inner" id="header-context-toggle">
-          <button type="button" id="btn-ctx-gpu" onclick="setMainContext('gpu')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition cursor-pointer bg-sky-500 text-slate-950 shadow-sm" title="Contexto Placas de Vídeo (GPUs)">
-            <span>🎮</span>
-            <span>GPU</span>
-          </button>
-          <button type="button" id="btn-ctx-cpu" onclick="setMainContext('cpu')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer text-slate-400 hover:text-slate-200" title="Contexto Processadores (CPUs, Placas-Mãe, RAM)">
-            <span>⚡</span>
-            <span>CPU</span>
-          </button>
-          <button type="button" id="btn-ctx-laptop" onclick="setMainContext('laptop')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer text-slate-400 hover:text-slate-200" title="Contexto Notebooks Completos (Sistema Completo vs Sistema Completo)">
-            <span>💻</span>
-            <span>Notebook</span>
-          </button>
+        <!-- Center: Highlighted Context Selector (GPU / CPU / Notebook) -->
+        <div class="ui-topbar-context">
+          <div class="ui-segmented" id="header-context-toggle" role="tablist" aria-label="Tipo de hardware">
+            <button type="button" id="btn-ctx-gpu" onclick="setMainContext('gpu')" class="ui-segmented-btn is-active" title="Placas de Vídeo (GPUs)">
+              <span>GPU</span>
+            </button>
+            <button type="button" id="btn-ctx-cpu" onclick="setMainContext('cpu')" class="ui-segmented-btn" title="Processadores (CPUs)">
+              <span>CPU</span>
+            </button>
+            <button type="button" id="btn-ctx-laptop" onclick="setMainContext('laptop')" class="ui-segmented-btn" title="Notebooks Completos">
+              <span>Notebook</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Button: Live Promo Radar -->
-        <button id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 shadow-sm shadow-amber-500/10 transition cursor-pointer" title="Abrir Radar de Promoções e Cupons ao Vivo">
-          <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          <span class="hidden sm:inline">Radar</span>
-          <span id="promo-radar-badge" class="px-1.5 py-0.5 rounded-md bg-slate-950 text-amber-300 font-mono text-[10px] border border-amber-500/30">...</span>
-        </button>
+        <!-- Right: Compact Actions (Radar, Sync, Settings Gear) -->
+        <div class="ui-topbar-actions">
+          <button type="button" id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="ui-btn ui-btn--sm" title="Abrir Radar de Promoções e Cupons ao Vivo">
+            <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span class="hidden sm:inline">Radar</span>
+            <span id="promo-radar-badge" class="ui-badge ui-badge--warn !py-0 !px-1.5 ui-mono">...</span>
+          </button>
 
-        <!-- Button: Refresh Database -->
-        <button id="btn-refresh-db" onclick="refreshDatabase()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-sm transition cursor-pointer" title="Sincronizar base de dados">
-          <svg id="icon-refresh" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          <span class="hidden sm:inline">Sync</span>
-        </button>
+          <button type="button" id="btn-refresh-db" onclick="refreshDatabase()" class="ui-btn ui-btn--primary ui-btn--sm" title="Sincronizar base de dados">
+            <svg id="icon-refresh" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span class="hidden sm:inline">Sync</span>
+          </button>
 
-        <!-- Button: Settings Tab Shortcut (No label, just icon as requested) -->
-        <button onclick="switchTab('config')" class="p-2 rounded-xl text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-slate-600 transition cursor-pointer" title="Abrir Configurações do Sistema (Workstation, PC de Referência, Pesos, Moeda)">
-          <svg class="w-4 h-4 text-slate-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-        </button>
+          <button type="button" id="btn-header-config" onclick="switchTab('config')" class="ui-btn ui-btn--icon" title="Configurações do Sistema" aria-label="Configurações do Sistema">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          </button>
+        </div>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- MAIN CONTENT CONTAINER -->
-  <main class="flex-1 max-w-[1640px] w-full mx-auto px-4 py-6 space-y-6">
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-[1640px] w-full mx-auto px-4 py-5 space-y-5">
+
+      <!-- AREA SUB-NAVIGATION BAR (MOBILE + QUICK SWITCHING WITHIN AREA) -->
+      <div id="area-subnav-wrap" class="flex items-center justify-between gap-3">
+        <div id="area-subnav" class="ui-subnav" role="tablist" aria-label="Sub-abas da área"></div>
+      </div>
+
+      <!-- =================================================================== -->
+      <!-- TAB 0: INÍCIO (ESTRUTURA BASE — ENRIQUECIDA NA FASE 2)              -->
+      <!-- =================================================================== -->
+      <section id="tab-home" class="hidden space-y-6">
+        <div class="ui-card">
+          <div class="ui-card-header">
+            <div>
+              <h2 class="ui-title-xl">O que você quer fazer hoje?</h2>
+              <p class="ui-body-sm mt-1">Escolha uma área abaixo ou use o menu para comparar peças, acompanhar preços e montar seu setup.</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button type="button" onclick="switchTab('versus')" class="ui-card ui-card--compact ui-card--interactive text-left">
+              <span class="ui-badge ui-badge--brand mb-2">Comparar</span>
+              <div class="ui-title-md">Duelo &amp; Simulador</div>
+              <p class="ui-body-sm mt-1">Compare dois modelos lado a lado ou simule desempenho real.</p>
+            </button>
+            <button type="button" onclick="switchTab('cb')" class="ui-card ui-card--compact ui-card--interactive text-left">
+              <span class="ui-badge ui-badge--good mb-2">Preços</span>
+              <div class="ui-title-md">Custo-benefício</div>
+              <p class="ui-body-sm mt-1">Veja o ranking por preço/desempenho e alvos de compra.</p>
+            </button>
+            <button type="button" onclick="switchTab('bf-promos')" class="ui-card ui-card--compact ui-card--interactive text-left">
+              <span class="ui-badge ui-badge--warn mb-2">Ofertas</span>
+              <div class="ui-title-md">Black Friday &amp; Promoções</div>
+              <p class="ui-body-sm mt-1">Acompanhe promoções ao vivo e sazonalidade histórica.</p>
+            </button>
+            <button type="button" onclick="switchTab('builder')" class="ui-card ui-card--compact ui-card--interactive text-left">
+              <span class="ui-badge mb-2">Montar</span>
+              <div class="ui-title-md">Montagem &amp; Upgrades</div>
+              <p class="ui-body-sm mt-1">Planeje seu PC, consumo de energia e upgrades de plataforma.</p>
+            </button>
+          </div>
+        </div>
+      </section>
 
     <!-- ===================================================================== -->
     <!-- COLLAPSIBLE LIVE PROMO & COUPON RADAR (WHATSAPP/TELEGRAM BOTS)        -->
@@ -2780,14 +2801,35 @@
   </main>
 
   <footer class="border-t border-slate-800/80 py-4 px-4 text-center text-xs text-slate-500 mt-8">
-    Dados sincronizados e calculados via Database de hardware • Calculadora Relacional Contextual (Jogos, Inferência IA Local, AI Training & Produtividade)
+    Dados sincronizados e calculados via Database de hardware • Calculadora Relacional Contextual (Jogos, Inferência IA Local, AI Training &amp; Produtividade)
   </footer>
+  </div><!-- /.ui-shell-content -->
 
-  <!-- Floating Deal Notification Toast Container -->
-  <div id="promo-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none"></div>
+  <!-- MOBILE BOTTOM NAVIGATION BAR (< 1024px) -->
+  <nav id="mobile-bottom-nav" class="ui-bottom-nav" aria-label="Navegação mobile">
+    <button type="button" id="bnav-home" onclick="switchArea('home')" class="ui-bottom-nav-btn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+      <span>Início</span>
+    </button>
+    <button type="button" id="bnav-compare" onclick="switchArea('compare')" class="ui-bottom-nav-btn is-active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+      <span>Comparar</span>
+    </button>
+    <button type="button" id="bnav-prices" onclick="switchArea('prices')" class="ui-bottom-nav-btn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+      <span>Preços</span>
+    </button>
+    <button type="button" id="bnav-build" onclick="switchArea('build')" class="ui-bottom-nav-btn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+      <span>Montar</span>
+    </button>
+  </nav>
 
-  <script src="app.js?v=20261119-3"></script>
-  <script src="app_features.js?v=20261119-3"></script>
-  <script src="laptop_mode.js?v=20261119-3"></script>
+  <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
+  <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
+
+  <script src="app.js?v=20261119-4"></script>
+  <script src="app_features.js?v=20261119-4"></script>
+  <script src="laptop_mode.js?v=20261119-4"></script>
 </body>
 </html>

@@ -4713,67 +4713,71 @@ function evaluateDealsForAlerts() {
   return qualifying;
 }
 
+let _dealToastTimer = null;
+
 function showDealToastNotification(deal) {
   if (!PROMO_STATE.notifyWebToast) return;
   const container = document.getElementById('promo-toast-container');
   if (!container) return;
 
+  if (_dealToastTimer) {
+    clearTimeout(_dealToastTimer);
+    _dealToastTimer = null;
+  }
+
+  // Max 1 compact offer alert at a time (replaces any previous alert)
+  container.innerHTML = '';
+
   const toastId = 'toast-' + Math.random().toString(36).slice(2, 9);
-  const couponBadge = (deal.coupon_code || deal.coupon_info)
-    ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px]">🎟️ ${deal.coupon_code || deal.coupon_info}</span>`
+  const firstReason = (deal.alert_reasons && deal.alert_reasons[0]) || 'Oferta';
+  const couponTag = (deal.coupon_code || deal.coupon_info)
+    ? `<span class="ui-badge ui-badge--warn ui-mono">${deal.coupon_code || deal.coupon_info}</span>`
     : '';
-  const reasonsHtml = (deal.alert_reasons || []).map(r =>
-    `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono font-bold text-[10px]">${r}</span>`
-  ).join(' ');
 
   const div = document.createElement('div');
   div.id = toastId;
-  div.className = 'pointer-events-auto rounded-2xl bg-slate-950/95 border-2 border-amber-400/80 shadow-2xl shadow-amber-500/20 p-3.5 text-xs space-y-2 transition-all duration-300';
+  div.className = 'ui-deal-toast';
   div.innerHTML = `
-    <div class="flex items-start justify-between gap-2">
-      <div class="flex flex-wrap items-center gap-1.5">
-        <span class="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 font-mono font-extrabold text-[10px]">🔔 ALERTA DE OFERTA</span>
-        ${reasonsHtml}
-      </div>
-      <button onclick="document.getElementById('${toastId}')?.remove()" class="text-slate-400 hover:text-white font-bold px-1 cursor-pointer">✕</button>
+    <div class="flex items-center justify-between gap-2">
+      <span class="ui-badge ui-badge--good">${firstReason}</span>
+      <button type="button" onclick="document.getElementById('${toastId}')?.remove()" class="text-slate-400 hover:text-white text-sm leading-none px-1 cursor-pointer" aria-label="Fechar aviso">✕</button>
     </div>
     <div class="flex items-baseline justify-between gap-2">
-      <span class="font-extrabold text-white text-sm">${deal.matched_name}</span>
-      <div class="flex items-center gap-1.5">
-        ${deal.hb_price_brl > deal.price_brl ? `<span class="text-[11px] font-mono text-slate-500 line-through">${fmtBRLShort(deal.hb_price_brl)}</span>` : ''}
-        <span class="font-mono font-extrabold text-base text-emerald-400">${fmtBRL(deal.price_brl)}</span>
-      </div>
+      <span class="font-bold text-slate-100 text-sm truncate">${deal.matched_name}</span>
+      <span class="ui-mono font-bold text-base text-emerald-400 shrink-0">${fmtBRL(deal.price_brl)}</span>
     </div>
-    ${deal.bf_alert_banner ? `
-      <div class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-500/25 via-rose-500/20 to-emerald-500/25 border border-amber-400 text-amber-200 font-mono font-extrabold text-[11px] tracking-wide">
-        ${deal.bf_alert_banner}
+    <div class="flex items-center justify-between gap-2 pt-1">
+      <div class="flex items-center gap-1.5 min-w-0 truncate">
+        ${couponTag}
       </div>
-    ` : ''}
-    <div class="text-[11px] text-slate-300 line-clamp-2">${deal.title}</div>
-    <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-800">
-      <div class="flex items-center gap-1.5">
-        ${couponBadge}
-        <span class="text-[10px] font-mono text-slate-400">@${deal.channel_id}</span>
-      </div>
-      <div class="flex items-center gap-1.5">
-        <button onclick="sendPromoToDuelOrBF('${deal.matched_kind}', '${deal.matched_slug}', ${deal.price_brl}); document.getElementById('${toastId}')?.remove();" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-bold text-[11px] cursor-pointer">
-          ${deal.matched_kind === 'gpu' ? 'Ver Duelo' : 'Ver BF'}
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button type="button" onclick="sendPromoToDuelOrBF('${deal.matched_kind}', '${deal.matched_slug}', ${deal.price_brl}); document.getElementById('${toastId}')?.remove();" class="ui-btn ui-btn--sm ui-btn--ghost">
+          ${deal.matched_kind === 'gpu' ? 'Duelo' : 'Ver'}
         </button>
-        <a href="${deal.buy_url}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">
-          Ir p/ Oferta ↗
+        <a href="${deal.buy_url}" target="_blank" rel="noopener" class="ui-btn ui-btn--sm ui-btn--good">
+          Oferta ↗
         </a>
       </div>
     </div>
   `;
 
-  container.prepend(div);
-  while (container.children.length > 3) {
-    container.lastElementChild.remove();
-  }
-  setTimeout(() => {
-    const el = document.getElementById(toastId);
-    if (el) el.remove();
-  }, 18000);
+  const scheduleDismiss = () => {
+    _dealToastTimer = setTimeout(() => {
+      const el = document.getElementById(toastId);
+      if (el) el.remove();
+    }, 7000);
+  };
+
+  div.addEventListener('mouseenter', () => {
+    if (_dealToastTimer) {
+      clearTimeout(_dealToastTimer);
+      _dealToastTimer = null;
+    }
+  });
+  div.addEventListener('mouseleave', scheduleDismiss);
+
+  container.appendChild(div);
+  scheduleDismiss();
 }
 
 function fireWindowsNativeNotification(deal) {

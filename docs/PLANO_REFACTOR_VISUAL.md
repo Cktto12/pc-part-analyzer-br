@@ -45,15 +45,15 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Tema único para todos os gráficos do Chart.js
 
 ### Fase 1 — Navegação
-- [ ] Trocar o hambúrguer por um menu sempre visível: barra lateral no desktop, barra inferior no celular
-- [ ] Agrupar as 8 abas em 4 áreas:
+- [x] Trocar o hambúrguer por um menu sempre visível: barra lateral no desktop, barra inferior no celular
+- [x] Agrupar as 8 abas em 4 áreas:
   - **Início**
   - **Comparar** (Duelo + Simulador)
   - **Preços** (Custo-benefício + Black Friday + Promoções)
   - **Montar** (Montagem + Upgrades)
-- [ ] Configurações no ícone de engrenagem
-- [ ] Seletor GPU / CPU / Notebook em destaque no topo
-- [ ] Avisos de oferta: no máximo um por vez, compacto, some sozinho
+- [x] Configurações no ícone de engrenagem
+- [x] Seletor GPU / CPU / Notebook em destaque no topo
+- [x] Avisos de oferta: no máximo um por vez, compacto, some sozinho
 
 ### Fase 2 — Página inicial nova
 - [ ] Números grandes no topo: ofertas ativas, produtos no mínimo histórico hoje, dias até a Black Friday

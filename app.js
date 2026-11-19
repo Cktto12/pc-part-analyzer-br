@@ -1451,23 +1451,106 @@ function getPriceStatusBadgeHTML(gpu) {
   }
 }
 
+// Navigation Areas (4 Areas: Início, Comparar, Preços, Montar) + Config
+const NAV_AREAS = {
+  home: { label: 'Início', tabs: [{ id: 'home', label: 'Início' }] },
+  compare: {
+    label: 'Comparar',
+    tabs: [
+      { id: 'versus', label: 'Duelo' },
+      { id: 'sim', label: 'Simulador' }
+    ]
+  },
+  prices: {
+    label: 'Preços',
+    tabs: [
+      { id: 'cb', label: 'Custo-benefício' },
+      { id: 'bf', label: 'Black Friday' },
+      { id: 'bf-promos', label: 'Promoções' }
+    ]
+  },
+  build: {
+    label: 'Montar',
+    tabs: [
+      { id: 'builder', label: 'Montagem' },
+      { id: 'upgrades', label: 'Upgrades' }
+    ]
+  }
+};
+
+const TAB_TO_AREA = {
+  home: 'home',
+  versus: 'compare',
+  sim: 'compare',
+  cb: 'prices',
+  bf: 'prices',
+  'bf-promos': 'prices',
+  builder: 'build',
+  upgrades: 'build',
+  config: null
+};
+
+const LAST_TAB_BY_AREA = {
+  home: 'home',
+  compare: 'versus',
+  prices: 'cb',
+  build: 'builder'
+};
+
+function renderAreaSubnav(tabId) {
+  const wrap = document.getElementById('area-subnav-wrap');
+  const nav = document.getElementById('area-subnav');
+  if (!wrap || !nav) return;
+
+  const areaKey = TAB_TO_AREA[tabId];
+  const area = areaKey ? NAV_AREAS[areaKey] : null;
+  if (!area || area.tabs.length <= 1) {
+    wrap.classList.add('hidden');
+    nav.innerHTML = '';
+    return;
+  }
+
+  wrap.classList.remove('hidden');
+  nav.innerHTML = area.tabs.map(t => {
+    const active = t.id === tabId ? 'is-active' : '';
+    return `<button type="button" onclick="switchTab('${t.id}')" class="ui-subnav-btn ${active}" role="tab" aria-selected="${t.id === tabId ? 'true' : 'false'}">${t.label}</button>`;
+  }).join('');
+}
+
+function switchArea(areaId) {
+  const target = LAST_TAB_BY_AREA[areaId] || (NAV_AREAS[areaId]?.tabs?.[0]?.id) || 'home';
+  switchTab(target);
+}
+window.switchArea = switchArea;
+
 // Switch Main Tabs
 function switchTab(tabId) {
   STATE.activeTab = tabId;
+  const areaKey = TAB_TO_AREA[tabId];
+  if (areaKey) LAST_TAB_BY_AREA[areaKey] = tabId;
 
-  ['versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'config'].forEach(id => {
+  const allTabs = ['home', 'versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'config'];
+  allTabs.forEach(id => {
     const sec = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`tab-btn-${id}`);
-    if (!sec || !btn) return;
-    if (id === tabId) {
-      sec.classList.remove('hidden');
-      btn.className = 'tab-btn w-full px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-3 bg-sky-500/15 text-sky-300 border border-sky-500/30 shadow-sm shadow-sky-500/10 transition-all text-left';
-    } else {
-      sec.classList.add('hidden');
-      btn.className = 'tab-btn w-full px-4 py-3 rounded-xl text-xs font-medium flex items-center gap-3 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60 border border-transparent transition-all text-left';
-    }
+    if (sec) sec.classList.toggle('hidden', id !== tabId);
+    if (btn) btn.classList.toggle('is-active', id === tabId);
   });
 
+  // Update mobile bottom navigation active area
+  ['home', 'compare', 'prices', 'build'].forEach(a => {
+    const b = document.getElementById(`bnav-${a}`);
+    if (b) b.classList.toggle('is-active', a === areaKey);
+  });
+
+  // Highlight header gear button when in config
+  const gearBtn = document.getElementById('btn-header-config');
+  if (gearBtn) {
+    gearBtn.style.borderColor = tabId === 'config' ? 'var(--ui-brand-border)' : '';
+    gearBtn.style.color = tabId === 'config' ? 'var(--ui-brand)' : '';
+  }
+
+  renderAreaSubnav(tabId);
   closeSidebar();
   renderActiveTab();
   if (tabId === 'bf-promos' && typeof startBFLivePolling === 'function') {
@@ -1478,24 +1561,11 @@ function switchTab(tabId) {
 }
 
 function toggleSidebar() {
-  const sb = document.getElementById('app-sidebar');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (!sb) return;
-  const isClosed = sb.classList.contains('-translate-x-full');
-  if (isClosed) {
-    sb.classList.remove('-translate-x-full');
-    if (bd) bd.classList.remove('hidden');
-  } else {
-    sb.classList.add('-translate-x-full');
-    if (bd) bd.classList.add('hidden');
-  }
+  // Sidebar is always visible on desktop (>= 1024px); mobile uses bottom navigation.
 }
 
 function closeSidebar() {
-  const sb = document.getElementById('app-sidebar');
-  const bd = document.getElementById('sidebar-backdrop');
-  if (sb) sb.classList.add('-translate-x-full');
-  if (bd) bd.classList.add('hidden');
+  // Kept for backward compatibility with existing onclick handlers.
 }
 
 function toggleContextSettings() {
@@ -1625,52 +1695,47 @@ function setMainContext(ctx) {
     localStorage.setItem('gca_context', STATE.context);
   } catch (_) {}
 
-  // Update header toggle button visual state
+  // Update header toggle button visual state (unified brand accent)
   const btnGpu = document.getElementById('btn-ctx-gpu');
   const btnCpu = document.getElementById('btn-ctx-cpu');
   const btnLap = document.getElementById('btn-ctx-laptop');
-  const idleCls = "px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200";
-  if (btnGpu && btnCpu) {
-    btnGpu.className = STATE.context === 'gpu' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-sky-500 text-slate-950 shadow-sm" : idleCls;
-    btnCpu.className = STATE.context === 'cpu' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-500 text-slate-950 shadow-sm" : idleCls;
-    if (btnLap) {
-      btnLap.className = STATE.context === 'laptop' ? "px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer bg-purple-500 text-white shadow-sm" : idleCls;
-    }
+  if (btnGpu) {
+    btnGpu.className = `ui-segmented-btn${STATE.context === 'gpu' ? ' is-active' : ''}`;
+    btnGpu.setAttribute('aria-selected', STATE.context === 'gpu' ? 'true' : 'false');
+  }
+  if (btnCpu) {
+    btnCpu.className = `ui-segmented-btn${STATE.context === 'cpu' ? ' is-active' : ''}`;
+    btnCpu.setAttribute('aria-selected', STATE.context === 'cpu' ? 'true' : 'false');
+  }
+  if (btnLap) {
+    btnLap.className = `ui-segmented-btn${STATE.context === 'laptop' ? ' is-active' : ''}`;
+    btnLap.setAttribute('aria-selected', STATE.context === 'laptop' ? 'true' : 'false');
   }
 
+  const subText = STATE.context === 'laptop'
+    ? 'Notebooks Completos'
+    : STATE.context === 'cpu'
+      ? 'Processadores & Plataforma'
+      : 'Placas de Vídeo';
   const brandSub = document.getElementById('header-brand-sub');
-  if (brandSub) {
-    brandSub.textContent = STATE.context === 'laptop'
-      ? 'Notebook & Full-System Analyzer'
-      : 'GPU & CPU Analyzer';
-  }
+  if (brandSub) brandSub.textContent = subText;
+  const sbBrandSub = document.getElementById('sidebar-brand-sub');
+  if (sbBrandSub) sbBrandSub.textContent = subText;
 
-  // Update sidebar titles (same tabs, context-adapted titles)
+  // Keep concise sidebar labels across contexts
   const tVersus = document.getElementById('sidebar-tab-title-versus');
   const tCb = document.getElementById('sidebar-tab-title-cb');
   const tBuilder = document.getElementById('sidebar-tab-title-builder');
   const tUpgrades = document.getElementById('sidebar-tab-title-upgrades');
   const tBf = document.getElementById('sidebar-tab-title-bf');
 
-  if (STATE.context === 'laptop') {
-    if (tVersus) tVersus.textContent = 'Duelo de Notebooks';
-    if (tCb) tCb.textContent = 'Custo-Benefício Notebooks';
-    if (tBuilder) tBuilder.textContent = 'Objetivo de Compra';
-    if (tUpgrades) tUpgrades.textContent = 'Upgrades (RAM / SSD)';
-    if (tBf) tBf.textContent = 'Black Friday Notebooks';
-  } else if (STATE.context === 'cpu') {
-    if (tVersus) tVersus.textContent = 'Duelo de CPUs';
-    if (tCb) tCb.textContent = 'Custo-Benefício CPUs';
-    if (tBuilder) tBuilder.textContent = 'Setup & Plataforma';
-    if (tUpgrades) tUpgrades.textContent = 'Upgrades CPU & RAM';
-    if (tBf) tBf.textContent = 'Black Friday CPUs';
-  } else {
-    if (tVersus) tVersus.textContent = 'Duelo de GPUs';
-    if (tCb) tCb.textContent = 'Custo-Benefício GPUs';
-    if (tBuilder) tBuilder.textContent = 'Objetivo de Compra';
-    if (tUpgrades) tUpgrades.textContent = 'Upgrades de Plataforma';
-    if (tBf) tBf.textContent = 'Black Friday GPUs';
-  }
+  if (tVersus) tVersus.textContent = 'Duelo';
+  if (tCb) tCb.textContent = 'Custo-benefício';
+  if (tBuilder) tBuilder.textContent = STATE.context === 'laptop' ? 'Objetivo' : 'Montagem';
+  if (tUpgrades) tUpgrades.textContent = STATE.context === 'laptop' ? 'Upgrades (RAM/SSD)' : 'Upgrades';
+  if (tBf) tBf.textContent = 'Black Friday';
+
+  renderAreaSubnav(STATE.activeTab || 'versus');
 
   const sym = STATE.market?.monetary?.currency_symbol || 'R$';
   const regName = STATE.market?.region_name || 'Brasil';
