@@ -1177,3 +1177,127 @@
 .ui-score-card--b {
   border-color: var(--ui-compare-b-border);
 }
+
+/* ==========================================================================
+   13. Custo-Benefício: Filtros em chips, Tabela enxuta & Sparklines (Fase 4)
+   ========================================================================== */
+.ui-filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.ui-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ui-filter-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--ui-radius-pill);
+  font-size: var(--ui-text-label);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ui-text-secondary);
+  background: var(--ui-bg-subtle);
+  border: 1px solid var(--ui-border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--ui-transition), border-color var(--ui-transition), color var(--ui-transition);
+}
+
+.ui-chip:hover:not(.is-active) {
+  background: var(--ui-bg-hover);
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text-primary);
+}
+
+.ui-chip.is-active {
+  background: var(--ui-brand-soft);
+  border-color: var(--ui-brand-border);
+  color: var(--ui-brand-hover);
+}
+
+.ui-chip--good.is-active {
+  background: var(--ui-good-soft);
+  border-color: var(--ui-good-border);
+  color: var(--ui-good-text);
+}
+
+.ui-chip--warn.is-active {
+  background: var(--ui-warn-soft);
+  border-color: var(--ui-warn-border);
+  color: var(--ui-warn-text);
+}
+
+.ui-chip--bad.is-active {
+  background: var(--ui-bad-soft);
+  border-color: var(--ui-bad-border);
+  color: var(--ui-bad-text);
+}
+
+.ui-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: rgba(9, 13, 22, 0.55);
+}
+
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ui-table thead th {
+  padding: 0.65rem 0.55rem;
+  font-size: var(--ui-text-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ui-text-muted);
+  background: rgba(15, 23, 42, 0.85);
+  border-bottom: 1px solid var(--ui-border);
+  white-space: nowrap;
+}
+
+.ui-table tbody tr {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.09);
+  transition: background-color var(--ui-transition);
+}
+
+.ui-table tbody tr:hover {
+  background: var(--ui-bg-hover);
+}
+
+.ui-table tbody td {
+  padding: 0.65rem 0.55rem;
+  font-size: var(--ui-text-body-sm);
+  vertical-align: middle;
+}
+
+.ui-sparkline-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.ui-sparkline-svg {
+  display: block;
+  width: 84px;
+  height: 28px;
+  overflow: visible;
+}

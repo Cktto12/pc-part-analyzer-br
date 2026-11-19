@@ -1362,91 +1362,149 @@
     <!-- ===================================================================== -->
     <section id="tab-cb" class="hidden space-y-6">
       <!-- GPU CB VIEW -->
-      <div id="cb-gpu-view" class="space-y-6">
-        <div class="glass-card rounded-2xl p-5">
-        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Ranking de Custo-Benefício & Preço Alvo</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Ponderação contextual calculada para seu monitor, jogos e demandas de IA/Engenharia.
-            </p>
-          </div>
-          <!-- Filters & Column Config -->
-          <div class="flex flex-wrap items-center gap-2">
-            <input type="text" id="cb-search" oninput="renderCBTable()" placeholder="Buscar GPU (ex: 5070, 9070, 3060)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400 w-48" />
-            <select id="cb-filter-brand" onchange="renderCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="ALL">Todas Marcas</option>
-              <option value="NVIDIA">NVIDIA GeForce</option>
-              <option value="AMD">AMD Radeon</option>
-              <option value="Intel">Intel Arc</option>
-            </select>
-            <select id="cb-filter-vram" onchange="renderCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="0">Qualquer VRAM</option>
-              <option value="8">Mínimo 8 GB VRAM</option>
-              <option value="12">Mínimo 12 GB VRAM (Recomendado IA/Redes)</option>
-              <option value="16">Mínimo 16 GB VRAM (Ideal IA/LLMs)</option>
-            </select>
-            <select id="cb-filter-base-rel" onchange="renderCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold" title="Escolha a Placa Base de Comparação"></select>
-
-            <!-- Scale Mode Segmented Control in CB Table -->
-            <div class="inline-flex p-0.5 bg-slate-900 border border-slate-700 rounded-lg text-[11px] font-mono" id="group-cb-scale-mode">
-              <button type="button" id="btn-scale-rel-cb" onclick="setComparisonScaleMode('relative')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm" title="Escala Relativa vs Placa Base">
-                ⚖️ Relativa (Base)
-              </button>
-              <button type="button" id="btn-scale-abs-cb" onclick="setComparisonScaleMode('absolute')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200" title="Escala Absoluta vs Topo">
-                📊 Absoluta (Topo)
-              </button>
+      <div id="cb-gpu-view" class="space-y-5">
+        <div class="ui-card space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-xl">Custo-benefício — GPUs</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o ranking de custo-benefício">i</button>
+                <span class="ui-info-popover" role="tooltip">Ponderação contextual calculada para seu monitor, jogos e demandas de IA/Engenharia, comparada com o preço alvo histórico.</span>
+              </span>
             </div>
 
-            <!-- Column Visibility Config Dropdown -->
-            <div class="relative inline-block text-left" id="cb-col-menu-wrapper">
-              <button onclick="toggleCBColMenu()" class="flex items-center gap-1.5 bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 transition cursor-pointer">
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-                <span>Colunas</span>
-              </button>
-              <div id="cb-col-menu" class="hidden absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-30 space-y-2 text-xs">
-                <div class="text-[10px] font-mono uppercase text-slate-400 font-bold border-b border-slate-800 pb-1">Personalizar Colunas</div>
-                <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
-                  <input type="checkbox" id="cb-chk-target" onchange="toggleCBCol('target', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
-                  <span>Preço Alvo</span>
-                </label>
-                <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
-                  <input type="checkbox" id="cb-chk-trend" onchange="toggleCBCol('trend', this.checked)" class="rounded border-slate-700 text-sky-500 focus:ring-0">
-                  <span>Tendência 90d</span>
-                </label>
-                <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
-                  <input type="checkbox" id="cb-chk-hb_cb" onchange="toggleCBCol('hb_cb', this.checked)" class="rounded border-slate-700 text-sky-500 focus:ring-0">
-                  <span>CB Catálogo Base</span>
-                </label>
-                <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
-                  <input type="checkbox" id="cb-chk-rel_verdict" onchange="toggleCBCol('rel_verdict', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
-                  <span>Relação vs Base</span>
-                </label>
-                <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
-                  <input type="checkbox" id="cb-chk-actions" onchange="toggleCBCol('actions', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
-                  <span>Ações</span>
-                </label>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="cb-search" oninput="renderCBTable()" placeholder="Buscar GPU (ex: 5070, 9070)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-400 w-52" />
+              <select id="cb-filter-base-rel" onchange="renderCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold" title="Escolha a Placa Base de Comparação"></select>
+
+              <div class="ui-segmented" id="group-cb-scale-mode">
+                <button type="button" id="btn-scale-rel-cb" onclick="setComparisonScaleMode('relative')" class="ui-segmented-btn is-active" title="Escala Relativa vs Placa Base">
+                  Relativa
+                </button>
+                <button type="button" id="btn-scale-abs-cb" onclick="setComparisonScaleMode('absolute')" class="ui-segmented-btn" title="Escala Absoluta vs Topo">
+                  Absoluta
+                </button>
+              </div>
+
+              <!-- Column Visibility Config Dropdown -->
+              <div class="relative inline-block text-left" id="cb-col-menu-wrapper">
+                <button type="button" onclick="toggleCBColMenu()" class="ui-btn ui-btn--sm">
+                  <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  <span>Colunas</span>
+                </button>
+                <div id="cb-col-menu" class="hidden absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-30 space-y-2 text-xs">
+                  <div class="ui-label border-b border-slate-800 pb-1">Personalizar Colunas</div>
+                  <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
+                    <input type="checkbox" id="cb-chk-target" onchange="toggleCBCol('target', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
+                    <span>Preço Alvo</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
+                    <input type="checkbox" id="cb-chk-trend" onchange="toggleCBCol('trend', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
+                    <span>Tendência 90d</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
+                    <input type="checkbox" id="cb-chk-hb_cb" onchange="toggleCBCol('hb_cb', this.checked)" class="rounded border-slate-700 text-sky-500 focus:ring-0">
+                    <span>CB Catálogo Base</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
+                    <input type="checkbox" id="cb-chk-rel_verdict" onchange="toggleCBCol('rel_verdict', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
+                    <span>Relação vs Base</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-slate-300 hover:text-white cursor-pointer select-none">
+                    <input type="checkbox" id="cb-chk-actions" onchange="toggleCBCol('actions', this.checked)" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
+                    <span>Ações</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Hidden selects kept in sync for backwards compatibility -->
+          <select id="cb-filter-brand" onchange="renderCBTable()" class="hidden">
+            <option value="ALL">Todas Marcas</option>
+            <option value="NVIDIA">NVIDIA</option>
+            <option value="AMD">AMD</option>
+            <option value="Intel">Intel</option>
+          </select>
+          <select id="cb-filter-vram" onchange="renderCBTable()" class="hidden">
+            <option value="0">Qualquer VRAM</option>
+            <option value="8">8 GB+</option>
+            <option value="12">12 GB+</option>
+            <option value="16">16 GB+</option>
+          </select>
+          <select id="cb-filter-price-status" onchange="renderCBTable()" class="hidden">
+            <option value="ALL">Todos</option>
+            <option value="good">Abaixo do alvo</option>
+            <option value="warn">No alvo</option>
+            <option value="bad">Caro</option>
+          </select>
+
+          <!-- Clickable Filter Chips -->
+          <div class="ui-filter-bar">
+            <div class="ui-filter-row">
+              <div class="ui-filter-group" data-chip-target="cb-filter-brand">
+                <span class="ui-label mr-1">Marca:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('cb-filter-brand', 'ALL', renderCBTable)">Todas</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cb-filter-brand', 'NVIDIA', renderCBTable)">NVIDIA</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cb-filter-brand', 'AMD', renderCBTable)">AMD</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cb-filter-brand', 'Intel', renderCBTable)">Intel</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="cb-filter-vram">
+                <span class="ui-label mr-1">VRAM:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('cb-filter-vram', '0', renderCBTable)">Qualquer</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cb-filter-vram', '8', renderCBTable)">8 GB+</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cb-filter-vram', '12', renderCBTable)">12 GB+</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cb-filter-vram', '16', renderCBTable)">16 GB+</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="cb-filter-price-status">
+                <span class="ui-label mr-1">Preço:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('cb-filter-price-status', 'ALL', renderCBTable)">Todos</button>
+                <button type="button" class="ui-chip ui-chip--good" onclick="setFilterChip('cb-filter-price-status', 'good', renderCBTable)">Abaixo do alvo</button>
+                <button type="button" class="ui-chip ui-chip--warn" onclick="setFilterChip('cb-filter-price-status', 'warn', renderCBTable)">No alvo</button>
+                <button type="button" class="ui-chip ui-chip--bad" onclick="setFilterChip('cb-filter-price-status', 'bad', renderCBTable)">Caro</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact Ranking Table FIRST -->
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th class="cursor-pointer hover:text-white" onclick="setCBSort('rank')">#</th>
+                  <th class="cursor-pointer hover:text-white" onclick="setCBSort('name')">Placa de Vídeo</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setCBSort('price')">Preço & Status</th>
+                  <th id="th-target" class="cursor-pointer hover:text-white text-right" onclick="setCBSort('target')">Preço Alvo</th>
+                  <th id="th-trend" class="cursor-pointer hover:text-white text-center" onclick="setCBSort('trend')">Tendência 90d</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setCBSort('my_cb')">Custo-Benefício</th>
+                  <th id="th-hb_cb" class="cursor-pointer hover:text-white text-center" onclick="setCBSort('hb_cb')">CB Catálogo</th>
+                  <th id="th-rel-verdict" class="text-right">Relação vs Base</th>
+                  <th id="th-actions" class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cb-table-body"></tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Scatter Chart: Price vs Benefit / Benchmark -->
-        <div class="mt-4 bg-slate-900/70 rounded-xl p-4 border border-slate-800/80">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <div>
-              <span id="cb-chart-title" class="text-xs font-bold text-slate-300">Mapa de Eficiência: Preço Atual (<span class="currency-sym">R$</span>) vs Custo-Benefício (Índice 0–100)</span>
-              <span class="text-[11px] text-slate-400 font-mono ml-2 hidden sm:inline">• Clique no ponto para enviar ao Duelo</span>
+        <!-- Scatter Chart below table -->
+        <div class="ui-card">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <h3 id="cb-chart-title" class="ui-card-title">Mapa de Eficiência: Preço Atual (<span class="currency-sym">R$</span>) vs Custo-Benefício (0–100)</h3>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o mapa de eficiência">i</button>
+                <span class="ui-info-popover" role="tooltip">Clique em qualquer ponto do gráfico para enviar a GPU diretamente para o Duelo.</span>
+              </span>
             </div>
-            <!-- Chart Metric Selector (Price vs Benefit vs Benchmark) -->
-            <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
-              <button id="cb-chart-btn-benefit" onclick="setCBChartMetric('benefit')" class="px-2.5 py-1 rounded text-xs font-semibold transition bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                Preço vs Custo-Benefício
+            <div class="ui-segmented">
+              <button type="button" id="cb-chart-btn-benefit" onclick="setCBChartMetric('benefit')" class="ui-segmented-btn is-active">
+                Custo-Benefício
               </button>
-              <button id="cb-chart-btn-benchmark" onclick="setCBChartMetric('benchmark')" class="px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200">
-                Preço vs Benchmark Bruto
+              <button type="button" id="cb-chart-btn-benchmark" onclick="setCBChartMetric('benchmark')" class="ui-segmented-btn">
+                Benchmark Bruto
               </button>
             </div>
           </div>
@@ -1454,178 +1512,245 @@
             <canvas id="chart-cb-scatter"></canvas>
           </div>
         </div>
+      </div> <!-- /cb-gpu-view -->
 
-        <!-- Full Interactive Table -->
-        <div class="mt-5 overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 text-[11px] font-mono uppercase text-slate-400 bg-slate-900/60">
-                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCBSort('rank')">#</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCBSort('name')">Placa de Vídeo</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCBSort('price')">Preço Hoje</th>
-                <th id="th-target" class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCBSort('target')">Faixa Esperada (Alvo / BF)</th>
-                <th id="th-trend" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('trend')">Tendência 90d</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('my_cb')">Seu Custo-Benefício</th>
-                <th id="th-hb_cb" class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCBSort('hb_cb')">CB Catálogo</th>
-                <th id="th-rel-verdict" class="py-3 px-3 text-right">Relação vs Base</th>
-                <th id="th-actions" class="py-3 px-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="cb-table-body" class="divide-y divide-slate-800/60 text-xs"></tbody>
-          </table>
-        </div>
-      </div>
-    </div> <!-- /cb-gpu-view -->
-
-    <!-- CPU CB VIEW -->
-    <div id="cb-cpu-view" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-emerald-500/20">
-        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span>Ranking de Custo-Benefício de Processadores (CPUs)</span>
-              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">Plataforma & Workstation</span>
-            </h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Ponderação entre Single-Core IPC (Jogos), Multi-Core (Renderização 3D, Edição e Compilação) e custo de migração de plataforma (Placa-mãe e RAM).
-            </p>
-          </div>
-          <!-- Filters & Mode -->
-          <div class="flex flex-wrap items-center gap-2">
-            <input type="text" id="cpu-cb-search" oninput="renderCpuCBTable()" placeholder="Buscar CPU (ex: 5700X3D, 7800X3D, 14600K)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-400 w-48" />
-            <select id="cpu-cb-filter-socket" onchange="renderCpuCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="ALL">Todos os Sockets</option>
-              <option value="AM5">AMD AM5 (DDR5)</option>
-              <option value="AM4">AMD AM4 (DDR4)</option>
-              <option value="LGA1851">Intel LGA1851 (Ultra)</option>
-              <option value="LGA1700">Intel LGA1700 (12ª–14ª)</option>
-              <option value="LGA1200">Intel LGA1200</option>
-              <option value="LGA2011-3">Intel LGA2011-3 (Xeon)</option>
-            </select>
-            <select id="cpu-cb-filter-brand" onchange="renderCpuCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="ALL">Todas Marcas</option>
-              <option value="AMD">AMD Ryzen</option>
-              <option value="Intel">Intel Core / Xeon</option>
-            </select>
-            <select id="cpu-cb-filter-base-rel" onchange="renderCpuCBTable()" class="bg-slate-900 border border-emerald-500/40 rounded-lg px-2.5 py-1.5 text-xs text-emerald-300 font-semibold" title="Escolha o Processador Base de Comparação"></select>
-
-            <!-- Mode Switch: Apenas CPU vs Kit Plataforma Completa -->
-            <div class="inline-flex p-0.5 bg-slate-900 border border-slate-700 rounded-lg text-[11px] font-mono" id="group-cpu-cb-platform-mode">
-              <button type="button" id="btn-cpu-mode-isolated" onclick="setCpuPlatformMode('isolated')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer bg-emerald-500 text-slate-950 shadow-sm" title="Avaliar apenas o preço da CPU individual">
-                ⚡ Apenas CPU
-              </button>
-              <button type="button" id="btn-cpu-mode-bundle" onclick="setCpuPlatformMode('bundle')" class="px-2.5 py-1 rounded font-semibold transition cursor-pointer text-slate-400 hover:text-slate-200" title="Incluir custo de Placa-Mãe e RAM se mudar de socket/DDR">
-                📦 Kit Plataforma (CPU+Mobo+RAM)
-              </button>
+      <!-- CPU CB VIEW -->
+      <div id="cb-cpu-view" class="hidden space-y-5">
+        <div class="ui-card space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-xl">Custo-benefício — CPUs</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o ranking de CPUs">i</button>
+                <span class="ui-info-popover" role="tooltip">Pondera Jogos, Workstation (Render/Edição/Compilação) e eventual custo de migração de plataforma (placa-mãe e RAM).</span>
+              </span>
             </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="cpu-cb-search" oninput="renderCpuCBTable()" placeholder="Buscar CPU (ex: 5700X3D, 7800X3D)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-400 w-52" />
+              <select id="cpu-cb-filter-base-rel" onchange="renderCpuCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold" title="Escolha o Processador Base de Comparação"></select>
 
-            <!-- Exclude Xeons / Server Checkbox -->
-            <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-amber-500/40 text-[11px] font-mono text-amber-300 cursor-pointer select-none hover:border-amber-400 transition" title="Ocultar processadores de servidor antigos (Xeon LGA2011-3/X99) do ranking e cálculo de custo-benefício">
-              <input type="checkbox" id="cpu-cb-exclude-xeon" onchange="toggleExcludeXeons(this.checked)" checked class="rounded border-amber-500/50 bg-slate-950 text-amber-500 focus:ring-0">
-              <span>Ocultar Xeons / X99</span>
-            </label>
+              <div class="ui-segmented" id="group-cpu-cb-platform-mode">
+                <button type="button" id="btn-cpu-mode-isolated" onclick="setCpuPlatformMode('isolated')" class="ui-segmented-btn is-active" title="Avaliar apenas o preço da CPU individual">
+                  Apenas CPU
+                </button>
+                <button type="button" id="btn-cpu-mode-bundle" onclick="setCpuPlatformMode('bundle')" class="ui-segmented-btn" title="Incluir custo de Placa-Mãe e RAM se mudar de socket/DDR">
+                  Kit Plataforma
+                </button>
+              </div>
+
+              <label class="ui-chip cursor-pointer select-none" title="Ocultar processadores de servidor antigos (Xeon LGA2011-3/X99)">
+                <input type="checkbox" id="cpu-cb-exclude-xeon" onchange="toggleExcludeXeons(this.checked)" checked class="rounded border-slate-600 bg-slate-950 text-sky-400 focus:ring-0">
+                <span>Ocultar Xeons</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Hidden selects kept in sync -->
+          <select id="cpu-cb-filter-socket" onchange="renderCpuCBTable()" class="hidden">
+            <option value="ALL">Todos</option>
+            <option value="AM5">AM5</option>
+            <option value="AM4">AM4</option>
+            <option value="LGA1851">LGA1851</option>
+            <option value="LGA1700">LGA1700</option>
+            <option value="LGA1200">LGA1200</option>
+            <option value="LGA2011-3">LGA2011-3</option>
+          </select>
+          <select id="cpu-cb-filter-brand" onchange="renderCpuCBTable()" class="hidden">
+            <option value="ALL">Todas</option>
+            <option value="AMD">AMD</option>
+            <option value="Intel">Intel</option>
+          </select>
+
+          <!-- Clickable Filter Chips -->
+          <div class="ui-filter-bar">
+            <div class="ui-filter-row">
+              <div class="ui-filter-group" data-chip-target="cpu-cb-filter-brand">
+                <span class="ui-label mr-1">Marca:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('cpu-cb-filter-brand', 'ALL', renderCpuCBTable)">Todas</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-brand', 'AMD', renderCpuCBTable)">AMD</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-brand', 'Intel', renderCpuCBTable)">Intel</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="cpu-cb-filter-socket">
+                <span class="ui-label mr-1">Socket:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('cpu-cb-filter-socket', 'ALL', renderCpuCBTable)">Todos</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-socket', 'AM5', renderCpuCBTable)">AM5</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-socket', 'AM4', renderCpuCBTable)">AM4</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-socket', 'LGA1851', renderCpuCBTable)">LGA1851</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-socket', 'LGA1700', renderCpuCBTable)">LGA1700</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('cpu-cb-filter-socket', 'LGA1200', renderCpuCBTable)">LGA1200</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact CPU Ranking Table FIRST -->
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th class="cursor-pointer hover:text-white" onclick="setCpuCBSort('rank')">#</th>
+                  <th class="cursor-pointer hover:text-white" onclick="setCpuCBSort('name')">Processador</th>
+                  <th class="text-center cursor-pointer hover:text-white" onclick="setCpuCBSort('cores')">Cores</th>
+                  <th class="text-right cursor-pointer hover:text-white" onclick="setCpuCBSort('gaming')">Jogos / WS</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setCpuCBSort('price')">Preço & Status</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setCpuCBSort('target')">Preço Alvo</th>
+                  <th class="text-center">Tendência</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setCpuCBSort('my_cb')">Custo-Benefício</th>
+                  <th class="text-right">Relação vs Base</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cpu-cb-table-body"></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Scatter Chart: CPU Price vs Benefit / Workstation -->
-        <div class="mt-4 bg-slate-900/70 rounded-xl p-4 border border-slate-800/80">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <div>
-              <span id="cpu-cb-chart-title" class="text-xs font-bold text-slate-300">Mapa de Eficiência de CPUs: Preço (<span class="currency-sym">R$</span>) vs Custo-Benefício Contextual</span>
-              <span class="text-[11px] text-slate-400 font-mono ml-2 hidden sm:inline">• Clique no ponto para enviar ao Duelo</span>
+        <!-- Scatter Chart below table -->
+        <div class="ui-card">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <h3 id="cpu-cb-chart-title" class="ui-card-title">Mapa de Eficiência de CPUs: Preço (<span class="currency-sym">R$</span>) vs Custo-Benefício</h3>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o mapa de CPUs">i</button>
+                <span class="ui-info-popover" role="tooltip">Clique em qualquer ponto para enviar o processador ao Duelo.</span>
+              </span>
             </div>
           </div>
           <div class="h-64">
             <canvas id="chart-cpu-cb-scatter"></canvas>
           </div>
         </div>
+      </div> <!-- /cb-cpu-view -->
 
-        <!-- Full Interactive CPU Table -->
-        <div class="mt-5 overflow-x-auto rounded-xl border border-slate-800">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 text-[11px] font-mono uppercase text-slate-400 bg-slate-900/60">
-                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCpuCBSort('rank')">#</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setCpuCBSort('name')">Processador</th>
-                <th class="py-3 px-2 text-center cursor-pointer hover:text-white" onclick="setCpuCBSort('cores')">Cores / Threads</th>
-                <th class="py-3 px-2 text-right cursor-pointer hover:text-white" onclick="setCpuCBSort('gaming')">Jogos</th>
-                <th class="py-3 px-2 text-right cursor-pointer hover:text-white" onclick="setCpuCBSort('workstation')">Workstation</th>
-                <th class="py-3 px-2 text-center">TDP</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCpuCBSort('price')">Preço</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setCpuCBSort('target')">Preço Alvo</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setCpuCBSort('my_cb')">Custo-Benefício</th>
-                <th class="py-3 px-3 text-right">Relação vs Base</th>
-                <th class="py-3 px-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="cpu-cb-table-body" class="divide-y divide-slate-800/60 text-xs"></tbody>
-          </table>
-        </div>
-      </div>
-    </div> <!-- /cb-cpu-view -->
-
-    <!-- LAPTOP CB VIEW -->
-    <div id="cb-laptop-view" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-purple-500/25">
-        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white flex items-center gap-2 flex-wrap">
-              <span>Ranking de Custo-Benefício — Notebooks Completos</span>
-              <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">Full-System Score + Pesos</span>
-              <button type="button" id="laptop-cb-intensity-pill" onclick="toggleContextSettings()" class="px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-mono text-[10px] cursor-pointer transition" title="Ajustar intensidade das cargas nas Configurações"></button>
-            </h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Avalia o conjunto completo: Jogos, Workstation (Render/Edição/Dev), IA/VRAM, Tela (Hz/sRGB), Bateria, Portabilidade e Capacidade de Upgrade.
-            </p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <input type="text" id="laptop-cb-search" oninput="renderLaptopCBTable()" placeholder="Buscar notebook (ex: LOQ, Nitro, MacBook, 4060)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-400 w-52" />
-            <select id="laptop-cb-filter-brand" onchange="renderLaptopCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="ALL">Todas Marcas</option>
-              <option value="Lenovo">Lenovo</option>
-              <option value="Acer">Acer</option>
-              <option value="Asus">Asus</option>
-              <option value="Dell">Dell</option>
-              <option value="Samsung">Samsung</option>
-              <option value="Apple">Apple</option>
-              <option value="MSI">MSI</option>
-              <option value="Gigabyte">Gigabyte</option>
-            </select>
-            <select id="laptop-cb-filter-category" onchange="renderLaptopCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="ALL">Todas Categorias</option>
-              <option value="gaming_pro">👑 Gamer / Creator Pro (RTX xx60+)</option>
-              <option value="gaming">🎮 Gamer Intermediário (RTX 3050/4050)</option>
-              <option value="macbook">🍎 MacBook (Apple Silicon)</option>
-              <option value="ultrabook">💼 Ultrabook & Produtividade</option>
-              <option value="budget">🏷️ Entrada & Estudo</option>
-            </select>
-            <select id="laptop-cb-filter-gpu" onchange="renderLaptopCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="ALL">Qualquer GPU</option>
-              <option value="DEDICATED">Com GPU Dedicada (RTX/GTX)</option>
-              <option value="VRAM6">Mínimo 6 GB VRAM / Unified</option>
-              <option value="VRAM8">Mínimo 8 GB VRAM / Unified</option>
-            </select>
-            <select id="laptop-cb-filter-ram" onchange="renderLaptopCBTable()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
-              <option value="0">Qualquer RAM</option>
-              <option value="16">Mínimo 16 GB RAM</option>
-              <option value="24">Mínimo 24 GB RAM</option>
-            </select>
-            <select id="laptop-cb-filter-base-rel" onchange="renderLaptopCBTable()" class="bg-slate-900 border border-purple-500/40 rounded-lg px-2.5 py-1.5 text-xs text-purple-300 font-semibold" title="Notebook base para comparação"></select>
-          </div>
-        </div>
-
-        <div class="mt-4 bg-slate-900/70 rounded-xl p-4 border border-slate-800/80">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <div>
-              <span id="laptop-cb-chart-title" class="text-xs font-bold text-slate-300">Mapa de Eficiência de Notebooks: Preço (R$) vs Custo-Benefício (0–100)</span>
-              <span class="text-[11px] text-slate-400 font-mono ml-2 hidden sm:inline">• Clique no ponto para enviar ao Duelo</span>
+      <!-- LAPTOP CB VIEW -->
+      <div id="cb-laptop-view" class="hidden space-y-5">
+        <div class="ui-card space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="ui-title-xl">Custo-benefício — Notebooks</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o ranking de notebooks">i</button>
+                <span class="ui-info-popover" role="tooltip">Avalia o sistema completo: Jogos, Workstation, IA/VRAM, Tela, Bateria, Portabilidade e Upgrade.</span>
+              </span>
+              <button type="button" id="laptop-cb-intensity-pill" onclick="toggleContextSettings()" class="ui-chip" title="Ajustar intensidade das cargas nas Configurações"></button>
             </div>
-            <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
-              <button id="laptop-cb-chart-btn-benefit" onclick="setLaptopCBChartMetric('benefit')" class="px-2.5 py-1 rounded text-xs font-semibold transition bg-purple-500/20 text-purple-300 border border-purple-500/30 cursor-pointer">
-                Preço vs Custo-Benefício
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="laptop-cb-search" oninput="renderLaptopCBTable()" placeholder="Buscar notebook (ex: LOQ, Nitro, MacBook)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-400 w-56" />
+              <select id="laptop-cb-filter-base-rel" onchange="renderLaptopCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold" title="Notebook base para comparação"></select>
+            </div>
+          </div>
+
+          <!-- Hidden selects kept in sync -->
+          <select id="laptop-cb-filter-brand" onchange="renderLaptopCBTable()" class="hidden">
+            <option value="ALL">Todas</option>
+            <option value="Lenovo">Lenovo</option>
+            <option value="Acer">Acer</option>
+            <option value="Asus">Asus</option>
+            <option value="Dell">Dell</option>
+            <option value="Samsung">Samsung</option>
+            <option value="Apple">Apple</option>
+            <option value="MSI">MSI</option>
+            <option value="Gigabyte">Gigabyte</option>
+          </select>
+          <select id="laptop-cb-filter-category" onchange="renderLaptopCBTable()" class="hidden">
+            <option value="ALL">Todas</option>
+            <option value="gaming_pro">Gamer Pro</option>
+            <option value="gaming">Gamer</option>
+            <option value="macbook">MacBook</option>
+            <option value="ultrabook">Ultrabook</option>
+            <option value="budget">Entrada</option>
+          </select>
+          <select id="laptop-cb-filter-gpu" onchange="renderLaptopCBTable()" class="hidden">
+            <option value="ALL">Qualquer</option>
+            <option value="DEDICATED">Dedicada</option>
+            <option value="VRAM6">6GB+</option>
+            <option value="VRAM8">8GB+</option>
+          </select>
+          <select id="laptop-cb-filter-ram" onchange="renderLaptopCBTable()" class="hidden">
+            <option value="0">Qualquer</option>
+            <option value="16">16GB+</option>
+            <option value="24">24GB+</option>
+          </select>
+
+          <!-- Clickable Filter Chips -->
+          <div class="ui-filter-bar">
+            <div class="ui-filter-row">
+              <div class="ui-filter-group" data-chip-target="laptop-cb-filter-category">
+                <span class="ui-label mr-1">Categoria:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('laptop-cb-filter-category', 'ALL', renderLaptopCBTable)">Todas</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-category', 'gaming_pro', renderLaptopCBTable)">Gamer Pro</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-category', 'gaming', renderLaptopCBTable)">Gamer</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-category', 'macbook', renderLaptopCBTable)">MacBook</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-category', 'ultrabook', renderLaptopCBTable)">Ultrabook</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-category', 'budget', renderLaptopCBTable)">Entrada</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="laptop-cb-filter-gpu">
+                <span class="ui-label mr-1">GPU:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('laptop-cb-filter-gpu', 'ALL', renderLaptopCBTable)">Qualquer</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-gpu', 'DEDICATED', renderLaptopCBTable)">Dedicada</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-gpu', 'VRAM6', renderLaptopCBTable)">6GB+</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-gpu', 'VRAM8', renderLaptopCBTable)">8GB+</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="laptop-cb-filter-ram">
+                <span class="ui-label mr-1">RAM:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('laptop-cb-filter-ram', '0', renderLaptopCBTable)">Qualquer</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-ram', '16', renderLaptopCBTable)">16GB+</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-ram', '24', renderLaptopCBTable)">24GB+</button>
+              </div>
+            </div>
+            <div class="ui-filter-row">
+              <div class="ui-filter-group" data-chip-target="laptop-cb-filter-brand">
+                <span class="ui-label mr-1">Marca:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('laptop-cb-filter-brand', 'ALL', renderLaptopCBTable)">Todas</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Lenovo', renderLaptopCBTable)">Lenovo</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Acer', renderLaptopCBTable)">Acer</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Asus', renderLaptopCBTable)">Asus</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Dell', renderLaptopCBTable)">Dell</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Samsung', renderLaptopCBTable)">Samsung</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Apple', renderLaptopCBTable)">Apple</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'MSI', renderLaptopCBTable)">MSI</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('laptop-cb-filter-brand', 'Gigabyte', renderLaptopCBTable)">Gigabyte</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact Laptop Ranking Table FIRST -->
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th class="cursor-pointer hover:text-white" onclick="setLaptopCBSort('rank')">#</th>
+                  <th class="cursor-pointer hover:text-white" onclick="setLaptopCBSort('name')">Notebook (CPU + GPU)</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setLaptopCBSort('ram')">RAM / SSD</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setLaptopCBSort('screen')">Tela & Peso</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setLaptopCBSort('price')">Preço & Status</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setLaptopCBSort('target')">Preço Alvo</th>
+                  <th class="text-center">Tendência</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setLaptopCBSort('my_cb')">Custo-Benefício</th>
+                  <th class="text-right">Relação vs Base</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="laptop-cb-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Scatter Chart below table -->
+        <div class="ui-card">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-2">
+              <h3 id="laptop-cb-chart-title" class="ui-card-title">Mapa de Eficiência de Notebooks: Preço (R$) vs Custo-Benefício (0–100)</h3>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o mapa de notebooks">i</button>
+                <span class="ui-info-popover" role="tooltip">Clique em qualquer ponto para enviar o notebook ao Duelo.</span>
+              </span>
+            </div>
+            <div class="ui-segmented">
+              <button type="button" id="laptop-cb-chart-btn-benefit" onclick="setLaptopCBChartMetric('benefit')" class="ui-segmented-btn is-active">
+                Custo-Benefício
               </button>
-              <button id="laptop-cb-chart-btn-benchmark" onclick="setLaptopCBChartMetric('benchmark')" class="px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 cursor-pointer">
-                Preço vs Score Full-System
+              <button type="button" id="laptop-cb-chart-btn-benchmark" onclick="setLaptopCBChartMetric('benchmark')" class="ui-segmented-btn">
+                Score Full-System
               </button>
             </div>
           </div>
@@ -1633,29 +1758,8 @@
             <canvas id="chart-laptop-cb-scatter"></canvas>
           </div>
         </div>
-
-        <div class="mt-5 overflow-x-auto rounded-xl border border-slate-800">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 text-[11px] font-mono uppercase text-slate-400 bg-slate-900/60">
-                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setLaptopCBSort('rank')">#</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white" onclick="setLaptopCBSort('name')">Notebook (CPU + GPU / TGP)</th>
-                <th class="py-3 px-2 cursor-pointer hover:text-white text-center" onclick="setLaptopCBSort('ram')">RAM / SSD</th>
-                <th class="py-3 px-2 cursor-pointer hover:text-white text-center" onclick="setLaptopCBSort('screen')">Tela & Peso</th>
-                <th class="py-3 px-2 cursor-pointer hover:text-white text-right" onclick="setLaptopCBSort('gaming')">Jogos / WS / IA</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setLaptopCBSort('price')">Preço Hoje</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-right" onclick="setLaptopCBSort('target')">Preço Alvo</th>
-                <th class="py-3 px-3 cursor-pointer hover:text-white text-center" onclick="setLaptopCBSort('my_cb')">Custo-Benefício</th>
-                <th class="py-3 px-3 text-right">Relação vs Base</th>
-                <th class="py-3 px-3 text-center">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="laptop-cb-table-body" class="divide-y divide-slate-800/60 text-xs"></tbody>
-          </table>
-        </div>
-      </div>
-    </div> <!-- /cb-laptop-view -->
-  </section>
+      </div> <!-- /cb-laptop-view -->
+    </section>
 
     <!-- ===================================================================== -->
     <!-- TAB 3: MEU PC, CONSUMO DE ENERGIA (WATTS) & O QUE FALTA                -->

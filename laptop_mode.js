@@ -1459,10 +1459,8 @@ function renderLaptopCBTable() {
   const btnM = document.getElementById('laptop-cb-chart-btn-benchmark');
   const titleEl = document.getElementById('laptop-cb-chart-title');
   if (btnB && btnM) {
-    const activeCls = 'px-2.5 py-1 rounded text-xs font-semibold transition bg-purple-500/20 text-purple-300 border border-purple-500/30 cursor-pointer';
-    const idleCls = 'px-2.5 py-1 rounded text-xs font-medium transition text-slate-400 hover:text-slate-200 cursor-pointer';
-    btnB.className = !isBench ? activeCls : idleCls;
-    btnM.className = isBench ? activeCls : idleCls;
+    btnB.classList.toggle('is-active', !isBench);
+    btnM.classList.toggle('is-active', isBench);
   }
   if (titleEl) {
     titleEl.textContent = isBench
@@ -1538,64 +1536,63 @@ function renderLaptopCBTable() {
     const isBase = l.slug === baseLap.slug;
     const rel = evaluateLaptopRelationalUpgrade(baseLap, l, baseLap.price_brl, l.price_brl);
     const tgt = (l.price_stats && l.price_stats.target_price) || l.price_brl;
-    const stBadge = typeof getPriceStatusBadgeHTML === 'function' ? getPriceStatusBadgeHTML(l) : '';
-    const cbColor = l._myCBScore >= 82 ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/40'
-      : (l._myCBScore >= 65 ? 'text-sky-300 bg-sky-500/15 border-sky-500/40' : 'text-slate-300 bg-slate-800 border-slate-700');
+    const priceStatus = typeof getPriceTargetStatus === 'function'
+      ? getPriceTargetStatus(l.price_brl, tgt, l.price_stats?.min_90d)
+      : { badgeHtml: '' };
+    const sparklineHtml = typeof renderPriceSparklineSVG === 'function'
+      ? renderPriceSparklineSVG(l, l.price_brl, tgt)
+      : '';
+    const cbTone = l._myCBScore >= 82 ? 'ui-badge--good' : (l._myCBScore >= 65 ? 'ui-badge--brand' : 'ui-badge--warn');
     const ssdLbl = l.storage_gb >= 1024 ? `${(l.storage_gb / 1024)}TB` : `${l.storage_gb}GB`;
     const flashTag = l._flashPromo
-      ? `<span class="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[9px]">⚡ PROMO −${fmtBRLShort(l._flashPromo.savings_vs_hb_brl || 0)}</span>`
+      ? `<span class="ui-badge ui-badge--good mt-1">Promo −${fmtBRLShort(l._flashPromo.savings_vs_hb_brl || 0)}</span>`
       : '';
 
     return `
-      <tr class="hover:bg-slate-900/60 transition ${isBase ? 'bg-emerald-950/20' : ''}">
-        <td class="py-2.5 px-3 font-mono font-bold text-slate-400">${rnk}</td>
-        <td class="py-2.5 px-3">
+      <tr class="${isBase ? 'bg-sky-950/20' : ''}">
+        <td class="ui-mono font-semibold text-slate-400">${rnk}</td>
+        <td>
           <div class="flex items-center gap-2.5">
             ${l.image ? `<img src="${_escLapHtml(l.image)}" alt="" class="w-10 h-10 rounded-lg object-contain bg-slate-950 border border-slate-800 p-0.5 shrink-0" onerror="this.style.display='none'">` : ''}
             <div class="min-w-0">
-              <div class="font-bold text-white truncate max-w-[240px]" title="${_escLapHtml(l.name)}">${_escLapHtml(l.name)}</div>
-              <div class="text-[10px] font-mono text-slate-400">${_escLapHtml(l.cpu_name)} • <span class="text-purple-300">${_escLapHtml(l.gpu_name)}</span></div>
-              ${l._readinessGate < 0.70 ? `<div class="text-[9px] text-rose-400 font-mono font-bold">⚠ Abaixo da carga exigida</div>` : ''}
-              ${l._dominatedBy ? `<div class="text-[9px] text-amber-400 font-mono">⚠ Superado por ${_escLapHtml(l._dominatedBy)}</div>` : ''}
+              <div class="font-bold text-white text-sm truncate max-w-[260px]" title="${_escLapHtml(l.name)}">${_escLapHtml(l.name)}</div>
+              <div class="text-xs ui-mono text-slate-400 truncate max-w-[260px]">${_escLapHtml(l.cpu_name)} • ${_escLapHtml(l.gpu_name)}</div>
+              ${l._readinessGate < 0.70 ? `<div class="text-xs text-rose-400 ui-mono font-semibold mt-0.5">Abaixo da carga exigida</div>` : ''}
             </div>
           </div>
         </td>
-        <td class="py-2.5 px-2 text-center font-mono">
-          <div class="text-slate-200 font-semibold">${l.ram_gb}GB / ${ssdLbl}</div>
-          <div class="text-[10px] ${l.ram_soldered ? 'text-amber-400' : 'text-emerald-400'}">${l.ram_soldered ? 'Soldada' : `Exp. ${l.ram_max_gb}GB`}</div>
+        <td class="text-center ui-mono">
+          <div class="text-slate-100 font-semibold">${l.ram_gb}GB / ${ssdLbl}</div>
+          <div class="text-xs ${l.ram_soldered ? 'text-amber-300' : 'text-slate-400'}">${l.ram_soldered ? 'Soldada' : `Exp. ${l.ram_max_gb}GB`}</div>
         </td>
-        <td class="py-2.5 px-2 text-center font-mono">
-          <div class="text-slate-200">${l.screen_inches}" ${l.screen_hz}Hz</div>
-          <div class="text-[10px] text-slate-400">${l.weight_kg}kg • ${l.battery_hours_light}h bat</div>
+        <td class="text-center ui-mono">
+          <div class="text-slate-100">${l.screen_inches}" ${l.screen_hz}Hz</div>
+          <div class="text-xs text-slate-400">${l.weight_kg}kg • ${l.battery_hours_light}h</div>
         </td>
-        <td class="py-2.5 px-2 text-right font-mono">
-          <div class="text-emerald-300 font-bold">${Math.round(l.gaming_score)} <span class="text-slate-500 text-[10px]">Jogos</span></div>
-          <div class="text-[10px] text-sky-300">${Math.round(l._wsEff)} WS • ${Math.round(l._aiEff)} IA</div>
-        </td>
-        <td class="py-2.5 px-3 text-right font-mono">
-          <div class="font-bold text-white">${fmtBRL(l.price_brl)}</div>
-          <div class="text-[10px] text-slate-400">${_escLapHtml(l.store_name || '')}</div>
+        <td class="text-right ui-mono">
+          <div class="font-bold text-white text-sm">${fmtBRL(l.price_brl)}</div>
+          <div class="mt-1 flex justify-end">${priceStatus.badgeHtml}</div>
           ${flashTag}
         </td>
-        <td class="py-2.5 px-3 text-right font-mono">
-          <div class="text-sky-300 font-semibold">${fmtBRLShort(tgt)}</div>
-          <div class="mt-0.5">${stBadge}</div>
+        <td class="text-right ui-mono">
+          <div class="text-slate-200 font-semibold">${fmtBRLShort(tgt)}</div>
+          <div class="text-xs text-slate-400">${_escLapHtml(l.store_name || '')}</div>
         </td>
-        <td class="py-2.5 px-3 text-center">
-          <span class="px-2 py-1 rounded-lg border font-mono font-black text-xs ${cbColor}">${l._myCBScore}</span>
-          <div class="text-[9px] font-mono text-slate-400 mt-0.5">Versus ${l._overallVersusScore}</div>
+        <td class="text-center">${sparklineHtml}</td>
+        <td class="text-center">
+          <span class="ui-badge ${cbTone} ui-mono font-bold text-sm px-2.5 py-1">${l._myCBScore}</span>
+          <div class="text-xs ui-mono text-slate-400 mt-1">Score ${l._overallVersusScore}</div>
         </td>
-        <td class="py-2.5 px-3 text-right font-mono">
-          ${isBase ? '<span class="text-emerald-400 font-bold text-[11px]">REFERÊNCIA</span>' : `
-            <div class="text-${rel.color}-300 font-bold text-[11px]">${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf</div>
-            <div class="text-[10px] text-slate-400">${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}</div>
+        <td class="text-right ui-mono">
+          ${isBase ? '<span class="ui-badge ui-badge--a">Base</span>' : `
+            <div class="text-${rel.color}-300 font-bold text-xs">${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf</div>
+            <div class="text-xs text-slate-400">${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}</div>
           `}
         </td>
-        <td class="py-2.5 px-3 text-center">
-          <div class="flex items-center justify-center gap-1">
-            <button type="button" onclick="sendLaptopToDuel('${_escLapHtml(l.slug)}', false)" class="px-1.5 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold cursor-pointer" title="Usar como Base no Duelo">Base</button>
-            <button type="button" onclick="sendLaptopToDuel('${_escLapHtml(l.slug)}', true)" class="px-1.5 py-1 rounded bg-purple-500/20 hover:bg-purple-500/35 text-purple-300 border border-purple-500/40 text-[10px] font-bold cursor-pointer" title="Comparar no Duelo">Duelar</button>
-            ${l.offer_url ? `<a href="${_escLapHtml(l.offer_url)}" target="_blank" rel="noopener" class="px-1.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold" title="Ver oferta">↗</a>` : ''}
+        <td class="text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button type="button" onclick="sendLaptopToDuel('${_escLapHtml(l.slug)}', true)" class="ui-btn ui-btn--sm" title="Comparar no Duelo">Duelo</button>
+            ${l.offer_url ? `<a href="${_escLapHtml(l.offer_url)}" target="_blank" rel="noopener" class="ui-btn ui-btn--sm ui-btn--ghost" title="Ver oferta">↗</a>` : ''}
           </div>
         </td>
       </tr>

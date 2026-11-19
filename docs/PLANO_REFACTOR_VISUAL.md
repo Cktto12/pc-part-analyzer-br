@@ -66,9 +66,9 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Explicações detalhadas em "Ver detalhes" recolhido
 
 ### Fase 4 — Custo-benefício
-- [ ] Tabela mais enxuta, com selo de status do preço (abaixo do alvo / no alvo / caro)
-- [ ] Minigráfico de tendência em cada linha
-- [ ] Filtros em botões clicáveis em vez de listas suspensas
+- [x] Tabela mais enxuta, com selo de status do preço (abaixo do alvo / no alvo / caro)
+- [x] Minigráfico de tendência em cada linha
+- [x] Filtros em botões clicáveis em vez de listas suspensas
 
 ### Fase 5 — Black Friday e Promoções
 - [ ] Painel do Radar vira a aba Promoções: grade de cards com % de desconto em destaque, faixa "Mínimo histórico" e filtros
