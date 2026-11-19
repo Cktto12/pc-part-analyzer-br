@@ -1957,3 +1957,9 @@ select.gca-combo-native {
   color: var(--ui-text-muted);
 }
 .gca-combo-empty[hidden] { display: none; }
+
+/* Logo GCA: chip com a curva de preço caindo (cor da marca do tema ativo) */
+.gca-logo { padding: 0.3125rem; }
+.gca-logo-mark { width: 100%; height: 100%; display: block; }
+.ui-sidebar-brand:hover .gca-logo-mark path { stroke-dasharray: 24; animation: gca-logo-drop 700ms ease-out; }
+@keyframes gca-logo-drop { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }

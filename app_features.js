@@ -5155,7 +5155,7 @@ function checkAndFireDealNotifications(forceTest = false) {
       fireWindowsNativeNotification(deal);
     });
     if (document.hidden) {
-      document.title = `🔥 (${newAlerts.length}) PECHINCHA! | Build & GPU Analyzer Pro`;
+      document.title = `🔥 (${newAlerts.length}) Pechincha! · GCA`;
     }
   } else if (forceTest) {
     const activeReg = getActiveRegionId();
@@ -5199,7 +5199,7 @@ function checkAndFireDealNotifications(forceTest = false) {
 
 window.addEventListener('focus', () => {
   if (document.title.startsWith('🔥')) {
-    document.title = 'GPU & Build Analyzer Pro — Duelo Relacional, IA, Engenharia & Custo-Benefício';
+    document.title = 'GCA · Preços de Hardware & Black Friday';
   }
 });
 
