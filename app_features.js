@@ -21,7 +21,8 @@ function saveUserPrefs() {
       monitorMaxFps: STATE.monitorMaxFps,
       dlssMode: STATE.dlssMode,
       comparisonScaleMode: STATE.comparisonScaleMode,
-      wGaming: STATE.wGaming, wAI: STATE.wAI, wSoft: STATE.wSoft,
+      wGaming: STATE.wGaming, wWorkstation: STATE.wWorkstation, wAI: STATE.wAI, wSoft: STATE.wSoft,
+      workloadIntensity: STATE.workloadIntensity,
       games: STATE.games,
       bfRanges: STATE.bfRanges,
       upg: STATE.upg
@@ -38,6 +39,7 @@ function loadUserPrefs() {
   STATE.upg = { cpu: {}, mobo: {}, reuseRam: true };
   STATE.focusGameId = 'cyberpunk';
   STATE.showGameEditor = false;
+  STATE.workloadIntensity = { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null');
     if (p) {
@@ -45,13 +47,34 @@ function loadUserPrefs() {
       if (p.monitorMaxFps) STATE.monitorMaxFps = p.monitorMaxFps;
       if (p.dlssMode && ['perceived', 'sr', 'native', 'max_fg'].includes(p.dlssMode)) STATE.dlssMode = p.dlssMode;
       if (p.comparisonScaleMode && ['relative', 'absolute'].includes(p.comparisonScaleMode)) STATE.comparisonScaleMode = p.comparisonScaleMode;
-      if (typeof p.wGaming === 'number') { STATE.wGaming = p.wGaming; STATE.wAI = p.wAI; STATE.wSoft = p.wSoft; }
+      if (typeof p.wGaming === 'number') {
+        STATE.wGaming = p.wGaming;
+        if (typeof p.wWorkstation === 'number') STATE.wWorkstation = p.wWorkstation;
+        STATE.wAI = p.wAI;
+        STATE.wSoft = p.wSoft;
+      }
+      if (p.workloadIntensity && typeof p.workloadIntensity === 'object') {
+        ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(k => {
+          const v = parseInt(p.workloadIntensity[k], 10);
+          if (!isNaN(v)) STATE.workloadIntensity[k] = Math.max(1, Math.min(5, v));
+        });
+      }
       if (Array.isArray(p.games) && p.games.length) STATE.games = p.games;
       if (p.bfRanges) STATE.bfRanges = p.bfRanges;
       if (p.upg) {
         STATE.upg = Object.assign({ cpu: {}, mobo: {}, reuseRam: true }, p.upg);
         if (!STATE.upg.mobo) STATE.upg.mobo = {};
         if (!STATE.upg.cpu) STATE.upg.cpu = {};
+      }
+    }
+    const rawInt = localStorage.getItem('gca_workload_intensity');
+    if (rawInt) {
+      const wi = JSON.parse(rawInt);
+      if (wi && typeof wi === 'object') {
+        ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(k => {
+          const v = parseInt(wi[k], 10);
+          if (!isNaN(v)) STATE.workloadIntensity[k] = Math.max(1, Math.min(5, v));
+        });
       }
     }
   } catch (_) { /* ignore corrupt prefs */ }
@@ -67,12 +90,13 @@ function loadUserPrefs() {
   if (gDlss) gDlss.value = STATE.dlssMode;
   const sDlss = document.getElementById('sim-select-upscale');
   if (sDlss) sDlss.value = STATE.dlssMode;
-  [['gaming', STATE.wGaming], ['ai', STATE.wAI], ['soft', STATE.wSoft]].forEach(([k, v]) => {
+  [['gaming', STATE.wGaming], ['workstation', STATE.wWorkstation !== undefined ? STATE.wWorkstation : 35], ['ai', STATE.wAI], ['soft', STATE.wSoft]].forEach(([k, v]) => {
     const sl = document.getElementById(`slider-w-${k}`);
     if (sl) sl.value = v;
     const nm = document.getElementById(`num-w-${k}`);
     if (nm) nm.value = v;
   });
+  if (typeof syncWorkloadIntensityUI === 'function') syncWorkloadIntensityUI();
 }
 
 function onGlobalDlssModeChange(val) {
@@ -1927,6 +1951,33 @@ const BF_FAMILIES = {
     slugs: ['xeon-e5-2680-v4', 'core-i3-12100f', 'ryzen-5-5500', 'ryzen-5-5600']
   },
 
+  // --- LAPTOP FAMILIES (DYNAMIC ZOOM CATALOG) ---
+  laptop_gaming_pro: {
+    kind: 'laptop',
+    label: '👑 Notebooks Gamer / Creator RTX 4060 / 4070 / 5060+',
+    filterFn: l => l.category === 'gaming_pro'
+  },
+  laptop_gaming: {
+    kind: 'laptop',
+    label: '🎮 Notebooks Gamer Entrada & Mid (RTX 2050 / 3050 / 4050)',
+    filterFn: l => l.category === 'gaming'
+  },
+  laptop_macbook: {
+    kind: 'laptop',
+    label: '🍎 Apple MacBook (Air & Pro M2 / M3 / M4 / M5)',
+    filterFn: l => l.category === 'macbook'
+  },
+  laptop_ultrabook: {
+    kind: 'laptop',
+    label: '💼 Ultrabooks, Dev & Produtividade (Core Ultra / Ryzen 7 / 16GB+)',
+    filterFn: l => l.category === 'ultrabook'
+  },
+  laptop_budget: {
+    kind: 'laptop',
+    label: '🏷️ Notebooks Custo-Benefício & Estudo',
+    filterFn: l => l.category === 'budget'
+  },
+
   // --- CUSTOM MODEL SELECTION ---
   custom: {
     kind: 'custom',
@@ -1954,10 +2005,12 @@ window.getExactBlackFridayDate = getExactBlackFridayDate;
 function updateBFFamilySelectorOptions() {
   const sel = document.getElementById('bf-select-family');
   if (!sel) return;
-  const isCpu = (typeof STATE !== 'undefined' && STATE.context === 'cpu');
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
   const allowedKeys = Object.keys(BF_FAMILIES).filter(k => {
     if (k === 'custom') return true;
-    return isCpu ? k.startsWith('cpu_') : k.startsWith('gpu_');
+    if (ctx === 'laptop') return k.startsWith('laptop_');
+    if (ctx === 'cpu') return k.startsWith('cpu_');
+    return k.startsWith('gpu_');
   });
 
   const curVal = sel.value;
@@ -1969,7 +2022,7 @@ function updateBFFamilySelectorOptions() {
   if (allowedKeys.includes(curVal)) {
     sel.value = curVal;
   } else {
-    sel.value = isCpu ? 'cpu_mid_am4' : 'gpu_cross_tiers';
+    sel.value = ctx === 'laptop' ? 'laptop_gaming_pro' : (ctx === 'cpu' ? 'cpu_mid_am4' : 'gpu_cross_tiers');
   }
 }
 window.updateBFFamilySelectorOptions = updateBFFamilySelectorOptions;
@@ -1989,18 +2042,22 @@ window.toggleBFCustomModelsDrawer = toggleBFCustomModelsDrawer;
 function renderBFCustomModelsCheckboxes() {
   const container = document.getElementById('bf-custom-models-checkboxes');
   if (!container) return;
-  const isCpu = (typeof STATE !== 'undefined' && STATE.context === 'cpu');
-  const pool = isCpu ? (DB.cpus || []) : (DB.gpus || []);
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  const pool = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || []));
 
-  if (!STATE.bfCustomSlugs || STATE.bfCustomSlugs.size === 0) {
+  if (!STATE.bfCustomSlugs || STATE.bfCustomSlugs.size === 0 || !pool.some(x => STATE.bfCustomSlugs.has(x.slug))) {
     const famKey = document.getElementById('bf-select-family').value;
-    const fam = BF_FAMILIES[famKey] || (isCpu ? BF_FAMILIES.cpu_mid_am4 : BF_FAMILIES.gpu_cross_tiers);
-    STATE.bfCustomSlugs = new Set(fam.slugs && fam.slugs.length ? fam.slugs : pool.slice(0, 8).map(x => x.slug));
+    const defKey = ctx === 'laptop' ? 'laptop_gaming_pro' : (ctx === 'cpu' ? 'cpu_mid_am4' : 'gpu_cross_tiers');
+    const fam = BF_FAMILIES[famKey] || BF_FAMILIES[defKey];
+    const seed = fam.filterFn
+      ? pool.filter(fam.filterFn).slice(0, 8).map(x => x.slug)
+      : (fam.slugs && fam.slugs.length ? fam.slugs : pool.slice(0, 8).map(x => x.slug));
+    STATE.bfCustomSlugs = new Set(seed);
   }
 
   container.innerHTML = pool.map(item => {
     const checked = STATE.bfCustomSlugs.has(item.slug);
-    const sub = isCpu ? (item.socket || 'CPU') : `${item.vram_gb || 8}GB`;
+    const sub = ctx === 'laptop' ? `${item.ram_gb}G / ${item.gpu_vram_gb}G` : (ctx === 'cpu' ? (item.socket || 'CPU') : `${item.vram_gb || 8}GB`);
     return `
       <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/70 border ${checked ? 'border-sky-500/50 text-sky-200' : 'border-slate-800 text-slate-400'} text-xs font-mono cursor-pointer hover:border-slate-700 transition">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="onBFCustomModelToggle('${item.slug}', this.checked)" class="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0">
@@ -2021,17 +2078,18 @@ function onBFCustomModelToggle(slug, checked) {
       STATE.bfCustomSlugs.delete(slug);
     }
   }
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
   const famSel = document.getElementById('bf-select-family');
   if (famSel) famSel.value = 'custom';
   BF_FAMILIES.custom.slugs = [...STATE.bfCustomSlugs];
-  BF_FAMILIES.custom.kind = (typeof STATE !== 'undefined' && STATE.context === 'cpu') ? 'cpu' : 'gpu';
+  BF_FAMILIES.custom.kind = ctx === 'laptop' ? 'laptop' : (ctx === 'cpu' ? 'cpu' : 'gpu');
   renderBlackFridayTab();
 }
 window.onBFCustomModelToggle = onBFCustomModelToggle;
 
 function selectAllBFModels(enable) {
-  const isCpu = (typeof STATE !== 'undefined' && STATE.context === 'cpu');
-  const pool = isCpu ? (DB.cpus || []) : (DB.gpus || []);
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  const pool = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || []));
   if (enable) {
     STATE.bfCustomSlugs = new Set(pool.slice(0, 15).map(x => x.slug));
   } else {
@@ -2040,7 +2098,7 @@ function selectAllBFModels(enable) {
   const famSel = document.getElementById('bf-select-family');
   if (famSel) famSel.value = 'custom';
   BF_FAMILIES.custom.slugs = [...STATE.bfCustomSlugs];
-  BF_FAMILIES.custom.kind = isCpu ? 'cpu' : 'gpu';
+  BF_FAMILIES.custom.kind = ctx === 'laptop' ? 'laptop' : (ctx === 'cpu' ? 'cpu' : 'gpu');
   renderBFCustomModelsCheckboxes();
   renderBlackFridayTab();
 }
@@ -2107,10 +2165,12 @@ function bfAnalyzeItem(item, kind) {
     if (mOff) effectiveCurrent = Math.max(10, item.price_brl - parseFloat(mOff[1]));
   }
 
-  // Use contextual composite score if GPU, else gaming index
-  const perf = kind === 'gpu'
-    ? (typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(item) : (item.gaming_score || 1))
-    : getCpuGamingIndex(item) * 100;
+  // Use contextual composite score if GPU or Laptop, else gaming index
+  const perf = kind === 'laptop'
+    ? (typeof getLaptopContextualCompositeScore === 'function' ? getLaptopContextualCompositeScore(item) : ((item.gaming_score || 1000) * 2))
+    : (kind === 'gpu'
+        ? (typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(item) : (item.gaming_score || 1))
+        : getCpuGamingIndex(item) * 100);
 
   return {
     item, kind, hist, years, allMin,
@@ -2196,17 +2256,26 @@ function toggleBFModel(slug) {
 }
 
 function renderBlackFridayTab() {
-  if (!DB.gpus.length && !DB.cpus.length) return;
-  const isCpu = (typeof STATE !== 'undefined' && STATE.context === 'cpu');
+  if (!DB.gpus.length && !DB.cpus.length && !(DB.laptops || []).length) return;
+  const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  const isCpu = ctx === 'cpu';
+  const isLaptop = ctx === 'laptop';
   const famKey = document.getElementById('bf-select-family').value;
-  const fam = BF_FAMILIES[famKey] || (isCpu ? BF_FAMILIES.cpu_mid_am4 : BF_FAMILIES.gpu_cross_tiers);
-  const pool = (fam.kind === 'cpu' || (fam.kind === 'custom' && isCpu)) ? (DB.cpus || []) : (DB.gpus || []);
-  const slugsToUse = (famKey === 'custom' && STATE.bfCustomSlugs && STATE.bfCustomSlugs.size > 0)
-    ? [...STATE.bfCustomSlugs]
-    : (fam.slugs && fam.slugs.length ? fam.slugs : pool.slice(0, 8).map(x => x.slug));
+  const defKey = isLaptop ? 'laptop_gaming_pro' : (isCpu ? 'cpu_mid_am4' : 'gpu_cross_tiers');
+  const fam = BF_FAMILIES[famKey] || BF_FAMILIES[defKey];
+  const activeKind = (fam.kind === 'custom') ? (isLaptop ? 'laptop' : (isCpu ? 'cpu' : 'gpu')) : fam.kind;
+  const pool = activeKind === 'laptop' ? (DB.laptops || []) : (activeKind === 'cpu' ? (DB.cpus || []) : (DB.gpus || []));
 
-  const items = slugsToUse.map(s => pool.find(x => x.slug === s)).filter(Boolean);
-  const stats = items.map(it => bfAnalyzeItem(it, isCpu ? 'cpu' : 'gpu'));
+  let items = [];
+  if (famKey === 'custom' && STATE.bfCustomSlugs && STATE.bfCustomSlugs.size > 0) {
+    items = [...STATE.bfCustomSlugs].map(s => pool.find(x => x.slug === s)).filter(Boolean);
+  } else if (fam.filterFn) {
+    items = pool.filter(fam.filterFn).slice(0, 10);
+  } else {
+    const slugsToUse = (fam.slugs && fam.slugs.length) ? fam.slugs : pool.slice(0, 8).map(x => x.slug);
+    items = slugsToUse.map(s => pool.find(x => x.slug === s)).filter(Boolean);
+  }
+  const stats = items.map(it => bfAnalyzeItem(it, activeKind));
   const curYear = parseInt(bfToday().slice(0, 4));
   const discs = stats.map(s => s.years[curYear - 1] && s.years[curYear - 1].discount).filter(d => d != null);
   const familyMedianDisc = median(discs) || 0.10;
@@ -2332,10 +2401,12 @@ function renderBlackFridayTab() {
         <td class="py-2.5 px-3">
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-bold text-white">${s.item.name}</span>
-            ${s.item.vram_gb ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-mono">${s.item.vram_gb} GB</span>` : ''}
+            ${s.kind === 'laptop'
+              ? `<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30 text-[10px] font-mono">${s.item.ram_gb}GB / ${s.item.storage_gb >= 1024 ? (s.item.storage_gb / 1024) + 'TB' : s.item.storage_gb + 'GB'}</span>`
+              : (s.item.vram_gb ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-mono">${s.item.vram_gb} GB</span>` : '')}
             ${s.item.coupon ? `<button onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono hover:bg-amber-500/40 transition cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
           </div>
-          <div class="text-[10px] text-slate-400 font-mono mt-0.5">${s.kind === 'gpu' ? `${s.item.vram_gb}GB • score ${Math.round(s.perf)}` : `índice jogo ${getCpuGamingIndex(s.item)}`} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
+          <div class="text-[10px] text-slate-400 font-mono mt-0.5">${s.kind === 'laptop' ? `${s.item.cpu_name} • ${s.item.gpu_name} • ${s.item.screen_hz}Hz` : (s.kind === 'gpu' ? `${s.item.vram_gb}GB • score ${Math.round(s.perf)}` : `índice jogo ${getCpuGamingIndex(s.item)}`)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
         </td>
         <td class="py-2.5 px-3 text-right font-mono font-bold text-white">${fmtBRLShort(s.current)}</td>
         <td class="py-2.5 px-3 text-right font-mono text-slate-300">${py.preAvg ? fmtBRLShort(py.preAvg) : '<span class="text-slate-600">sem dado</span>'}</td>
@@ -2628,7 +2699,15 @@ function onBFTargetItemChange(silent) {
   // Render Target Info Pill (VRAM badge, RAM, Arch, Today's Price)
   const pillEl = document.getElementById('bf-target-info-pill');
   if (pillEl) {
-    if (st.kind === 'gpu') {
+    if (st.kind === 'laptop') {
+      const l = st.item;
+      pillEl.innerHTML = `
+        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-mono font-bold">${l.cpu_name}</span>
+        <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[11px] font-mono">${l.gpu_name}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${l.ram_gb}GB • ${l.screen_inches}" ${l.screen_hz}Hz</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+      `;
+    } else if (st.kind === 'gpu') {
       const g = st.item;
       pillEl.innerHTML = `
         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 font-mono text-[11px] font-bold border border-sky-500/30">
@@ -3141,7 +3220,7 @@ const CLIENT_PROMO_CHANNELS = [
   { id: 'ofertastechbr',     name: 'Ofertas Tech BR' }
 ];
 
-const CLIENT_PROMO_QUERIES = ['', 'RTX', '5060', '5070', '4060', '7600', 'RX ', 'Ryzen', 'DDR4', 'DDR5', 'expirou', 'acabou', 'esgotou'];
+const CLIENT_PROMO_QUERIES = ['', 'RTX', '5060', '5070', '4060', '7600', 'RX ', 'Ryzen', 'DDR4', 'DDR5', 'notebook', 'macbook', 'nitro', 'loq', 'expirou', 'acabou', 'esgotou'];
 
 function getClientPromoChannels() {
   const sources = (typeof STATE !== 'undefined' && STATE?.market?.promotion_sources) ||
@@ -3174,7 +3253,9 @@ function getClientPromoQueries() {
   return CLIENT_PROMO_QUERIES;
 }
 
-const CLIENT_EXCLUDE_SYSTEM_RE = /\b(notebook|laptop|macbook|computador\s*completo|pc\s*completo|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b/i;
+const CLIENT_LAPTOP_CLUE_RE = /\b(notebook|laptop|macbook|ultrabook|ideapad|vivobook|zenbook|thinkpad|inspiron|galaxy\s*book|acer\s*nitro|nitro\s*v?1[56]|lenovo\s*loq|legion\s*5|dell\s*g15|tuf\s*gaming\s*[af]1[567]|predator\s*helios|avell|victus)\b/i;
+const CLIENT_LAPTOP_ACCESSORY_RE = /^\s*[^a-zA-Z0-9]*(?:power\s*bank|mochila|bolsa|suporte|base\s*(?:refrigerada|cooler)|cooler\s*para|capa|case|sleeve|pel[íi]cula|carregador|fonte\s*para|hub\s*usb|mouse|teclado|pendrive)|\b(?:para|p\/)\s*notebook\b/i;
+const CLIENT_EXCLUDE_SYSTEM_RE = /\b(computador\s*completo|pc\s*completo|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b/i;
 
 const CLIENT_GPU_RULES = [
   ['rtx-5090',         /\b(?:rtx|geforce)?\s*5090\b/i],
@@ -3395,7 +3476,70 @@ function extractPriceAndCouponClient(lines) {
   };
 }
 
+function matchLaptopCatalogClient(headText) {
+  const laptops = (DB && DB.laptops) || [];
+  if (!laptops.length || CLIENT_LAPTOP_ACCESSORY_RE.test(headText || '')) return null;
+
+  const low = (headText || '').toLowerCase();
+  const mGpu = low.match(/\b(rtx\s*(?:5080|5070\s*ti|5070|5060|5050|4080|4070|4060|4050|3060|3050|2050)|gtx\s*1650)\b/);
+  const txtGpu = mGpu ? mGpu[1].replace(/\s+/g, ' ').trim() : '';
+  const mCpu = low.match(/\b(i[3579][-\s]*\d{4,5}[a-z]*|ultra\s*[x579][-\s]*\d{3}[a-z]*|ryzen\s*[3579][-\s]*\d{4}[a-z]*|m[1-5](?:\s*(?:pro|max))?)\b/);
+  const txtCpu = mCpu ? mCpu[1].replace(/[-\s]+/g, '').toLowerCase() : '';
+  const mRam = low.match(/\b(8|16|24|32)\s*gb\b/);
+  const txtRam = mRam ? parseInt(mRam[1], 10) : 0;
+
+  let bestScore = 0;
+  let bestItem = null;
+  for (const lap of laptops) {
+    const lName = (lap.name || '').toLowerCase();
+    const lSlug = (lap.slug || '').toLowerCase();
+    const lBrand = (lap.brand || '').toLowerCase();
+    const lCpu = (lap.cpu_name || '').toLowerCase().replace(/[-\s]+/g, '');
+    const lGpu = (lap.gpu_name || '').toLowerCase().replace(/\s+/g, ' ');
+    let score = 0;
+
+    if (lBrand && low.includes(lBrand)) score += 18;
+    else if (lBrand) score -= 12;
+
+    const lineKws = ['macbook pro', 'macbook air', 'galaxy book6', 'galaxy book4', 'vivobook go', 'vivobook', 'zenbook', 'ideapad slim', 'ideapad', 'loq-e', 'loq', 'nitro v16', 'nitro v15', 'nitro', 'tuf gaming', 'predator helios', 'alienware', 'inspiron', 'aspire go', 'yoga', 'v14', 'g15'];
+    for (const kw of lineKws) {
+      if (low.includes(kw)) {
+        if (lName.includes(kw) || lSlug.includes(kw)) score += 30;
+        else score -= 10;
+      }
+    }
+
+    const skuMatches = low.match(/\b([a-z0-9]{6,14})\b/g) || [];
+    for (const s of skuMatches) {
+      if (/[0-9]/.test(s) && /[a-z]/.test(s) && lName.includes(s)) score += 45;
+    }
+
+    if (txtGpu) {
+      if (lGpu.includes(txtGpu)) score += 36;
+      else score -= 55;
+    } else if (lGpu.includes('rtx ') || lGpu.includes('gtx ')) {
+      score -= 22;
+    }
+
+    if (txtCpu) {
+      if (lCpu.includes(txtCpu) || lName.replace(/[-\s]+/g, '').includes(txtCpu)) score += 26;
+      else score -= 22;
+    }
+
+    if (txtRam && lap.ram_gb === txtRam) score += 10;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestItem = lap;
+    }
+  }
+  return (bestItem && bestScore >= 45) ? { kind: 'laptop', item: bestItem } : null;
+}
+
 function matchCatalogItemClient(headText) {
+  if (CLIENT_LAPTOP_CLUE_RE.test(headText || '') && !CLIENT_LAPTOP_ACCESSORY_RE.test(headText || '')) {
+    return matchLaptopCatalogClient(headText);
+  }
   const hasComp = /\b(placa\s*de\s*v[íi]deo|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|ddr[45]|mem[óo]ria\s*ram)\b/i.test(headText);
   if (!hasComp && CLIENT_EXCLUDE_SYSTEM_RE.test(headText)) return null;
   for (const [slug, re] of CLIENT_GPU_RULES) {
@@ -4001,8 +4145,19 @@ function savePromoSettingsToStorage() {
       { slug: 'rtx-4060', name: 'RTX 4060', max_price: 1850 }
     ]
   };
-  const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const targetEndpoint = isLocal ? '/api/alert-config' : 'http://localhost:8080/api/alert-config';
+function isLocalServerHost() {
+  const h = window.location.hostname || '';
+  return (
+    h === 'localhost' ||
+    h === '127.0.0.1' ||
+    /^192\.168\.\d+\.\d+$/.test(h) ||
+    /^10\.\d+\.\d+\.\d+$/.test(h) ||
+    /^172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+$/.test(h)
+  );
+}
+
+  const isLocal = isLocalServerHost();
+  const targetEndpoint = isLocal ? '/api/alert-config' : 'http://127.0.0.1:8080/api/alert-config';
   fetch(targetEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -4035,7 +4190,7 @@ async function subscribeToBackgroundPush() {
     // 2. Register Service Worker + Periodic Sync (for GitHub Pages closed-tab background polling)
     let swOk = false;
     let periodicOk = false;
-    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || isLocalServerHost())) {
       try {
         const reg = await navigator.serviceWorker.register('./sw.js');
         swOk = true;
@@ -4052,9 +4207,9 @@ async function subscribeToBackgroundPush() {
 
     // 3. Sync alert config & topic directly to local PC Python daemon (works from GitHub Pages too!)
     let daemonOnline = false;
-    const isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const isLocal = isLocalServerHost();
     try {
-      const r = await fetchWithTimeout(isLocal ? '/api/alert-config' : 'http://localhost:8080/api/alert-config', {
+      const r = await fetchWithTimeout(isLocal ? '/api/alert-config' : 'http://127.0.0.1:8080/api/alert-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -4148,9 +4303,9 @@ async function testBackgroundAlertNow() {
 
   try {
     const res = await fetch(
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      isLocalServerHost()
         ? '/api/test-background-alert'
-        : 'http://localhost:8080/api/test-background-alert',
+        : 'http://127.0.0.1:8080/api/test-background-alert',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4440,12 +4595,14 @@ function evaluateDealsForAlerts() {
     let hitHB = false;
     const reasons = [];
 
-    // 1. Evaluate CB & BF for GPUs / CPUs
+    // 1. Evaluate CB & BF for GPUs / CPUs / Laptops
     const catalogItem = d.matched_kind === 'gpu'
       ? (DB.gpus || []).find(g => g.slug === d.matched_slug)
       : d.matched_kind === 'cpu'
         ? (DB.cpus || []).find(c => c.slug === d.matched_slug)
-        : null;
+        : d.matched_kind === 'laptop'
+          ? (DB.laptops || []).find(l => l.slug === d.matched_slug)
+          : null;
 
     if (d.matched_kind === 'gpu' && catalogItem) {
       const comp = getContextualCompositeScore(catalogItem);
@@ -4462,7 +4619,7 @@ function evaluateDealsForAlerts() {
     }
 
     // 2. Evaluate Black Friday Expected Price & Historical Low
-    if (catalogItem && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu')) {
+    if (catalogItem && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu' || d.matched_kind === 'laptop')) {
       const st = bfAnalyzeItem(catalogItem, d.matched_kind);
       const exp = bfExpectedRange(st, 0.10);
       const userSaved = (STATE.bfRanges && STATE.bfRanges[d.matched_slug]) || null;
@@ -4517,7 +4674,7 @@ function evaluateDealsForAlerts() {
     // 4. Evaluate 30-day rolling average flash drop (default >= 5%)
     let hitAvg30d = false;
     if (PROMO_STATE.trigAvg30d && d.matched_slug && d.price_brl > 0) {
-      const catPool = (d.matched_kind === 'cpu' ? DB.cpus : (d.matched_kind === 'ram' ? DB.rams : DB.gpus)) || [];
+      const catPool = (d.matched_kind === 'laptop' ? DB.laptops : (d.matched_kind === 'cpu' ? DB.cpus : (d.matched_kind === 'ram' ? DB.rams : DB.gpus))) || [];
       const catIt = catPool.find(x => x.slug === d.matched_slug);
       const avg30 = (catIt && catIt.price_stats && catIt.price_stats.avg_30d) ? catIt.price_stats.avg_30d : 0;
       if (avg30 > 0) {
@@ -4982,7 +5139,7 @@ function togglePromoRadarPanel() {
 }
 
 function backupOriginalHBPrices(force = false) {
-  ['gpus', 'cpus', 'rams'].forEach(group => {
+  ['gpus', 'cpus', 'rams', 'laptops'].forEach(group => {
     (DB[group] || []).forEach(it => {
       if (force || it._hbPrice === undefined) {
         it._hbPrice = it.price_brl;
@@ -5010,7 +5167,7 @@ function applyFlashPromosToCatalog() {
 
   const brChannels = new Set(['ofertasadrenaline', 'peperaiohardware', 'iskandarsouza', 'benchpromos', 'kabumofertas', 'nerdofertas', 'ofertastechbr']);
 
-  ['gpus', 'cpus', 'rams'].forEach(group => {
+  ['gpus', 'cpus', 'rams', 'laptops'].forEach(group => {
     (DB[group] || []).forEach(it => {
       const promo = bestMap[it.slug];
       const promoRegion = (promo && promo.region_id ? promo.region_id : lastDataReg).toLowerCase();
@@ -5068,6 +5225,7 @@ function applyFlashPromosToCatalog() {
   }
 
   enrichGPUsWithContextualMetrics();
+  if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
   populateSelectors();
   renderActiveTab();
 }
@@ -5143,7 +5301,16 @@ function onChangePromoSyncInterval() {
 }
 
 function sendPromoToDuelOrBF(kind, slug, price) {
-  if (kind === 'gpu') {
+  if (kind === 'laptop') {
+    if (typeof setMainContext === 'function') setMainContext('laptop');
+    STATE.laptopDuelCandSlug = slug;
+    const sel = document.getElementById('laptop-duel-select-cand');
+    if (sel) sel.value = slug;
+    if (typeof syncLaptopDuelPriceInputsFromSelection === 'function') syncLaptopDuelPriceInputsFromSelection();
+    const pInp = document.getElementById('laptop-duel-price-cand');
+    if (pInp) pInp.value = price;
+    switchTab('versus');
+  } else if (kind === 'gpu') {
     if (typeof setMainContext === 'function') setMainContext('gpu');
     STATE.duelCandSlug = slug;
     const sel = document.getElementById('duel-select-cand');
@@ -5456,7 +5623,7 @@ function renderPromoRadarPanel() {
     }
   });
   const storeExtras = [];
-  [['gpus', 'gpu'], ['cpus', 'cpu']].forEach(([grp, kindName]) => {
+  [['gpus', 'gpu'], ['cpus', 'cpu'], ['laptops', 'laptop']].forEach(([grp, kindName]) => {
     (DB[grp] || []).forEach(it => {
       if (!it || !it.slug || !it.price_brl || it.store_name === 'referencia' || it.is_xeon) return;
       const bestGroupP = bestActiveGroupBySlug.get(it.slug);
@@ -6234,7 +6401,9 @@ function renderBFPromosCardsTab() {
 
   const _enrichCard = (d) => {
     const imgUrl = d.image_url || imgByPost.get(d.post_id) || d.image || null;
-    const catGroup = d.matched_kind === 'cpu' ? (DB.cpus || []) : (d.matched_kind === 'ram' ? (DB.rams || []) : (DB.gpus || []));
+    const catGroup = d.matched_kind === 'laptop'
+      ? (DB.laptops || [])
+      : (d.matched_kind === 'cpu' ? (DB.cpus || []) : (d.matched_kind === 'ram' ? (DB.rams || []) : (DB.gpus || [])));
     const catItem = catGroup.find(x => x.slug === d.matched_slug);
 
     // Compute Black Friday target range identically to Black Friday view
@@ -6302,7 +6471,7 @@ function renderBFPromosCardsTab() {
   const dbTs = (typeof DB !== 'undefined' && DB.updated_at) ? Date.parse(DB.updated_at.replace(' ', 'T')) : nowMs;
   const storeAgeHrs = !isNaN(dbTs) ? Math.max(0.05, (nowMs - dbTs) / 3600000) : 0.5;
 
-  [['gpus', 'gpu'], ['cpus', 'cpu']].forEach(([grp, kindName]) => {
+  [['gpus', 'gpu'], ['cpus', 'cpu'], ['laptops', 'laptop']].forEach(([grp, kindName]) => {
     (DB[grp] || []).forEach(it => {
       if (!it || !it.slug || !it.price_brl || it.store_name === 'referencia' || it.is_xeon) return;
       const baseCard = _enrichCard({
@@ -6334,11 +6503,15 @@ function renderBFPromosCardsTab() {
   });
 
   const allCards = [...groupCards, ...storeCatalogCards];
+  const isLapCtx = (typeof STATE !== 'undefined' && STATE.context === 'laptop');
 
   const items = allCards.filter(d => {
+    if (isLapCtx && d.matched_kind !== 'laptop') return false;
+    if (!isLapCtx && d.matched_kind === 'laptop') return false;
     if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
     if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
     if (BF_CARDS_FILTER === 'ram' && d.matched_kind !== 'ram') return false;
+    if (BF_CARDS_FILTER === 'laptop' && d.matched_kind !== 'laptop') return false;
     if (BF_CARDS_FILTER === 'store_direct' && !d._isStoreDirect) return false;
     if (BF_CARDS_FILTER === 'in_stock' && (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired')) return false;
     if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice && !d.isNearBF) return false;

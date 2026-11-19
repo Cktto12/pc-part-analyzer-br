@@ -393,6 +393,14 @@ def fetch_gpu_detail(gpu_item):
     }
 
 def build_database(output_path):
+    prev_laptops = []
+    if os.path.exists(output_path):
+        try:
+            with open(output_path, 'r', encoding='utf-8') as f:
+                prev_laptops = json.load(f).get('laptops') or []
+        except Exception:
+            prev_laptops = []
+
     print("Fetching live catalog from Hardware Barato...")
     _, gpu_arrays = fetch_json_arrays('/produtos/placas-de-video')
     raw_gpus = gpu_arrays[0] if gpu_arrays else []
@@ -629,6 +637,31 @@ def build_database(output_path):
                 "offer_url": f"https://www.hardwarebarato.com/produtos/fontes/{ps['slug']}"
             })
 
+    laptops = list(prev_laptops or [])
+    try:
+        import laptop_scraper
+        scraped_laptops = laptop_scraper.build_laptops_catalog(existing_laptops=prev_laptops)
+        if scraped_laptops:
+            min_full = max(10, int(len(laptops) * 0.6))
+            if not laptops or len(scraped_laptops) >= min_full:
+                # Full scrape succeeded; merge in any previous high-history slugs that temporarily dipped
+                scraped_by_slug = {item.get("slug"): item for item in scraped_laptops if item.get("slug")}
+                merged = list(scraped_laptops)
+                for prev in laptops:
+                    p_slug = prev.get("slug")
+                    if p_slug and p_slug not in scraped_by_slug and len(prev.get("history") or []) >= 5:
+                        merged.append(prev)
+                laptops = merged
+            else:
+                # Partial scrape (e.g. rate-limited in CI): update existing slugs without dropping catalog items
+                by_slug = {item.get("slug"): item for item in laptops if item.get("slug")}
+                for item in scraped_laptops:
+                    if item.get("slug"):
+                        by_slug[item["slug"]] = item
+                laptops = list(by_slug.values())
+    except Exception as e:
+        print(f"Warning building laptops catalog: {e}")
+
     db = {
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "source": "https://www.hardwarebarato.com/",
@@ -636,13 +669,14 @@ def build_database(output_path):
         "cpus": cpus,
         "rams": rams,
         "motherboards": mobos,
-        "psus": psus
+        "psus": psus,
+        "laptops": laptops
     }
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(db, f, ensure_ascii=False, indent=2)
-    print(f"Database saved to {output_path} ({len(enriched_gpus)} GPUs, {len(cpus)} CPUs, {len(rams)} RAMs, {len(mobos)} Mobos, {len(psus)} PSUs)")
+    print(f"Database saved to {output_path} ({len(enriched_gpus)} GPUs, {len(cpus)} CPUs, {len(rams)} RAMs, {len(mobos)} Mobos, {len(psus)} PSUs, {len(laptops)} Laptops)")
     return db
 
 
@@ -719,10 +753,18 @@ def refresh_live_catalog_prices(db_path):
                         it["history"] = hist[-600:]
             updated += 1
 
+    try:
+        import laptop_scraper
+        lap_upd, lap_drop = laptop_scraper.refresh_live_laptop_prices(db)
+        updated += lap_upd
+        dropped += lap_drop
+    except Exception as e:
+        print(f"[Live Catalog Refresh] Laptop refresh skipped: {e}")
+
     db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(db_path, 'w', encoding='utf-8') as f:
         json.dump(db, f, ensure_ascii=False, indent=2)
-    print(f"[Live Catalog Refresh] Updated {updated} GPU/CPU prices ({dropped} price drops detected).")
+    print(f"[Live Catalog Refresh] Updated {updated} catalog prices ({dropped} price drops detected).")
     return updated, dropped
 
 

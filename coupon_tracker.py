@@ -121,7 +121,7 @@ def fetch_hb_live_slug_info(kind, slug):
     Fetches Hardware Barato's live in-stock offer list ('data') and verified coupon list ('coupons')
     for a given hardware slug (cached for 5 minutes).
     """
-    if not slug:
+    if not slug or (kind or "").lower() == "laptop":
         return None
     cat_map = {
         "gpu": "placas-de-video",
