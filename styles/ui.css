@@ -1676,3 +1676,116 @@
   border: 1.5px solid #070b12;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7);
 }
+
+/* ==========================================================================
+   15. Acabamento: Skeletons, Estados Vazios & Ajustes Mobile (Fase 7)
+   ========================================================================== */
+
+@keyframes ui-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.ui-skeleton {
+  display: block;
+  border-radius: var(--ui-radius-md);
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.55) 25%,
+    rgba(51, 65, 85, 0.75) 50%,
+    rgba(30, 41, 59, 0.55) 75%
+  );
+  background-size: 200% 100%;
+  animation: ui-shimmer 1.5s ease-in-out infinite;
+}
+
+.ui-skeleton-card {
+  border-radius: var(--ui-radius-lg);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg-surface-glass);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.ui-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.25rem 1.25rem;
+  border-radius: var(--ui-radius-lg);
+  border: 1px dashed var(--ui-border-strong);
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.ui-empty-state-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-bg-elevated);
+  border: 1px solid var(--ui-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ui-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.ui-empty-state-title {
+  font-size: var(--ui-text-md);
+  font-weight: 700;
+  color: var(--ui-text-primary);
+}
+
+.ui-empty-state-desc {
+  font-size: var(--ui-text-body-sm);
+  color: var(--ui-text-muted);
+  max-width: 26rem;
+}
+
+/* Ajustes finos para celular (< 640px) */
+@media (max-width: 640px) {
+  .ui-card {
+    padding: 1rem;
+    border-radius: var(--ui-radius-md);
+  }
+
+  .ui-kpi {
+    padding: 0.875rem 1rem;
+  }
+
+  .ui-title-xl {
+    font-size: 1.3rem;
+  }
+
+  .ui-title-lg {
+    font-size: 1.125rem;
+  }
+
+  select {
+    max-width: 100%;
+  }
+
+  .ui-details-summary {
+    padding: 0.75rem 0.875rem;
+    font-size: var(--ui-text-body-sm);
+  }
+
+  .ui-details-body {
+    padding: 0.875rem;
+  }
+
+  .ui-shell-content {
+    padding-bottom: calc(var(--ui-bottom-nav-height) + 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton {
+    animation: none;
+  }
+}

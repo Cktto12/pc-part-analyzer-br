@@ -79,9 +79,9 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Números em destaque em vez de texto corrido
 
 ### Fase 7 — Configurações e acabamento
-- [ ] Configurações agrupadas em seções recolhíveis
-- [ ] Ajustes para celular
-- [ ] Animações de carregamento e mensagens para telas vazias
+- [x] Configurações agrupadas em seções recolhíveis
+- [x] Ajustes para celular
+- [x] Animações de carregamento e mensagens para telas vazias
 
 ## 5. Processo
 

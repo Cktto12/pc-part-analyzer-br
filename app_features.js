@@ -6665,9 +6665,16 @@ function renderBFPromosCardsTab() {
 
   if (!items.length) {
     grid.innerHTML = `
-      <div class="col-span-full ui-card text-center py-8 space-y-2">
-        <div class="ui-title-md">Nenhuma promoção encontrada para este filtro</div>
-        <div class="ui-body-sm">Tente trocar o filtro acima ou clique em "Atualizar Agora".</div>
+      <div class="col-span-full ui-empty-state">
+        <div class="ui-empty-state-icon">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+        <div class="ui-empty-state-title">Nenhuma promoção encontrada</div>
+        <p class="ui-empty-state-desc">Nenhum item corresponde ao filtro ou busca atual. Limpe os filtros ou atualize o Radar.</p>
+        <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
+          <button type="button" onclick="const s=document.getElementById('bf-cards-search'); if(s) s.value=''; setBFCardsFilter('all');" class="ui-btn ui-btn--sm">Limpar filtros</button>
+          <button type="button" onclick="pollBFLiveCardsFeed(true); scanLivePromos(true);" class="ui-btn ui-btn--primary ui-btn--sm">Atualizar agora</button>
+        </div>
       </div>`;
     return;
   }

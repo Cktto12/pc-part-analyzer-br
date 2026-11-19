@@ -400,17 +400,12 @@ function syncComparisonScaleControls() {
     btnAbsCB.classList.toggle('is-active', isAbs);
   }
 
-  // Config tab buttons
+  // Config tab buttons (.ui-segmented-btn)
   const btnRelCfg = document.getElementById('btn-scale-rel-cfg');
   const btnAbsCfg = document.getElementById('btn-scale-abs-cfg');
   if (btnRelCfg && btnAbsCfg) {
-    if (isAbs) {
-      btnRelCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200';
-      btnAbsCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-amber-400 text-slate-950 shadow-sm';
-    } else {
-      btnRelCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer bg-sky-400 text-slate-950 shadow-sm';
-      btnAbsCfg.className = 'px-3 py-1.5 rounded-lg font-bold text-xs transition cursor-pointer text-slate-400 hover:text-slate-200';
-    }
+    btnRelCfg.classList.toggle('is-active', !isAbs);
+    btnAbsCfg.classList.toggle('is-active', isAbs);
   }
 
   // Fallback for checkboxes & labels
@@ -1552,6 +1547,7 @@ function toggleContextSettings() {
   setTimeout(() => {
     const target = document.getElementById('cfg-section-display-workloads');
     if (target) {
+      if (target.tagName === 'DETAILS') target.open = true;
       target.scrollIntoView({ behavior: 'smooth', block: 'center' });
       target.classList.add('ring-2', 'ring-sky-400');
       setTimeout(() => target.classList.remove('ring-2', 'ring-sky-400'), 1500);
