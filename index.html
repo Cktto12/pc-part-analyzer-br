@@ -110,7 +110,7 @@
     <nav class="ui-sidebar-nav">
       <!-- Área 1: Início -->
       <div class="ui-nav-group">
-        <button type="button" onclick="switchTab('home')" id="tab-btn-home" class="tab-btn ui-nav-item">
+        <button type="button" onclick="switchTab('home')" id="tab-btn-home" class="tab-btn ui-nav-item is-active">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
           <span>Início</span>
         </button>
@@ -119,7 +119,7 @@
       <!-- Área 2: Comparar -->
       <div class="ui-nav-group">
         <span class="ui-nav-group-label">Comparar</span>
-        <button type="button" onclick="switchTab('versus')" id="tab-btn-versus" class="tab-btn ui-nav-item is-active">
+        <button type="button" onclick="switchTab('versus')" id="tab-btn-versus" class="tab-btn ui-nav-item">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
           <span id="sidebar-tab-title-versus">Duelo</span>
         </button>
@@ -239,36 +239,139 @@
       </div>
 
       <!-- =================================================================== -->
-      <!-- TAB 0: INÍCIO (ESTRUTURA BASE — ENRIQUECIDA NA FASE 2)              -->
+      <!-- TAB 0: INÍCIO (FASE 2 — KPIs, TOP OFERTAS, TOP CB E ATALHOS)        -->
       <!-- =================================================================== -->
-      <section id="tab-home" class="hidden space-y-6">
-        <div class="ui-card">
-          <div class="ui-card-header">
-            <div>
-              <h2 class="ui-title-xl">O que você quer fazer hoje?</h2>
-              <p class="ui-body-sm mt-1">Escolha uma área abaixo ou use o menu para comparar peças, acompanhar preços e montar seu setup.</p>
+      <section id="tab-home" class="space-y-6">
+        <!-- 1. KPIs grandes no topo -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button type="button" onclick="switchTab('bf-promos')" class="ui-kpi ui-card--interactive text-left">
+            <span class="ui-kpi-label">
+              Ofertas ativas hoje
+              <span class="ui-info ui-info--bottom" onclick="event.stopPropagation()">
+                <span class="ui-info-trigger" tabindex="0" aria-label="Sobre ofertas ativas">i</span>
+                <span class="ui-info-popover" role="tooltip">Promoções reais detectadas pelo Radar nos grupos monitorados e cruzadas com a base de preços.</span>
+              </span>
+            </span>
+            <span id="home-kpi-deals" class="ui-kpi-value ui-kpi-value--brand">--</span>
+            <span id="home-kpi-deals-sub" class="ui-kpi-sub">Carregando radar de ofertas...</span>
+          </button>
+
+          <button type="button" onclick="switchTab('cb')" class="ui-kpi ui-card--interactive text-left">
+            <span class="ui-kpi-label">
+              No mínimo histórico hoje
+              <span class="ui-info ui-info--bottom" onclick="event.stopPropagation()">
+                <span class="ui-info-trigger" tabindex="0" aria-label="Sobre mínimo histórico">i</span>
+                <span class="ui-info-popover" role="tooltip">Modelos do catálogo atual cujo preço hoje está igual ou até 2% acima do menor preço já registrado.</span>
+              </span>
+            </span>
+            <span id="home-kpi-min" class="ui-kpi-value ui-kpi-value--good">--</span>
+            <span id="home-kpi-min-sub" class="ui-kpi-sub">Analisando catálogo...</span>
+          </button>
+
+          <button type="button" onclick="switchTab('bf')" class="ui-kpi ui-card--interactive text-left">
+            <span class="ui-kpi-label">
+              Dias até a Black Friday
+              <span class="ui-info ui-info--bottom" onclick="event.stopPropagation()">
+                <span class="ui-info-trigger" tabindex="0" aria-label="Sobre Black Friday">i</span>
+                <span class="ui-info-popover" role="tooltip">Contagem regressiva até a próxima Black Friday para acompanhar a curva sazonal de preços.</span>
+              </span>
+            </span>
+            <span id="home-kpi-bf" class="ui-kpi-value ui-kpi-value--warn">--</span>
+            <span id="home-kpi-bf-sub" class="ui-kpi-sub">Sazonalidade e faixa esperada</span>
+          </button>
+        </div>
+
+        <!-- 2. Top 5 Ofertas do Dia + Top Custo-Benefício -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <!-- Card: Top 5 Ofertas do Dia -->
+          <div class="ui-card flex flex-col">
+            <div class="ui-card-header">
+              <div>
+                <h2 class="ui-card-title">
+                  <span>5 melhores ofertas do dia</span>
+                  <span class="ui-info ui-info--bottom">
+                    <button type="button" class="ui-info-trigger" aria-label="Como escolhemos as 5 melhores ofertas">i</button>
+                    <span class="ui-info-popover" role="tooltip">Ordenadas pelo maior desconto real em relação ao preço médio de mercado no Radar ao vivo.</span>
+                  </span>
+                </h2>
+                <p id="home-deals-subtitle" class="ui-card-subtitle">Destaques reais do Radar agora</p>
+              </div>
+              <button type="button" onclick="switchTab('bf-promos')" class="ui-btn ui-btn--sm ui-btn--ghost">
+                Ver todas →
+              </button>
+            </div>
+            <div id="home-top-deals" class="space-y-2.5 flex-1">
+              <div class="ui-skeleton h-16 w-full"></div>
+              <div class="ui-skeleton h-16 w-full"></div>
+              <div class="ui-skeleton h-16 w-full"></div>
             </div>
           </div>
+
+          <!-- Card: Top Custo-Benefício -->
+          <div class="ui-card flex flex-col">
+            <div class="ui-card-header">
+              <div>
+                <h2 class="ui-card-title">
+                  <span id="home-cb-title">Top custo-benefício (GPUs)</span>
+                  <span class="ui-info ui-info--bottom">
+                    <button type="button" class="ui-info-trigger" aria-label="Como funciona o custo-benefício">i</button>
+                    <span class="ui-info-popover" role="tooltip">Ranking calculado pelo desempenho no seu perfil de uso dividido pelo preço atual de mercado.</span>
+                  </span>
+                </h2>
+                <p id="home-cb-subtitle" class="ui-card-subtitle">Clique em qualquer modelo para comparar no Duelo</p>
+              </div>
+              <button type="button" onclick="switchTab('cb')" class="ui-btn ui-btn--sm ui-btn--ghost">
+                Ver ranking →
+              </button>
+            </div>
+            <div id="home-top-cb" class="space-y-2.5 flex-1">
+              <div class="ui-skeleton h-16 w-full"></div>
+              <div class="ui-skeleton h-16 w-full"></div>
+              <div class="ui-skeleton h-16 w-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Quatro cards grandes: O que você quer fazer? -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="ui-title-lg">O que você quer fazer?</h2>
+          </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button type="button" onclick="switchTab('versus')" class="ui-card ui-card--compact ui-card--interactive text-left">
-              <span class="ui-badge ui-badge--brand mb-2">Comparar</span>
-              <div class="ui-title-md">Duelo &amp; Simulador</div>
-              <p class="ui-body-sm mt-1">Compare dois modelos lado a lado ou simule desempenho real.</p>
+            <button type="button" onclick="switchTab('versus')" class="ui-card ui-card--interactive text-left flex flex-col justify-between gap-4">
+              <div>
+                <span class="ui-badge ui-badge--brand mb-3">Comparar</span>
+                <div class="ui-title-md">Comparar dois modelos</div>
+                <p class="ui-body-sm mt-1.5">Duelo direto com veredito de preço e simulador de desempenho real.</p>
+              </div>
+              <span class="text-sm font-semibold text-sky-400">Abrir Duelo →</span>
             </button>
-            <button type="button" onclick="switchTab('cb')" class="ui-card ui-card--compact ui-card--interactive text-left">
-              <span class="ui-badge ui-badge--good mb-2">Preços</span>
-              <div class="ui-title-md">Custo-benefício</div>
-              <p class="ui-body-sm mt-1">Veja o ranking por preço/desempenho e alvos de compra.</p>
+
+            <button type="button" onclick="switchTab('cb')" class="ui-card ui-card--interactive text-left flex flex-col justify-between gap-4">
+              <div>
+                <span class="ui-badge ui-badge--good mb-3">Preços</span>
+                <div class="ui-title-md">Achar o melhor custo-benefício</div>
+                <p class="ui-body-sm mt-1.5">Ranking completo com preço alvo, tendência e filtros rápidos.</p>
+              </div>
+              <span class="text-sm font-semibold text-emerald-400">Ver Custo-benefício →</span>
             </button>
-            <button type="button" onclick="switchTab('bf-promos')" class="ui-card ui-card--compact ui-card--interactive text-left">
-              <span class="ui-badge ui-badge--warn mb-2">Ofertas</span>
-              <div class="ui-title-md">Black Friday &amp; Promoções</div>
-              <p class="ui-body-sm mt-1">Acompanhe promoções ao vivo e sazonalidade histórica.</p>
+
+            <button type="button" onclick="switchTab('bf-promos')" class="ui-card ui-card--interactive text-left flex flex-col justify-between gap-4">
+              <div>
+                <span class="ui-badge ui-badge--warn mb-3">Promoções</span>
+                <div class="ui-title-md">Caçar ofertas e Black Friday</div>
+                <p class="ui-body-sm mt-1.5">Radar de promoções ao vivo, cupons e sazonalidade histórica.</p>
+              </div>
+              <span class="text-sm font-semibold text-amber-400">Abrir Promoções →</span>
             </button>
-            <button type="button" onclick="switchTab('builder')" class="ui-card ui-card--compact ui-card--interactive text-left">
-              <span class="ui-badge mb-2">Montar</span>
-              <div class="ui-title-md">Montagem &amp; Upgrades</div>
-              <p class="ui-body-sm mt-1">Planeje seu PC, consumo de energia e upgrades de plataforma.</p>
+
+            <button type="button" onclick="switchTab('builder')" class="ui-card ui-card--interactive text-left flex flex-col justify-between gap-4">
+              <div>
+                <span class="ui-badge mb-3">Montar</span>
+                <div class="ui-title-md">Montar ou evoluir setup</div>
+                <p class="ui-body-sm mt-1.5">Calcule consumo em Watts, compatibilidade e upgrades de plataforma.</p>
+              </div>
+              <span class="text-sm font-semibold text-slate-200">Abrir Montagem →</span>
             </button>
           </div>
         </div>
@@ -634,7 +737,7 @@
     <!-- ===================================================================== -->
     <!-- TAB 1: DUELO RELACIONAL (GPU VS GPU OU CPU VS CPU)                      -->
     <!-- ===================================================================== -->
-    <section id="tab-versus" class="space-y-6">
+    <section id="tab-versus" class="hidden space-y-6">
       <!-- GPU DUEL VIEW -->
       <div id="versus-gpu-view" class="space-y-6">
         <div class="glass-card rounded-2xl p-5 border border-sky-500/30 shadow-xl">
@@ -2807,11 +2910,11 @@
 
   <!-- MOBILE BOTTOM NAVIGATION BAR (< 1024px) -->
   <nav id="mobile-bottom-nav" class="ui-bottom-nav" aria-label="Navegação mobile">
-    <button type="button" id="bnav-home" onclick="switchArea('home')" class="ui-bottom-nav-btn">
+    <button type="button" id="bnav-home" onclick="switchArea('home')" class="ui-bottom-nav-btn is-active">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
       <span>Início</span>
     </button>
-    <button type="button" id="bnav-compare" onclick="switchArea('compare')" class="ui-bottom-nav-btn is-active">
+    <button type="button" id="bnav-compare" onclick="switchArea('compare')" class="ui-bottom-nav-btn">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
       <span>Comparar</span>
     </button>
@@ -2828,8 +2931,8 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261119-4"></script>
-  <script src="app_features.js?v=20261119-4"></script>
-  <script src="laptop_mode.js?v=20261119-4"></script>
+  <script src="app.js?v=20261119-5"></script>
+  <script src="app_features.js?v=20261119-5"></script>
+  <script src="laptop_mode.js?v=20261119-5"></script>
 </body>
 </html>

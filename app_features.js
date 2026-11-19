@@ -5607,6 +5607,10 @@ function renderPromoRadarPanel() {
   const data = PROMO_STATE.lastData;
   if (!data) return;
 
+  if (typeof renderHomeTab === 'function' && typeof STATE !== 'undefined' && STATE.activeTab === 'home') {
+    renderHomeTab();
+  }
+
   const matchedEl = document.getElementById('promo-matched-list');
   const feedEl = document.getElementById('promo-general-feed');
   const sumEl = document.getElementById('promo-matched-summary');

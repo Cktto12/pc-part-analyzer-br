@@ -56,9 +56,9 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Avisos de oferta: no máximo um por vez, compacto, some sozinho
 
 ### Fase 2 — Página inicial nova
-- [ ] Números grandes no topo: ofertas ativas, produtos no mínimo histórico hoje, dias até a Black Friday
-- [ ] As 5 melhores ofertas do dia e o top de custo-benefício em cards visuais
-- [ ] Quatro cards grandes "O que você quer fazer?", que levam a cada área
+- [x] Números grandes no topo: ofertas ativas, produtos no mínimo histórico hoje, dias até a Black Friday
+- [x] As 5 melhores ofertas do dia e o top de custo-benefício em cards visuais
+- [x] Quatro cards grandes "O que você quer fazer?", que levam a cada área
 
 ### Fase 3 — Duelo: veredito primeiro
 - [ ] Card grande com a resposta em uma frase: **Vale / Aguarde / Não compensa**, mais a diferença de preço

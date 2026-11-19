@@ -19,7 +19,7 @@ window.DB = DB;
 // User Context Weights & Context Separation (GPU vs CPU vs Notebook)
 let STATE = {
   context: 'gpu', // 'gpu' | 'cpu' | 'laptop'
-  activeTab: 'versus',
+  activeTab: 'home',
   wGaming: 30,
   wWorkstation: 35,
   wAI: 20,
@@ -1534,7 +1534,11 @@ function switchTab(tabId) {
     const sec = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`tab-btn-${id}`);
     if (sec) sec.classList.toggle('hidden', id !== tabId);
-    if (btn) btn.classList.toggle('is-active', id === tabId);
+    if (btn) {
+      btn.classList.toggle('is-active', id === tabId);
+      if (id === tabId) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
+    }
   });
 
   // Update mobile bottom navigation active area
@@ -1623,6 +1627,9 @@ function renderActiveTab() {
   const ctx = STATE.context;
   syncLaptopContextViews();
   try {
+    if (t === 'home') {
+      renderHomeTab();
+    }
     if (t === 'versus') {
       const gpuView = document.getElementById('versus-gpu-view');
       const cpuView = document.getElementById('versus-cpu-view');
@@ -1687,6 +1694,212 @@ function renderActiveTab() {
     console.error('Render error on tab', t, e);
   }
 }
+
+// ============================================================================
+// TAB 0: PÁGINA INICIAL (FASE 2 — KPIs, TOP 5 OFERTAS, TOP CUSTO-BENEFÍCIO)
+// ============================================================================
+function getNextBlackFridayCountdown() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const computeBF = (yr) => {
+    if (typeof window.getExactBlackFridayDate === 'function') {
+      const d = window.getExactBlackFridayDate(yr);
+      if (d instanceof Date && !isNaN(d)) return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
+    const nov30 = new Date(yr, 10, 30);
+    const day = nov30.getDay();
+    const diff = (day >= 5) ? (day - 5) : (day + 2);
+    return new Date(yr, 10, 30 - diff);
+  };
+  let bf = computeBF(today.getFullYear());
+  if (bf < today) bf = computeBF(today.getFullYear() + 1);
+  const days = Math.round((bf - today) / 86400000);
+  const dateLabel = bf.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return { days, dateLabel };
+}
+
+function openHomeItemInDuel(kind, slug) {
+  if (kind === 'cpu') {
+    setMainContext('cpu');
+    if (typeof setCpuDuelPair === 'function') {
+      setCpuDuelPair(slug, STATE.cpuBaseSlug || null);
+      return;
+    }
+  } else if (kind === 'laptop') {
+    setMainContext('laptop');
+    const candSel = document.getElementById('sel-laptop-cand');
+    if (candSel) {
+      candSel.value = slug;
+      if (typeof STATE !== 'undefined') STATE.laptopCandSlug = slug;
+    }
+    switchTab('versus');
+    return;
+  } else {
+    setMainContext('gpu');
+    if (typeof setDuelPair === 'function') {
+      setDuelPair(slug, STATE.cbRelBaseSlug || null);
+      return;
+    }
+  }
+  switchTab('versus');
+}
+window.openHomeItemInDuel = openHomeItemInDuel;
+
+function renderHomeTab() {
+  const ctx = STATE.context || 'gpu';
+  const ctxLabel = ctx === 'laptop' ? 'Notebooks' : (ctx === 'cpu' ? 'CPUs' : 'GPUs');
+
+  // 1. KPI: Dias até a Black Friday
+  const bfInfo = getNextBlackFridayCountdown();
+  const kpiBf = document.getElementById('home-kpi-bf');
+  const kpiBfSub = document.getElementById('home-kpi-bf-sub');
+  if (kpiBf) kpiBf.textContent = bfInfo.days === 0 ? 'HOJE!' : `${bfInfo.days} dias`;
+  if (kpiBfSub) kpiBfSub.textContent = `Próxima Black Friday: ${bfInfo.dateLabel}`;
+
+  // 2. KPI: Produtos no mínimo histórico hoje (no contexto atual)
+  const items = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || []));
+  const validItems = items.filter(it => it && it.price_brl > 0 && !it.is_xeon);
+  const atMinItems = validItems.filter(it => {
+    const ps = it.price_stats || {};
+    const minRef = ps.min_all_time || ps.min_90d || 0;
+    return minRef > 0 && it.price_brl <= minRef * 1.02;
+  });
+  const kpiMin = document.getElementById('home-kpi-min');
+  const kpiMinSub = document.getElementById('home-kpi-min-sub');
+  if (kpiMin) kpiMin.textContent = String(atMinItems.length);
+  if (kpiMinSub) {
+    kpiMinSub.textContent = validItems.length > 0
+      ? `de ${validItems.length} ${ctxLabel} monitorados`
+      : 'Carregando catálogo...';
+  }
+
+  // 3. KPI: Ofertas ativas hoje + Top 5 melhores ofertas do dia
+  const promoData = (typeof PROMO_STATE !== 'undefined' && PROMO_STATE.lastData) ? PROMO_STATE.lastData : null;
+  const activeDeals = (promoData && Array.isArray(promoData.matched_deals))
+    ? promoData.matched_deals.filter(d => d && d.price_brl > 0 && !d.is_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired')
+    : [];
+
+  const kpiDeals = document.getElementById('home-kpi-deals');
+  const kpiDealsSub = document.getElementById('home-kpi-deals-sub');
+  if (kpiDeals) kpiDeals.textContent = promoData ? String(activeDeals.length) : '--';
+  if (kpiDealsSub) {
+    kpiDealsSub.textContent = promoData
+      ? (activeDeals.length > 0 ? 'Promoções verificadas no Radar' : 'Nenhuma oferta ativa agora')
+      : 'Carregando radar de ofertas...';
+  }
+
+  const dealsWrap = document.getElementById('home-top-deals');
+  if (dealsWrap) {
+    if (!promoData) {
+      dealsWrap.innerHTML = `<div class="ui-skeleton h-16 w-full"></div><div class="ui-skeleton h-16 w-full"></div><div class="ui-skeleton h-16 w-full"></div>`;
+    } else if (activeDeals.length === 0) {
+      dealsWrap.innerHTML = `<div class="ui-empty">Nenhuma oferta ativa no Radar no momento. Clique em <strong>Sync</strong> ou abra o Radar para escanear.</div>`;
+    } else {
+      // Deduplicate by slug keeping lowest price, then sort by best real discount
+      const bestByKey = new Map();
+      activeDeals.forEach(d => {
+        const key = d.matched_slug || d.matched_name || d.title;
+        const prev = bestByKey.get(key);
+        if (!prev || d.price_brl < prev.price_brl) bestByKey.set(key, d);
+      });
+      const rankedDeals = Array.from(bestByKey.values()).map(d => {
+        const ref = d.hb_price_brl > d.price_brl ? d.hb_price_brl : (d.avg_30d > d.price_brl ? d.avg_30d : 0);
+        const pct = ref > 0 ? Math.round(((ref - d.price_brl) / ref) * 100) : (d.discount_pct || 0);
+        return { deal: d, ref, pct };
+      }).sort((a, b) => (b.pct - a.pct) || (a.deal.price_brl - b.deal.price_brl)).slice(0, 5);
+
+      dealsWrap.innerHTML = rankedDeals.map(({ deal: d, ref, pct }) => {
+        const badgeHtml = pct >= 5
+          ? `<span class="ui-badge ui-badge--good ui-mono">-${pct}%</span>`
+          : `<span class="ui-badge ui-badge--brand">Oferta</span>`;
+        const couponHtml = (d.coupon_code || d.coupon_info)
+          ? `<span class="ui-badge ui-badge--warn ui-mono">${d.coupon_code || d.coupon_info}</span>`
+          : '';
+        const buyHref = d.buy_url || d.post_url || '#';
+        const canDuel = d.matched_slug && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu' || d.matched_kind === 'laptop');
+        return `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/65 border border-slate-800/90 hover:border-slate-700 transition">
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                ${badgeHtml}
+                ${couponHtml}
+                <span class="text-sm font-bold text-slate-100 truncate">${d.matched_name || d.title}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span class="ui-mono font-bold text-base text-emerald-400">${fmtBRL(d.price_brl)}</span>
+                ${ref > d.price_brl ? `<span class="ui-mono line-through text-slate-500">${fmtBRLShort(ref)}</span>` : ''}
+                ${d.channel_id ? `<span class="truncate">@${d.channel_id}</span>` : ''}
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${canDuel ? `<button type="button" onclick="openHomeItemInDuel('${d.matched_kind}', '${d.matched_slug}')" class="ui-btn ui-btn--sm ui-btn--ghost">Duelo</button>` : ''}
+              <a href="${buyHref}" target="_blank" rel="noopener" class="ui-btn ui-btn--sm ui-btn--good">Oferta ↗</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // 4. Top 5 Custo-Benefício do contexto atual
+  const cbTitle = document.getElementById('home-cb-title');
+  if (cbTitle) cbTitle.textContent = `Top custo-benefício (${ctxLabel})`;
+
+  if (ctx === 'gpu' && typeof enrichGPUsWithContextualMetrics === 'function') enrichGPUsWithContextualMetrics();
+  else if (ctx === 'cpu' && typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
+  else if (ctx === 'laptop' && typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+
+  const cbWrap = document.getElementById('home-top-cb');
+  if (cbWrap) {
+    if (validItems.length === 0) {
+      cbWrap.innerHTML = `<div class="ui-empty">Carregando ranking de ${ctxLabel}...</div>`;
+    } else {
+      const top5 = validItems
+        .slice()
+        .sort((a, b) => (b._myCBScore || 0) - (a._myCBScore || 0))
+        .slice(0, 5);
+
+      cbWrap.innerHTML = top5.map((it, idx) => {
+        const score = Math.round(it._myCBScore || 0);
+        const tgt = it.price_stats?.target_price || 0;
+        let priceBadge = `<span class="ui-badge">Preço médio</span>`;
+        if (tgt > 0) {
+          if (it.price_brl <= tgt) priceBadge = `<span class="ui-badge ui-badge--good">Abaixo do alvo</span>`;
+          else if (it.price_brl <= tgt * 1.08) priceBadge = `<span class="ui-badge ui-badge--warn">No alvo</span>`;
+          else priceBadge = `<span class="ui-badge ui-badge--bad">Acima do alvo</span>`;
+        }
+        const cpuSp = it._specs || {};
+        const specShort = ctx === 'gpu'
+          ? `${it.vram_gb || '?'}GB VRAM`
+          : ctx === 'cpu'
+            ? `${cpuSp.cores || it.cores || '?'}c/${cpuSp.threads || it.threads || '?'}t • ${cpuSp.socket || it.socket || ''}`
+            : `${it.gpu_name || it.cpu_name || ''}`;
+        return `
+          <button type="button" onclick="openHomeItemInDuel('${ctx}', '${it.slug}')" class="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/65 border border-slate-800/90 hover:border-sky-500/40 transition cursor-pointer">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="w-7 h-7 rounded-lg bg-slate-800 text-sky-300 ui-mono font-bold text-xs flex items-center justify-center shrink-0">#${idx + 1}</span>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="text-sm font-bold text-slate-100 truncate">${it.name}</span>
+                  ${priceBadge}
+                </div>
+                <div class="text-xs text-slate-400 truncate mt-0.5">${specShort}</div>
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+              <div class="text-right">
+                <div class="ui-mono font-bold text-sm text-slate-100">${fmtBRL(it.price_brl)}</div>
+                <div class="text-xs text-emerald-400 ui-mono font-semibold">CB ${score}/100</div>
+              </div>
+              <span class="text-xs font-semibold text-sky-400">Duelo →</span>
+            </div>
+          </button>
+        `;
+      }).join('');
+    }
+  }
+}
+window.renderHomeTab = renderHomeTab;
 
 // Global Context Toggle: GPU vs CPU vs Notebook
 function setMainContext(ctx) {
