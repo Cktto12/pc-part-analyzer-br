@@ -93,6 +93,15 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 
 > Ao adicionar classes de cor novas no HTML/JS, rode `python tools/gen_themes.py styles/themes.css` para incluí-las no remapeamento.
 
+### Manutenção do CSS
+- O Tailwind não vem mais por CDN: `styles/tailwind.css` é gerado a partir de `tools/tailwind.config.js`.
+- Ao usar classes Tailwind novas no HTML/JS, gere de novo (a partir da raiz do repositório):
+
+```
+npx tailwindcss@3.4.17 -c tools/tailwind.config.js -i tools/tailwind.input.css -o styles/tailwind.css --minify
+python tools/gen_themes.py styles/themes.css
+```
+
 ## 5. Processo
 
 - Cada fase é testada no navegador (desktop e celular) antes do commit.

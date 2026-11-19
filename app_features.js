@@ -3277,6 +3277,35 @@ function enableMobileBackgroundKeepAlive(enable) {
   }
 }
 
+// ===== Disjuntor dos proxies públicos do Telegram =====
+// Os proxies gratuitos (codetabs, allorigins, corsproxy) caem com frequência. Quando
+// falham em sequência, paramos de tentar por um tempo em vez de disparar dezenas de
+// requisições que demoram 4s cada. O robô do GitHub Actions continua trazendo as
+// promoções pelo promos_cache.json.
+const TG_PROXY_BREAKER_KEY = 'gca-tg-proxy-down-until';
+const TG_PROXY_FAIL_LIMIT = 3;            // canais seguidos sem resposta
+const TG_PROXY_COOLDOWN_MS = 30 * 60000;  // pausa de 30 min
+let _tgProxyFailStreak = 0;
+
+function isTgProxyDown() {
+  let until = 0;
+  try { until = Number(sessionStorage.getItem(TG_PROXY_BREAKER_KEY)) || 0; } catch (_) {}
+  return Date.now() < until;
+}
+function _tgProxyResult(ok) {
+  if (ok) {
+    _tgProxyFailStreak = 0;
+    try { sessionStorage.removeItem(TG_PROXY_BREAKER_KEY); } catch (_) {}
+    return;
+  }
+  _tgProxyFailStreak++;
+  if (_tgProxyFailStreak >= TG_PROXY_FAIL_LIMIT) {
+    try { sessionStorage.setItem(TG_PROXY_BREAKER_KEY, String(Date.now() + TG_PROXY_COOLDOWN_MS)); } catch (_) {}
+    _tgProxyFailStreak = 0;
+  }
+}
+window.isTgProxyDown = isTgProxyDown;
+
 async function fetchTelegramChannelHTML(chId, query) {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   if (!isStatic) {
@@ -3285,6 +3314,7 @@ async function fetchTelegramChannelHTML(chId, query) {
       if (r.ok) return await r.text();
     } catch (_) {}
   }
+  if (isTgProxyDown()) return '';
   // Static GitHub Pages fallback: race CORS proxies concurrently with 4s timeout
   const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
   const proxies = [
@@ -3293,21 +3323,27 @@ async function fetchTelegramChannelHTML(chId, query) {
     `https://corsproxy.io/?${encodeURIComponent(tgUrl)}`
   ];
   try {
-    return await Promise.any(proxies.map(async (pUrl) => {
+    const html = await Promise.any(proxies.map(async (pUrl) => {
       const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4000);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const txt = await r.text();
       if (!txt || !txt.includes('tgme_widget_message')) throw new Error('Empty TG feed');
       return txt;
     }));
+    _tgProxyResult(true);
+    return html;
   } catch (_) {}
   try {
     const rJson = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4000);
     if (rJson.ok) {
       const j = await rJson.json();
-      if (j && j.contents && j.contents.includes('tgme_widget_message')) return j.contents;
+      if (j && j.contents && j.contents.includes('tgme_widget_message')) {
+        _tgProxyResult(true);
+        return j.contents;
+      }
     }
   } catch (_) {}
+  _tgProxyResult(false);
   return '';
 }
 
@@ -6435,7 +6471,13 @@ async function pollBFLiveCardsFeed(manual) {
     }
     if (statusEl) {
       const nowStr = new Date().toLocaleTimeString('pt-BR');
-      statusEl.textContent = _bfLiveEnabled ? `🟢 Ao vivo • 10s (${nowStr})` : `⏸️ Pausado (${nowStr})`;
+      const proxyDown = typeof isTgProxyDown === 'function' && isTgProxyDown();
+      statusEl.textContent = !_bfLiveEnabled
+        ? `⏸️ Pausado (${nowStr})`
+        : (proxyDown ? `🟡 Dados do robô • leitura direta indisponível (${nowStr})` : `🟢 Ao vivo • 10s (${nowStr})`);
+      statusEl.title = proxyDown
+        ? 'Os serviços públicos usados para ler o Telegram direto do navegador estão fora do ar. As ofertas continuam vindo do robô que atualiza o site a cada poucas horas. Nova tentativa em até 30 min.'
+        : '';
     }
   } catch (e) {
     if (statusEl) statusEl.textContent = '⚠️ Reconectando (10s)...';
