@@ -71,8 +71,8 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Filtros em botões clicáveis em vez de listas suspensas
 
 ### Fase 5 — Black Friday e Promoções
-- [ ] Painel do Radar vira a aba Promoções: grade de cards com % de desconto em destaque, faixa "Mínimo histórico" e filtros
-- [ ] Aba Black Friday: medidor visual de onde o preço de hoje está dentro da faixa esperada
+- [x] Painel do Radar vira a aba Promoções: grade de cards com % de desconto em destaque, faixa "Mínimo histórico" e filtros
+- [x] Aba Black Friday: medidor visual de onde o preço de hoje está dentro da faixa esperada
 
 ### Fase 6 — Simulador, Montagem e Upgrades
 - [ ] Aplicar os mesmos componentes

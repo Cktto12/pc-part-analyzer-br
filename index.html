@@ -212,9 +212,9 @@
 
         <!-- Right: Compact Actions (Radar, Sync, Settings Gear) -->
         <div class="ui-topbar-actions">
-          <button type="button" id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="ui-btn ui-btn--sm" title="Abrir Radar de Promoções e Cupons ao Vivo">
+          <button type="button" id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="ui-btn ui-btn--sm" title="Abrir aba Promoções e Radar ao Vivo">
             <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            <span class="hidden sm:inline">Radar</span>
+            <span class="hidden sm:inline">Promoções</span>
             <span id="promo-radar-badge" class="ui-badge ui-badge--warn !py-0 !px-1.5 ui-mono">...</span>
           </button>
 
@@ -376,363 +376,6 @@
           </div>
         </div>
       </section>
-
-    <!-- ===================================================================== -->
-    <!-- COLLAPSIBLE LIVE PROMO & COUPON RADAR (WHATSAPP/TELEGRAM BOTS)        -->
-    <!-- ===================================================================== -->
-    <section id="promo-radar-panel" class="hidden glass-card rounded-2xl p-6 border border-amber-500/35 shadow-2xl shadow-amber-500/10 space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
-        <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono text-[10px] font-bold uppercase">⚡ Radar de Ofertas & Cupons em Tempo Real</span>
-            <span id="promo-radar-status" class="text-[11px] font-mono text-slate-400">Pronto para escanear</span>
-            <span id="sitewise-validator-badge" class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span id="sitewise-validator-text">Validador Sitewise 24/7 Ativo</span>
-            </span>
-          </div>
-          <h2 class="text-lg font-bold text-white mt-1">Ofertas Relâmpago dos Grupos de Hardware</h2>
-          <p class="text-xs text-slate-300">
-            Monitora canais de ofertas e cupons e cruza com a base de dados do catálogo para detectar pechinchas e aplicar cupons automaticamente.
-          </p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="testAllRadarCoupons()" id="btn-test-all-coupons" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 shadow-sm transition-all cursor-pointer flex items-center gap-1.5" title="Testa diretamente se os cupons e links de ofertas do radar continuam ativos na loja">
-            <span>🧪 Testar Cupons & Links</span>
-          </button>
-          <button onclick="scanLivePromos(true)" id="btn-scan-promos-now" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all cursor-pointer">
-            Buscar Ofertas Agora
-          </button>
-          <button onclick="togglePromoRadarPanel()" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all cursor-pointer">
-            ✕ Fechar
-          </button>
-        </div>
-      </div>
-
-      <!-- Controls Bar: Apply to Catalog + Max Age + Auto-Refresh + Custom Query/Channels -->
-      <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-xs">
-        <div class="flex flex-wrap items-center gap-4">
-          <label class="flex items-center gap-2 cursor-pointer font-bold text-emerald-300">
-            <input type="checkbox" id="chk-apply-flash-promos" checked onchange="onToggleApplyFlashPromos(this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
-            <span>Aplicar Preços de Promoção Relâmpago + Cupom nas Listas</span>
-          </label>
-          <div class="flex items-center gap-1.5 text-sky-300 bg-slate-950/80 px-2.5 py-1 rounded-lg border border-sky-500/30">
-            <label class="flex items-center gap-1.5 cursor-pointer font-semibold">
-              <input type="checkbox" id="chk-promo-autorefresh" onchange="onTogglePromoAutoRefresh()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
-              <span>Sincronização periódica a cada</span>
-            </label>
-            <input type="number" id="input-promo-sync-mins" value="3" min="0.5" max="120" step="0.5" onchange="onChangePromoSyncInterval()" class="w-14 bg-slate-900 border border-sky-500/40 rounded px-1.5 py-0.5 text-xs font-mono font-bold text-sky-300 text-center" title="Intervalo em minutos (ex: 1, 2, 3, 5, 10)" />
-            <span class="text-[11px] font-mono text-slate-400">min</span>
-            <span id="promo-autosync-countdown" class="text-[10px] font-mono text-emerald-400 ml-1"></span>
-          </div>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label class="text-[11px] text-slate-400">Janela:</label>
-          <select id="select-promo-max-age" onchange="scanLivePromos(false)" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-semibold">
-            <option value="12">Últimas 12h (Só Hoje)</option>
-            <option value="24" selected>Últimas 24h</option>
-            <option value="48">Últimas 48h (2 Dias)</option>
-            <option value="96">Últimas 96h (4 Dias)</option>
-          </select>
-          <input type="text" id="input-promo-query" placeholder="Busca extra (ex: 5060, B550)..." class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white w-44" />
-          <input type="text" id="input-promo-channels" placeholder="Canais extras (@canal1, @canal2)..." class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white w-48" />
-          <button onclick="scanLivePromos(true)" class="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-sky-500/40 font-bold cursor-pointer">Filtrar</button>
-        </div>
-      </div>
-
-      <!-- Smart Deal Notifications Summary Bar + Toggleable Config Menu -->
-      <div class="bg-amber-950/25 rounded-xl border border-amber-500/30 p-3 space-y-3 text-xs">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-3">
-            <label class="flex items-center gap-2 cursor-pointer font-bold text-amber-300">
-              <input type="checkbox" id="chk-notify-enabled" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-amber-500 cursor-pointer" />
-              <span>Alertas Automáticos de Ofertas</span>
-            </label>
-            <span id="notify-active-rules-summary" class="px-2.5 py-0.5 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] font-mono text-emerald-300">
-              Gatilhos: CB ≥ 92 OU Meta BF OU −<span class="currency-sym">R$</span> <span id="notify-dyn-minsav">150</span> / −8% vs Catálogo
-            </span>
-            <span id="notify-perm-status" class="text-[11px] font-mono text-slate-400">Windows Toast + Tela + Som</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="togglePromoNotifyConfigMenu()" id="btn-toggle-notify-config" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-bold cursor-pointer">
-              Configurar Gatilhos & Canais ▾
-            </button>
-            <button onclick="requestAndTestPromoNotification()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 hover:text-slate-950 text-amber-300 border border-amber-500/40 font-bold cursor-pointer">
-              Testar Alerta no Windows
-            </button>
-          </div>
-        </div>
-
-        <!-- Collapsible Notification Configuration Menu -->
-        <div id="promo-notify-config-menu" class="hidden pt-3 border-t border-amber-500/20 space-y-3">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Trigger 1: Cost-Benefit (CB) -->
-            <div class="p-3 rounded-xl bg-slate-950/85 border border-purple-500/30 space-y-2">
-              <label class="flex items-center justify-between cursor-pointer">
-                <span class="font-bold text-purple-300 flex items-center gap-1.5">Custo-Benefício (CB)</span>
-                <input type="checkbox" id="chk-trig-cb" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-purple-500 cursor-pointer" />
-              </label>
-              <p class="text-[11px] text-slate-400">Dispara quando o preço da promoção eleva o índice CB contextual (Jogos + IA + Eng.) da GPU acima da nota:</p>
-              <div class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
-                <span class="text-slate-300 font-semibold">Nota CB Mínima (0–100):</span>
-                <input type="number" id="input-notify-min-cb" value="92" min="50" max="100" onchange="onUpdatePromoNotificationSettings()" class="w-16 bg-slate-950 border border-purple-500/40 rounded px-2 py-0.5 text-xs font-mono font-bold text-purple-300 text-center" />
-              </div>
-            </div>
-
-            <!-- Trigger 2: Black Friday Expected Price & Historical Low -->
-            <div class="p-3 rounded-xl bg-slate-950/85 border border-amber-500/30 space-y-2">
-              <label class="flex items-center justify-between cursor-pointer">
-                <span class="font-bold text-amber-300 flex items-center gap-1.5">Preço Esperado Black Friday</span>
-                <input type="checkbox" id="chk-trig-bf" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-amber-500 cursor-pointer" />
-              </label>
-              <p class="text-[11px] text-slate-400">Compara a promoção com a sazonalidade de Black Friday e os limites que você definiu na Aba 5:</p>
-              <select id="select-notify-bf-mode" onchange="onUpdatePromoNotificationSettings()" class="w-full bg-slate-900 border border-amber-500/40 rounded-lg px-2 py-1.5 text-xs text-white font-semibold">
-                <option value="user_or_low" selected>≤ Seu Mínimo Esperado (Aba 5) ou Piso Pechincha BF</option>
-                <option value="bf_mid">≤ Preço Médio Esperado na Black Friday</option>
-                <option value="bf_high">≤ Teto Esperado de Black Friday (ou seu Máximo)</option>
-                <option value="all_min">≤ Menor Preço Histórico de Todos os Tempos</option>
-              </select>
-            </div>
-
-            <!-- Trigger 3: Comparison vs Database / Base Catalog -->
-            <div class="p-3 rounded-xl bg-slate-950/85 border border-emerald-500/30 space-y-2">
-              <label class="flex items-center justify-between cursor-pointer">
-                <span class="font-bold text-emerald-300 flex items-center gap-1.5">Comparação vs. Catálogo Base</span>
-                <input type="checkbox" id="chk-trig-hb" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
-              </label>
-              <select id="select-notify-hb-mode" onchange="onUpdatePromoNotificationSettings()" class="w-full bg-slate-900 border border-emerald-500/40 rounded-lg px-2 py-1 text-xs text-white font-semibold">
-                <option value="brl_or_pct" selected>Economia ≥ Valor Mínimo OU ≥ % Mínimo vs Catálogo</option>
-                <option value="brl_only">Apenas Desconto em Valor (≥ X abaixo do Catálogo)</option>
-                <option value="pct_only">Apenas Desconto Percentual (≥ Y% abaixo do Catálogo)</option>
-                <option value="brl_and_pct">Ambos: ≥ Valor X E ≥ Y% abaixo do Catálogo</option>
-              </select>
-              <div class="grid grid-cols-2 gap-2">
-                <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-                  <span class="text-[11px] text-slate-400">Mín. <span class="currency-sym">R$</span>:</span>
-                  <input type="number" id="input-notify-hb-brl" value="150" min="10" max="5000" step="10" onchange="onUpdatePromoNotificationSettings()" class="w-16 bg-slate-950 border border-emerald-500/40 rounded px-1.5 py-0.5 text-xs font-mono font-bold text-emerald-300 text-right" />
-                </div>
-                <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
-                  <span class="text-[11px] text-slate-400">Mín. %:</span>
-                  <input type="number" id="input-notify-hb-pct" value="8" min="1" max="80" step="1" onchange="onUpdatePromoNotificationSettings()" class="w-14 bg-slate-950 border border-emerald-500/40 rounded px-1.5 py-0.5 text-xs font-mono font-bold text-emerald-300 text-right" />
-                </div>
-              </div>
-              <div class="pt-1.5 mt-1 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                <label class="flex items-center gap-1.5 cursor-pointer text-[11px] text-cyan-300 font-semibold">
-                  <input type="checkbox" id="chk-trig-avg30d" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-cyan-400 cursor-pointer" />
-                  <span>⚡ Queda Flash vs Média 30d:</span>
-                </label>
-                <div class="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded border border-cyan-500/30">
-                  <span class="text-[10px] text-slate-400">&ge;</span>
-                  <input type="number" id="input-notify-avg30d-pct" value="5" min="1" max="50" step="1" onchange="onUpdatePromoNotificationSettings()" class="w-11 bg-slate-950 border border-cyan-500/40 rounded px-1 py-0.5 text-xs font-mono font-bold text-cyan-300 text-right" />
-                  <span class="text-[10px] text-cyan-300 font-mono">%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Logic Combination + Item Filter + Delivery Channels -->
-          <div class="space-y-2.5 bg-slate-950/90 p-3 rounded-xl border border-slate-800">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center gap-1.5">
-                <span class="text-[11px] text-slate-400 font-semibold">Regra entre gatilhos:</span>
-                <select id="select-notify-logic" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-amber-300 font-bold">
-                  <option value="OR" selected>Qualquer gatilho ativo (OU)</option>
-                  <option value="AND">Todos os gatilhos ativos (E)</option>
-                </select>
-              </div>
-
-              <div class="flex flex-wrap items-center gap-3">
-                <span class="text-[11px] text-slate-400 font-semibold">Onde avisar:</span>
-                <label class="flex items-center gap-1.5 cursor-pointer text-sky-300" title="Notificação nativa na Central de Ações do Windows 10/11">
-                  <input type="checkbox" id="chk-notify-win-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
-                  <span>Windows Toast</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer text-rose-300" title="Abre uma janela Pop-up do Windows por cima de qualquer aplicativo/jogo">
-                  <input type="checkbox" id="chk-notify-win-popup" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-rose-400 cursor-pointer" />
-                  <span>Pop-up Windows</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer text-emerald-300" title="Banner flutuante no canto superior direito desta página">
-                  <input type="checkbox" id="chk-notify-web-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-emerald-400 cursor-pointer" />
-                  <span>Card em Tela</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer text-amber-300" title="Notificação direta no celular (ntfy / WhatsApp / E-mail)">
-                  <input type="checkbox" id="chk-notify-phone" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-amber-400 cursor-pointer" />
-                  <span>Notificação no Celular</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer text-purple-300">
-                  <input type="checkbox" id="chk-notify-sound" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-purple-400 cursor-pointer" />
-                  <span>Aviso Sonoro</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Multi-Product Category Filter for Notifications -->
-            <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-              <span class="text-[11px] text-slate-400 font-semibold">Peças Notificadas:</span>
-              <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono">
-                <label class="inline-flex items-center gap-1.5 text-sky-300 cursor-pointer select-none">
-                  <input type="checkbox" id="chk-notify-prod-gpu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
-                  <span>🎮 Placas de Vídeo (GPUs)</span>
-                </label>
-                <label class="inline-flex items-center gap-1.5 text-emerald-300 cursor-pointer select-none">
-                  <input type="checkbox" id="chk-notify-prod-cpu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-emerald-400 cursor-pointer" />
-                  <span>⚡ Processadores (CPUs)</span>
-                </label>
-                <label class="inline-flex items-center gap-1.5 text-amber-300 cursor-pointer select-none">
-                  <input type="checkbox" id="chk-notify-prod-psu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-amber-400 cursor-pointer" />
-                  <span>🔌 Fontes (PSU)</span>
-                </label>
-                <label class="inline-flex items-center gap-1.5 text-purple-300 cursor-pointer select-none">
-                  <input type="checkbox" id="chk-notify-prod-mobo" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-purple-400 cursor-pointer" />
-                  <span>🔲 Placas-Mãe</span>
-                </label>
-                <label class="inline-flex items-center gap-1.5 text-pink-300 cursor-pointer select-none">
-                  <input type="checkbox" id="chk-notify-prod-ram" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-pink-400 cursor-pointer" />
-                  <span>💾 Memórias RAM</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Background Monitor Status & Offline Notice -->
-          <div class="p-3 rounded-xl bg-sky-950/30 border border-sky-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div class="space-y-0.5">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-sky-300 flex items-center gap-1.5">⚡ Monitoramento Contínuo em Segundo Plano</span>
-                <span id="bg-monitor-badge" class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">● Ativo no PC</span>
-              </div>
-              <p class="text-[11px] text-slate-300" id="bg-monitor-desc">
-                O servidor Python local monitora silenciosamente a cada <strong>30s</strong> (inicia com o Windows) e envia push verificado mesmo com todas as abas fechadas. No GitHub Pages, clique em <strong>Inscrever-se em Push</strong> para receber pelo navegador/celular!
-              </p>
-              <div id="bg-monitor-status" class="text-[11px] font-mono text-slate-400 mt-1"></div>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 shrink-0">
-              <button type="button" onclick="subscribeToBackgroundPush()" id="btn-subscribe-push" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md transition">
-                📲 Inscrever-se em Push (Aba Fechada)
-              </button>
-              <button type="button" onclick="testBackgroundAlertNow()" class="px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md transition">
-                🔔 Testar em 2º Plano
-              </button>
-              <a id="link-open-ntfy-topic" href="https://ntfy.sh/alerta_deal_jz265i" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-semibold transition">
-                🔗 Canal ntfy.sh
-              </a>
-            </div>
-          </div>
-
-          <!-- Phone Notification Configuration (ntfy.sh, WhatsApp CallMeBot, Email SMTP) -->
-          <div id="promo-phone-config-box" class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/40 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">Notificação Push no Celular</span>
-                <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono text-[10px]">Grátis • Sem Mensalidade</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button type="button" onclick="testPhoneAlertNow()" class="px-2.5 py-1 rounded bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs cursor-pointer shadow-md">
-                  Testar Disparo no Celular
-                </button>
-                <span id="phone-test-status" class="text-[11px] font-mono text-slate-400"></span>
-              </div>
-            </div>
-
-            <!-- Service Selection Tabs -->
-            <div class="flex flex-wrap items-center gap-2 text-xs">
-              <span class="text-slate-400">Método de envio:</span>
-              <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:border-amber-400">
-                <input type="radio" name="phone-service-choice" value="ntfy" checked onchange="onPhoneServiceChange(this.value)" class="accent-amber-400" />
-                <span class="font-bold text-amber-300">Push no Celular (ntfy.sh - Recomendado)</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:border-emerald-400">
-                <input type="radio" name="phone-service-choice" value="whatsapp" onchange="onPhoneServiceChange(this.value)" class="accent-emerald-400" />
-                <span class="font-bold text-emerald-300">WhatsApp (CallMeBot Grátis)</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:border-sky-400">
-                <input type="radio" name="phone-service-choice" value="email" onchange="onPhoneServiceChange(this.value)" class="accent-sky-400" />
-                <span class="font-bold text-sky-300">E-mail (Gmail / Outlook SMTP)</span>
-              </label>
-            </div>
-
-            <!-- Panel 1: ntfy.sh (Recommended for phone notifications) -->
-            <div id="phone-panel-ntfy" class="space-y-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-amber-500/20">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <p class="text-slate-300">
-                  <strong>Como funciona:</strong> Instale o app grátis <strong>ntfy</strong> (<a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" class="text-sky-400 underline">Android</a> ou <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" class="text-sky-400 underline">iOS</a>), clique em <em>+ Inscrever-se</em> e digite o mesmo nome de tópico abaixo. Por padrão, chega como <strong>notificação comum</strong> (respeita o modo Não Perturbe e o volume padrão do aparelho).
-                </p>
-                <button type="button" onclick="generateRandomNtfyTopic()" class="text-[11px] text-amber-400 hover:underline cursor-pointer shrink-0">🎲 Gerar Tópico Aleatório</button>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1">
-                <div class="md:col-span-2 flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
-                  <span class="text-slate-400 font-mono text-[11px]">ntfy.sh/</span>
-                  <input type="text" id="input-phone-ntfy-topic" value="meu_alerta_gpu_cecatto" onchange="onUpdatePromoNotificationSettings()" placeholder="nome_secreto_do_seu_topico" class="w-full bg-transparent font-mono font-bold text-amber-300 focus:outline-none" />
-                </div>
-                <div class="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
-                  <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 font-medium" title="Se marcado, emite toque de alarme e fura o Não Perturbe">
-                    <input type="checkbox" id="chk-phone-ntfy-ring" onchange="onUpdatePromoNotificationSettings()" class="accent-rose-400" />
-                    <span>🚨 Modo Alarme / DND</span>
-                  </label>
-                  <select id="select-phone-ntfy-priority" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-950 border border-slate-700 rounded text-[11px] text-white">
-                    <option value="default" selected>Padrão (Discreto / Normal)</option>
-                    <option value="high">Alta Prioridade</option>
-                    <option value="urgent">Urgente (Furar DND)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- Panel 2: WhatsApp (CallMeBot) -->
-            <div id="phone-panel-whatsapp" class="hidden space-y-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-emerald-500/20">
-              <p class="text-slate-300">
-                <strong>Como funciona o CallMeBot (100% Grátis):</strong> Salve o contato <strong>+34 644 44 49 14</strong> no WhatsApp e envie a mensagem <code>I allow callmebot to send me messages</code>. Ele responderá com a sua <strong>API Key</strong> de 6 dígitos.
-              </p>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
-                <div class="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
-                  <span class="text-slate-400 text-[11px]">Seu WhatsApp (DDI+DDD):</span>
-                  <input type="text" id="input-phone-wa-number" placeholder="+5511999999999" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 font-mono text-emerald-300 text-xs w-36" />
-                </div>
-                <div class="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
-                  <span class="text-slate-400 text-[11px]">API Key do CallMeBot:</span>
-                  <input type="text" id="input-phone-wa-apikey" placeholder="ex: 123456" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 font-mono text-emerald-300 text-xs w-28 text-center" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Panel 3: E-mail (SMTP) -->
-            <div id="phone-panel-email" class="hidden space-y-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-sky-500/20">
-              <p class="text-slate-300">
-                Dispara um e-mail com subject urgente e botão de compra direta para o seu celular. (No Gmail, use <em>smtp.gmail.com</em>, porta 587 e uma <em>Senha de App</em> gerada na conta Google).
-              </p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
-                <input type="text" id="input-phone-email-host" placeholder="Servidor SMTP (smtp.gmail.com)" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs" />
-                <input type="number" id="input-phone-email-port" placeholder="Porta (587 ou 465)" value="587" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs font-mono" />
-                <input type="text" id="input-phone-email-user" placeholder="Seu e-mail remetente" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs" />
-                <input type="password" id="input-phone-email-pass" placeholder="Senha ou Senha de App" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs" />
-              </div>
-              <div class="flex items-center gap-2 pt-1">
-                <span class="text-slate-400 text-[11px]">Destinatário no celular (onde você lê):</span>
-                <input type="email" id="input-phone-email-recipient" placeholder="seu_email@dominio.com" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sky-300 text-xs w-64" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Two-Column Results: Matched Catalog Deals vs Full Live Feed -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        <div class="lg:col-span-7 bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-300 font-mono uppercase">Peças do Catálogo com Promoção Detectada</span>
-            <span id="promo-matched-summary" class="text-[11px] font-mono text-slate-400"></span>
-          </div>
-          <div id="promo-matched-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
-        </div>
-        <div class="lg:col-span-5 bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-sky-300 font-mono uppercase">Feed em Tempo Real dos Grupos</span>
-            <span class="text-[10px] font-mono text-slate-400">Clique p/ abrir post ou cupom</span>
-          </div>
-          <div id="promo-general-feed" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
-        </div>
-      </div>
-    </section>
 
     <!-- ===================================================================== -->
     <!-- TAB 1: DUELO RELACIONAL (GPU VS GPU OU CPU VS CPU)                      -->
@@ -2012,20 +1655,21 @@
     <!-- ===================================================================== -->
     <!-- TAB 5: INTELIGÊNCIA BLACK FRIDAY & SAZONALIDADE POR GERAÇÃO            -->
     <!-- ===================================================================== -->
-    <section id="tab-bf" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-amber-500/30">
+    <section id="tab-bf" class="hidden space-y-5">
+      <div class="ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
-            <h2 class="text-xl font-bold tracking-tight text-white">Inteligência de Preços & Sazonalidade</h2>
-            <p class="text-xs text-slate-300 mt-0.5">
-              Histórico diário com mais de 550 dias para prever faixas ideais de compra e pisos promocionais.
-            </p>
+          <div class="flex items-center gap-2">
+            <h2 class="ui-title-lg">Black Friday & Sazonalidade</h2>
+            <span class="ui-tooltip" tabindex="0">
+              <span class="ui-info-icon">i</span>
+              <span class="ui-tooltip-content">Histórico diário de até 600 dias para comparar o preço de hoje com a faixa esperada de Black Friday e pisos promocionais.</span>
+            </span>
           </div>
           <!-- Family Selector & Display Controls -->
           <div class="flex flex-wrap items-center gap-2">
-            <label class="text-xs text-slate-400 font-semibold">Família:</label>
-            <select id="bf-select-family" onchange="renderBlackFridayTab()" class="bg-slate-900 border border-amber-500/50 rounded-xl px-3 py-1.5 text-xs font-bold text-white">
-              <option value="gpu_cross_tiers" selected>⚡ Crossover de Gerações (RTX 3080 vs 4070 vs 5060 Ti vs 5070)</option>
+            <label for="bf-select-family" class="ui-label">Família</label>
+            <select id="bf-select-family" onchange="renderBlackFridayTab()" class="bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg px-3 py-1.5 text-sm font-semibold text-white">
+              <option value="gpu_cross_tiers" selected>Crossover de Gerações (RTX 3080 vs 4070 vs 5060 Ti vs 5070)</option>
               <option value="gpu_60">GPUs Série xx60 (RTX 2060 → 3060 → 4060 → 5060 / Ti)</option>
               <option value="gpu_70">GPUs Série xx70 (RTX 2070 → 3070 → 4070 → 5070 / RX 9070)</option>
               <option value="gpu_80">GPUs Série xx80 High-End (RTX 3080 → 4080 → 5080 / RX 6800 XT / 7800 XT)</option>
@@ -2034,86 +1678,85 @@
               <option value="cpu_high">CPUs High-End / X3D (5700X3D → 7800X3D → 9800X3D / i5-14600KF)</option>
               <option value="cpu_xeon_budget">CPUs Budget & Upgrades (Xeon E5-2680 v4 vs i3-12100F vs R5 5500 vs 5600 vs 5700X3D)</option>
             </select>
-            <button onclick="toggleBFSummary()" id="bf-btn-toggle-summary" class="bg-slate-900 border border-slate-700 hover:border-slate-500 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 transition cursor-pointer">
+            <button type="button" onclick="toggleBFSummary()" id="bf-btn-toggle-summary" class="ui-btn ui-btn--sm">
               Estatísticas Multi-Anos
             </button>
-            <button onclick="toggleBFCustomModelsDrawer()" id="bf-btn-toggle-custom" class="bg-slate-900 border border-sky-500/40 hover:border-sky-400 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 transition cursor-pointer font-semibold" title="Escolha exatamente quais modelos devem aparecer no gráfico e na análise">
-              ⚙️ Escolher Modelos
+            <button type="button" onclick="toggleBFCustomModelsDrawer()" id="bf-btn-toggle-custom" class="ui-btn ui-btn--sm" title="Escolha exatamente quais modelos devem aparecer no gráfico e na análise">
+              Escolher Modelos
             </button>
           </div>
         </div>
 
         <!-- Collapsible Custom Models Selector Drawer -->
-        <div id="bf-custom-models-drawer" class="hidden mt-3 p-4 rounded-xl bg-slate-900/90 border border-sky-500/40 space-y-3">
+        <div id="bf-custom-models-drawer" class="hidden p-4 rounded-xl bg-slate-900/90 border border-slate-700 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
-            <span class="text-xs font-bold text-white flex items-center gap-1.5">
-              <span>🛠️ Personalizar Modelos Exibidos na Black Friday</span>
-            </span>
+            <span class="ui-title-md">Personalizar Modelos Exibidos</span>
             <div class="flex items-center gap-2">
-              <button type="button" onclick="selectAllBFModels(true)" class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-mono hover:bg-sky-500/30 cursor-pointer">Marcar Todos</button>
-              <button type="button" onclick="selectAllBFModels(false)" class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-mono hover:bg-slate-700 cursor-pointer">Desmarcar</button>
-              <button type="button" onclick="toggleBFCustomModelsDrawer()" class="text-xs text-slate-400 hover:text-white cursor-pointer">✕ Fechar</button>
+              <button type="button" onclick="selectAllBFModels(true)" class="ui-btn ui-btn--sm">Marcar Todos</button>
+              <button type="button" onclick="selectAllBFModels(false)" class="ui-btn ui-btn--sm ui-btn--ghost">Desmarcar</button>
+              <button type="button" onclick="toggleBFCustomModelsDrawer()" class="ui-btn ui-btn--sm ui-btn--ghost">Fechar</button>
             </div>
           </div>
           <div id="bf-custom-models-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 max-h-56 overflow-y-auto pr-1"></div>
         </div>
 
         <!-- Multi-Year Historical Black Friday Reference Cards (Configurable/Collapsible) -->
-        <div id="bf-multiyear-summary" class="mt-4"></div>
+        <div id="bf-multiyear-summary"></div>
 
-        <!-- 1. SIMULADOR & FAIXA DE PREÇO ESPERADA (APARECE PRIMEIRO NO TOPO) -->
-        <div class="mt-5 glass-elevated rounded-2xl p-5 border border-amber-500/30 hover:border-amber-500/50 shadow-md shadow-amber-500/5 transition-all">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
-            <div>
-              <span class="text-[10px] font-mono uppercase text-amber-400 font-bold">Simulador de Oferta de Black Friday</span>
-              <h3 class="text-base font-bold text-white mt-0.5">Faixa de preço esperada e momento ideal de compra</h3>
+        <!-- 1. MEDIDOR DE FAIXA ESPERADA & SIMULADOR (VEREDITO PRIMEIRO) -->
+        <div class="ui-card ui-card--elevated space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <h3 class="ui-title-md">Medidor de Preço Esperado</h3>
+              <span class="ui-tooltip" tabindex="0">
+                <span class="ui-info-icon">i</span>
+                <span class="ui-tooltip-content">Mostra visualmente onde o preço de hoje (ou uma oferta com cupom) está dentro da faixa esperada de Black Friday e do seu teto máximo.</span>
+              </span>
             </div>
-            <span class="text-xs text-slate-400 font-mono">Calcule o teto máximo aceitável e compare ofertas ao vivo</span>
+            <button type="button" onclick="syncBFTargetRangeToExpected()" title="Ajustar automaticamente para a faixa estatística da BF" class="ui-btn ui-btn--sm">
+              ↺ Sincronizar com Faixa BF
+            </button>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            <!-- Left 5 Cols: Select Target, Thresholds & Test Live Deal -->
-            <div class="lg:col-span-5 space-y-3">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <!-- Left 5 Cols: Target Selector, Visual Gauge Verdict & Inputs -->
+            <div class="lg:col-span-5 space-y-3.5">
               <div>
-                <label class="text-[11px] text-slate-300 font-semibold block mb-1">Escolha o Produto Alvo:</label>
-                <select id="bf-target-item" onchange="onBFTargetItemChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-white"></select>
-                <!-- Dynamic Hardware Info Pill (RAM, VRAM, Arch) -->
+                <label for="bf-target-item" class="ui-label block mb-1.5">Produto Alvo</label>
+                <select id="bf-target-item" onchange="onBFTargetItemChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white"></select>
                 <div id="bf-target-info-pill" class="mt-2 flex flex-wrap items-center gap-2"></div>
               </div>
 
-              <div class="flex items-center justify-between pt-1">
-                <span class="text-[11px] text-slate-300 font-semibold">Defina sua Faixa de Alvo:</span>
-                <button type="button" onclick="syncBFTargetRangeToExpected()" title="Ajustar automaticamente para a faixa estatística da BF" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold cursor-pointer transition">
-                  ↺ Sincronizar com Faixa BF
-                </button>
-              </div>
+              <!-- HERO VISUAL GAUGE & VERDICT (POPULATED BY updateBFPromoEvaluator) -->
+              <div id="bf-test-verdict"></div>
 
-              <div class="grid grid-cols-2 gap-2.5 text-xs">
+              <!-- User Target Range -->
+              <div class="grid grid-cols-2 gap-2.5">
                 <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-                  <span class="text-[10px] font-mono text-slate-400 block">Seu Preço Esperado Mín (<span class="currency-sym">R$</span>)</span>
-                  <input type="number" id="bf-input-min" oninput="updateBFPromoEvaluator()" class="w-full bg-transparent font-mono font-bold text-emerald-400 text-sm focus:outline-none border-b border-slate-700 mt-0.5" step="50" />
+                  <label for="bf-input-min" class="ui-label block">Seu Mínimo (<span class="currency-sym">R$</span>)</label>
+                  <input type="number" id="bf-input-min" oninput="updateBFPromoEvaluator()" class="w-full bg-transparent ui-mono font-bold text-emerald-400 text-base focus:outline-none border-b border-slate-700 mt-1" step="50" />
                 </div>
                 <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-800">
-                  <span class="text-[10px] font-mono text-slate-400 block">Seu Teto Máximo Aceitável (<span class="currency-sym">R$</span>)</span>
-                  <input type="number" id="bf-input-max" oninput="updateBFPromoEvaluator()" class="w-full bg-transparent font-mono font-bold text-sky-400 text-sm focus:outline-none border-b border-slate-700 mt-0.5" step="50" />
+                  <label for="bf-input-max" class="ui-label block">Seu Teto Máx. (<span class="currency-sym">R$</span>)</label>
+                  <input type="number" id="bf-input-max" oninput="updateBFPromoEvaluator()" class="w-full bg-transparent ui-mono font-bold text-sky-400 text-base focus:outline-none border-b border-slate-700 mt-1" step="50" />
                 </div>
               </div>
 
               <!-- Coupon Simulator & Live Deal Tester -->
-              <div class="bg-slate-900/90 p-3 rounded-lg border border-amber-500/30 space-y-2.5">
+              <div class="bg-slate-900/90 p-3 rounded-xl border border-slate-800 space-y-2.5">
                 <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-mono uppercase text-amber-300 block font-bold">Simular Cupom ou Preço Live (<span class="currency-sym">R$</span>):</label>
-                  <span class="text-[10px] text-slate-400 font-mono">Dedução automática</span>
+                  <span class="ui-label text-amber-300">Simular Oferta ou Cupom</span>
+                  <span class="text-xs text-slate-400 ui-mono">Dedução automática</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <span class="text-[9px] font-mono uppercase text-slate-400 block">Preço Anunciado (<span class="currency-sym">R$</span>)</span>
-                    <input type="number" id="bf-input-test-price" oninput="this.dataset.userEditedSlug = document.getElementById('bf-target-item')?.value || ''; recalcBFCoupon()" placeholder="Ex: 3500" class="w-full bg-slate-950 border border-slate-700 rounded px-2.5 py-1.5 font-mono font-extrabold text-white text-xs mt-0.5" step="50" />
+                    <label for="bf-input-test-price" class="ui-label block">Preço Anunciado (<span class="currency-sym">R$</span>)</label>
+                    <input type="number" id="bf-input-test-price" oninput="this.dataset.userEditedSlug = document.getElementById('bf-target-item')?.value || ''; recalcBFCoupon()" placeholder="Ex: 3500" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 ui-mono font-bold text-white text-sm mt-1" step="50" />
                   </div>
                   <div>
-                    <span class="text-[9px] font-mono uppercase text-amber-400 block">Cupom / Desconto (<span class="currency-sym">R$</span> ou %)</span>
-                    <input type="text" id="bf-input-coupon" oninput="recalcBFCoupon()" placeholder="Ex: 300 ou 10%" class="w-full bg-slate-950 border border-amber-500/40 rounded px-2.5 py-1.5 font-mono font-bold text-amber-300 text-xs mt-0.5" />
+                    <label for="bf-input-coupon" class="ui-label block text-amber-300">Cupom (<span class="currency-sym">R$</span> ou %)</label>
+                    <input type="text" id="bf-input-coupon" oninput="recalcBFCoupon()" placeholder="Ex: 300 ou 10%" class="w-full bg-slate-950 border border-amber-500/40 rounded-lg px-2.5 py-1.5 ui-mono font-bold text-amber-300 text-sm mt-1" />
                   </div>
                 </div>
 
@@ -2121,57 +1764,84 @@
                 <div id="bf-active-coupons-container" class="hidden"></div>
 
                 <!-- Coupon result breakdown -->
-                <div id="bf-coupon-calc-summary" class="hidden px-2.5 py-1.5 rounded bg-amber-500/10 border border-amber-500/30 text-[11px] font-mono text-amber-300"></div>
-
-                <div id="bf-test-verdict" class="mt-2 text-xs"></div>
+                <div id="bf-coupon-calc-summary" class="hidden px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs ui-mono text-amber-300"></div>
               </div>
             </div>
 
-            <!-- Right 7 Cols: Dedicated Target GPU Historical Chart & Target Metas -->
+            <!-- Right 7 Cols: Dedicated Target Historical Chart -->
             <div class="lg:col-span-7 bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800/80">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800/80">
                 <div>
                   <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                    <span class="text-xs font-bold text-white" id="bf-target-chart-title">Curva Histórica do Produto Alvo</span>
+                    <span class="text-sm font-bold text-white" id="bf-target-chart-title">Curva Histórica do Produto Alvo</span>
                   </div>
-                  <p class="text-[10px] text-slate-400 font-mono mt-0.5" id="bf-target-chart-subtitle">Histórico diário com linha de meta esperada e teto aceitável</p>
+                  <p class="text-xs text-slate-400 mt-0.5" id="bf-target-chart-subtitle">Histórico diário com linha de meta esperada e teto aceitável</p>
                 </div>
-                <div class="flex items-center gap-2 text-[11px] font-mono">
-                  <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="bf-target-badge-min">Mín: --</span>
-                  <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700" id="bf-target-badge-today">Hoje: --</span>
+                <div class="flex items-center gap-2">
+                  <span class="ui-badge ui-badge--good ui-mono" id="bf-target-badge-min">Mín: --</span>
+                  <span class="ui-badge ui-mono" id="bf-target-badge-today">Hoje: --</span>
                 </div>
               </div>
-              <div class="h-56">
+              <div class="h-64">
                 <canvas id="chart-bf-target-history"></canvas>
               </div>
-              <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
-                <div class="flex items-center gap-3">
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-amber-400 inline-block"></span> Preço Real</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-emerald-400 inline-block"></span> Meta Mínima</span>
-                  <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-sky-400 inline-block"></span> Teto Aceitável</span>
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs ui-mono text-slate-400 pt-2 border-t border-slate-800/60">
+                <div class="flex flex-wrap items-center gap-3">
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-amber-400 inline-block"></span> Preço Real</span>
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-emerald-400 inline-block"></span> Meta Mínima</span>
+                  <span class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-sky-400 inline-block"></span> Teto Aceitável</span>
                 </div>
-                <span id="bf-target-stat-gap" class="text-slate-300 font-semibold"></span>
+                <span id="bf-target-stat-gap" class="text-slate-200 font-semibold"></span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 2. GRÁFICO HISTÓRICO MULTI-GERAÇÃO (APARECE DEPOIS DA FAIXA ESPERADA) -->
-        <div class="mt-6 bg-slate-900/80 rounded-2xl p-5 border border-slate-800">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div>
-              <h3 class="text-sm font-bold text-white">Curva Sazonal Multi-Geração (Pré-BF Outubro → Black Friday Novembro → Pós-BF → 2026)</h3>
-              <p class="text-[11px] text-slate-400">Compare como cada geração oscila antes, durante e depois da Black Friday:</p>
+        <!-- 2. TABELA COMPARATIVA POR GERAÇÃO (COM MINI-MEDIDOR VISUAL) -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="ui-title-md">Posição de Hoje na Faixa Esperada</h3>
+            <span class="ui-body-sm">Clique em uma linha para inspecionar no medidor acima</span>
+          </div>
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th>Modelo</th>
+                  <th class="text-right">Preço Hoje</th>
+                  <th class="text-center">Posição na Faixa BF</th>
+                  <th class="text-right">Faixa Esperada BF</th>
+                  <th class="text-right">Menor Histórico</th>
+                  <th class="text-right hidden 2xl:table-cell">Pré-BF (Set/Out)</th>
+                  <th class="text-right hidden 2xl:table-cell">Piso BF Passada</th>
+                  <th class="text-center hidden md:table-cell">Desc. Típico</th>
+                  <th class="text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="bf-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. GRÁFICO HISTÓRICO MULTI-GERAÇÃO -->
+        <div class="bg-slate-900/75 rounded-2xl p-4 sm:p-5 border border-slate-800 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <h3 class="ui-title-md">Curva Sazonal Multi-Geração</h3>
+              <span class="ui-tooltip" tabindex="0">
+                <span class="ui-info-icon">i</span>
+                <span class="ui-tooltip-content">Compare como cada geração oscila antes, durante e depois da Black Friday ao longo dos últimos meses.</span>
+              </span>
             </div>
             <!-- Horizon & Mode Config -->
             <div class="flex flex-wrap items-center gap-2">
-              <select id="bf-chart-horizon" onchange="renderBlackFridayTab()" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-300">
+              <select id="bf-chart-horizon" onchange="renderBlackFridayTab()" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
                 <option value="all" selected>Histórico Completo (~600 dias)</option>
                 <option value="180d">Últimos 180 dias</option>
                 <option value="bf_window">Janela Black Friday (Nov–Dez)</option>
               </select>
-              <select id="bf-chart-mode" onchange="renderBlackFridayTab()" class="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-[11px] font-semibold text-white">
+              <select id="bf-chart-mode" onchange="renderBlackFridayTab()" class="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white">
                 <option value="index" selected>Índice % (100 = média pré-BF 2025)</option>
                 <option value="brl" id="bf-opt-abs-price">Preço absoluto (R$)</option>
               </select>
@@ -2179,79 +1849,444 @@
           </div>
 
           <!-- Model Visibility Filter Chips -->
-          <div class="flex flex-wrap items-center gap-1.5 mb-3 pt-1 border-t border-slate-800/60" id="bf-model-filter-chips"></div>
+          <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-800/60" id="bf-model-filter-chips"></div>
 
           <div class="h-80">
             <canvas id="chart-bf-generations"></canvas>
           </div>
         </div>
-
-        <!-- Generation Comparison Table (2060 vs 3060 vs 4060 vs 5060 etc.) -->
-        <div class="mt-6 overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 text-[11px] font-mono uppercase text-slate-400 bg-slate-900/60">
-                <th class="py-2.5 px-3">Modelo / Geração</th>
-                <th class="py-2.5 px-3 text-right">Preço Hoje</th>
-                <th class="py-2.5 px-3 text-right">Média Pré-BF (Set/Out 25)</th>
-                <th class="py-2.5 px-3 text-right">Piso Black Friday (Nov 25)</th>
-                <th class="py-2.5 px-3 text-right">Menor Preço Histórico</th>
-                <th class="py-2.5 px-3 text-center">Desconto Típico BF</th>
-                <th class="py-2.5 px-3 text-right">Faixa Esperada BF 2026</th>
-                <th class="py-2.5 px-3 text-center">Diagnóstico Sazonal</th>
-              </tr>
-            </thead>
-            <tbody id="bf-table-body" class="divide-y divide-slate-800/60 text-xs"></tbody>
-          </table>
-        </div>
       </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 5B: PROMOÇÕES BLACK FRIDAY (CARDS AO VIVO SEM GRÁFICOS)           -->
+    <!-- TAB 5B: PROMOÇÕES & RADAR AO VIVO (UNIFICADO - FASE 5)                -->
     <!-- ===================================================================== -->
-    <section id="tab-bf-promos" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-5 border border-rose-500/30 space-y-4">
+    <section id="tab-bf-promos" class="hidden space-y-5">
+      <div class="ui-card space-y-5">
+        <!-- Header -->
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div>
+          <div class="space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
-              <h2 class="text-xl font-bold tracking-tight text-white">⚡ Promoções Black Friday — Feed em Tempo Real</h2>
-              <span id="bf-cards-live-count" class="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[11px] font-bold">0 ofertas</span>
-              <span id="bf-cards-live-status" class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-bold">🟢 Ao vivo • 10s</span>
+              <h2 class="ui-title-lg">Promoções & Radar</h2>
+              <span class="ui-tooltip" tabindex="0">
+                <span class="ui-info-icon">i</span>
+                <span class="ui-tooltip-content">Reúne ofertas relâmpago dos grupos de hardware e quedas diretas do catálogo, destacando o % de desconto e itens no mínimo histórico.</span>
+              </span>
+              <span id="bf-cards-live-count" class="ui-badge ui-badge--brand ui-mono">0 ofertas</span>
+              <span id="bf-cards-live-status" class="ui-badge ui-badge--good ui-mono">Ao vivo • 10s</span>
             </div>
-            <p class="text-xs text-slate-300 mt-1">
-              Ordenado pela alteração mais recente nos grupos (sem filtro de família, sem gráficos). Mostra miniatura, preço anunciado, faixa alvo Black Friday e veredito instantâneo.
-            </p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="toggleBFLivePolling()" id="btn-bf-live-toggle" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition cursor-pointer">
-              ⏸️ Pausar Auto (10s)
+            <button type="button" onclick="testAllRadarCoupons()" id="btn-test-all-coupons" class="ui-btn ui-btn--sm" title="Testa se os cupons e links de ofertas continuam ativos na loja">
+              Testar Cupons
             </button>
-            <button onclick="pollBFLiveCardsFeed(true)" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition cursor-pointer">
-              🔄 Puxar Agora
+            <button type="button" onclick="toggleBFLivePolling()" id="btn-bf-live-toggle" class="ui-btn ui-btn--sm">
+              Pausar Auto (10s)
+            </button>
+            <button type="button" onclick="pollBFLiveCardsFeed(true); scanLivePromos(true);" id="btn-scan-promos-now" class="ui-btn ui-btn--primary ui-btn--sm">
+              Atualizar Agora
             </button>
           </div>
         </div>
 
-        <!-- Filter Bar -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-1.5" id="bf-cards-filter-pills">
-            <button onclick="setBFCardsFilter('all')" data-bf-filter="all" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer">Todos</button>
-            <button onclick="setBFCardsFilter('gpu')" data-bf-filter="gpu" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer">🎮 GPUs</button>
-            <button onclick="setBFCardsFilter('cpu')" data-bf-filter="cpu" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer">⚡ CPUs</button>
-            <button onclick="setBFCardsFilter('ram')" data-bf-filter="ram" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer">🧬 RAM</button>
-            <button onclick="setBFCardsFilter('laptop')" data-bf-filter="laptop" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-purple-300 border border-purple-500/30 hover:border-purple-400 cursor-pointer">💻 Notebooks</button>
-            <button onclick="setBFCardsFilter('in_stock')" data-bf-filter="in_stock" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-emerald-300 border border-emerald-500/30 hover:border-emerald-400 cursor-pointer">✅ Ativos / Em Estoque</button>
-            <button onclick="setBFCardsFilter('bf_deal')" data-bf-filter="bf_deal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-amber-300 border border-amber-500/30 hover:border-amber-400 cursor-pointer">🔥 Preço BF / Perto</button>
-            <button onclick="setBFCardsFilter('store_direct')" data-bf-filter="store_direct" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 cursor-pointer">🏬 Lojas Diretas (Sem Grupo)</button>
+        <!-- Compact KPI Strip -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="ui-kpi">
+            <span class="ui-kpi-label">Ofertas visíveis</span>
+            <span id="promos-kpi-total" class="ui-kpi-value ui-kpi-value--brand">0</span>
+            <span class="ui-kpi-sub">no filtro atual</span>
           </div>
-          <div class="relative w-full md:w-64">
-            <input type="text" id="bf-cards-search" oninput="renderBFPromosCardsTab()" placeholder="Buscar GPU, CPU, loja, cupom..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none" />
+          <div class="ui-kpi">
+            <span class="ui-kpi-label">Mínimo histórico</span>
+            <span id="promos-kpi-histmin" class="ui-kpi-value ui-kpi-value--good">0</span>
+            <span class="ui-kpi-sub">menor preço já registrado</span>
+          </div>
+          <div class="ui-kpi">
+            <span class="ui-kpi-label">Na faixa Black Friday</span>
+            <span id="promos-kpi-bf" class="ui-kpi-value ui-kpi-value--good">0</span>
+            <span class="ui-kpi-sub">dentro ou abaixo do alvo</span>
+          </div>
+          <div class="ui-kpi">
+            <span class="ui-kpi-label">Com cupom</span>
+            <span id="promos-kpi-coupons" class="ui-kpi-value ui-kpi-value--warn">0</span>
+            <span class="ui-kpi-sub">desconto extra no carrinho</span>
           </div>
         </div>
 
-        <!-- Live Promo Cards List (1 row per card, newest first) -->
-        <div id="bf-promos-cards-grid" class="flex flex-col gap-2.5"></div>
+        <!-- Filter Bar (Chips + Search + Sort) -->
+        <div class="ui-filter-bar">
+          <div class="ui-filter-row justify-between">
+            <div class="ui-filter-group" id="bf-cards-filter-pills">
+              <button type="button" onclick="setBFCardsFilter('all')" data-bf-filter="all" class="ui-chip is-active">Todos</button>
+              <button type="button" onclick="setBFCardsFilter('hist_min')" data-bf-filter="hist_min" class="ui-chip ui-chip--good">Mínimo histórico</button>
+              <button type="button" onclick="setBFCardsFilter('bf_deal')" data-bf-filter="bf_deal" class="ui-chip ui-chip--good">Preço BF / Perto</button>
+              <button type="button" onclick="setBFCardsFilter('gpu')" data-bf-filter="gpu" class="ui-chip">GPUs</button>
+              <button type="button" onclick="setBFCardsFilter('cpu')" data-bf-filter="cpu" class="ui-chip">CPUs</button>
+              <button type="button" onclick="setBFCardsFilter('ram')" data-bf-filter="ram" class="ui-chip">RAM</button>
+              <button type="button" onclick="setBFCardsFilter('laptop')" data-bf-filter="laptop" class="ui-chip">Notebooks</button>
+              <button type="button" onclick="setBFCardsFilter('in_stock')" data-bf-filter="in_stock" class="ui-chip">Em estoque</button>
+              <button type="button" onclick="setBFCardsFilter('store_direct')" data-bf-filter="store_direct" class="ui-chip">Lojas diretas</button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <select id="bf-cards-sort" onchange="renderBFPromosCardsTab()" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
+                <option value="recent" selected>Ordenar: Mais recentes</option>
+                <option value="discount">Maior desconto (%)</option>
+                <option value="price_asc">Menor preço</option>
+              </select>
+              <input type="text" id="bf-cards-search" oninput="renderBFPromosCardsTab()" placeholder="Buscar modelo, loja, cupom..." class="w-full sm:w-56 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-sky-400 focus:outline-none" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Responsive Card Grid -->
+        <div id="bf-promos-cards-grid" class="ui-promo-grid"></div>
+
+        <!-- Collapsible Radar Controls & Automatic Notifications (all original IDs preserved) -->
+        <details class="ui-details" id="promo-radar-controls-details">
+          <summary class="ui-details-summary">
+            <span>Controles do Radar, Sincronização & Alertas Automáticos</span>
+            <span id="promo-radar-status" class="text-xs ui-mono text-slate-400 ml-auto mr-2">Pronto para escanear</span>
+          </summary>
+          <div class="ui-details-body space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span id="sitewise-validator-badge" class="ui-badge ui-badge--good ui-mono">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="sitewise-validator-text">Validador Sitewise 24/7 Ativo</span>
+              </span>
+            </div>
+
+            <!-- Controls Bar: Apply to Catalog + Max Age + Auto-Refresh + Custom Query/Channels -->
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 text-xs">
+              <div class="flex flex-wrap items-center gap-4">
+                <label class="flex items-center gap-2 cursor-pointer font-semibold text-emerald-300">
+                  <input type="checkbox" id="chk-apply-flash-promos" checked onchange="onToggleApplyFlashPromos(this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+                  <span>Aplicar Preços de Promoção Relâmpago + Cupom nas Listas</span>
+                </label>
+                <div class="flex items-center gap-1.5 text-sky-300 bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-sky-500/30">
+                  <label class="flex items-center gap-1.5 cursor-pointer font-semibold">
+                    <input type="checkbox" id="chk-promo-autorefresh" onchange="onTogglePromoAutoRefresh()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                    <span>Sincronizar a cada</span>
+                  </label>
+                  <input type="number" id="input-promo-sync-mins" value="3" min="0.5" max="120" step="0.5" onchange="onChangePromoSyncInterval()" class="w-14 bg-slate-900 border border-sky-500/40 rounded px-1.5 py-0.5 text-xs ui-mono font-bold text-sky-300 text-center" title="Intervalo em minutos (ex: 1, 2, 3, 5, 10)" />
+                  <span class="text-xs ui-mono text-slate-400">min</span>
+                  <span id="promo-autosync-countdown" class="text-xs ui-mono text-emerald-400 ml-1"></span>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <label for="select-promo-max-age" class="text-xs text-slate-400">Janela:</label>
+                <select id="select-promo-max-age" onchange="scanLivePromos(false)" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-semibold">
+                  <option value="12">Últimas 12h (Só Hoje)</option>
+                  <option value="24" selected>Últimas 24h</option>
+                  <option value="48">Últimas 48h (2 Dias)</option>
+                  <option value="96">Últimas 96h (4 Dias)</option>
+                </select>
+                <input type="text" id="input-promo-query" placeholder="Busca extra (ex: 5060, B550)..." class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white w-44" />
+                <input type="text" id="input-promo-channels" placeholder="Canais extras (@canal1, @canal2)..." class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white w-48" />
+                <button type="button" onclick="scanLivePromos(true)" class="ui-btn ui-btn--sm">Filtrar</button>
+              </div>
+            </div>
+
+            <!-- Smart Deal Notifications Summary Bar + Toggleable Config Menu -->
+            <div class="bg-slate-900/75 rounded-xl border border-amber-500/30 p-3.5 space-y-3 text-xs">
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-3">
+                  <label class="flex items-center gap-2 cursor-pointer font-bold text-amber-300">
+                    <input type="checkbox" id="chk-notify-enabled" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-amber-500 cursor-pointer" />
+                    <span>Alertas Automáticos de Ofertas</span>
+                  </label>
+                  <span id="notify-active-rules-summary" class="ui-badge ui-badge--good ui-mono">
+                    Gatilhos: CB ≥ 92 OU Meta BF OU −<span class="currency-sym">R$</span> <span id="notify-dyn-minsav">150</span> / −8% vs Catálogo
+                  </span>
+                  <span id="notify-perm-status" class="text-xs ui-mono text-slate-400">Windows Toast + Tela + Som</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="togglePromoNotifyConfigMenu()" id="btn-toggle-notify-config" class="ui-btn ui-btn--sm">
+                    Configurar Gatilhos & Canais ▾
+                  </button>
+                  <button type="button" onclick="requestAndTestPromoNotification()" class="ui-btn ui-btn--sm">
+                    Testar Alerta no Windows
+                  </button>
+                </div>
+              </div>
+
+              <!-- Collapsible Notification Configuration Menu -->
+              <div id="promo-notify-config-menu" class="hidden pt-3 border-t border-slate-800 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <!-- Trigger 1: Cost-Benefit (CB) -->
+                  <div class="p-3 rounded-xl bg-slate-950/85 border border-slate-800 space-y-2">
+                    <label class="flex items-center justify-between cursor-pointer">
+                      <span class="font-bold text-slate-100">Custo-Benefício (CB)</span>
+                      <input type="checkbox" id="chk-trig-cb" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-sky-500 cursor-pointer" />
+                    </label>
+                    <p class="text-xs text-slate-400">Dispara quando o preço da promoção eleva o índice CB contextual acima da nota:</p>
+                    <div class="flex items-center justify-between bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                      <span class="text-slate-300 font-semibold">Nota CB Mínima (0–100):</span>
+                      <input type="number" id="input-notify-min-cb" value="92" min="50" max="100" onchange="onUpdatePromoNotificationSettings()" class="w-16 bg-slate-950 border border-slate-700 rounded px-2 py-0.5 text-xs ui-mono font-bold text-sky-300 text-center" />
+                    </div>
+                  </div>
+
+                  <!-- Trigger 2: Black Friday Expected Price & Historical Low -->
+                  <div class="p-3 rounded-xl bg-slate-950/85 border border-slate-800 space-y-2">
+                    <label class="flex items-center justify-between cursor-pointer">
+                      <span class="font-bold text-amber-300">Preço Esperado Black Friday</span>
+                      <input type="checkbox" id="chk-trig-bf" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-amber-500 cursor-pointer" />
+                    </label>
+                    <p class="text-xs text-slate-400">Compara a promoção com a sazonalidade de Black Friday e seus limites:</p>
+                    <select id="select-notify-bf-mode" onchange="onUpdatePromoNotificationSettings()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white font-semibold">
+                      <option value="user_or_low" selected>≤ Seu Mínimo Esperado ou Piso Pechincha BF</option>
+                      <option value="bf_mid">≤ Preço Médio Esperado na Black Friday</option>
+                      <option value="bf_high">≤ Teto Esperado de Black Friday (ou seu Máximo)</option>
+                      <option value="all_min">≤ Menor Preço Histórico de Todos os Tempos</option>
+                    </select>
+                  </div>
+
+                  <!-- Trigger 3: Comparison vs Database / Base Catalog -->
+                  <div class="p-3 rounded-xl bg-slate-950/85 border border-slate-800 space-y-2">
+                    <label class="flex items-center justify-between cursor-pointer">
+                      <span class="font-bold text-emerald-300">Comparação vs. Catálogo Base</span>
+                      <input type="checkbox" id="chk-trig-hb" checked onchange="onUpdatePromoNotificationSettings()" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
+                    </label>
+                    <select id="select-notify-hb-mode" onchange="onUpdatePromoNotificationSettings()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white font-semibold">
+                      <option value="brl_or_pct" selected>Economia ≥ Valor Mínimo OU ≥ % Mínimo vs Catálogo</option>
+                      <option value="brl_only">Apenas Desconto em Valor (≥ X abaixo do Catálogo)</option>
+                      <option value="pct_only">Apenas Desconto Percentual (≥ Y% abaixo do Catálogo)</option>
+                      <option value="brl_and_pct">Ambos: ≥ Valor X E ≥ Y% abaixo do Catálogo</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-2">
+                      <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
+                        <span class="text-xs text-slate-400">Mín. <span class="currency-sym">R$</span>:</span>
+                        <input type="number" id="input-notify-hb-brl" value="150" min="10" max="5000" step="10" onchange="onUpdatePromoNotificationSettings()" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-xs ui-mono font-bold text-emerald-300 text-right" />
+                      </div>
+                      <div class="flex items-center justify-between bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
+                        <span class="text-xs text-slate-400">Mín. %:</span>
+                        <input type="number" id="input-notify-hb-pct" value="8" min="1" max="80" step="1" onchange="onUpdatePromoNotificationSettings()" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-xs ui-mono font-bold text-emerald-300 text-right" />
+                      </div>
+                    </div>
+                    <div class="pt-1.5 mt-1 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                      <label class="flex items-center gap-1.5 cursor-pointer text-xs text-sky-300 font-semibold">
+                        <input type="checkbox" id="chk-trig-avg30d" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Queda Flash vs Média 30d:</span>
+                      </label>
+                      <div class="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
+                        <span class="text-xs text-slate-400">&ge;</span>
+                        <input type="number" id="input-notify-avg30d-pct" value="5" min="1" max="50" step="1" onchange="onUpdatePromoNotificationSettings()" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs ui-mono font-bold text-sky-300 text-right" />
+                        <span class="text-xs text-sky-300 ui-mono">%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Logic Combination + Item Filter + Delivery Channels -->
+                <div class="space-y-2.5 bg-slate-950/90 p-3 rounded-xl border border-slate-800">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs text-slate-400 font-semibold">Regra entre gatilhos:</span>
+                      <select id="select-notify-logic" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-amber-300 font-bold">
+                        <option value="OR" selected>Qualquer gatilho ativo (OU)</option>
+                        <option value="AND">Todos os gatilhos ativos (E)</option>
+                      </select>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                      <span class="text-xs text-slate-400 font-semibold">Onde avisar:</span>
+                      <label class="flex items-center gap-1.5 cursor-pointer text-slate-200" title="Notificação nativa na Central de Ações do Windows 10/11">
+                        <input type="checkbox" id="chk-notify-win-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Windows Toast</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer text-slate-200" title="Abre uma janela Pop-up do Windows por cima de qualquer aplicativo/jogo">
+                        <input type="checkbox" id="chk-notify-win-popup" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Pop-up Windows</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer text-slate-200" title="Banner compacto no canto superior direito desta página">
+                        <input type="checkbox" id="chk-notify-web-toast" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-emerald-400 cursor-pointer" />
+                        <span>Card em Tela</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer text-slate-200" title="Notificação direta no celular (ntfy / WhatsApp / E-mail)">
+                        <input type="checkbox" id="chk-notify-phone" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-amber-400 cursor-pointer" />
+                        <span>Notificação no Celular</span>
+                      </label>
+                      <label class="flex items-center gap-1.5 cursor-pointer text-slate-200">
+                        <input type="checkbox" id="chk-notify-sound" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Aviso Sonoro</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Multi-Product Category Filter for Notifications -->
+                  <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs text-slate-400 font-semibold">Peças Notificadas:</span>
+                    <div class="flex flex-wrap items-center gap-3 text-xs ui-mono">
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-gpu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>GPUs</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-cpu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>CPUs</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-psu" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Fontes (PSU)</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-mobo" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Placas-Mãe</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-ram" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Memórias RAM</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Background Monitor Status & Offline Notice -->
+                <div class="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-sky-300">Monitoramento Contínuo em Segundo Plano</span>
+                      <span id="bg-monitor-badge" class="ui-badge ui-badge--good ui-mono">● Ativo no PC</span>
+                    </div>
+                    <p class="text-xs text-slate-300" id="bg-monitor-desc">
+                      O servidor Python local monitora silenciosamente a cada <strong>30s</strong> e envia push mesmo com abas fechadas. No GitHub Pages, clique em <strong>Inscrever-se em Push</strong>.
+                    </p>
+                    <div id="bg-monitor-status" class="text-xs ui-mono text-slate-400"></div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <button type="button" onclick="subscribeToBackgroundPush()" id="btn-subscribe-push" class="ui-btn ui-btn--good ui-btn--sm">
+                      Inscrever-se em Push
+                    </button>
+                    <button type="button" onclick="testBackgroundAlertNow()" class="ui-btn ui-btn--sm">
+                      Testar 2º Plano
+                    </button>
+                    <a id="link-open-ntfy-topic" href="https://ntfy.sh/alerta_deal_jz265i" target="_blank" class="ui-btn ui-btn--sm ui-btn--ghost">
+                      Canal ntfy.sh ↗
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Phone Notification Configuration (ntfy.sh, WhatsApp CallMeBot, Email SMTP) -->
+                <div id="promo-phone-config-box" class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3">
+                  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-bold text-amber-300">Notificação Push no Celular</span>
+                      <span class="ui-badge ui-badge--good">Grátis</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick="testPhoneAlertNow()" class="ui-btn ui-btn--sm">
+                        Testar Disparo no Celular
+                      </button>
+                      <span id="phone-test-status" class="text-xs ui-mono text-slate-400"></span>
+                    </div>
+                  </div>
+
+                  <!-- Service Selection Tabs -->
+                  <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-slate-400">Método de envio:</span>
+                    <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:border-amber-400">
+                      <input type="radio" name="phone-service-choice" value="ntfy" checked onchange="onPhoneServiceChange(this.value)" class="accent-amber-400" />
+                      <span class="font-bold text-amber-300">ntfy.sh (Recomendado)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:border-emerald-400">
+                      <input type="radio" name="phone-service-choice" value="whatsapp" onchange="onPhoneServiceChange(this.value)" class="accent-emerald-400" />
+                      <span class="font-bold text-emerald-300">WhatsApp (CallMeBot)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-950 hover:border-sky-400">
+                      <input type="radio" name="phone-service-choice" value="email" onchange="onPhoneServiceChange(this.value)" class="accent-sky-400" />
+                      <span class="font-bold text-sky-300">E-mail (SMTP)</span>
+                    </label>
+                  </div>
+
+                  <!-- Panel 1: ntfy.sh -->
+                  <div id="phone-panel-ntfy" class="space-y-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                      <p class="text-slate-300">
+                        Instale o app grátis <strong>ntfy</strong> (<a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" class="text-sky-400 underline">Android</a> / <a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" class="text-sky-400 underline">iOS</a>), inscreva-se e digite o tópico abaixo.
+                      </p>
+                      <button type="button" onclick="generateRandomNtfyTopic()" class="text-xs text-amber-400 hover:underline cursor-pointer shrink-0">Gerar Tópico Aleatório</button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-1">
+                      <div class="md:col-span-2 flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <span class="text-slate-400 ui-mono text-xs">ntfy.sh/</span>
+                        <input type="text" id="input-phone-ntfy-topic" value="meu_alerta_gpu_cecatto" onchange="onUpdatePromoNotificationSettings()" placeholder="nome_secreto_do_seu_topico" class="w-full bg-transparent ui-mono font-bold text-amber-300 focus:outline-none" />
+                      </div>
+                      <div class="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 font-medium" title="Se marcado, emite toque de alarme e fura o Não Perturbe">
+                          <input type="checkbox" id="chk-phone-ntfy-ring" onchange="onUpdatePromoNotificationSettings()" class="accent-rose-400" />
+                          <span>Alarme / DND</span>
+                        </label>
+                        <select id="select-phone-ntfy-priority" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-950 border border-slate-700 rounded text-xs text-white">
+                          <option value="default" selected>Padrão</option>
+                          <option value="high">Alta Prioridade</option>
+                          <option value="urgent">Urgente (DND)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Panel 2: WhatsApp (CallMeBot) -->
+                  <div id="phone-panel-whatsapp" class="hidden space-y-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                    <p class="text-slate-300">
+                      Salve o contato <strong>+34 644 44 49 14</strong> no WhatsApp e envie <code>I allow callmebot to send me messages</code> para receber sua API Key.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                      <div class="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <span class="text-slate-400 text-xs">Seu WhatsApp (DDI+DDD):</span>
+                        <input type="text" id="input-phone-wa-number" placeholder="+5511999999999" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 ui-mono text-emerald-300 text-xs w-36" />
+                      </div>
+                      <div class="flex items-center justify-between bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700">
+                        <span class="text-slate-400 text-xs">API Key do CallMeBot:</span>
+                        <input type="text" id="input-phone-wa-apikey" placeholder="ex: 123456" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-950 border border-slate-700 rounded px-2 py-0.5 ui-mono text-emerald-300 text-xs w-28 text-center" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Panel 3: E-mail (SMTP) -->
+                  <div id="phone-panel-email" class="hidden space-y-2 text-xs bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+                    <p class="text-slate-300">
+                      Dispara um e-mail com botão de compra direta. (No Gmail, use <em>smtp.gmail.com</em>, porta 587 e uma <em>Senha de App</em>).
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-1">
+                      <input type="text" id="input-phone-email-host" placeholder="Servidor SMTP (smtp.gmail.com)" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs" />
+                      <input type="number" id="input-phone-email-port" placeholder="Porta (587 ou 465)" value="587" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs ui-mono" />
+                      <input type="text" id="input-phone-email-user" placeholder="Seu e-mail remetente" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs" />
+                      <input type="password" id="input-phone-email-pass" placeholder="Senha ou Senha de App" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white text-xs" />
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                      <span class="text-slate-400 text-xs">Destinatário:</span>
+                      <input type="email" id="input-phone-email-recipient" placeholder="seu_email@dominio.com" onchange="onUpdatePromoNotificationSettings()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sky-300 text-xs w-64" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- Collapsible Raw Radar Feed & Per-Deal Validator -->
+        <details class="ui-details" id="promo-radar-feed-details">
+          <summary class="ui-details-summary">
+            <span>Feed Bruto dos Grupos & Validação Individual de Cupons</span>
+            <span id="promo-matched-summary" class="text-xs ui-mono text-slate-400 ml-auto mr-2"></span>
+          </summary>
+          <div class="ui-details-body">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div class="lg:col-span-7 bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="ui-label text-amber-300">Peças do Catálogo com Promoção Detectada</span>
+                </div>
+                <div id="promo-matched-list" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+              </div>
+              <div class="lg:col-span-5 bg-slate-900/70 rounded-xl p-3.5 border border-slate-800 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="ui-label text-sky-300">Feed em Tempo Real dos Grupos</span>
+                  <span class="text-xs text-slate-400">Clique p/ abrir</span>
+                </div>
+                <div id="promo-general-feed" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
 

@@ -2289,12 +2289,12 @@ function renderBlackFridayTab() {
   const chipsEl = document.getElementById('bf-model-filter-chips');
   if (chipsEl) {
     chipsEl.innerHTML = `
-      <span class="text-[10px] font-mono text-slate-400 mr-1 uppercase">Modelos no Gráfico:</span>
+      <span class="ui-label mr-1">Modelos no Gráfico:</span>
       ${stats.map(s => {
         const active = !STATE.bfVisibleSlugs || STATE.bfVisibleSlugs.has(s.item.slug);
-        return `<button onclick="toggleBFModel('${s.item.slug}')" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono transition cursor-pointer border ${active ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold' : 'bg-slate-900/60 text-slate-500 border-slate-800'}">${s.item.name}</button>`;
+        return `<button type="button" onclick="toggleBFModel('${s.item.slug}')" class="ui-chip ${active ? 'is-active' : ''}">${s.item.name}</button>`;
       }).join('')}
-      <button onclick="STATE.bfVisibleSlugs = null; renderBlackFridayTab();" class="text-[10px] text-sky-400 hover:underline ml-1">Exibir Todos</button>
+      <button type="button" onclick="STATE.bfVisibleSlugs = null; renderBlackFridayTab();" class="ui-btn ui-btn--sm ui-btn--ghost ml-1">Exibir Todos</button>
     `;
   }
 
@@ -2312,50 +2312,43 @@ function renderBlackFridayTab() {
   const yoys = stats.map(s => s.yoyPct).filter(v => v != null);
   const bestValue = [...stats].sort((a, b) => (a.brlPerContextualPerf || a.brlPerPerf) - (b.brlPerContextualPerf || b.brlPerPerf))[0];
   document.getElementById('bf-multiyear-summary').innerHTML = `
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 text-xs">
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Desconto mediano BF ${curYear - 1}</span>
-        <span class="text-xl font-mono font-extrabold text-amber-300">${Math.round(familyMedianDisc * 100)}%</span>
-        <span class="block text-[10px] text-slate-500">mín. de Nov vs média Set–Out (${discs.length} modelos)</span>
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Desconto mediano BF ${curYear - 1}</span>
+        <span class="ui-kpi-value ui-kpi-value--warn">${Math.round(familyMedianDisc * 100)}%</span>
+        <span class="ui-kpi-sub">mín. de Nov vs média Set–Out (${discs.length} modelos)</span>
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-mono uppercase text-slate-400 block">Ficou mais barato DEPOIS da BF?</span>
-          <span class="text-xl font-mono font-extrabold ${postLowerCount > withPost / 2 ? 'text-sky-300' : 'text-emerald-300'}">${postLowerCount}/${withPost}</span>
-        </div>
-        <span class="block text-[10px] text-slate-500 mt-0.5">modelos com preço menor entre Dez–Mar</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Caiu depois da BF?</span>
+        <span class="ui-kpi-value ${postLowerCount > withPost / 2 ? 'ui-kpi-value--brand' : 'ui-kpi-value--good'}">${postLowerCount}/${withPost}</span>
+        <span class="ui-kpi-sub">modelos mais baratos entre Dez–Mar</span>
         ${postLowerModels.length ? `
-          <div class="mt-2 pt-1.5 border-t border-slate-800/80">
-            <span class="text-[9px] text-slate-400 block font-mono mb-1">Modelos que caíram pós-BF:</span>
-            <div class="flex flex-wrap gap-1 max-h-20 overflow-y-auto pr-0.5">
-              ${postLowerModels.map(s => {
-                const py = s.years[curYear - 1] || {};
-                const dropPct = py.bfMin && py.postMin ? Math.round((1 - py.postMin / py.bfMin) * 100) : 0;
-                return `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 font-mono text-[9px]" title="Piso BF: ${fmtBRLShort(py.bfMin)} → Menor Pós-BF: ${fmtBRLShort(py.postMin)}">
-                  ${s.item.name} ${dropPct > 0 ? `(-${dropPct}%)` : ''}
-                </span>`;
-              }).join('')}
-            </div>
+          <div class="mt-1.5 flex flex-wrap gap-1 max-h-16 overflow-y-auto pr-0.5">
+            ${postLowerModels.map(s => {
+              const py = s.years[curYear - 1] || {};
+              const dropPct = py.bfMin && py.postMin ? Math.round((1 - py.postMin / py.bfMin) * 100) : 0;
+              return `<span class="ui-badge ui-badge--brand ui-mono" title="Piso BF: ${fmtBRLShort(py.bfMin)} → Menor Pós-BF: ${fmtBRLShort(py.postMin)}">${s.item.name}${dropPct > 0 ? ` −${dropPct}%` : ''}</span>`;
+            }).join('')}
           </div>
-        ` : `<span class="block text-[9px] text-emerald-400/80 mt-1">Nenhum modelo caiu mais no pós-BF</span>`}
+        ` : ''}
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Variação em 12 meses (mediana)</span>
-        <span class="text-xl font-mono font-extrabold ${(median(yoys) || 0) > 0 ? 'text-rose-300' : 'text-emerald-300'}">${yoys.length ? ((median(yoys) > 0 ? '+' : '') + Math.round(median(yoys)) + '%') : '--'}</span>
-        <span class="block text-[10px] text-slate-500">hoje vs mesma época de ${curYear - 1}</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Variação em 12 meses</span>
+        <span class="ui-kpi-value ${(median(yoys) || 0) > 0 ? 'ui-kpi-value--bad' : 'ui-kpi-value--good'}">${yoys.length ? ((median(yoys) > 0 ? '+' : '') + Math.round(median(yoys)) + '%') : '--'}</span>
+        <span class="ui-kpi-sub">hoje vs mesma época de ${curYear - 1}</span>
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Alerta "metade do dobro"</span>
-        <span class="text-xl font-mono font-extrabold ${inflated.length ? 'text-rose-300' : 'text-emerald-300'}">${inflated.length}</span>
-        <span class="block text-[10px] text-slate-500 truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >6% desde Set: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Alerta "metade do dobro"</span>
+        <span class="ui-kpi-value ${inflated.length ? 'ui-kpi-value--bad' : 'ui-kpi-value--good'}">${inflated.length}</span>
+        <span class="ui-kpi-sub truncate" title="${inflated.map(s => s.item.name).join(', ')}">${inflated.length ? 'subiram >6%: ' + inflated.map(s => s.item.name).join(', ') : 'nenhum modelo inflado pré-BF'}</span>
       </div>
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-emerald-500/30">
-        <span class="text-[10px] font-mono uppercase text-slate-400 block">Melhor custo por desempenho hoje</span>
-        <span class="text-sm font-extrabold text-emerald-300">${bestValue ? bestValue.item.name : '--'}</span>
-        <span class="block text-[10px] text-slate-500">${bestValue ? fmtBRLShort(bestValue.brlPerContextualPerf || bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
+      <div class="ui-kpi">
+        <span class="ui-kpi-label">Melhor custo-desempenho</span>
+        <span class="text-base font-bold text-emerald-300 leading-snug">${bestValue ? bestValue.item.name : '--'}</span>
+        <span class="ui-kpi-sub">${bestValue ? fmtBRLShort(bestValue.brlPerContextualPerf || bestValue.brlPerPerf) + ' por 1000 pts' : ''}</span>
       </div>
     </div>
-    <p class="text-[10px] text-slate-500 mt-2">📅 Histórico disponível na Database: desde ${firstDates[0] || '--'} (≈ ${firstDates[0] ? Math.round((new Date(bfToday()) - new Date(firstDates[0])) / 86400000) : 0} dias).</p>`;
+    <p class="text-xs text-slate-400 mt-2">Histórico disponível: desde ${firstDates[0] || '--'} (≈ ${firstDates[0] ? Math.round((new Date(bfToday()) - new Date(firstDates[0])) / 86400000) : 0} dias).</p>`;
 
   // Target item selector
   const sel = document.getElementById('bf-target-item');
@@ -2368,53 +2361,73 @@ function renderBlackFridayTab() {
     onBFTargetItemChange(true);
   }
 
-  // Table
+  // Table with inline visual BF range mini-gauge
   const yPrev = curYear - 1;
   document.getElementById('bf-table-body').innerHTML = stats.map(s => {
     const py = s.years[yPrev] || {};
     const r = s.range;
-    let diag, diagColor;
-    // 1. Check EOL Scarcity / Severe Price Spike FIRST (Argon Drop-in)
+    let diag, badgeTone, dotColor;
     if (s.yoyPct != null && s.yoyPct > 15 && s.effectiveCurrent > s.allMin * 1.25) {
-      diag = `Encarecendo (+${Math.round(s.yoyPct)}% a/a) — estoque saindo?`;
-      diagColor = 'amber';
-    }
-    // 2. Check Pre-BF Inflation SECOND
-    else if (s.preBfInflationPct != null && s.preBfInflationPct > 6 && s.effectiveCurrent > r.high) {
-      diag = `Inflado +${Math.round(s.preBfInflationPct)}% vs Pré-BF`;
-      diagColor = 'rose';
-    }
-    // 3. Declare "Já em preço de BF" if inside the expected promo range
-    else if (s.effectiveCurrent <= r.high) {
-      diag = s.effectiveCurrent <= r.low ? 'Pechincha / Abaixo do Piso BF' : 'Já em preço de BF';
-      diagColor = 'emerald';
-    }
-    else if (py.postLower) {
-      diag = 'Caiu mais depois da BF passada';
-      diagColor = 'sky';
+      diag = `Encarecendo (+${Math.round(s.yoyPct)}% a/a)`;
+      badgeTone = 'warn';
+      dotColor = 'var(--ui-warn)';
+    } else if (s.preBfInflationPct != null && s.preBfInflationPct > 6 && s.effectiveCurrent > r.high) {
+      diag = `Inflado +${Math.round(s.preBfInflationPct)}%`;
+      badgeTone = 'bad';
+      dotColor = 'var(--ui-bad)';
+    } else if (s.effectiveCurrent <= r.high) {
+      diag = s.effectiveCurrent <= r.low ? 'Abaixo do piso BF' : 'Já em preço de BF';
+      badgeTone = 'good';
+      dotColor = 'var(--ui-good)';
+    } else if (s.effectiveCurrent <= r.high * 1.07) {
+      diag = `Perto (+${fmtBRLShort(s.effectiveCurrent - r.high)})`;
+      badgeTone = 'warn';
+      dotColor = 'var(--ui-warn)';
+    } else if (py.postLower) {
+      diag = 'Caiu pós-BF';
+      badgeTone = 'warn';
+      dotColor = 'var(--ui-warn)';
     } else {
-      diag = `Aguarde cair ~${fmtBRLShort(s.effectiveCurrent - r.high)}`;
-      diagColor = 'sky';
+      diag = `Aguarde −${fmtBRLShort(s.effectiveCurrent - r.high)}`;
+      badgeTone = 'bad';
+      dotColor = 'var(--ui-bad)';
     }
+
+    // Mini-gauge geometry
+    const mLo = Math.min(s.allMin || r.low, r.low, s.effectiveCurrent) * 0.94;
+    const mHi = Math.max(s.effectiveCurrent, r.high, py.preAvg || r.high) * 1.06;
+    const mPos = v => Math.max(2, Math.min(98, ((v - mLo) / Math.max(1, mHi - mLo)) * 100));
+    const rLeft = mPos(r.low);
+    const rWidth = Math.max(8, mPos(r.high) - rLeft);
+    const curPos = mPos(s.effectiveCurrent);
+
     return `
-      <tr class="hover:bg-slate-800/50 cursor-pointer" onclick="document.getElementById('bf-target-item').value='${s.item.slug}'; onBFTargetItemChange();">
-        <td class="py-2.5 px-3">
+      <tr class="cursor-pointer" onclick="document.getElementById('bf-target-item').value='${s.item.slug}'; onBFTargetItemChange();">
+        <td>
           <div class="flex items-center gap-1.5 flex-wrap">
             <span class="font-bold text-white">${s.item.name}</span>
             ${s.kind === 'laptop'
-              ? `<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30 text-[10px] font-mono">${s.item.ram_gb}GB / ${s.item.storage_gb >= 1024 ? (s.item.storage_gb / 1024) + 'TB' : s.item.storage_gb + 'GB'}</span>`
-              : (s.item.vram_gb ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-mono">${s.item.vram_gb} GB</span>` : '')}
-            ${s.item.coupon ? `<button onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-mono hover:bg-amber-500/40 transition cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
+              ? `<span class="ui-badge ui-mono">${s.item.ram_gb}GB / ${s.item.storage_gb >= 1024 ? (s.item.storage_gb / 1024) + 'TB' : s.item.storage_gb + 'GB'}</span>`
+              : (s.item.vram_gb ? `<span class="ui-badge ui-mono">${s.item.vram_gb} GB</span>` : '')}
+            ${s.item.coupon ? `<button type="button" onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="ui-badge ui-badge--warn ui-mono cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
           </div>
-          <div class="text-[10px] text-slate-400 font-mono mt-0.5">${s.kind === 'laptop' ? `${s.item.cpu_name} • ${s.item.gpu_name} • ${s.item.screen_hz}Hz` : (s.kind === 'gpu' ? `${s.item.vram_gb}GB • score ${Math.round(s.perf)}` : `índice jogo ${getCpuGamingIndex(s.item)}`)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
+          <div class="text-xs text-slate-400 ui-mono mt-0.5">${s.kind === 'laptop' ? `${s.item.cpu_name} • ${s.item.gpu_name}` : (s.kind === 'gpu' ? `Score ${Math.round(s.perf)}` : `Índice ${getCpuGamingIndex(s.item)}`)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
         </td>
-        <td class="py-2.5 px-3 text-right font-mono font-bold text-white">${fmtBRLShort(s.current)}</td>
-        <td class="py-2.5 px-3 text-right font-mono text-slate-300">${py.preAvg ? fmtBRLShort(py.preAvg) : '<span class="text-slate-600">sem dado</span>'}</td>
-        <td class="py-2.5 px-3 text-right font-mono text-amber-300">${py.bfMin ? fmtBRLShort(py.bfMin) : '<span class="text-slate-600">—</span>'}</td>
-        <td class="py-2.5 px-3 text-right font-mono text-emerald-300">${fmtBRLShort(s.allMin)}</td>
-        <td class="py-2.5 px-3 text-center font-mono">${py.discount != null ? `<span class="text-amber-300 font-bold">−${Math.round(py.discount * 100)}%</span>` : `<span class="text-slate-500" title="Produto sem BF anterior — usa mediana da família">~${Math.round(BF_CACHE.familyMedianDisc * 100)}%*</span>`}</td>
-        <td class="py-2.5 px-3 text-right font-mono"><span class="text-emerald-300 font-bold">${fmtBRLShort(r.low)}</span> – <span class="text-sky-300">${fmtBRLShort(r.high)}</span></td>
-        <td class="py-2.5 px-3 text-center"><span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-${diagColor}-500/15 text-${diagColor}-300 border border-${diagColor}-500/30">${diag}</span></td>
+        <td class="text-right ui-mono font-bold text-white whitespace-nowrap">${fmtBRLShort(s.current)}</td>
+        <td>
+          <div class="ui-bf-mini-gauge mx-auto" title="Hoje: ${fmtBRLShort(s.effectiveCurrent)} | Faixa esperada BF: ${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}">
+            <div class="ui-bf-mini-track">
+              <div class="ui-bf-mini-range" style="left:${rLeft}%; width:${rWidth}%"></div>
+              <div class="ui-bf-mini-dot" style="left:${curPos}%; background:${dotColor}"></div>
+            </div>
+          </div>
+        </td>
+        <td class="text-right ui-mono whitespace-nowrap"><span class="text-emerald-300 font-bold">${fmtBRLShort(r.low)}</span> – <span class="text-slate-300">${fmtBRLShort(r.high)}</span></td>
+        <td class="text-right ui-mono text-emerald-300 whitespace-nowrap">${fmtBRLShort(s.allMin)}</td>
+        <td class="text-right ui-mono text-slate-300 hidden 2xl:table-cell whitespace-nowrap">${py.preAvg ? fmtBRLShort(py.preAvg) : '<span class="text-slate-600">—</span>'}</td>
+        <td class="text-right ui-mono text-amber-300 hidden 2xl:table-cell whitespace-nowrap">${py.bfMin ? fmtBRLShort(py.bfMin) : '<span class="text-slate-600">—</span>'}</td>
+        <td class="text-center ui-mono hidden md:table-cell whitespace-nowrap">${py.discount != null ? `<span class="text-amber-300 font-bold">−${Math.round(py.discount * 100)}%</span>` : `<span class="text-slate-400" title="Produto sem BF anterior — usa mediana da família">~${Math.round(BF_CACHE.familyMedianDisc * 100)}%*</span>`}</td>
+        <td class="text-center whitespace-nowrap"><span class="ui-badge ui-badge--${badgeTone}">${diag}</span></td>
       </tr>`;
   }).join('');
 
@@ -3047,37 +3060,117 @@ function updateBFPromoEvaluator(skipSave, overrideTestPrice) {
   renderBFTargetChart(st, uMin, uMax, test);
 
   const r = st.range;
-  let verdict, color;
-  if (test <= Math.min(r.low, uMin)) { verdict = '🟢 COMPRE AGORA — abaixo da faixa esperada e do seu mínimo. Raro de ver.'; color = 'emerald'; }
-  else if (test <= uMin) { verdict = '🟢 ÓTIMO — abaixo do seu preço esperado mínimo.'; color = 'emerald'; }
-  else if (test <= r.mid) { verdict = '🔵 BOM — dentro da faixa típica de BF (metade mais barata).'; color = 'sky'; }
-  else if (test <= uMax) { verdict = '🟡 ACEITÁVEL — dentro do seu teto, mas é possível achar mais barato na BF.'; color = 'amber'; }
-  else { verdict = '🔴 ESPERE — acima do seu teto. Não é promoção real para este produto.'; color = 'rose'; }
+  let badgeText, verdictMsg, tone;
+  if (test <= Math.min(r.low, uMin)) {
+    badgeText = 'COMPRE AGORA';
+    verdictMsg = 'Abaixo da faixa esperada de Black Friday e do seu mínimo.';
+    tone = 'good';
+  } else if (test <= uMin) {
+    badgeText = 'ÓTIMO PREÇO';
+    verdictMsg = 'Abaixo do seu preço mínimo esperado.';
+    tone = 'good';
+  } else if (test <= r.high) {
+    badgeText = 'DENTRO DA FAIXA BF';
+    verdictMsg = 'Dentro da faixa esperada de Black Friday.';
+    tone = 'good';
+  } else if (test <= uMax) {
+    badgeText = 'ACEITÁVEL';
+    verdictMsg = 'Dentro do seu teto, mas pode cair mais na Black Friday.';
+    tone = 'warn';
+  } else {
+    badgeText = 'AGUARDE';
+    verdictMsg = `Acima do teto em ${fmtBRLShort(test - uMax)}. Não é preço de Black Friday.`;
+    tone = 'bad';
+  }
 
-  const lo = Math.min(st.allMin, uMin, r.low, test) * 0.95;
-  const hi = Math.max(st.current, uMax, r.high, test, st.recentAvg) * 1.05;
-  const pos = v => Math.max(0, Math.min(100, ((v - lo) / (hi - lo)) * 100));
+  const lo = Math.min(st.allMin || r.low, uMin, r.low, test, st.current) * 0.94;
+  const hi = Math.max(st.current, uMax, r.high, test, st.recentAvg || r.high) * 1.06;
+  const span = Math.max(1, hi - lo);
+  const pos = v => Math.max(2, Math.min(98, ((v - lo) / span) * 100));
+
+  const pLow = pos(r.low);
+  const pHigh = pos(r.high);
+  const pWarnEnd = Math.min(98, pos(Math.max(uMax, r.high * 1.08)));
+  const pToday = pos(st.current);
+  const pTest = pos(test);
+  const pUserLow = pos(uMin);
+  const pUserHigh = pos(uMax);
+  const hasDistinctTest = Math.abs(test - st.current) >= 1;
   const py = st.years[parseInt(bfToday().slice(0, 4)) - 1] || {};
 
-  document.getElementById('bf-test-verdict').innerHTML = `
-    <div class="p-2.5 rounded-lg bg-${color}-950/50 border border-${color}-500/50 text-${color}-100 font-semibold">${verdict}</div>
-    <div class="relative h-12 mt-3">
-      <div class="absolute top-4 left-0 right-0 h-2 rounded-full bg-slate-800"></div>
-      <div class="absolute top-4 h-2 rounded-full bg-emerald-500/50" style="left:${pos(r.low)}%; width:${Math.max(1, pos(r.high) - pos(r.low))}%" title="Faixa esperada BF (${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)})"></div>
-      <div class="absolute top-3 h-4 rounded-md border-2 border-sky-400 bg-sky-400/25 pointer-events-none transition-all duration-300 shadow-sm" style="left:${pos(uMin)}%; width:${Math.max(2, pos(uMax) - pos(uMin))}%" title="Sua Faixa de Alvo: ${fmtBRLShort(uMin)} a ${fmtBRLShort(uMax)}"></div>
-      <div class="absolute top-0 -translate-x-1/2 text-[9px] font-mono text-white font-bold" style="left:${pos(test)}%">▼ teste</div>
-      <div class="absolute top-7 -translate-x-1/2 text-[9px] font-mono text-emerald-400 font-semibold" style="left:${pos(st.allMin)}%">mín</div>
-      <div class="absolute top-7 -translate-x-1/2 text-[9px] font-mono text-slate-400" style="left:${pos(st.current)}%">hoje</div>
-    </div>
-    <div class="grid grid-cols-2 gap-1.5 text-[11px] font-mono mt-1">
-      <span class="text-slate-400">Faixa esperada BF:</span><span class="text-right text-emerald-300">${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}</span>
-      <span class="text-slate-400">Base (média pré-BF):</span><span class="text-right">${fmtBRLShort(r.base)}</span>
-      <span class="text-slate-400">Desconto usado:</span><span class="text-right">${Math.round(r.disc * 100)}% ${r.ownData ? '(BF passada deste modelo)' : '(mediana da família)'}</span>
-      <span class="text-slate-400">Piso BF passada:</span><span class="text-right text-amber-300">${py.bfMin ? fmtBRLShort(py.bfMin) : '—'}</span>
-      <span class="text-slate-400">Menor preço histórico:</span><span class="text-right text-emerald-300">${fmtBRLShort(st.allMin)}</span>
-      <span class="text-slate-400">Teste vs mínimo:</span><span class="text-right ${test <= st.allMin ? 'text-emerald-300' : 'text-slate-200'}">${test <= st.allMin ? 'NOVO MÍNIMO' : '+' + Math.round((test / st.allMin - 1) * 100) + '%'}</span>
-    </div>
-    <p class="text-[10px] text-slate-500 mt-1.5">Sua faixa (contorno azul) fica salva por produto. Barra verde = faixa estatística esperada.</p>`;
+  // Clamp floating pin tag horizontally so it never clips on narrow mobile screens
+  const tagShift = p => (p < 22 ? 'translateX(-15%)' : p > 78 ? 'translateX(-85%)' : 'translateX(-50%)');
+
+  const gaugeEl = document.getElementById('bf-test-verdict');
+  if (!gaugeEl) return;
+
+  gaugeEl.innerHTML = `
+    <div class="ui-bf-gauge-card ui-bf-gauge-card--${tone}">
+      <!-- Verdict First -->
+      <div class="ui-bf-gauge-verdict">
+        <span class="ui-badge ui-badge--${tone} font-bold">${badgeText}</span>
+        <span class="ui-mono font-extrabold text-lg text-white">${fmtBRL(test)}</span>
+      </div>
+      <p class="ui-body-sm text-slate-200">${verdictMsg}</p>
+
+      <!-- Visual 3-Zone Price Gauge -->
+      <div class="ui-bf-gauge-wrap">
+        <div class="ui-bf-gauge-track">
+          <div class="ui-bf-gauge-zone ui-bf-gauge-zone--good" style="left:0%; width:${pHigh}%"></div>
+          <div class="ui-bf-gauge-zone ui-bf-gauge-zone--warn" style="left:${pHigh}%; width:${Math.max(0, pWarnEnd - pHigh)}%"></div>
+          <div class="ui-bf-gauge-zone ui-bf-gauge-zone--bad" style="left:${pWarnEnd}%; width:${Math.max(0, 100 - pWarnEnd)}%"></div>
+
+          <!-- Expected BF Range Band -->
+          <div class="ui-bf-gauge-expected" style="left:${pLow}%; width:${Math.max(4, pHigh - pLow)}%" title="Faixa esperada BF: ${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}"></div>
+
+          <!-- User Custom Range Bracket -->
+          <div class="ui-bf-gauge-user" style="left:${pUserLow}%; width:${Math.max(4, pUserHigh - pUserLow)}%" title="Sua faixa alvo: ${fmtBRLShort(uMin)} – ${fmtBRLShort(uMax)}"></div>
+
+          <!-- Today Pin -->
+          <div class="ui-bf-gauge-pin ui-bf-gauge-pin--today" style="left:${pToday}%" title="Preço hoje: ${fmtBRL(st.current)}">
+            ${!hasDistinctTest ? `<span class="ui-bf-gauge-pin-tag" style="transform:${tagShift(pToday)}">Hoje • ${fmtBRLShort(st.current)}</span>` : ''}
+          </div>
+
+          <!-- Simulated / Coupon Pin (when user tests another price) -->
+          ${hasDistinctTest ? `
+            <div class="ui-bf-gauge-pin ui-bf-gauge-pin--test" style="left:${pTest}%" title="Preço simulado: ${fmtBRL(test)}">
+              <span class="ui-bf-gauge-pin-tag" style="transform:${tagShift(pTest)}; border-color:var(--ui-brand-border); color:var(--ui-brand-hover);">Simulado • ${fmtBRLShort(test)}</span>
+            </div>
+          ` : ''}
+        </div>
+        <div class="ui-bf-gauge-axis">
+          <span class="text-emerald-400">Mín ${fmtBRLShort(st.allMin || r.low)}</span>
+          <span class="text-slate-400">Teto ${fmtBRLShort(Math.max(uMax, r.high, st.current))}</span>
+        </div>
+      </div>
+
+      <!-- Compact Key Numbers -->
+      <div class="grid grid-cols-2 gap-2 text-xs ui-mono pt-1 border-t border-slate-800/80">
+        <div>
+          <span class="text-slate-400 block">Faixa esperada BF</span>
+          <span class="text-emerald-300 font-bold">${fmtBRLShort(r.low)} – ${fmtBRLShort(r.high)}</span>
+        </div>
+        <div class="text-right">
+          <span class="text-slate-400 block">Menor histórico</span>
+          <span class="text-slate-100 font-bold">${fmtBRLShort(st.allMin)}</span>
+        </div>
+      </div>
+
+      <!-- Collapsible Statistical Details -->
+      <details class="ui-details">
+        <summary class="ui-details-summary">Ver detalhes do cálculo</summary>
+        <div class="ui-details-body">
+          <div class="grid grid-cols-2 gap-y-1.5 text-xs ui-mono">
+            <span class="text-slate-400">Preço hoje:</span><span class="text-right text-white font-semibold">${fmtBRLShort(st.current)}</span>
+            <span class="text-slate-400">Base (média pré-BF):</span><span class="text-right text-slate-200">${fmtBRLShort(r.base)}</span>
+            <span class="text-slate-400">Desconto usado:</span><span class="text-right text-slate-200">${Math.round(r.disc * 100)}% ${r.ownData ? '(BF passada)' : '(mediana)'}</span>
+            <span class="text-slate-400">Piso BF passada:</span><span class="text-right text-amber-300">${py.bfMin ? fmtBRLShort(py.bfMin) : '—'}</span>
+            <span class="text-slate-400">Preço vs mínimo:</span><span class="text-right ${test <= st.allMin ? 'text-emerald-300 font-bold' : 'text-slate-200'}">${test <= st.allMin ? 'NOVO MÍNIMO' : '+' + Math.round((test / st.allMin - 1) * 100) + '%'}</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Borda verde = faixa estatística esperada. Tracejado azul = sua faixa salva por produto.</p>
+        </div>
+      </details>
+    </div>`;
 }
 
 function syncBFTargetRangeToExpected() {
@@ -5127,10 +5220,11 @@ async function requestAndTestPromoNotification() {
 }
 
 function togglePromoRadarPanel() {
-  PROMO_STATE.open = !PROMO_STATE.open;
-  const panel = document.getElementById('promo-radar-panel');
-  if (panel) panel.classList.toggle('hidden', !PROMO_STATE.open);
-  if (PROMO_STATE.open && !PROMO_STATE.lastData) {
+  PROMO_STATE.open = true;
+  if (typeof switchTab === 'function') {
+    switchTab('bf-promos');
+  }
+  if (!PROMO_STATE.lastData && typeof scanLivePromos === 'function') {
     scanLivePromos(false);
   }
 }
@@ -6270,9 +6364,7 @@ function setBFCardsFilter(filterKey) {
   const pills = document.querySelectorAll('#bf-cards-filter-pills button[data-bf-filter]');
   pills.forEach(b => {
     const isSelected = b.getAttribute('data-bf-filter') === BF_CARDS_FILTER;
-    b.className = isSelected
-      ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-950 cursor-pointer shadow-sm'
-      : 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-700 hover:border-slate-500 cursor-pointer';
+    b.classList.toggle('is-active', isSelected);
   });
   renderBFPromosCardsTab();
 }
@@ -6372,16 +6464,14 @@ function toggleBFLivePolling() {
   const btn = document.getElementById('btn-bf-live-toggle');
   const statusEl = document.getElementById('bf-cards-live-status');
   if (btn) {
-    btn.textContent = _bfLiveEnabled ? '⏸️ Pausar Auto (10s)' : '▶️ Retomar Auto (10s)';
-    btn.className = _bfLiveEnabled
-      ? 'px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition cursor-pointer'
-      : 'px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 transition cursor-pointer';
+    btn.textContent = _bfLiveEnabled ? 'Pausar Auto (10s)' : 'Retomar Auto (10s)';
+    btn.className = _bfLiveEnabled ? 'ui-btn ui-btn--sm' : 'ui-btn ui-btn--sm ui-btn--ghost';
   }
   if (_bfLiveEnabled) {
     startBFLivePolling();
   } else {
     stopBFLivePolling();
-    if (statusEl) statusEl.textContent = '⏸️ Auto-poll pausado';
+    if (statusEl) statusEl.textContent = 'Auto-poll pausado';
   }
 }
 window.toggleBFLivePolling = toggleBFLivePolling;
@@ -6401,6 +6491,7 @@ function renderBFPromosCardsTab() {
   });
 
   const searchQ = (document.getElementById('bf-cards-search')?.value || '').trim().toLowerCase();
+  const sortMode = (document.getElementById('bf-cards-sort')?.value || 'recent');
   const nowMs = Date.now();
 
   const _enrichCard = (d) => {
@@ -6435,6 +6526,7 @@ function renderBFPromosCardsTab() {
       }
     }
 
+    const isOutOfStock = Boolean(d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired');
     const isHistoricalMin = Boolean(allMin && d.price_brl <= allMin * 1.015);
     const isBFLow = Boolean(targetLow && d.price_brl <= targetLow);
     const isBFRange = Boolean(targetHigh && d.price_brl <= targetHigh);
@@ -6442,6 +6534,14 @@ function renderBFPromosCardsTab() {
     const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
     const drop30Pct = (avg30 && avg30 > 0) ? ((avg30 - d.price_brl) / avg30) * 100 : 0;
     const isInBFPrice = isHistoricalMin || isBFLow || isBFRange || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5);
+
+    // Best reference price to compute prominent discount %
+    const refCandidates = [
+      (!d._isStoreDirect && d.hb_price_brl > d.price_brl) ? d.hb_price_brl : 0,
+      (avg30 && avg30 > d.price_brl) ? avg30 : 0
+    ].filter(v => v > 0);
+    const refPrice = refCandidates.length ? Math.max(...refCandidates) : 0;
+    const discountPct = refPrice > 0 ? Math.round(((refPrice - d.price_brl) / refPrice) * 100) : 0;
 
     return {
       ...d,
@@ -6451,6 +6551,9 @@ function renderBFPromosCardsTab() {
       allMin,
       avg30,
       drop30Pct,
+      refPrice,
+      discountPct,
+      isOutOfStock,
       isHistoricalMin,
       isBFLow,
       isBFRange,
@@ -6470,7 +6573,7 @@ function renderBFPromosCardsTab() {
     seenKeys.add(`${d.matched_slug}_${(d.store_name || '').toLowerCase()}_${Math.round(d.price_brl || 0)}`);
   });
 
-  // 2. Direct Store Catalog deals (eliminates Telegram blind spots: RTX 3080, 3070 Ti, Shopee drops, etc.)
+  // 2. Direct Store Catalog deals
   const storeCatalogCards = [];
   const dbTs = (typeof DB !== 'undefined' && DB.updated_at) ? Date.parse(DB.updated_at.replace(' ', 'T')) : nowMs;
   const storeAgeHrs = !isNaN(dbTs) ? Math.max(0.05, (nowMs - dbTs) / 3600000) : 0.5;
@@ -6496,7 +6599,6 @@ function renderBFPromosCardsTab() {
         timestamp: !isNaN(dbTs) ? new Date(dbTs).toISOString() : '',
         _isStoreDirect: true
       });
-      // Include if in BF pricing, near BF (within 5%), or >= 3% below 30d avg
       if (baseCard.isInBFPrice || baseCard.isNearBF || baseCard.drop30Pct >= 3) {
         const sig = `${baseCard.matched_slug}_${(baseCard.store_name || '').toLowerCase()}_${Math.round(baseCard.price_brl || 0)}`;
         if (!seenKeys.has(sig)) {
@@ -6512,12 +6614,13 @@ function renderBFPromosCardsTab() {
   const items = allCards.filter(d => {
     if (isLapCtx && d.matched_kind !== 'laptop') return false;
     if (!isLapCtx && d.matched_kind === 'laptop') return false;
+    if (BF_CARDS_FILTER === 'hist_min' && !d.isHistoricalMin) return false;
     if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
     if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
     if (BF_CARDS_FILTER === 'ram' && d.matched_kind !== 'ram') return false;
     if (BF_CARDS_FILTER === 'laptop' && d.matched_kind !== 'laptop') return false;
     if (BF_CARDS_FILTER === 'store_direct' && !d._isStoreDirect) return false;
-    if (BF_CARDS_FILTER === 'in_stock' && (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired')) return false;
+    if (BF_CARDS_FILTER === 'in_stock' && d.isOutOfStock) return false;
     if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice && !d.isNearBF) return false;
 
     if (searchQ) {
@@ -6526,11 +6629,18 @@ function renderBFPromosCardsTab() {
     }
     return true;
   }).sort((a, b) => {
-    // Keep very fresh Telegram drops (<= 1.5h) at the top, then prioritize BF-priced deals, then age
+    if (sortMode === 'discount') {
+      if (b.discountPct !== a.discountPct) return b.discountPct - a.discountPct;
+      return (a.price_brl || 0) - (b.price_brl || 0);
+    }
+    if (sortMode === 'price_asc') {
+      return (a.price_brl || 0) - (b.price_brl || 0);
+    }
     const aFreshGroup = !a._isStoreDirect && a.ageHrs <= 1.5;
     const bFreshGroup = !b._isStoreDirect && b.ageHrs <= 1.5;
     if (aFreshGroup !== bFreshGroup) return aFreshGroup ? -1 : 1;
     if (aFreshGroup && bFreshGroup) return (b.tsMs || 0) - (a.tsMs || 0);
+    if (a.isHistoricalMin !== b.isHistoricalMin) return a.isHistoricalMin ? -1 : 1;
     if (a.isInBFPrice !== b.isInBFPrice) return a.isInBFPrice ? -1 : 1;
     if (a.tsMs && b.tsMs && a.tsMs !== b.tsMs) return b.tsMs - a.tsMs;
     return a.ageHrs - b.ageHrs;
@@ -6538,11 +6648,18 @@ function renderBFPromosCardsTab() {
 
   if (countBadge) countBadge.textContent = `${items.length} ofertas`;
 
+  // Populate KPI strip
+  const setKpi = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
+  setKpi('promos-kpi-total', items.length);
+  setKpi('promos-kpi-histmin', items.filter(d => d.isHistoricalMin && !d.isOutOfStock).length);
+  setKpi('promos-kpi-bf', items.filter(d => (d.isBFLow || d.isBFRange) && !d.isOutOfStock).length);
+  setKpi('promos-kpi-coupons', items.filter(d => Boolean((d.coupon_code || '').trim()) && !d.isOutOfStock).length);
+
   if (!items.length) {
     grid.innerHTML = `
-      <div class="p-6 rounded-xl bg-slate-950/80 border border-slate-800 text-center space-y-2">
-        <div class="text-slate-300 font-semibold text-sm">Nenhuma promoção recente encontrada para este filtro.</div>
-        <div class="text-xs text-slate-500">Aguardando a próxima atualização automática (10s) ou clique em "🔄 Puxar Agora".</div>
+      <div class="col-span-full ui-card text-center py-8 space-y-2">
+        <div class="ui-title-md">Nenhuma promoção encontrada para este filtro</div>
+        <div class="ui-body-sm">Tente trocar o filtro acima ou clique em "Atualizar Agora".</div>
       </div>`;
     return;
   }
@@ -6553,75 +6670,108 @@ function renderBFPromosCardsTab() {
       ? `${Math.max(1, Math.round(d.ageHrs * 60))}m`
       : `${d.ageHrs.toFixed(1)}h`;
 
+    const cardModifier = d.isOutOfStock
+      ? 'ui-promo-card--oos'
+      : d.isHistoricalMin
+        ? 'ui-promo-card--hist'
+        : (d.isBFLow || d.isBFRange)
+          ? 'ui-promo-card--bf'
+          : d.isNearBF
+            ? 'ui-promo-card--warn'
+            : '';
+
+    const ribbonHtml = d.isOutOfStock
+      ? `<div class="ui-promo-ribbon ui-promo-ribbon--oos"><span>Esgotado / Encerrado</span><span class="ui-mono">há ${ageLabel}</span></div>`
+      : d.isHistoricalMin
+        ? `<div class="ui-promo-ribbon ui-promo-ribbon--hist"><span>★ Mínimo Histórico</span><span class="ui-mono">há ${ageLabel}</span></div>`
+        : d.isBFLow
+          ? `<div class="ui-promo-ribbon ui-promo-ribbon--bf"><span>Piso Black Friday</span><span class="ui-mono">há ${ageLabel}</span></div>`
+          : '';
+
     const bfVerdictBadge = d.isHistoricalMin
-      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🔥 MÍNIMO HISTÓRICO BF</span>`
+      ? `<span class="ui-badge ui-badge--good">Mínimo histórico</span>`
       : d.isBFLow
-      ? `<span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-bold whitespace-nowrap">✅ PISO BLACK FRIDAY</span>`
-      : d.isBFRange
-      ? `<span class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold whitespace-nowrap">🎯 PREÇO DE BLACK FRIDAY</span>`
-      : d.isNearBF
-      ? `<span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 font-mono text-[11px] font-bold whitespace-nowrap">⚡ Perto da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
-      : d.targetHigh
-      ? `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-rose-300 border border-rose-500/30 font-mono text-[11px] font-semibold whitespace-nowrap">⏳ Acima da BF (+${fmtBRL(d.price_brl - d.targetHigh)})</span>`
-      : `<span class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 border border-slate-700 font-mono text-[11px] whitespace-nowrap">ℹ️ Sem faixa BF</span>`;
+        ? `<span class="ui-badge ui-badge--good">Piso BF</span>`
+        : d.isBFRange
+          ? `<span class="ui-badge ui-badge--good">Preço BF</span>`
+          : d.isNearBF
+            ? `<span class="ui-badge ui-badge--warn">Perto da BF (+${fmtBRLShort(d.price_brl - d.targetHigh)})</span>`
+            : d.targetHigh
+              ? `<span class="ui-badge ui-badge--bad">Acima da BF (+${fmtBRLShort(d.price_brl - d.targetHigh)})</span>`
+              : '';
 
     const targetText = d.targetLow && d.targetHigh
-      ? `${fmtBRL(d.targetLow)} – ${fmtBRL(d.targetHigh)}`
-      : (d.targetLow ? fmtBRL(d.targetLow) : '—');
+      ? `${fmtBRLShort(d.targetLow)} – ${fmtBRLShort(d.targetHigh)}`
+      : (d.targetLow ? fmtBRLShort(d.targetLow) : '—');
 
     const thumbHtml = d.imgUrl
-      ? `<img src="${d.imgUrl}" alt="" loading="lazy" class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-contain bg-slate-950 border border-slate-800 p-1 shrink-0" onerror="this.style.display='none'" />`
-      : `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-[10px] font-mono shrink-0 uppercase">${d.matched_kind || 'HW'}</div>`;
+      ? `<img src="${d.imgUrl}" alt="" loading="lazy" class="ui-promo-thumb" onerror="this.style.display='none'" />`
+      : `<div class="ui-promo-thumb ui-promo-thumb--placeholder">${d.matched_kind || 'HW'}</div>`;
+
+    const discountHtml = (!d.isOutOfStock && d.discountPct >= 3)
+      ? `<span class="ui-promo-discount" title="Desconto estimado frente à referência/média 30d (${fmtBRLShort(d.refPrice)})">−${d.discountPct}%</span>`
+      : '';
 
     return `
-      <div class="p-3 sm:px-4 sm:py-3 rounded-xl bg-slate-950/90 border ${d.isInBFPrice ? 'border-emerald-500/40 shadow-sm shadow-emerald-500/5' : 'border-slate-800 hover:border-slate-700'} flex flex-col lg:flex-row lg:items-center justify-between gap-3 transition">
-        <!-- Left: Small Image + Title + Group/Store -->
-        <div class="flex items-center gap-3 min-w-0 flex-1">
-          ${thumbHtml}
-          <div class="min-w-0 flex-1 space-y-1">
-            <div class="flex items-center gap-2 flex-wrap text-[11px] font-mono">
-              <span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-bold">${d.matched_name || d.matched_slug || ''}</span>
-              ${d._isStoreDirect
-                ? `<span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-bold">🏬 Catálogo Lojas</span>`
-                : `<span class="text-amber-300 font-semibold">@${d.channel_id || 'grupo'}</span>`}
-              <span class="text-slate-400">• ${d.store_name || 'Loja BR'}</span>
-              <span class="text-emerald-400 font-bold">• há ${ageLabel}</span>
-              ${cleanCoup ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">🎟️ ${cleanCoup}</span>` : ''}
+      <article class="ui-promo-card ${cardModifier}">
+        ${ribbonHtml}
+        <div class="ui-promo-body">
+          <!-- Top: Thumb + Model/Store + Discount % -->
+          <div class="ui-promo-head">
+            ${thumbHtml}
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="ui-badge ui-badge--brand ui-mono truncate max-w-[170px]">${d.matched_name || d.matched_slug || ''}</span>
+                ${discountHtml}
+              </div>
+              <div class="text-xs text-slate-400 flex items-center flex-wrap gap-1.5">
+                <span class="text-slate-200 font-semibold">${d.store_name || 'Loja BR'}</span>
+                <span>•</span>
+                <span>${d._isStoreDirect ? 'Catálogo' : '@' + (d.channel_id || 'grupo')}</span>
+                ${!ribbonHtml ? `<span>• há ${ageLabel}</span>` : ''}
+              </div>
             </div>
-            <div class="text-xs sm:text-sm font-semibold text-slate-100 truncate" title="${d.title}">${d.title}</div>
+          </div>
+
+          <!-- Title -->
+          <div class="ui-promo-title" title="${d.title}">${d.title}</div>
+
+          <!-- Price Box -->
+          <div class="ui-promo-price-box">
+            <div>
+              <div class="flex items-baseline gap-2 flex-wrap">
+                <span class="ui-promo-price ${d.isInBFPrice && !d.isOutOfStock ? 'ui-promo-price--good' : ''}">${fmtBRL(d.price_brl)}</span>
+                ${d.refPrice > d.price_brl ? `<span class="ui-promo-ref-price">${fmtBRLShort(d.refPrice)}</span>` : ''}
+              </div>
+              <div class="text-xs ui-mono text-slate-400 mt-1">
+                Alvo BF: <span class="text-slate-200 font-semibold">${targetText}</span>
+              </div>
+            </div>
+            <div class="flex flex-col items-end gap-1">
+              ${bfVerdictBadge}
+            </div>
+          </div>
+
+          <!-- Coupon Pill (if present) -->
+          ${cleanCoup ? `
+            <button type="button" onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="w-full ui-btn ui-btn--sm justify-between" style="background:var(--ui-warn-soft); border-color:var(--ui-warn-border); color:var(--ui-warn-text);" title="Copiar cupom e abrir loja">
+              <span class="ui-mono font-bold">🎟️ Cupom: ${cleanCoup}</span>
+              <span class="text-xs">Copiar ↗</span>
+            </button>
+          ` : ''}
+
+          <!-- Actions Footer -->
+          <div class="ui-promo-footer">
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="ui-btn ui-btn--sm">
+                ${d.matched_kind === 'gpu' ? 'Duelo' : 'Ver BF'}
+              </button>
+              <a href="${d.post_url}" target="_blank" class="ui-btn ui-btn--sm ui-btn--ghost">Post ↗</a>
+            </div>
+            <a href="${d.buy_url}" target="_blank" class="ui-btn ui-btn--good ui-btn--sm">Ver oferta ↗</a>
           </div>
         </div>
-
-        <!-- Right: Current Price + Target Price + BF Verdict + Actions -->
-        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-4 shrink-0 border-t lg:border-t-0 border-slate-800/80 pt-2 lg:pt-0">
-          <div class="text-left lg:text-right">
-            <span class="text-[10px] font-mono uppercase text-slate-400 block">Preço Anunciado</span>
-            <span class="text-lg font-mono font-extrabold ${d.isInBFPrice ? 'text-emerald-400' : 'text-white'}">${fmtBRL(d.price_brl)}</span>
-            ${!d._isStoreDirect && d.hb_price_brl > 0 ? (
-              d.price_brl < d.hb_price_brl
-                ? `<span class="block text-[10px] font-mono text-emerald-400">✅ −${fmtBRL(d.hb_price_brl - d.price_brl)} vs menor loja</span>`
-                : (d.price_brl > d.hb_price_brl + 1
-                    ? `<span class="block text-[10px] font-mono text-rose-400">⚠️ +${fmtBRL(d.price_brl - d.hb_price_brl)} vs menor loja (${fmtBRL(d.hb_price_brl)})</span>`
-                    : '')
-            ) : ''}
-          </div>
-
-          <div class="text-left lg:text-right min-w-[130px]">
-            <span class="text-[10px] font-mono uppercase text-slate-400 block">Alvo Black Friday</span>
-            <span class="text-xs font-mono font-bold text-amber-300">${targetText}</span>
-            ${d.allMin ? `<span class="block text-[10px] font-mono text-slate-500">Piso Hist: ${fmtBRL(d.allMin)}</span>` : ''}
-          </div>
-
-          <div>${bfVerdictBadge}</div>
-
-          <div class="flex items-center gap-1.5">
-            ${cleanCoup ? `<button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-mono text-[11px] font-bold cursor-pointer" title="Copiar cupom e abrir">📋</button>` : ''}
-            <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 font-semibold text-[11px] cursor-pointer">BF</button>
-            <a href="${d.post_url}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 font-semibold text-[11px]">Post ↗</a>
-            <a href="${d.buy_url}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">Loja 🛒</a>
-          </div>
-        </div>
-      </div>
+      </article>
     `;
   }).join('');
 }
