@@ -1789,3 +1789,18 @@
     animation: none;
   }
 }
+
+/* ==========================================================================
+   Correções de layout mobile
+   - Dicas ocultas e selects longos não podem alargar a página.
+   ========================================================================== */
+.ui-shell-content {
+  overflow-x: clip;
+  min-width: 0;
+}
+
+main select,
+main input:not([type="checkbox"]):not([type="radio"]) {
+  max-width: 100%;
+  min-width: 0;
+}

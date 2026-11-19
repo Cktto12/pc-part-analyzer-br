@@ -6,7 +6,7 @@
   <title>GCA — GPU & CPU Analyzer: Duelo Relacional, Workstation, Black Friday & Custo-Benefício</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261119-2" />
+  <link rel="stylesheet" href="styles/ui.css?v=20261119-3" />
   <script src="styles/chart-theme.js?v=20261119-2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1406,9 +1406,9 @@
           <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div class="flex items-center gap-2">
               <h2 class="ui-title-lg">Montagem & Objetivo de Compra</h2>
-              <span class="ui-tooltip" tabindex="0">
-                <span class="ui-info-icon">i</span>
-                <span class="ui-tooltip-content">Monte sua máquina desejada ou planeje o próximo upgrade sem alterar o seu PC de Referência configurado no sistema.</span>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Monte sua máquina desejada ou planeje o próximo upgrade sem alterar o seu PC de Referência configurado no sistema.</span>
               </span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -1501,9 +1501,9 @@
           <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div class="flex items-center gap-2">
               <h2 class="ui-title-lg">Montagem — Notebook & Ecossistema</h2>
-              <span class="ui-tooltip" tabindex="0">
-                <span class="ui-info-icon">i</span>
-                <span class="ui-tooltip-content">Escolha o notebook ideal por objetivo de uso e planeje upgrades de RAM SO-DIMM, SSD NVMe extra, monitor ou hub sem custos ocultos.</span>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Escolha o notebook ideal por objetivo de uso e planeje upgrades de RAM SO-DIMM, SSD NVMe extra, monitor ou hub sem custos ocultos.</span>
               </span>
             </div>
             <div class="flex flex-wrap items-center gap-1.5" id="laptop-builder-presets">
@@ -1531,9 +1531,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <h2 class="ui-title-lg">Upgrades de Plataforma (DDR4 vs DDR5)</h2>
-            <span class="ui-tooltip" tabindex="0">
-              <span class="ui-info-icon">i</span>
-              <span class="ui-tooltip-content">Compare a transição DDR4 (X99 / AM4) versus DDR5 (AM5 / LGA1700) e veja quanto sobra do orçamento para a GPU.</span>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Compare a transição DDR4 (X99 / AM4) versus DDR5 (AM5 / LGA1700) e veja quanto sobra do orçamento para a GPU.</span>
             </span>
           </div>
           <div class="flex flex-wrap items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
@@ -1575,9 +1575,9 @@
           <div class="lg:col-span-7 ui-card ui-card--compact space-y-3">
             <div class="flex items-center justify-between gap-2">
               <h3 class="ui-title-md">Preço Real de RAM Hoje (DDR4 vs DDR5)</h3>
-              <span class="ui-tooltip" tabindex="0">
-                <span class="ui-info-icon">i</span>
-                <span class="ui-tooltip-content">Glitches de preço (&gt; 2,5× a mediana) são ignorados. Use os campos manuais acima para cotações de usados ou ECC.</span>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Glitches de preço (&gt; 2,5× a mediana) são ignorados. Use os campos manuais acima para cotações de usados ou ECC.</span>
               </span>
             </div>
             <div id="upg-ram-deals-table" class="space-y-2 text-xs"></div>
@@ -1593,9 +1593,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <h2 class="ui-title-lg">Upgrades em Notebooks (RAM & SSD)</h2>
-            <span class="ui-tooltip" tabindex="0">
-              <span class="ui-info-icon">i</span>
-              <span class="ui-tooltip-content">Compare o custo real final após expandir memória RAM (SO-DIMM) e armazenamento (SSD NVMe) versus modelos com memória soldada de fábrica.</span>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Compare o custo real final após expandir memória RAM (SO-DIMM) e armazenamento (SSD NVMe) versus modelos com memória soldada de fábrica.</span>
             </span>
           </div>
           <div class="flex flex-wrap items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
@@ -1652,9 +1652,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <h2 class="ui-title-lg">Black Friday & Sazonalidade</h2>
-            <span class="ui-tooltip" tabindex="0">
-              <span class="ui-info-icon">i</span>
-              <span class="ui-tooltip-content">Histórico diário de até 600 dias para comparar o preço de hoje com a faixa esperada de Black Friday e pisos promocionais.</span>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Histórico diário de até 600 dias para comparar o preço de hoje com a faixa esperada de Black Friday e pisos promocionais.</span>
             </span>
           </div>
           <!-- Family Selector & Display Controls -->
@@ -1700,9 +1700,9 @@
           <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
             <div class="flex items-center gap-2">
               <h3 class="ui-title-md">Medidor de Preço Esperado</h3>
-              <span class="ui-tooltip" tabindex="0">
-                <span class="ui-info-icon">i</span>
-                <span class="ui-tooltip-content">Mostra visualmente onde o preço de hoje (ou uma oferta com cupom) está dentro da faixa esperada de Black Friday e do seu teto máximo.</span>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Mostra visualmente onde o preço de hoje (ou uma oferta com cupom) está dentro da faixa esperada de Black Friday e do seu teto máximo.</span>
               </span>
             </div>
             <button type="button" onclick="syncBFTargetRangeToExpected()" title="Ajustar automaticamente para a faixa estatística da BF" class="ui-btn ui-btn--sm">
@@ -1821,9 +1821,9 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2">
               <h3 class="ui-title-md">Curva Sazonal Multi-Geração</h3>
-              <span class="ui-tooltip" tabindex="0">
-                <span class="ui-info-icon">i</span>
-                <span class="ui-tooltip-content">Compare como cada geração oscila antes, durante e depois da Black Friday ao longo dos últimos meses.</span>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Compare como cada geração oscila antes, durante e depois da Black Friday ao longo dos últimos meses.</span>
               </span>
             </div>
             <!-- Horizon & Mode Config -->
@@ -1860,9 +1860,9 @@
           <div class="space-y-1">
             <div class="flex items-center gap-2 flex-wrap">
               <h2 class="ui-title-lg">Promoções & Radar</h2>
-              <span class="ui-tooltip" tabindex="0">
-                <span class="ui-info-icon">i</span>
-                <span class="ui-tooltip-content">Reúne ofertas relâmpago dos grupos de hardware e quedas diretas do catálogo, destacando o % de desconto e itens no mínimo histórico.</span>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Reúne ofertas relâmpago dos grupos de hardware e quedas diretas do catálogo, destacando o % de desconto e itens no mínimo histórico.</span>
               </span>
               <span id="bf-cards-live-count" class="ui-badge ui-badge--brand ui-mono">0 ofertas</span>
               <span id="bf-cards-live-status" class="ui-badge ui-badge--good ui-mono">Ao vivo • 10s</span>
@@ -2294,9 +2294,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <h2 class="ui-title-lg">Simulador de Desempenho Real</h2>
-            <span class="ui-tooltip" tabindex="0">
-              <span class="ui-info-icon">i</span>
-              <span class="ui-tooltip-content">Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.</span>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.</span>
             </span>
           </div>
           <!-- Controls: Setup A (Azul) vs Setup B (Roxo) + Upscaling & Modes -->
@@ -2451,9 +2451,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <h2 class="ui-title-lg">Simulador de Notebooks</h2>
-            <span class="ui-tooltip" tabindex="0">
-              <span class="ui-info-icon">i</span>
-              <span class="ui-tooltip-content">Simulação em Jogos (considerando TGP móvel, limite de CPU, tela nativa em Hz e bateria vs tomada), Workstation e IA Local (CUDA / Apple MLX).</span>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Simulação em Jogos (considerando TGP móvel, limite de CPU, tela nativa em Hz e bateria vs tomada), Workstation e IA Local (CUDA / Apple MLX).</span>
             </span>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
@@ -2534,9 +2534,9 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-2">
             <h2 class="ui-title-lg">Configurações do Sistema</h2>
-            <span class="ui-tooltip" tabindex="0">
-              <span class="ui-info-icon">i</span>
-              <span class="ui-tooltip-content">Personalize seu PC/Notebook de referência, monitor, pesos de uso, base de dados, escala gráfica e região.</span>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Personalize seu PC/Notebook de referência, monitor, pesos de uso, base de dados, escala gráfica e região.</span>
             </span>
           </div>
           <div class="flex items-center gap-2">
@@ -3023,8 +3023,8 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261119-6"></script>
-  <script src="app_features.js?v=20261119-6"></script>
-  <script src="laptop_mode.js?v=20261119-6"></script>
+  <script src="app.js?v=20261119-7"></script>
+  <script src="app_features.js?v=20261119-7"></script>
+  <script src="laptop_mode.js?v=20261119-7"></script>
 </body>
 </html>

@@ -1411,13 +1411,13 @@ function getPriceStatusBadgeHTML(gpu) {
   const st = gpu.price_stats || {};
   const vsAvg = st.vs_avg_90d_pct || 0;
   if (st.status === 'great') {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🟢 No Preço Alvo (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">🟢 No Preço Alvo (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
   } else if (st.status === 'normal') {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">🔵 Preço Estável (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">🔵 Preço Estável (${vsAvg > 0 ? '+' : ''}${vsAvg}% vs 90d)</span>`;
   } else if (st.status === 'rising') {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ Subiu +${vsAvg}% vs Média 90d</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">⚠️ Subiu +${vsAvg}% vs Média 90d</span>`;
   } else {
-    return `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">🚨 Alta Forte (+${vsAvg}% vs Média 90d)</span>`;
+    return `<span class="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">🚨 Alta Forte (+${vsAvg}% vs Média 90d)</span>`;
   }
 }
 
@@ -1698,12 +1698,12 @@ function openHomeItemInDuel(kind, slug) {
     }
   } else if (kind === 'laptop') {
     setMainContext('laptop');
-    const candSel = document.getElementById('sel-laptop-cand');
-    if (candSel) {
-      candSel.value = slug;
-      if (typeof STATE !== 'undefined') STATE.laptopCandSlug = slug;
-    }
     switchTab('versus');
+    const candSel = document.getElementById('laptop-duel-select-cand');
+    if (candSel && [...candSel.options].some(o => o.value === slug)) {
+      candSel.value = slug;
+      if (typeof onLaptopDuelSelectionChange === 'function') onLaptopDuelSelectionChange();
+    }
     return;
   } else {
     setMainContext('gpu');
@@ -2104,7 +2104,7 @@ function syncWorkloadIntensityUI() {
     const badge = document.getElementById(`badge-int-${key}`);
     if (badge) {
       badge.textContent = `${lvl}/5 • ${meta.label}`;
-      badge.className = `px-1.5 py-0.5 rounded border text-[10px] font-mono font-bold ${meta.cls}`;
+      badge.className = `px-1.5 py-0.5 rounded border text-xs font-mono font-bold ${meta.cls}`;
     }
     const desc = document.getElementById(`desc-int-${key}`);
     if (desc && WORKLOAD_INTENSITY_DESCS[key]) {
@@ -2860,27 +2860,27 @@ function renderDuelAnalysis() {
 
   document.getElementById('duel-scenarios-grid').innerHTML = `
     <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-      <span class="text-[10px] font-mono uppercase text-slate-400 block">Cenário 1: Preços de Hoje nas Lojas</span>
+      <span class="text-xs font-mono uppercase text-slate-400 block">Cenário 1: Preços de Hoje nas Lojas</span>
       <div class="text-xs font-bold text-white mt-1">${candGpu.name} (${fmtBRLShort(candPrice)}) vs ${baseGpu.name} (${fmtBRLShort(basePrice)})</div>
       <div class="mt-1.5 flex items-center justify-between">
         <span class="font-mono text-xs text-slate-300">Diferença: <strong>+${fmtBRLShort(rel.actualDelta)}</strong></span>
-        <span class="text-[11px] font-mono font-bold text-${rel.color}-400">${rel.label}</span>
+        <span class="text-xs font-mono font-bold text-${rel.color}-400">${rel.label}</span>
       </div>
     </div>
     <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-      <span class="text-[10px] font-mono uppercase text-sky-400 block">Cenário 2: Ambas no Preço Alvo (Histórico)</span>
+      <span class="text-xs font-mono uppercase text-sky-400 block">Cenário 2: Ambas no Preço Alvo (Histórico)</span>
       <div class="text-xs font-bold text-white mt-1">${candGpu.name} (${fmtBRLShort(candGpu.price_stats.target_price)}) vs ${baseGpu.name} (${fmtBRLShort(baseGpu.price_stats.target_price)})</div>
       <div class="mt-1.5 flex items-center justify-between">
         <span class="font-mono text-xs text-slate-300">Diferença: <strong>+${fmtBRLShort(relTarget.actualDelta)}</strong></span>
-        <span class="text-[11px] font-mono font-bold text-${relTarget.color}-400">${relTarget.label}</span>
+        <span class="text-xs font-mono font-bold text-${relTarget.color}-400">${relTarget.label}</span>
       </div>
     </div>
     <div class="bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
-      <span class="text-[10px] font-mono uppercase text-emerald-400 block">Cenário 3: ${candGpu.name} na Menor Promo 90d</span>
+      <span class="text-xs font-mono uppercase text-emerald-400 block">Cenário 3: ${candGpu.name} na Menor Promo 90d</span>
       <div class="text-xs font-bold text-white mt-1">${candGpu.name} (${fmtBRLShort(candGpu.price_stats.min_90d)}) vs ${baseGpu.name} Hoje (${fmtBRLShort(basePrice)})</div>
       <div class="mt-1.5 flex items-center justify-between">
         <span class="font-mono text-xs text-slate-300">Diferença: <strong>+${fmtBRLShort(relPromoCand.actualDelta)}</strong></span>
-        <span class="text-[11px] font-mono font-bold text-${relPromoCand.color}-400">${relPromoCand.label}</span>
+        <span class="text-xs font-mono font-bold text-${relPromoCand.color}-400">${relPromoCand.label}</span>
       </div>
     </div>
   `;
@@ -2992,15 +2992,15 @@ function renderDuelAlternatives(baseGpu, candGpu, basePrice, candPrice) {
         <div>
           <div class="flex items-center gap-2">
             <span class="font-bold text-white text-xs">${g.name}</span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300">${g.vram_gb}GB</span>
-            <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-300">Seu CB: ${g._myCBScore}/100</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-purple-500/20 text-purple-300">${g.vram_gb}GB</span>
+            <span class="px-1.5 py-0.5 rounded text-xs font-mono bg-emerald-500/20 text-emerald-300">Seu CB: ${g._myCBScore}/100</span>
           </div>
-          <div class="text-[11px] text-slate-400 mt-0.5">
+          <div class="text-xs text-slate-400 mt-0.5">
             Hoje: <strong class="text-slate-200 font-mono">${fmtBRL(g.price_brl)}</strong> (Alvo: ${fmtBRLShort(g.price_stats.target_price)}) •
             vs ${baseGpu.name}: <span class="text-${relVsBase.color}-400 font-semibold">${relVsBase.perfGainPct >= 0 ? '+' : ''}${relVsBase.perfGainPct.toFixed(0)}% perf por ${relVsBase.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(relVsBase.actualDelta)}</span>
           </div>
         </div>
-        <button onclick="setDuelPair('${g.slug}', '${baseGpu.slug}')" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 transition shrink-0 cursor-pointer">
+        <button onclick="setDuelPair('${g.slug}', '${baseGpu.slug}')" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 border border-slate-700 transition shrink-0 cursor-pointer">
           Comparar
         </button>
       </div>
@@ -3010,8 +3010,8 @@ function renderDuelAlternatives(baseGpu, candGpu, basePrice, candPrice) {
   // Explain why VRAM, Local Inference, and CUDA matter for AI Training, Ethernet Frame processing & OpenDSS
   const insightEl = document.getElementById('duel-ram-ai-insight');
   insightEl.innerHTML = `
-    <span class="font-mono uppercase text-[10px] text-purple-400 font-bold block mb-1">💡 Cálculo de Inferência Local + AI Training / Ethernet / OpenDSS (${candGpu.name} vs ${baseGpu.name})</span>
-    <ul class="space-y-1 text-[11px] list-disc pl-4">
+    <span class="font-mono uppercase text-xs text-purple-400 font-bold block mb-1">💡 Cálculo de Inferência Local + AI Training / Ethernet / OpenDSS (${candGpu.name} vs ${baseGpu.name})</span>
+    <ul class="space-y-1 text-xs list-disc pl-4">
       <li><strong>Inferência Local no Cálculo:</strong> A <strong>${candGpu.name}</strong> (${candGpu.vram_gb}GB, ${candGpu.bandwidth_gbs} GB/s) roda modelos <strong>14B Q4 + KV-Cache</strong> direto na VRAM a <strong>~${candGpu.llm_14b_tok_s} tok/s</strong>, enquanto a <strong>${baseGpu.name}</strong> (${baseGpu.vram_gb}GB, ${baseGpu.bandwidth_gbs} GB/s) faz <strong>~${baseGpu.llm_14b_tok_s} tok/s</strong> ${baseGpu.vram_gb <= 8 ? '(sofre gargalo severo de PCIe por offload na RAM DDR4)' : ''}.</li>
       <li><strong>AI Training, Eth Frames & OpenDSS:</strong> Co-simulação simultânea (ex: cena 3D Omniverse + agente LLM local + buffer GPU de pacotes Ethernet via CuPy/RAPIDS + matrizes esparsas do OpenDSS) exige <strong>CUDA/Tensor nativo</strong> e pelo menos <strong>12GB–16GB de VRAM</strong> para não estourar a memória de vídeo.</li>
     </ul>
@@ -3262,15 +3262,15 @@ function renderCpuDuelAlternatives(baseCpu, candCpu) {
         <div class="space-y-0.5">
           <div class="flex items-center gap-2">
             <span class="font-bold text-white text-xs">${a.name}</span>
-            <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-[10px]">${s.socket}</span>
+            <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-mono text-xs">${s.socket}</span>
           </div>
-          <div class="text-[11px] text-slate-400 font-mono">
+          <div class="text-xs text-slate-400 font-mono">
             ${s.cores}C/${s.threads}T • Jogos: <span class="text-emerald-400 font-bold">${a._gamingScore || getCpuGamingScore(a)}</span> • WS: <span class="text-amber-400 font-bold">${a._workstationScore || getCpuWorkstationScore(a)}</span> • CB: <span class="text-purple-300 font-bold">${a._myCBScore || 70}/100</span>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <span class="font-mono font-bold text-white text-xs">${fmtBRL(a.price_brl)}</span>
-          <button onclick="setCpuDuelPair('${a.slug}', '${baseCpu.slug}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-[10px] font-bold cursor-pointer">Comparar ⚔️</button>
+          <button onclick="setCpuDuelPair('${a.slug}', '${baseCpu.slug}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 text-xs font-bold cursor-pointer">Comparar ⚔️</button>
         </div>
       </div>
     `;
@@ -3306,53 +3306,53 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
     const border = isBase ? 'border-emerald-500/40' : 'border-sky-500/40';
     const bgBadge = isBase ? 'bg-emerald-500/20 text-emerald-300' : 'bg-sky-500/20 text-sky-300';
     const hybridBadge = s.eCores > 0
-      ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">Híbrido: ${s.pCores}P + ${s.eCores}E</span>`
-      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] font-bold">${s.cores} Núcleos Uniformes</span>`;
+      ? `<span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-xs font-bold">Híbrido: ${s.pCores}P + ${s.eCores}E</span>`
+      : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs font-bold">${s.cores} Núcleos Uniformes</span>`;
 
     return `
       <div class="rounded-xl p-4 bg-slate-900/90 border ${border} space-y-3">
         <div class="flex items-center justify-between pb-2 border-b border-slate-800">
           <div>
-            <span class="text-[10px] font-mono uppercase text-${color}-400 font-bold block">${isBase ? 'CPU BASE (REFERÊNCIA)' : 'CPU CANDIDATO (UPGRADE)'}</span>
+            <span class="text-xs font-mono uppercase text-${color}-400 font-bold block">${isBase ? 'CPU BASE (REFERÊNCIA)' : 'CPU CANDIDATO (UPGRADE)'}</span>
             <h4 class="text-sm font-bold text-white">${cpu.name}</h4>
           </div>
           <div class="text-right">
-            <span class="px-2 py-0.5 rounded ${bgBadge} font-mono text-[11px] font-bold">${s.socket} • ${s.ddr}</span>
-            <span class="block text-[10px] text-slate-400 font-mono mt-0.5">${s.nodeNm}</span>
+            <span class="px-2 py-0.5 rounded ${bgBadge} font-mono text-xs font-bold">${s.socket} • ${s.ddr}</span>
+            <span class="block text-xs text-slate-400 font-mono mt-0.5">${s.nodeNm}</span>
           </div>
         </div>
 
         <!-- Big Core & Thread Count -->
         <div class="grid grid-cols-2 gap-2 text-center">
           <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-            <span class="block text-[10px] uppercase font-mono text-slate-400">Núcleos Físicos</span>
+            <span class="block text-xs uppercase font-mono text-slate-400">Núcleos Físicos</span>
             <span class="text-xl font-mono font-black text-white">${s.cores} Cores</span>
             <div class="mt-1">${hybridBadge}</div>
           </div>
           <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-            <span class="block text-[10px] uppercase font-mono text-slate-400">Threads Lógicas</span>
+            <span class="block text-xs uppercase font-mono text-slate-400">Threads Lógicas</span>
             <span class="text-xl font-mono font-black text-${color}-400">${s.threads} Threads</span>
-            <span class="block text-[10px] font-mono text-slate-400 mt-1">${(s.threads / s.cores).toFixed(1)}T / Núcleo</span>
+            <span class="block text-xs font-mono text-slate-400 mt-1">${(s.threads / s.cores).toFixed(1)}T / Núcleo</span>
           </div>
         </div>
 
         <!-- SMT / Hyper-Threading Details -->
         <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800 space-y-1 text-xs">
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Topologia / Microarquitetura:</span>
-            <span class="font-mono font-bold text-slate-200 text-[11px]">${s.archName}</span>
+            <span class="text-slate-400 text-xs font-medium">Topologia / Microarquitetura:</span>
+            <span class="font-mono font-bold text-slate-200 text-xs">${s.archName}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Tecnologia Multithread:</span>
-            <span class="font-mono font-bold text-slate-200 text-[11px]">${s.smtType}</span>
+            <span class="text-slate-400 text-xs font-medium">Tecnologia Multithread:</span>
+            <span class="font-mono font-bold text-slate-200 text-xs">${s.smtType}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Ganho de Vazão SMT/HT:</span>
-            <span class="font-mono font-bold text-emerald-400 text-[11px]">${s.smtGainPct > 0 ? '+' + s.smtGainPct + '% vazão paralela' : 'Nativo 1:1 (Zero Contenção)'}</span>
+            <span class="text-slate-400 text-xs font-medium">Ganho de Vazão SMT/HT:</span>
+            <span class="font-mono font-bold text-emerald-400 text-xs">${s.smtGainPct > 0 ? '+' + s.smtGainPct + '% vazão paralela' : 'Nativo 1:1 (Zero Contenção)'}</span>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-400 text-[11px] font-medium">Subsistema Cache L3:</span>
-            <span class="font-mono font-bold ${s.isX3D ? 'text-purple-300' : 'text-slate-200'} text-[11px]">${s.l3CacheMB} MB ${s.isX3D ? '🔥 (3D V-Cache)' : ''}</span>
+            <span class="text-slate-400 text-xs font-medium">Subsistema Cache L3:</span>
+            <span class="font-mono font-bold ${s.isX3D ? 'text-purple-300' : 'text-slate-200'} text-xs">${s.l3CacheMB} MB ${s.isX3D ? '🔥 (3D V-Cache)' : ''}</span>
           </div>
         </div>
       </div>
@@ -3362,7 +3362,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
   container.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
       <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold tracking-wider">ARQUITETURA & MULTI-CORE</span>
+        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono text-xs font-bold tracking-wider">ARQUITETURA & MULTI-CORE</span>
         <h3 class="text-base font-bold text-white">Topologia de Núcleos, Threads e Escalabilidade Multi-Core</h3>
       </div>
       <span class="text-xs text-slate-400 font-mono">Cores Físicos vs Threads • SMT / Hyper-Threading • Eficiência por Watt</span>
@@ -3378,37 +3378,37 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
       <!-- Card 1: Multi-Core Score -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Cinebench Multi-Core</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Cinebench Multi-Core</span>
         <span class="text-lg font-mono font-black text-white mt-0.5 block">${c.multiBench.toLocaleString()} pts</span>
-        <span class="text-[11px] font-mono font-bold ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${multiGain >= 0 ? '+' : ''}${multiGain}% vs base</span>
+        <span class="text-xs font-mono font-bold ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${multiGain >= 0 ? '+' : ''}${multiGain}% vs base</span>
       </div>
 
       <!-- Card 2: Single-Core IPC -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Single-Core & IPC</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Single-Core & IPC</span>
         <span class="text-lg font-mono font-black text-white mt-0.5 block">${c.singleBench} pts</span>
-        <span class="text-[11px] font-mono font-bold ${singleGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${singleGain >= 0 ? '+' : ''}${singleGain}% vs base</span>
+        <span class="text-xs font-mono font-bold ${singleGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${singleGain >= 0 ? '+' : ''}${singleGain}% vs base</span>
       </div>
 
       <!-- Card 3: Multi-Threading Speedup -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Escalabilidade Paralela</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Escalabilidade Paralela</span>
         <span class="text-lg font-mono font-black text-sky-300 mt-0.5 block">${c.speedupRatio}×</span>
-        <span class="text-[10px] font-mono text-slate-400">vs ${b.speedupRatio}× na base</span>
+        <span class="text-xs font-mono text-slate-400">vs ${b.speedupRatio}× na base</span>
       </div>
 
       <!-- Card 4: Score per Core -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Pontos por Núcleo</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Pontos por Núcleo</span>
         <span class="text-lg font-mono font-black text-amber-300 mt-0.5 block">${c.scorePerCore} pts/core</span>
-        <span class="text-[10px] font-mono text-slate-400">Base: ${b.scorePerCore} pts/c</span>
+        <span class="text-xs font-mono text-slate-400">Base: ${b.scorePerCore} pts/c</span>
       </div>
 
       <!-- Card 5: Efficiency per Watt -->
       <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 text-center col-span-2 sm:col-span-1">
-        <span class="text-[10px] uppercase font-mono text-slate-400 block">Eficiência Multithread</span>
+        <span class="text-xs uppercase font-mono text-slate-400 block">Eficiência Multithread</span>
         <span class="text-lg font-mono font-black text-emerald-400 mt-0.5 block">${c.scorePerWatt} pts/W</span>
-        <span class="text-[11px] font-mono font-bold ${effGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${effGain >= 0 ? '+' : ''}${effGain}% vs base</span>
+        <span class="text-xs font-mono font-bold ${effGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${effGain >= 0 ? '+' : ''}${effGain}% vs base</span>
       </div>
     </div>
 
@@ -3420,7 +3420,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>🎨 Render 3D (Blender)</span>
           <span class="font-mono ${multiGain >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${multiGain >= 0 ? '-' + Math.round(multiGain / (1 + multiGain / 100)) + '% tempo' : '+tempo'}</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Com <strong>${c.threads} threads</strong>, a renderização divide a imagem em mais tiles paralelos, reduzindo a fila de exportação.
         </p>
       </div>
@@ -3431,7 +3431,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>⚙️ Compilação (Rust/C++)</span>
           <span class="font-mono text-sky-300 font-bold">${c.threads} workers (-j ${c.threads})</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Compiladores modernos escalam linearmente com threads. Ganho de até <strong>${Math.round(threadGain)}%</strong> em builds limpos.
         </p>
       </div>
@@ -3442,7 +3442,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>🎬 Edição 4K (Premiere/DaVinci)</span>
           <span class="font-mono text-amber-300 font-bold">Timeline Fluida</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Decodificação em tempo real de H.264/HEVC 10-bit e efeitos pesados sem perder quadros durante a pré-visualização.
         </p>
       </div>
@@ -3453,7 +3453,7 @@ function renderCpuArchitectureComparison(baseCpu, candCpu) {
           <span>🛡️ Frame Pacing & 1% Lows</span>
           <span class="font-mono text-purple-300 font-bold">Zero Stutter</span>
         </div>
-        <p class="text-[11px] text-slate-400 leading-snug">
+        <p class="text-xs text-slate-400 leading-snug">
           Núcleos sobressalentes absorvem Discord, OBS e navegador sem disputar ciclos com o jogo em execução.
         </p>
       </div>
@@ -3529,7 +3529,7 @@ function renderCpuDuelAnalysis() {
           <div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-lg">✅</div>
           <div>
             <span class="font-bold text-sm text-white block">Mesmo Socket (${bSpecs.socket}) & Plataforma 100% Compatível</span>
-            <p class="text-[11px] text-slate-300 mt-0.5">Você não precisa trocar placa-mãe nem memórias RAM. Todo o investimento vai 100% para o salto de processamento!</p>
+            <p class="text-xs text-slate-300 mt-0.5">Você não precisa trocar placa-mãe nem memórias RAM. Todo o investimento vai 100% para o salto de processamento!</p>
           </div>
         </div>
         <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold text-xs">Custo Plataforma: ${fmtBRL(0)}</span>
@@ -3538,19 +3538,19 @@ function renderCpuDuelAnalysis() {
       platformBox.className = "mt-5 p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs text-slate-300 space-y-2";
       let partsHTML = [];
       if (rel.migration.needsMobo) {
-        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-[11px] text-amber-300">🔲 Placa-Mãe ${cSpecs.socket}: +${fmtBRL(rel.migration.moboCost)}</span>`);
+        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-xs text-amber-300">🔲 Placa-Mãe ${cSpecs.socket}: +${fmtBRL(rel.migration.moboCost)}</span>`);
       }
       if (rel.migration.needsRam) {
-        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-[11px] text-sky-300">💾 32GB DDR5: +${fmtBRL(rel.migration.ramCost)}</span>`);
+        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-xs text-sky-300">💾 32GB DDR5: +${fmtBRL(rel.migration.ramCost)}</span>`);
       }
       if (rel.migration.needsCooler) {
-        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-[11px] text-purple-300">❄️ Cooler 105W+: +${fmtBRL(rel.migration.coolerCost)}</span>`);
+        partsHTML.push(`<span class="px-2 py-1 rounded bg-slate-900 border border-amber-500/30 font-mono text-xs text-purple-300">❄️ Cooler 105W+: +${fmtBRL(rel.migration.coolerCost)}</span>`);
       }
       platformBox.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <span class="text-amber-400 font-bold text-sm">📦 Requer Migração de Plataforma:</span>
-            <span class="text-[11px] text-slate-400">Mudança de socket (${bSpecs.socket} → ${cSpecs.socket}) ou memórias</span>
+            <span class="text-xs text-slate-400">Mudança de socket (${bSpecs.socket} → ${cSpecs.socket}) ou memórias</span>
           </div>
           <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold text-xs">Total Plataforma: +${fmtBRL(rel.migration.totalCost)}</span>
         </div>
@@ -3756,17 +3756,17 @@ function renderCpuDuelAnalysis() {
       <div class="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-xs">
         <span class="text-emerald-300 font-bold block">Pechincha / Excelente</span>
         <span class="font-mono text-white text-sm">≤ +${fmtBRL(rel.stealDelta)}</span>
-        <p class="text-[10px] text-slate-400 mt-0.5">Ganho de performance a custo proporcionalmente menor que o da base.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Ganho de performance a custo proporcionalmente menor que o da base.</p>
       </div>
       <div class="p-2.5 rounded-lg bg-sky-950/30 border border-sky-500/30 text-xs">
         <span class="text-sky-300 font-bold block">Paridade Justa Linear</span>
         <span class="font-mono text-white text-sm">≤ +${fmtBRL(rel.fairMaxDelta)}</span>
-        <p class="text-[10px] text-slate-400 mt-0.5">Preço adicional estritamente correspondente a +${rel.perfGainPct.toFixed(1)}% de performance.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Preço adicional estritamente correspondente a +${rel.perfGainPct.toFixed(1)}% de performance.</p>
       </div>
       <div class="p-2.5 rounded-lg bg-amber-950/30 border border-amber-500/30 text-xs">
         <span class="text-amber-300 font-bold block">Ágio de Entusiasta</span>
         <span class="font-mono text-white text-sm">≤ +${fmtBRL(rel.stretchMaxDelta)}</span>
-        <p class="text-[10px] text-slate-400 mt-0.5">Ágio de até 25% aceitável se você necessita de pico de FPS imediatamente.</p>
+        <p class="text-xs text-slate-400 mt-0.5">Ágio de até 25% aceitável se você necessita de pico de FPS imediatamente.</p>
       </div>
     `;
   }
@@ -3998,8 +3998,8 @@ function renderCBTable() {
 
     const diffCB = g._myCBScore - (g.hb_cb_score || 0);
     const diffCBHtml = diffCB > 0
-      ? `<span class="text-[10px] text-emerald-400 font-mono">(+${diffCB} c/ IA)</span>`
-      : (diffCB < 0 ? `<span class="text-[10px] text-rose-400 font-mono">(${diffCB} c/ IA)</span>` : '');
+      ? `<span class="text-xs text-emerald-400 font-mono">(+${diffCB} c/ IA)</span>`
+      : (diffCB < 0 ? `<span class="text-xs text-rose-400 font-mono">(${diffCB} c/ IA)</span>` : '');
 
     const dotClass = g.vram_gb >= 24 ? 'bg-amber-400 ring-2 ring-amber-500/40' :
                      g.vram_gb >= 16 ? 'bg-purple-400 ring-2 ring-purple-500/40' :
@@ -4007,16 +4007,16 @@ function renderCBTable() {
                      g.vram_gb >= 8  ? 'bg-emerald-400 ring-2 ring-emerald-500/40' :
                                        'bg-slate-400 ring-2 ring-slate-500/40';
 
-    const vramCloudBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-sm ml-2">
+    const vramCloudBadge = `<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-slate-800/90 text-slate-200 border border-slate-700/80 shadow-sm ml-2">
       <span class="w-2 h-2 rounded-full ${dotClass}"></span>
       ${g.vram_gb} GB ${g.memory_type}
-      <span class="text-slate-400 font-normal text-[10px]">(${g.bandwidth_gbs} GB/s)</span>
+      <span class="text-slate-400 font-normal text-xs">(${g.bandwidth_gbs} GB/s)</span>
     </span>`;
 
-    const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-[10px]">✨ ${getGpuTechProfile(g).badge}</span>` : '';
-    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px]" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
+    const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-xs">✨ ${getGpuTechProfile(g).badge}</span>` : '';
+    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
     const couponBadge = g.coupon
-      ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-[10px] hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
+      ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-xs hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
       : '';
 
     const gComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(g) : (g.gaming_score || 1000);
@@ -4030,11 +4030,11 @@ function renderCBTable() {
 
       verdictCellHTML = `
         <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
-          <div class="flex items-center justify-between gap-1 text-[10px]">
+          <div class="flex items-center justify-between gap-1 text-xs">
             <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${isBaseCard ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : (badgeMap[rel.color] || 'bg-slate-800 text-slate-300')}">
               ${isBaseCard ? 'PLACA BASE' : (rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA')))}
             </span>
-            <span class="text-[9px] text-slate-400 font-mono">Topo: ${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'}</span>
+            <span class="text-xs text-slate-400 font-mono">Topo: ${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'}</span>
           </div>
 
           <!-- Bar 1: Desempenho Absoluto (vs Topo) -->
@@ -4043,7 +4043,7 @@ function renderCBTable() {
             <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho Absoluto: ${absPerfPct.toFixed(0)}% do Topo (${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'})">
               <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300" style="width: ${absPerfPct.toFixed(1)}%;"></div>
             </div>
-            <span class="text-[9px] font-mono text-slate-400 w-7 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
+            <span class="text-xs font-mono text-slate-400 w-7 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
           </div>
 
           <!-- Bar 2: Preço Absoluto (vs Teto) -->
@@ -4052,10 +4052,10 @@ function renderCBTable() {
             <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${absPricePct.toFixed(0)}% do Teto (${fmtBRLShort(extremes.maxPrice)})">
               <div class="h-full rounded-full ${absPricePct < 25 ? 'bg-emerald-400' : (absPricePct < 50 ? 'bg-sky-400' : (absPricePct < 75 ? 'bg-amber-400' : 'bg-rose-400'))} transition-all duration-300" style="width: ${absPricePct.toFixed(1)}%;"></div>
             </div>
-            <span class="text-[9px] font-mono text-slate-400 w-7 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
+            <span class="text-xs font-mono text-slate-400 w-7 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
           </div>
 
-          <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+          <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
             <span class="font-bold ${isBaseCard ? 'text-emerald-400' : (rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400')}">
               ${isBaseCard ? '100% Base' : `${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% vs Base`}
             </span>
@@ -4070,8 +4070,8 @@ function renderCBTable() {
       if (g.slug === baseGpu.slug) {
         verdictCellHTML = `
           <div class="flex flex-col items-end gap-1 font-mono">
-            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-bold">100% BASE</span>
-            <span class="text-[10px] text-slate-500">Referência</span>
+            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-xs font-bold">100% BASE</span>
+            <span class="text-xs text-slate-500">Referência</span>
           </div>
         `;
       } else {
@@ -4091,11 +4091,11 @@ function renderCBTable() {
 
         verdictCellHTML = `
           <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
-            <div class="flex items-center justify-between gap-1 text-[10px]">
+            <div class="flex items-center justify-between gap-1 text-xs">
               <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">
                 ${rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA'))}
               </span>
-              <span class="text-[9px] text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
+              <span class="text-xs text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
             </div>
 
             <!-- Bar 1: Desempenho Relativo -->
@@ -4116,7 +4116,7 @@ function renderCBTable() {
               </div>
             </div>
 
-            <div class="flex items-center justify-between text-[10px] text-slate-300 font-mono pt-0.5">
+            <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
               <span class="font-bold ${rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400'}">
                 ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf
               </span>
@@ -4651,7 +4651,7 @@ function renderPCBuilder() {
     <!-- GPU ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-sky-500/40 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-sky-400 font-bold block">Placa de Vídeo (GPU)</span>
+        <span class="text-xs font-mono uppercase text-sky-400 font-bold block">Placa de Vídeo (GPU)</span>
         <span class="text-xs text-slate-300 font-semibold">Peça Principal</span>
       </div>
       <div class="md:col-span-5">
@@ -4659,15 +4659,15 @@ function renderPCBuilder() {
         <input type="text" value="${curGpu.name || ''}" oninput="updateBuildField('gpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" placeholder="Nome customizado da GPU" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">TDP / Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">TDP / Consumo (W)</label>
         <input type="number" value="${curGpu.tdp || 0}" oninput="updateBuildField('gpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curGpu.price || 0}" oninput="updateBuildField('gpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curGpu.owned ? 'checked' : ''} onchange="updateBuildField('gpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4675,7 +4675,7 @@ function renderPCBuilder() {
     <!-- CPU ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block">Processador (CPU)</span>
+        <span class="text-xs font-mono uppercase text-slate-400 font-bold block">Processador (CPU)</span>
         <span class="text-xs text-slate-300 font-semibold">Cérebro / Socket</span>
       </div>
       <div class="md:col-span-5">
@@ -4683,15 +4683,15 @@ function renderPCBuilder() {
         <input type="text" value="${curCpu.name || ''}" oninput="updateBuildField('cpu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">TDP / Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">TDP / Consumo (W)</label>
         <input type="number" value="${curCpu.tdp || 0}" oninput="updateBuildField('cpu', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curCpu.price || 0}" oninput="updateBuildField('cpu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curCpu.owned ? 'checked' : ''} onchange="updateBuildField('cpu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4699,7 +4699,7 @@ function renderPCBuilder() {
     <!-- MOTHERBOARD ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block">Placa-Mãe</span>
+        <span class="text-xs font-mono uppercase text-slate-400 font-bold block">Placa-Mãe</span>
         <span class="text-xs text-slate-300 font-semibold">Chipset / VRM</span>
       </div>
       <div class="md:col-span-5">
@@ -4707,15 +4707,15 @@ function renderPCBuilder() {
         <input type="text" value="${curMobo.name || ''}" oninput="updateBuildField('mobo', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">Consumo (W)</label>
         <input type="number" value="${curMobo.tdp || 0}" oninput="updateBuildField('mobo', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curMobo.price || 0}" oninput="updateBuildField('mobo', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curMobo.owned ? 'checked' : ''} onchange="updateBuildField('mobo', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4723,7 +4723,7 @@ function renderPCBuilder() {
     <!-- RAM ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-purple-400 font-bold block">Memória RAM</span>
+        <span class="text-xs font-mono uppercase text-purple-400 font-bold block">Memória RAM</span>
         <span class="text-xs text-slate-300 font-semibold">Crítico p/ IA & Multitarefa</span>
       </div>
       <div class="md:col-span-5">
@@ -4731,15 +4731,15 @@ function renderPCBuilder() {
         <input type="text" value="${curRam.name || ''}" oninput="updateBuildField('ram', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">Consumo (W)</label>
         <input type="number" value="${curRam.tdp || 0}" oninput="updateBuildField('ram', 'tdp', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curRam.price || 0}" oninput="updateBuildField('ram', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curRam.owned ? 'checked' : ''} onchange="updateBuildField('ram', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4747,7 +4747,7 @@ function renderPCBuilder() {
     <!-- PSU ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-amber-500/40 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-amber-400 font-bold block">Fonte (PSU)</span>
+        <span class="text-xs font-mono uppercase text-amber-400 font-bold block">Fonte (PSU)</span>
         <span class="text-xs text-slate-300 font-semibold">Potência Total (W)</span>
       </div>
       <div class="md:col-span-5">
@@ -4755,15 +4755,15 @@ function renderPCBuilder() {
         <input type="text" value="${curPsu.name || ''}" oninput="updateBuildField('psu', 'name', this.value)" class="w-full bg-slate-950/60 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-amber-300 block">Potência Fonte (W)</label>
+        <label class="text-xs font-mono text-amber-300 block">Potência Fonte (W)</label>
         <input type="number" value="${curPsu.watts || 0}" oninput="updateBuildField('psu', 'watts', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-amber-500/50 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-300" step="50" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curPsu.price || 0}" oninput="updateBuildField('psu', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curPsu.owned ? 'checked' : ''} onchange="updateBuildField('psu', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4771,22 +4771,22 @@ function renderPCBuilder() {
     <!-- STORAGE & COOLING ROW -->
     <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
       <div class="md:col-span-2">
-        <span class="text-[10px] font-mono uppercase text-slate-400 font-bold block">SSD, Cooler & Fans</span>
+        <span class="text-xs font-mono uppercase text-slate-400 font-bold block">SSD, Cooler & Fans</span>
         <span class="text-xs text-slate-300 font-semibold">Restante do Setup</span>
       </div>
       <div class="md:col-span-5">
         <input type="text" value="${curStorage.name || ''}" oninput="updateBuildField('storage', 'name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Consumo (W)</label>
+        <label class="text-xs font-mono text-slate-400 block">Consumo (W)</label>
         <input type="number" value="${(curStorage.tdp || 0) + (curCooling.tdp || 0)}" oninput="updateBuildField('storage', 'tdp', parseFloat(this.value)||0); if (STATE.build.cooling) STATE.build.cooling.tdp=0;" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-amber-400" />
       </div>
       <div class="md:col-span-2">
-        <label class="text-[10px] font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
+        <label class="text-xs font-mono text-slate-400 block">Preço (<span class="currency-sym">${STATE.market?.monetary?.currency_symbol || 'R$'}</span>)</label>
         <input type="number" value="${curStorage.price || 0}" oninput="updateBuildField('storage', 'price', parseFloat(this.value)||0)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-mono font-bold text-emerald-400" step="50" />
       </div>
       <div class="md:col-span-1 flex flex-col items-center">
-        <label class="text-[10px] font-mono text-slate-400 mb-1">Já Tenho?</label>
+        <label class="text-xs font-mono text-slate-400 mb-1">Já Tenho?</label>
         <input type="checkbox" ${curStorage.owned ? 'checked' : ''} onchange="updateBuildField('storage', 'owned', this.checked)" class="w-4 h-4 accent-emerald-500 cursor-pointer" />
       </div>
     </div>
@@ -4912,17 +4912,17 @@ function updateBuilderPowerAndDiagnostics() {
   if (pill && advice && bar) {
     if (psuWatts >= recommendedPSU) {
       bar.className = 'h-full rounded-full transition-all duration-300 bg-emerald-500';
-      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+      pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
       pill.textContent = '✅ FOLGA SEGURA';
       advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> opera com <strong>${loadPct}% de carga típica</strong> (${typicalLoad}W), suportando com folga picos transientes de até ${peakTransient}W.`;
     } else if (psuWatts >= peakTransient) {
       bar.className = 'h-full rounded-full transition-all duration-300 bg-amber-500';
-      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40';
       pill.textContent = '⚠️ NO LIMITE';
       advice.innerHTML = `Sua fonte de <strong>${psuWatts}W</strong> aguenta os ${typicalLoad}W, mas fica apertada para picos transientes (${peakTransient}W). Recomendamos uma fonte de <strong>${recommendedPSU}W</strong>.`;
     } else {
       bar.className = 'h-full rounded-full transition-all duration-300 bg-rose-600';
-      pill.className = 'text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
+      pill.className = 'text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
       pill.textContent = '🚨 FONTE INSUFICIENTE';
       advice.innerHTML = `<strong>Perigo de desligamento:</strong> O consumo de pico (${peakTransient}W) supera sua fonte de ${psuWatts}W! Troque por uma fonte de pelo menos <strong>${recommendedPSU}W</strong>.`;
     }
@@ -4953,11 +4953,11 @@ function updateBuilderPowerAndDiagnostics() {
         <div class="flex items-center justify-between bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
           <div>
             <span class="text-xs font-bold text-white block">${p.name}</span>
-            <span class="text-[10px] font-mono text-amber-300">${p.watts}W • ${p.efficiency || '80 Plus Bronze'}</span>
+            <span class="text-xs font-mono text-amber-300">${p.watts}W • ${p.efficiency || '80 Plus Bronze'}</span>
           </div>
           <div class="text-right">
             <span class="text-xs font-mono font-bold text-emerald-400 block">${fmtBRL(p.price_brl)}</span>
-            ${p.offer_url ? `<a href="${p.offer_url}" target="_blank" class="text-[10px] text-sky-400 hover:underline">Ver Oferta ↗</a>` : ''}
+            ${p.offer_url ? `<a href="${p.offer_url}" target="_blank" class="text-xs text-sky-400 hover:underline">Ver Oferta ↗</a>` : ''}
           </div>
         </div>
       `).join('');
@@ -4984,7 +4984,7 @@ function updateBuilderPowerAndDiagnostics() {
       missingHTML.push(`
         <div class="flex items-center justify-between py-1.5 px-2.5 rounded bg-slate-900/50 border border-slate-800/70 opacity-75">
           <span>✅ <strong>${p.label}:</strong> ${p.item.name}</span>
-          <span class="font-mono text-[11px] text-emerald-400">Já Possui</span>
+          <span class="font-mono text-xs text-emerald-400">Já Possui</span>
         </div>
       `);
     } else {
@@ -5088,7 +5088,7 @@ function renderSimulatorLegacy() {
           <span>${gm.title}</span>
           <span class="font-mono text-emerald-400">+${Math.round(((fpsA / Math.max(1, fpsB)) - 1) * 100)}%</span>
         </div>
-        <div class="space-y-1 text-[11px] font-mono">
+        <div class="space-y-1 text-xs font-mono">
           <div class="flex items-center gap-2">
             <span class="w-24 truncate text-sky-300">${gpuA.name}:</span>
             <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
@@ -5151,8 +5151,8 @@ function renderSimulatorLegacy() {
         <span class="flex items-center gap-1">${robotSvg} ${w.title}</span>
         <span class="font-mono text-purple-300 font-bold">${w.gain >= 0 ? '+' : ''}${w.gain}%</span>
       </div>
-      <div class="text-[11px] text-slate-400">${w.desc}</div>
-      <div class="space-y-1 text-[11px] font-mono pt-1">
+      <div class="text-xs text-slate-400">${w.desc}</div>
+      <div class="space-y-1 text-xs font-mono pt-1">
         <div class="flex items-center gap-2">
           <span class="w-24 truncate text-sky-300">${gpuA.name}:</span>
           <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
@@ -5168,7 +5168,7 @@ function renderSimulatorLegacy() {
           <span class="w-28 text-right text-slate-300">${w.valB}</span>
         </div>
       </div>
-      <div class="text-[10px] text-purple-300/90 pt-0.5">${w.note}</div>
+      <div class="text-xs text-purple-300/90 pt-0.5">${w.note}</div>
     </div>
   `).join('');
 
@@ -5214,8 +5214,8 @@ function renderSimulatorLegacy() {
           <span class="flex items-center gap-1">${circuitSvg} ${sf.title}</span>
           <span class="font-mono text-amber-400 font-bold">${gain >= 0 ? '+' : ''}${gain}%</span>
         </div>
-        <div class="text-[11px] text-slate-400">${sf.desc}</div>
-        <div class="space-y-1 text-[11px] font-mono pt-1">
+        <div class="text-xs text-slate-400">${sf.desc}</div>
+        <div class="space-y-1 text-xs font-mono pt-1">
           <div class="flex items-center gap-2">
             <span class="w-24 truncate text-sky-300">${gpuA.name}:</span>
             <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
@@ -5231,7 +5231,7 @@ function renderSimulatorLegacy() {
             <span class="w-28 text-right text-slate-300">${sB}${sf.unit}</span>
           </div>
         </div>
-        <div class="text-[10px] text-amber-300/90 pt-0.5">${sf.note}</div>
+        <div class="text-xs text-amber-300/90 pt-0.5">${sf.note}</div>
       </div>
     `;
   }).join('');

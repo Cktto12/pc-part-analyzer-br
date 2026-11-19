@@ -657,7 +657,7 @@ function getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB) {
     parts.push(`
       <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/50 text-xs text-amber-100 space-y-1.5">
         <div class="font-bold text-amber-300">💡 Análise de Arquitetura do Processador (${cpu.name})</div>
-        <ul class="list-disc pl-5 space-y-0.5 text-[11px]">
+        <ul class="list-disc pl-5 space-y-0.5 text-xs">
           <li>Este processador possui índice de jogos estimado em ${cpuIndex}/100 frente aos modelos topo de linha de alta frequência (como 7800X3D/9800X3D). Em 1080p competitivo com placas muito rápidas, o clock single-core dita o teto de quadros.</li>
           <li>Em <strong>1440p ou 4K</strong>, ou com tecnologias de upscaling ativo (<strong>DLSS / FSR</strong>), a exigência migra para a GPU, diminuindo a sensibilidade ao processador.</li>
           <li>Dica de calibração: você pode preencher o campo <strong>Meu FPS Medido</strong> na tabela abaixo para calibrar com precisão os ganhos no seu hardware real.</li>
@@ -668,7 +668,7 @@ function getCpuArchitectureAdviceHTML(cpu, gpuA, gpuB) {
     const narrow = [gpuA, gpuB].filter(g => g && (PCIE_X8_GPUS.has(g.slug) || PCIE_X4_GPUS.has(g.slug)));
     if (narrow.length) {
       parts.push(`
-        <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-[11px] text-sky-100 mt-2">
+        <div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-xs text-sky-100 mt-2">
           <strong>🔌 Interface PCIe das Placas:</strong> ${narrow.map(g => `<strong>${g.name}</strong> (${PCIE_X4_GPUS.has(g.slug) ? 'x4' : 'x8'})`).join(', ')}
           utilizam barramento elétrico reduzido (x4/x8). Em sistemas com PCIe 3.0 isso limita a largura de banda e pode impactar fluidez quando a VRAM transborda. Em placas x16 completas (RTX 5070, 9070 XT), o barramento opera folgado.
         </div>`);
@@ -687,7 +687,7 @@ function fpsBarRow(label, colorText, colorBar, fps, maxFps, bold, monitorCap) {
         <div class="h-full ${colorBar} rounded-full" style="width:${Math.min(100, (fps / maxFps) * 100)}%"></div>
         ${monitorCap < 999 ? `<div class="absolute top-0 h-full w-px bg-white/70" style="left:${Math.min(100, (monitorCap / maxFps) * 100)}%"></div>` : ''}
       </div>
-      <span class="w-20 text-right ${bold ? 'font-bold text-white' : 'text-slate-300'}">${fps} FPS${over ? '<span class="text-[9px] text-slate-500">*</span>' : ''}</span>
+      <span class="w-20 text-right ${bold ? 'font-bold text-white' : 'text-slate-300'}">${fps} FPS${over ? '<span class="text-xs text-slate-500">*</span>' : ''}</span>
     </div>`;
 }
 
@@ -708,19 +708,19 @@ function renderSimulatorControls() {
 
   // Relevant game chips + editor
   const chips = STATE.games.map(g => `
-    <button onclick="toggleRelevantGame('${g.id}')" class="px-2.5 py-1 rounded-full text-[11px] font-semibold border transition cursor-pointer ${g.relevant ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-slate-900 text-slate-500 border-slate-700 hover:text-slate-300'}">
+    <button onclick="toggleRelevantGame('${g.id}')" class="px-2.5 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${g.relevant ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50' : 'bg-slate-900 text-slate-500 border-slate-700 hover:text-slate-300'}">
       ${g.relevant ? '✓ ' : ''}${g.title}${g.measured ? ' 📏' : ''}
     </button>`).join('');
 
   const editor = !STATE.showGameEditor ? '' : `
     <div class="w-full mt-2 p-3 rounded-lg bg-slate-950/80 border border-slate-800 overflow-x-auto">
-      <p class="text-[10px] text-slate-400 mb-2">
+      <p class="text-xs text-slate-400 mb-2">
         <strong>FPS ref.</strong> = média numa RTX 5060 em 1440p nativo sem limite de CPU •
         <strong>Teto CPU</strong> = FPS máximo com Ryzen 7 9800X3D (escala pelo índice do seu CPU) •
         <strong>Meu FPS medido</strong> = o que você vê hoje no seu setup atual na resolução selecionada (opcional, calibra o jogo).
       </p>
-      <table class="w-full text-[11px]">
-        <thead><tr class="text-slate-400 font-mono text-[10px] uppercase">
+      <table class="w-full text-xs">
+        <thead><tr class="text-slate-400 font-mono text-xs uppercase">
           <th class="text-left py-1">Jogo</th><th>FPS ref. (5060 1440p)</th><th>Teto CPU (9800X3D)</th><th>VRAM 1440p (GB)</th><th>Meu FPS medido</th><th></th>
         </tr></thead>
         <tbody>
@@ -736,14 +736,14 @@ function renderSimulatorControls() {
         </tbody>
       </table>
       <div class="flex gap-3 mt-2">
-        <button onclick="addCustomGame()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[11px] font-semibold cursor-pointer">+ Adicionar jogo</button>
-        <button onclick="resetGamesToDefault()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[11px] cursor-pointer">Restaurar padrão</button>
+        <button onclick="addCustomGame()" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 text-xs font-semibold cursor-pointer">+ Adicionar jogo</button>
+        <button onclick="resetGamesToDefault()" class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-xs cursor-pointer">Restaurar padrão</button>
       </div>
     </div>`;
 
   document.getElementById('sim-relevant-games-chips').innerHTML = `
     ${chips}
-    <button onclick="toggleGameEditor()" class="px-2.5 py-1 rounded-full text-[11px] font-bold border border-sky-500/50 text-sky-300 bg-sky-500/10 cursor-pointer">⚙️ ${STATE.showGameEditor ? 'Fechar editor' : 'Editar / adicionar jogos'}</button>
+    <button onclick="toggleGameEditor()" class="px-2.5 py-1 rounded-full text-xs font-bold border border-sky-500/50 text-sky-300 bg-sky-500/10 cursor-pointer">⚙️ ${STATE.showGameEditor ? 'Fechar editor' : 'Editar / adicionar jogos'}</button>
     ${editor}`;
 }
 
@@ -797,7 +797,7 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
   panel.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
       <div class="flex items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] font-bold tracking-wider">WORKSTATION & PRODUTIVIDADE</span>
+        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-xs font-bold tracking-wider">WORKSTATION & PRODUTIVIDADE</span>
         <h3 class="text-base font-bold text-white">Comparativo de Produtividade: Setup A vs Setup B</h3>
       </div>
       <div class="flex items-center gap-2 text-xs font-mono">
@@ -815,22 +815,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>🎨 Render 3D (Blender)</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${blenderGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${blenderGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${blenderGain >= 0 ? 'Setup A ' + blenderGain + '% +rápido' : 'Setup B +' + Math.abs(blenderGain) + '% +rápido'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Cycles Classroom 1080p c/ OptiX/HIP + CPU Tile Assist:</p>
+        <p class="text-xs text-slate-400">Cycles Classroom 1080p c/ OptiX/HIP + CPU Tile Assist:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${blenderSecA}s <span class="text-[10px] text-slate-400">(${gpuA.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
+            <span class="font-bold text-white">${blenderSecA}s <span class="text-xs text-slate-400">(${gpuA.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${blenderSecB}s <span class="text-[10px] text-slate-400">(${gpuB.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
+            <span class="font-bold text-white">${blenderSecB}s <span class="text-xs text-slate-400">(${gpuB.brand === 'NVIDIA' ? 'OptiX' : 'HIP'})</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           Cinebench Multi: <strong>${sA.multiBench} pts</strong> (A) vs <strong>${sB.multiBench} pts</strong> (B)
         </div>
       </div>
@@ -841,22 +841,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>🎬 Edição & Export 4K</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${exportGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${exportGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${exportGain >= 0 ? 'Setup A ' + exportGain + '% +rápido' : 'Setup B +' + Math.abs(exportGain) + '% +rápido'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Exportação de timeline 10 min 4K H.264/HEVC/ProRes:</p>
+        <p class="text-xs text-slate-400">Exportação de timeline 10 min 4K H.264/HEVC/ProRes:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${exportSecA}s <span class="text-[10px] text-slate-400">(${isDualEncA ? 'Dual NVENC' : 'Single Enc'})</span></span>
+            <span class="font-bold text-white">${exportSecA}s <span class="text-xs text-slate-400">(${isDualEncA ? 'Dual NVENC' : 'Single Enc'})</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${exportSecB}s <span class="text-[10px] text-slate-400">(${isDualEncB ? 'Dual NVENC' : 'Single Enc'})</span></span>
+            <span class="font-bold text-white">${exportSecB}s <span class="text-xs text-slate-400">(${isDualEncB ? 'Dual NVENC' : 'Single Enc'})</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           Timeline Fluida: ${sA.cores}C/${sA.threads}T (A) vs ${sB.cores}C/${sB.threads}T (B)
         </div>
       </div>
@@ -867,22 +867,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>⚙️ Compilação & Dev</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${buildGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${buildGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${buildGain >= 0 ? 'Setup A +' + buildGain + '%' : 'Setup B +' + Math.abs(buildGain) + '%'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Vazão do compilador Rust/C++ em linhas de código:</p>
+        <p class="text-xs text-slate-400">Vazão do compilador Rust/C++ em linhas de código:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${klocA} kLOC/s <span class="text-[10px] text-slate-400">(build: ${buildSecA}s)</span></span>
+            <span class="font-bold text-white">${klocA} kLOC/s <span class="text-xs text-slate-400">(build: ${buildSecA}s)</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${klocB} kLOC/s <span class="text-[10px] text-slate-400">(build: ${buildSecB}s)</span></span>
+            <span class="font-bold text-white">${klocB} kLOC/s <span class="text-xs text-slate-400">(build: ${buildSecB}s)</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           Workers paralelos: <strong>-j ${sA.threads}</strong> (A) vs <strong>-j ${sB.threads}</strong> (B)
         </div>
       </div>
@@ -893,22 +893,22 @@ function renderSimulatorWorkstationComparison(gpuA, cpuA, gpuB, cpuB) {
           <span class="text-xs font-bold text-white flex items-center gap-1.5">
             <span>⚡ Simulação Técnica & IA</span>
           </span>
-          <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${scnGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
+          <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${scnGain >= 0 ? 'bg-sky-500/20 text-sky-300' : 'bg-emerald-500/20 text-emerald-300'}">
             ${scnGain >= 0 ? 'Setup A +' + scnGain + '%' : 'Setup B +' + Math.abs(scnGain) + '%'}
           </span>
         </div>
-        <p class="text-[11px] text-slate-400">Matrizes esparsas OpenDSS / Monte Carlo & 14B Q4:</p>
+        <p class="text-xs text-slate-400">Matrizes esparsas OpenDSS / Monte Carlo & 14B Q4:</p>
         <div class="space-y-1.5 pt-1 font-mono text-xs">
           <div class="flex justify-between items-center">
             <span class="text-sky-300 truncate">Setup A:</span>
-            <span class="font-bold text-white">${scnMinA} c/min <span class="text-[10px] text-slate-400">(${tokA} tok/s)</span></span>
+            <span class="font-bold text-white">${scnMinA} c/min <span class="text-xs text-slate-400">(${tokA} tok/s)</span></span>
           </div>
           <div class="flex justify-between items-center">
             <span class="text-emerald-300 truncate">Setup B:</span>
-            <span class="font-bold text-white">${scnMinB} c/min <span class="text-[10px] text-slate-400">(${tokB} tok/s)</span></span>
+            <span class="font-bold text-white">${scnMinB} c/min <span class="text-xs text-slate-400">(${tokB} tok/s)</span></span>
           </div>
         </div>
-        <div class="pt-1 text-[10px] text-slate-400 border-t border-slate-800/80">
+        <div class="pt-1 text-xs text-slate-400 border-t border-slate-800/80">
           VRAM + Memória: ${gpuA.vram_gb}GB + ${sA.ddr} vs ${gpuB.vram_gb}GB + ${sB.ddr}
         </div>
       </div>
@@ -1120,7 +1120,7 @@ function renderSimulatorRadarChart(gpuA, cpuA, gpuB, cpuB, mode, opts = {}) {
         <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex items-center justify-between">
           <div class="flex items-center gap-1.5">
             <span class="w-1.5 h-1.5 rounded-full ${aWins && !bWins ? 'bg-sky-400' : (bWins && !aWins ? 'bg-emerald-400' : 'bg-slate-500')}"></span>
-            <span class="text-slate-300 font-semibold text-[11px]">${lbl}</span>
+            <span class="text-slate-300 font-semibold text-xs">${lbl}</span>
           </div>
           <div class="flex items-center gap-2 ui-mono text-xs">
             <span class="${aWins ? 'font-bold' : 'text-slate-400'}" style="${aWins ? 'color:var(--ui-compare-a-text);' : ''}">${data.rawA[i]} <span class="text-xs text-slate-500">${data.units[i]}</span></span>
@@ -1222,9 +1222,9 @@ function renderSimulatorResultsOnly() {
   if (adviceBanner) adviceBanner.innerHTML = `
     <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
       <div class="flex flex-wrap items-center gap-2">
-        <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold">SETUP A: ${gpuA.name} + ${cpuA.name}</span>
+        <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-xs font-bold">SETUP A: ${gpuA.name} + ${cpuA.name}</span>
         <span class="text-slate-500">|</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold">SETUP B: ${gpuB.name} + ${cpuB.name}</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold">SETUP B: ${gpuB.name} + ${cpuB.name}</span>
         <span class="text-slate-400 hidden sm:inline">• Monitor ${getMonitorLabel()} (${cap} Hz) • ${dlssMode === 'perceived' ? 'Realista DLSS 4' : dlssMode}</span>
       </div>
       <button onclick="toggleXeonDetails()" id="btn-toggle-xeon-details" class="text-xs text-sky-400 hover:text-sky-300 underline cursor-pointer">
@@ -1234,7 +1234,7 @@ function renderSimulatorResultsOnly() {
     <div id="sim-xeon-details-box" class="${STATE.showXeonDetails ? '' : 'hidden'} mt-2 space-y-2">
       ${xeonWarnA}
       ${xeonWarnB !== xeonWarnA ? xeonWarnB : ''}
-      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-[11px] text-slate-300">
+      <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300">
         ✨ <strong>DLSS 4 + Multi-Frame Generation (MFG 3×/4×):</strong> A série <strong>RTX 50 (Blackwell)</strong> gera até 4× quadros via Transformer diretamente na GPU após a fila de renderização do processador, aliviando o teto de FPS da CPU para preencher monitores de alta taxa de atualização.
       </div>
     </div>`;
@@ -1254,35 +1254,35 @@ function renderSimulatorResultsOnly() {
       const limitedBy = `<span class="${r.bottleneckType === 'cpu' ? 'text-amber-300' : (r.bottleneckType === 'gpu' ? 'text-sky-300' : 'text-emerald-300')}">${r.bottleneckLabel}</span>`;
       const visible = Math.min(shown, cap);
       const fgBadge = r.canUseFG
-        ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[9px]">${r.tech.badge} (${r.activeFgMult}× ativo)</span>`
-        : `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[9px]">${r.tech.badge}</span>`;
+        ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs">${r.tech.badge} (${r.activeFgMult}× ativo)</span>`
+        : `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs">${r.tech.badge}</span>`;
       const latColor = r.latencyMs <= 24 ? 'text-emerald-400' : r.latencyMs <= 38 ? 'text-amber-300' : 'text-rose-400';
       return `
         <div class="p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 space-y-1.5">
           <div class="flex flex-wrap justify-between items-center gap-1">
             <div class="flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 ${color}">${setupLabel}</span>
+              <span class="px-1.5 py-0.5 rounded text-xs font-mono font-bold bg-slate-800 ${color}">${setupLabel}</span>
               <span class="font-bold text-white text-xs">${gpu.name} + ${cpu.name}</span>
               ${fgBadge}
             </div>
-            ${mode !== 'pure' && mode !== 'gpu' ? `<span class="text-[10px]">${limitedBy}</span>` : ''}
+            ${mode !== 'pure' && mode !== 'gpu' ? `<span class="text-xs">${limitedBy}</span>` : ''}
           </div>
           <div class="grid grid-cols-4 gap-1.5 text-center">
             <div title="FPS real renderizado antes da geração de quadros (define a resposta do mouse)">
-              <span class="block text-[9px] uppercase text-slate-500 font-mono">Base Real</span>
+              <span class="block text-xs uppercase text-slate-500 font-mono">Base Real</span>
               <span class="font-mono font-bold text-slate-200 text-sm">${r.baseRenderFps}</span>
             </div>
             <div title="FPS total enviado para a tela incluindo quadros gerados por FG / MFG">
-              <span class="block text-[9px] uppercase text-slate-500 font-mono">Tela c/ FG</span>
+              <span class="block text-xs uppercase text-slate-500 font-mono">Tela c/ FG</span>
               <span class="font-mono font-extrabold text-emerald-400 text-sm">${r.displayedWithCpu}</span>
             </div>
             <div title="Desempenho Percebido (pondera fluidez visual vs latência de entrada e nitidez DLSS 4)">
-              <span class="block text-[9px] uppercase text-amber-400 font-mono">Percebido</span>
+              <span class="block text-xs uppercase text-amber-400 font-mono">Percebido</span>
               <span class="font-mono font-extrabold text-amber-300 text-base">${r.perceivedWithCpu}</span>
             </div>
             <div title="FPS efetivo aproveitado dentro do limite Hz do seu monitor e latência estimada c/ Reflex">
-              <span class="block text-[9px] uppercase text-sky-400 font-mono">Monitor / Lat.</span>
-              <span class="font-mono font-extrabold text-sky-300 text-sm">${visible} <span class="text-[10px] ${latColor}">(${r.latencyMs}ms)</span></span>
+              <span class="block text-xs uppercase text-sky-400 font-mono">Monitor / Lat.</span>
+              <span class="font-mono font-extrabold text-sky-300 text-sm">${visible} <span class="text-xs ${latColor}">(${r.latencyMs}ms)</span></span>
             </div>
           </div>
         </div>`;
@@ -1291,7 +1291,7 @@ function renderSimulatorResultsOnly() {
       <div class="space-y-2">
         ${row(gpuA, cpuA, a, 'text-sky-300', 'Setup A')}
         ${row(gpuB, cpuB, b, 'text-emerald-300', 'Setup B')}
-        <p class="text-[10px] text-slate-500">Teto CPU: ${cpuA.name} (~${a.cpuCap} FPS) vs ${cpuB.name} (~${b.cpuCap} FPS). Quadros extras via FG/MFG multiplicam acima desse limite.</p>
+        <p class="text-xs text-slate-500">Teto CPU: ${cpuA.name} (~${a.cpuCap} FPS) vs ${cpuB.name} (~${b.cpuCap} FPS). Quadros extras via FG/MFG multiplicam acima desse limite.</p>
       </div>`;
   }
 
@@ -1414,7 +1414,7 @@ function renderSimulatorResultsOnly() {
       (<span class="font-mono text-emerald-300">${aDisp} FPS na tela c/ FG</span> • <span class="font-mono text-sky-300">${avgVisible(gpuA, cpuA, mode === 'pure' ? 'pure' : 'withCpu')}</span> úteis no monitor)</div>
     <div><strong class="text-emerald-300">Setup B: ${gpuB.name} + ${cpuB.name}</strong>:
       <span class="font-mono text-white">${bPure}</span> → <span class="font-mono text-amber-300">${bCpu}</span> (<span class="font-mono text-emerald-300">${bDisp} c/ FG</span>)</div>
-    <div class="w-full text-[11px] ${lossA >= 15 || lossB >= 15 ? 'text-amber-300' : 'text-slate-400'}">
+    <div class="w-full text-xs ${lossA >= 15 || lossB >= 15 ? 'text-amber-300' : 'text-slate-400'}">
       Comparativo no modo (${dlssMode === 'perceived' ? 'Realista DLSS 4 + Latência' : dlssMode}):
       <strong>${bCpu > 0 ? (aCpu >= bCpu ? '+' : '') + Math.round((aCpu / bCpu - 1) * 100) : '--'}%</strong> com CPU
       (vs ${bPure > 0 ? (aPure >= bPure ? '+' : '') + Math.round((aPure / bPure - 1) * 100) : '--'}% sem gargalo de CPU).
@@ -1438,24 +1438,24 @@ function renderSimulatorResultsOnly() {
       rows.push(fpsBarRow(`Setup B: ${gpuB.name} + ${cpuB.name}`, 'text-emerald-200', 'bg-amber-600', b.withCpu, maxF, false, cap));
     }
     const fgNote = (a.canUseFG || b.canUseFG)
-      ? `<div class="text-[10px] text-emerald-300/90 font-mono">✨ Na tela c/ FG/MFG: Setup A ${a.displayedWithCpu} FPS (${a.activeFgMult}×, ~${a.latencyMs}ms) vs Setup B ${b.displayedWithCpu} FPS (${b.activeFgMult}×, ~${b.latencyMs}ms)</div>`
+      ? `<div class="text-xs text-emerald-300/90 font-mono">✨ Na tela c/ FG/MFG: Setup A ${a.displayedWithCpu} FPS (${a.activeFgMult}×, ~${a.latencyMs}ms) vs Setup B ${b.displayedWithCpu} FPS (${b.activeFgMult}×, ~${b.latencyMs}ms)</div>`
       : '';
     return `
       <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
         <div class="flex justify-between items-center text-xs font-semibold text-white">
-          <span class="flex items-center gap-1">${speedometerSvgSmall} ${gm.title}${a.calibrated ? ' <span class="text-[10px] text-sky-400">📏</span>' : ''}</span>
+          <span class="flex items-center gap-1">${speedometerSvgSmall} ${gm.title}${a.calibrated ? ' <span class="text-xs text-sky-400">📏</span>' : ''}</span>
           <span class="font-mono ${gain >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${gain >= 0 ? '+' : ''}${gain}%</span>
         </div>
-        <div class="space-y-1 text-[11px] font-mono">${rows.join('')}</div>
+        <div class="space-y-1 text-xs font-mono">${rows.join('')}</div>
         ${fgNote}
         ${mode !== 'pure' && mode !== 'gpu' && (a.bottleneckType !== 'balanced' || b.bottleneckType !== 'balanced') ? `
-          <div class="text-[10px] text-slate-300 flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80 font-mono">
+          <div class="text-xs text-slate-300 flex flex-wrap items-center gap-2 pt-1 border-t border-slate-800/80 font-mono">
             <span title="${a.bottleneckLabel}">A: <strong class="${a.bottleneckType === 'cpu' ? 'text-amber-300' : (a.bottleneckType === 'gpu' ? 'text-sky-300' : 'text-emerald-300')}">${a.bottleneckLabel}</strong></span>
             <span class="text-slate-600">|</span>
             <span title="${b.bottleneckLabel}">B: <strong class="${b.bottleneckType === 'cpu' ? 'text-amber-300' : (b.bottleneckType === 'gpu' ? 'text-sky-300' : 'text-emerald-300')}">${b.bottleneckLabel}</strong></span>
           </div>` : ''}
       </div>`;
-  }).join('') + (cap < 999 ? `<p class="text-[10px] text-slate-500">Linha branca = limite do monitor (${cap} Hz).</p>` : '');
+  }).join('') + (cap < 999 ? `<p class="text-xs text-slate-500">Linha branca = limite do monitor (${cap} Hz).</p>` : '');
 }
 
 // ============================================================================
@@ -1758,30 +1758,30 @@ function renderUpgradeSuggestions() {
       <div class="rounded-xl p-4 border ${isBest ? 'border-emerald-400 bg-emerald-950/30 shadow-lg shadow-emerald-500/10' : (hasVrmAlert ? 'border-amber-500/50 bg-slate-900/90' : 'border-slate-800 bg-slate-900/80')} flex flex-col gap-2.5 text-xs">
         <div class="flex items-center justify-between gap-2">
           <span class="font-extrabold text-white text-sm">${pl.p.label}</span>
-          <span class="px-2 py-0.5 rounded border text-[10px] font-mono font-bold ${memColor}">${pl.memType}</span>
+          <span class="px-2 py-0.5 rounded border text-xs font-mono font-bold ${memColor}">${pl.memType}</span>
         </div>
-        ${isBest ? '<span class="text-[10px] font-mono font-bold text-emerald-300">🏆 MELHOR RESULTADO PARA SEU PERFIL</span>' : ''}
+        ${isBest ? '<span class="text-xs font-mono font-bold text-emerald-300">🏆 MELHOR RESULTADO PARA SEU PERFIL</span>' : ''}
         
         <!-- CPU Selector -->
         <div>
-          <label class="text-[10px] font-mono text-slate-400 block mb-0.5">Processador:</label>
-          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgCpuChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-white">${cpuOptions}</select>
+          <label class="text-xs font-mono text-slate-400 block mb-0.5">Processador:</label>
+          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgCpuChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white">${cpuOptions}</select>
         </div>
 
         <!-- Motherboard Selector & Compatibility Flag -->
         <div>
-          <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-0.5">
+          <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-0.5">
             <span>Placa-Mãe:</span>
-            ${hasVrmAlert ? `<span class="px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px]">⚠️ [!] Atenção VRM</span>` : ''}
+            ${hasVrmAlert ? `<span class="px-1.5 py-0.2 rounded font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs">⚠️ [!] Atenção VRM</span>` : ''}
           </div>
-          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgMoboChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border ${hasVrmAlert ? 'border-amber-500/60' : 'border-slate-700'} rounded px-2 py-1 text-[11px] text-white">
+          <select ${pl.p.keep ? 'disabled' : ''} onchange="onUpgMoboChange('${pl.p.id}', this.value)" class="w-full bg-slate-950 border ${hasVrmAlert ? 'border-amber-500/60' : 'border-slate-700'} rounded px-2 py-1 text-xs text-white">
             ${moboOptions}
           </select>
         </div>
 
         <!-- VRM / Compatibility Warning Alert Box -->
         ${hasVrmAlert ? `
-          <div class="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-200 text-[11px] flex items-start gap-2 leading-snug">
+          <div class="p-2.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs flex items-start gap-2 leading-snug">
             <span class="font-bold font-mono text-amber-400 shrink-0 text-xs">⚠️ [!]</span>
             <div>
               <strong class="block text-amber-300 font-semibold">${pl.comp.label}</strong>
@@ -1790,11 +1790,11 @@ function renderUpgradeSuggestions() {
           </div>
         ` : ''}
 
-        <div class="space-y-1 font-mono text-[11px] pt-1 border-t border-slate-800">
+        <div class="space-y-1 font-mono text-xs pt-1 border-t border-slate-800">
           <div class="flex justify-between"><span class="text-slate-400">CPU</span><span>${pl.p.keep ? `${formatMoneyShort(0)} (já tem)` : fmtBRLShort(pl.cpuCost)}</span></div>
           <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">Placa-mãe</span><span class="truncate text-right" title="${pl.mobo.name}">${pl.p.keep ? `${formatMoneyShort(0)} (já tem)` : `${fmtBRLShort(pl.moboCost)} <span class="text-slate-500">${pl.mobo.name}</span>`}</span></div>
           <div class="flex justify-between gap-2"><span class="text-slate-400 shrink-0">RAM +${pl.neededGB}GB</span><span class="truncate text-right ${pl.memType === 'DDR5' ? 'text-sky-300' : 'text-emerald-300'}" title="${pl.ram.desc}">${fmtBRLShort(pl.ram.cost)}</span></div>
-          <div class="text-[10px] text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus ' + curUserRamCap + 'GB)' : ''}</div>
+          <div class="text-xs text-slate-500 truncate" title="${pl.ram.desc}">${pl.ram.desc}${pl.canReuse ? ' (+ seus ' + curUserRamCap + 'GB)' : ''}</div>
           <div class="flex justify-between border-t border-slate-800 pt-1 font-bold"><span class="text-slate-300">Total plataforma</span><span class="text-white">${fmtBRLShort(pl.platformCost)}</span></div>
           <div class="flex justify-between"><span class="text-slate-400">Sobra p/ GPU</span><span class="${pl.gpuBudget > 0 ? 'text-amber-300' : 'text-rose-400'} font-bold">${fmtBRLShort(pl.gpuBudget)}</span></div>
         </div>
@@ -2070,7 +2070,7 @@ function renderBFCustomModelsCheckboxes() {
       <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/70 border ${checked ? 'border-sky-500/50 text-sky-200' : 'border-slate-800 text-slate-400'} text-xs font-mono cursor-pointer hover:border-slate-700 transition">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="onBFCustomModelToggle('${item.slug}', this.checked)" class="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0">
         <span class="truncate" title="${item.name}">${item.name}</span>
-        <span class="text-[9px] text-slate-500 shrink-0">(${sub})</span>
+        <span class="text-xs text-slate-500 shrink-0">(${sub})</span>
       </label>
     `;
   }).join('');
@@ -2723,25 +2723,25 @@ function onBFTargetItemChange(silent) {
     if (st.kind === 'laptop') {
       const l = st.item;
       pillEl.innerHTML = `
-        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[11px] font-mono font-bold">${l.cpu_name}</span>
-        <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[11px] font-mono">${l.gpu_name}</span>
-        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${l.ram_gb}GB • ${l.screen_inches}" ${l.screen_hz}Hz</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+        <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-mono font-bold">${l.cpu_name}</span>
+        <span class="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-xs font-mono">${l.gpu_name}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">${l.ram_gb}GB • ${l.screen_inches}" ${l.screen_hz}Hz</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
       `;
     } else if (st.kind === 'gpu') {
       const g = st.item;
       pillEl.innerHTML = `
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 font-mono text-[11px] font-bold border border-sky-500/30">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-sky-300 font-mono text-xs font-bold border border-sky-500/30">
           <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
           ${g.vram_gb} GB ${g.memory_type || 'GDDR6'} (${g.bandwidth_gbs || 288} GB/s)
         </span>
-        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${g.arch || 'GPU'}</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">${g.arch || 'GPU'}</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
       `;
     } else {
       pillEl.innerHTML = `
-        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px] font-mono">${st.item.socket || 'Processador'}</span>
-        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[11px] font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-xs font-mono">${st.item.socket || 'Processador'}</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">Hoje: ${fmtBRL(st.current)}</span>
       `;
     }
   }
@@ -2835,17 +2835,17 @@ function onBFTargetItemChange(silent) {
 
       let freshBadge = '';
       if (isExpired) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
       } else if (isVerifiedActive) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO EM ESTOQUE NA LOJA'}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO EM ESTOQUE NA LOJA'}</span>`;
       } else if (isUnverifiedCoupon) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-500/50 font-mono text-[10px] font-bold" title="${(dealStatus && dealStatus.reason) || 'Depende do cupom aplicar no carrinho da loja'}">⚠️ DEPENDE DE CUPOM NO CARRINHO${liveStorePrice ? ` (Sem cupom: ${formatMoney(liveStorePrice)})` : ''}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Depende do cupom aplicar no carrinho da loja'}">⚠️ DEPENDE DE CUPOM NO CARRINHO${liveStorePrice ? ` (Sem cupom: ${formatMoney(liveStorePrice)})` : ''}</span>`;
       } else if (best.age_hours <= 2) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[10px] font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
       } else if (best.age_hours <= 8) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-bold">🟡 ${activeReg === 'mx' ? 'Moderado' : 'Moderado'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold">🟡 ${activeReg === 'mx' ? 'Moderado' : 'Moderado'} (${best.age_hours}h)</span>`;
       } else {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">🔴 ${activeReg === 'mx' ? 'Riesgo de Expirado' : 'Risco de Expirado'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs font-bold">🔴 ${activeReg === 'mx' ? 'Riesgo de Expirado' : 'Risco de Expirado'} (${best.age_hours}h)</span>`;
       }
 
       let titleHtml = '';
@@ -2859,7 +2859,7 @@ function onBFTargetItemChange(silent) {
         titleHtml = `
           <span class="font-mono text-emerald-400 font-bold">⚡ ${activeReg === 'mx' ? 'Oferta Directa (Sin Cupón)' : 'Oferta Direta (Sem Cupom)'}:</span>
           <span class="text-white font-mono font-bold">${formatMoney(best.price_brl)}</span>
-          <span class="text-slate-400 font-mono text-[10px]">(${activeReg === 'mx' ? 'Precio de contado en enlace' : 'Preço à vista no link'})</span>
+          <span class="text-slate-400 font-mono text-xs">(${activeReg === 'mx' ? 'Precio de contado en enlace' : 'Preço à vista no link'})</span>
         `;
       }
 
@@ -2871,29 +2871,29 @@ function onBFTargetItemChange(silent) {
             ${freshBadge}
           </div>
           <div class="flex items-center gap-1 flex-wrap">
-            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl}, '${best.matched_slug || slug}', '${best.matched_kind || st.kind}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Testar status">
+            <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl}, '${best.matched_slug || slug}', '${best.matched_kind || st.kind}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-xs cursor-pointer flex items-center gap-1" title="Testar status">
               <span>🧪 ${activeReg === 'mx' ? 'Probar' : 'Testar'}</span>
             </button>
             ${hasRealCoupon ? `
-              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer" title="Copiar cupom">
+              <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-xs cursor-pointer" title="Copiar cupom">
                 📋 ${activeReg === 'mx' ? 'Copiar Cupón' : 'Copiar Cupom'}
               </button>
             ` : ''}
-            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-[11px] cursor-pointer flex items-center gap-1" title="Abrir loja">
+            <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-xs cursor-pointer flex items-center gap-1" title="Abrir loja">
               ↗ ${activeReg === 'mx' ? 'Abrir Tienda' : 'Abrir Loja'}
             </a>
-            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-[11px] font-bold hover:bg-amber-300 transition cursor-pointer" title="Simular preço">
+            <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-bold hover:bg-amber-300 transition cursor-pointer" title="Simular preço">
               ⚡ ${activeReg === 'mx' ? 'Simular Precio' : 'Simular Preço'}
             </button>
           </div>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
+        <div class="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
           <span>${activeReg === 'mx' ? 'Fuente' : 'Canal'}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${activeReg === 'mx' ? 'Tienda' : 'Loja'}: ${resolvedStore} • Modelo: ${(best.title || '').slice(0, 55)}</span>
           <div class="flex items-center gap-1">
-            <span class="text-slate-400 text-[10px]">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-[10px] cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
-            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px] cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
+            <span class="text-slate-400 text-xs">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-xs cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-xs cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
+            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
           </div>
         </div>
       `;
@@ -2905,9 +2905,9 @@ function onBFTargetItemChange(silent) {
         ctnActive.innerHTML = `
           <div class="flex items-center justify-between gap-1.5 flex-wrap">
             <span class="font-mono text-rose-300 font-bold">❌ ${activeReg === 'mx' ? 'Ninguna promoción activa en México' : 'Nenhuma promoção ativa no momento'}</span>
-            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-[10px]">${activeReg === 'mx' ? 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' terminada' : 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' encerrada'}</span>
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-xs">${activeReg === 'mx' ? 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' terminada' : 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' encerrada'}</span>
           </div>
-          <div class="text-[11px] text-slate-400 font-mono">${activeReg === 'mx' ? 'Precio de referencia en México: ' + formatMoney(st.current) : 'Preço mantido no catálogo oficial: ' + formatMoney(st.current)}.</div>
+          <div class="text-xs text-slate-400 font-mono">${activeReg === 'mx' ? 'Precio de referencia en México: ' + formatMoney(st.current) : 'Preço mantido no catálogo oficial: ' + formatMoney(st.current)}.</div>
         `;
       } else {
         ctnActive.innerHTML = '';
@@ -3032,16 +3032,16 @@ function recalcBFCoupon(skipSave) {
         <div class="flex items-center justify-between">
           <span><strong>Dedução Aplicada:</strong> ${fmtBRL(basePrice)} com cupom ${coupLabel} = 
           <span class="text-white font-black underline text-xs">${fmtBRL(finalPrice)}</span>!</span>
-          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-[10px]">⚠️ MARCADO EXPIRADO</span>' : ''}
+          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-xs">⚠️ MARCADO EXPIRADO</span>' : ''}
         </div>
-        ${isMarkedExpired ? '<div class="text-rose-300 text-[10px] mt-1">⚠️ Você ou o sistema marcaram este cupom como EXPIRADO. A loja pode recusar o desconto no carrinho real.</div>' : ''}
+        ${isMarkedExpired ? '<div class="text-rose-300 text-xs mt-1">⚠️ Você ou o sistema marcaram este cupom como EXPIRADO. A loja pode recusar o desconto no carrinho real.</div>' : ''}
       `;
     } else if (coupRaw && !/^(OFERTAFLASH|OFERTA FLASH)$/i.test(coupRaw)) {
       summaryEl.classList.remove('hidden');
       summaryEl.innerHTML = `
         <div class="flex items-center justify-between text-xs text-slate-300">
           <span>🎟️ Cupom <strong>${cleanCoup}</strong> inserido. O preço anunciado de <strong>${fmtBRL(basePrice)}</strong> já é o valor final com este cupom na loja.</span>
-          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-[10px]">⚠️ MARCADO EXPIRADO</span>' : ''}
+          ${isMarkedExpired ? '<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 font-bold text-xs">⚠️ MARCADO EXPIRADO</span>' : ''}
         </div>
       `;
     } else {
@@ -4334,17 +4334,17 @@ async function subscribeToBackgroundPush() {
     if (daemonOnline && perm === 'granted') {
       setStatus(
         `✅ Inscrito! Monitor PC ativo (30s) + Service Worker${periodicOk ? ' + PeriodicSync' : ''} inscritos no tópico <code>${topic}</code>. Para push web nativo em qualquer aba/celular: <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300">ntfy.sh/${topic}</a>`,
-        'text-[11px] text-emerald-400 font-mono mt-1'
+        'text-xs text-emerald-400 font-mono mt-1'
       );
     } else if (perm === 'granted') {
       setStatus(
         `✅ Service Worker ativo! Para push instantâneo 24/7 com a aba 100% fechada, clique em <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300 font-bold">ntfy.sh/${topic} → Subscribe</a> (ou deixe o monitor do PC rodando).`,
-        'text-[11px] text-sky-300 font-mono mt-1'
+        'text-xs text-sky-300 font-mono mt-1'
       );
     } else {
       setStatus(
         `⚠️ Permissão de notificação do navegador: ${perm}. Libere notificações no cadeado da URL ou assine direto em <a href="https://ntfy.sh/${encodeURIComponent(topic)}" target="_blank" class="underline text-amber-300">ntfy.sh/${topic}</a>.`,
-        'text-[11px] text-amber-300 font-mono mt-1'
+        'text-xs text-amber-300 font-mono mt-1'
       );
     }
     try { localStorage.setItem('gca_push_subscribed_v1', '1'); } catch (_) {}
@@ -4353,7 +4353,7 @@ async function subscribeToBackgroundPush() {
       btn.disabled = false;
       btn.textContent = '📲 Inscrever-se em Push (Aba Fechada)';
     }
-    setStatus(`Erro ao inscrever push: ${e.message}`, 'text-[11px] text-rose-400 font-mono mt-1');
+    setStatus(`Erro ao inscrever push: ${e.message}`, 'text-xs text-rose-400 font-mono mt-1');
   }
 }
 window.subscribeToBackgroundPush = subscribeToBackgroundPush;
@@ -4369,7 +4369,7 @@ function updateBackgroundMonitorUI() {
   if (isStatic) {
     if (badge) {
       badge.textContent = '🌐 GitHub Pages (Push Sync)';
-      badge.className = 'px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-[10px] font-bold';
+      badge.className = 'px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono text-xs font-bold';
     }
     if (desc) {
       desc.innerHTML = 'No GitHub Pages, clique em <strong>Inscrever-se em Push</strong> para ativar o Service Worker + sincronizar suas metas com o monitor Python do PC (30s) e receber alertas em <code>ntfy.sh/' + topic + '</code> mesmo com a aba fechada.';
@@ -4377,7 +4377,7 @@ function updateBackgroundMonitorUI() {
   } else {
     if (badge) {
       badge.textContent = '● Ativo no PC (30s)';
-      badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] font-bold';
+      badge.className = 'px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold';
     }
   }
 }
@@ -4391,7 +4391,7 @@ async function testBackgroundAlertNow() {
     if (bgStatusEl) { bgStatusEl.textContent = msg; bgStatusEl.className = cls; }
   };
 
-  updateStatus('Verificando monitor de segundo plano...', 'text-[11px] text-amber-300 font-mono');
+  updateStatus('Verificando monitor de segundo plano...', 'text-xs text-amber-300 font-mono');
 
   let serverSuccess = false;
 
@@ -4421,7 +4421,7 @@ async function testBackgroundAlertNow() {
   } catch (_) {}
 
   if (serverSuccess) {
-    updateStatus('✓ Alerta em segundo plano disparado pelo servidor local (Windows + Celular)!', 'text-[11px] text-emerald-400 font-mono font-bold');
+    updateStatus('✓ Alerta em segundo plano disparado pelo servidor local (Windows + Celular)!', 'text-xs text-emerald-400 font-mono font-bold');
     playDealAlertChime();
     return;
   }
@@ -4465,12 +4465,12 @@ async function testBackgroundAlertNow() {
   if (isStatic) {
     updateStatus(
       '✓ Alerta testado com sucesso no navegador e celular (ntfy.sh)! Nota: O monitoramento com navegador FECHADO requer o servidor Python local rodando no PC ("python server.py").',
-      'text-[11px] text-sky-300 font-mono font-bold'
+      'text-xs text-sky-300 font-mono font-bold'
     );
   } else {
     updateStatus(
       '✓ Alerta testado no navegador e celular via ntfy.sh! (Inicie "python server.py" para segundo plano nativo no Windows).',
-      'text-[11px] text-amber-300 font-mono font-bold'
+      'text-xs text-amber-300 font-mono font-bold'
     );
   }
 }
@@ -5798,57 +5798,57 @@ function renderPromoRadarPanel() {
             }
 
             couponBadge = `
-              <button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-1.5 py-0.5 rounded ${isExp ? 'bg-rose-500/20 text-rose-300 line-through border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'} font-mono text-[10px] cursor-pointer inline-flex items-center gap-1" title="Clique para copiar cupom e testar na loja">
+              <button onclick="copyCouponAndOpen('${cleanCoup}', '${d.buy_url || d.post_url}')" class="px-1.5 py-0.5 rounded ${isExp ? 'bg-rose-500/20 text-rose-300 line-through border border-rose-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'} font-mono text-xs cursor-pointer inline-flex items-center gap-1" title="Clique para copiar cupom e testar na loja">
                 🎟️ ${cleanCoup} 📋 ${freshTag}
               </button>
             `;
           } else if (!isOutOfStock) {
             if (d.stock_verified && d.deal_status === 'active') {
-              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta confirmada em estoque'}">✅ Em Estoque (Sem Cupom)</span>`;
+              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono text-xs font-semibold" title="${d.deal_status_reason || 'Oferta direta confirmada em estoque'}">✅ Em Estoque (Sem Cupom)</span>`;
             } else {
-              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-[10px] font-semibold" title="${d.deal_status_reason || 'Oferta direta no link'}">⚡ Oferta Direta</span>`;
+              couponBadge = `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-xs font-semibold" title="${d.deal_status_reason || 'Oferta direta no link'}">⚡ Oferta Direta</span>`;
             }
           }
           const cbBadge = d.cb_score != null
-            ? `<span class="px-1.5 py-0.5 rounded ${d.is_high_cb ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50 font-extrabold' : 'bg-slate-800 text-slate-300'} font-mono text-[10px]">${d.is_high_cb ? '🏆 ' : ''}CB ${d.cb_score}/100</span>`
+            ? `<span class="px-1.5 py-0.5 rounded ${d.is_high_cb ? 'bg-purple-500/30 text-purple-200 border border-purple-400/50 font-extrabold' : 'bg-slate-800 text-slate-300'} font-mono text-xs">${d.is_high_cb ? '🏆 ' : ''}CB ${d.cb_score}/100</span>`
             : '';
           const pechBadge = d.is_pechincha
-            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/50 font-mono font-extrabold text-[10px]">🔥 PECHINCHA</span>`
+            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-200 border border-rose-400/50 font-mono font-extrabold text-xs">🔥 PECHINCHA</span>`
             : '';
           const statusBadge = isOutOfStock
-            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-[10px] font-bold">⚠️ ${d.deal_status === 'out_of_stock' ? 'Esgotado' : 'Encerrado'}</span>`
+            ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/25 text-rose-300 border border-rose-500/40 font-mono text-xs font-bold">⚠️ ${d.deal_status === 'out_of_stock' ? 'Esgotado' : 'Encerrado'}</span>`
             : (isCouponExpired && d.coupon_discount_revoked
-              ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-[10px] font-semibold">Preço Sem Cupom</span>`
+              ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-500/40 font-mono text-xs font-semibold">Preço Sem Cupom</span>`
               : '');
           const safeId = (d.post_id || '').replace(/[^a-zA-Z0-9]/g, '_');
           const cleanCoupCode = (d.coupon_code || '').replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
           const isVerifiedActive = !isOutOfStock && !isCouponExpired && d.stock_verified && (reqCoup ? d.coupon_status === 'verified' : d.deal_status === 'active');
           const isUnverifiedCoup = !isOutOfStock && !isCouponExpired && !isVerifiedActive && (reqCoup || d.deal_status === 'unverified_coupon');
           const testBtnClass = isVerifiedActive
-            ? 'px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
+            ? 'px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/35 font-semibold text-xs cursor-pointer inline-flex items-center gap-1'
             : isUnverifiedCoup
-              ? 'px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1'
-              : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-[11px] cursor-pointer inline-flex items-center gap-1';
+              ? 'px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 font-semibold text-xs cursor-pointer inline-flex items-center gap-1'
+              : 'px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-sky-400 border border-slate-700 font-semibold text-xs cursor-pointer inline-flex items-center gap-1';
           const testBtnLabel = isVerifiedActive ? '✅ Em Estoque' : isUnverifiedCoup ? '⚠️ Testar Cupom' : '🧪 Testar';
           return `
             <div class="p-3 rounded-xl bg-slate-950/80 border ${isOutOfStock ? 'border-rose-900/60 opacity-75' : isHot ? 'border-amber-400/60 shadow-md shadow-amber-500/10' : isCheaper ? 'border-emerald-500/40' : 'border-slate-800'} flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold text-[10px]">${d.matched_name}</span>
+                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono font-bold text-xs">${d.matched_name}</span>
                   <span class="font-mono font-extrabold text-sm ${isOutOfStock ? 'text-slate-400 line-through' : isCheaper ? 'text-emerald-400' : 'text-white'}">
                     ${d.coupon_discount_revoked && d.promo_price_brl ? `<span class="line-through text-slate-500 text-xs mr-1">${fmtBRL(d.promo_price_brl)}</span>` : ''}
                     ${fmtBRL(d.price_brl)}
                   </span>
                   ${isCheaper && !isOutOfStock
-                    ? `<span class="text-[10px] font-mono text-emerald-300 font-bold">(−${fmtBRLShort(d.savings_vs_hb_brl)} vs Ref ${fmtBRLShort(d.hb_price_brl)})</span>`
-                    : `<span class="text-[10px] font-mono text-slate-500">(Ref: ${fmtBRLShort(d.hb_price_brl)})</span>`}
+                    ? `<span class="text-xs font-mono text-emerald-300 font-bold">(−${fmtBRLShort(d.savings_vs_hb_brl)} vs Ref ${fmtBRLShort(d.hb_price_brl)})</span>`
+                    : `<span class="text-xs font-mono text-slate-500">(Ref: ${fmtBRLShort(d.hb_price_brl)})</span>`}
                   ${cbBadge}
                   ${pechBadge}
                   ${statusBadge}
                   ${couponBadge}
                 </div>
-                <div class="text-[11px] text-slate-300 truncate max-w-xl" title="${d.title}">${d.title}</div>
-                <div class="text-[10px] font-mono text-slate-500">
+                <div class="text-xs text-slate-300 truncate max-w-xl" title="${d.title}">${d.title}</div>
+                <div class="text-xs font-mono text-slate-500">
                   Canal: <a href="${d.post_url}" target="_blank" class="text-sky-400 hover:underline">@${d.channel_id} ↗</a> • há ${d.age_hours}h${d.store_name && d.store_name !== 'E-commerce' ? ` • Loja: <span class="text-slate-300">${d.store_name}</span>` : ''}
                   ${d.coupon_url ? ` • <a href="${d.coupon_url}" target="_blank" class="text-amber-300 hover:underline">Resgatar Cupom ↗</a>` : ''}
                   ${d.deal_status_reason ? ` • <span class="${isOutOfStock ? 'text-rose-400/90' : isVerifiedActive ? 'text-emerald-400/90' : 'text-amber-400/90'}">${d.deal_status_reason}</span>` : ''}
@@ -5858,10 +5858,10 @@ function renderPromoRadarPanel() {
                 <button id="btn-test-${safeId}" onclick="testDealCouponNow('${d.post_id}', '${d.buy_url}', '${cleanCoupCode}', ${d.promo_price_brl || d.price_brl}, '${d.matched_slug || ''}', '${d.matched_kind || 'gpu'}')" class="${testBtnClass}" title="Testar se o produto está em estoque e se o cupom aplica na loja">
                   ${testBtnLabel}
                 </button>
-                <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-semibold text-[11px] cursor-pointer">
+                <button onclick="sendPromoToDuelOrBF('${d.matched_kind}', '${d.matched_slug}', ${d.price_brl})" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500 hover:text-slate-950 text-sky-300 font-semibold text-xs cursor-pointer">
                   ${d.matched_kind === 'gpu' ? 'Duelo' : 'Testar BF'}
                 </button>
-                <a href="${d.buy_url}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px]">
+                <a href="${d.buy_url}" target="_blank" class="px-2.5 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs">
                   Oferta ↗
                 </a>
               </div>
@@ -5876,12 +5876,12 @@ function renderPromoRadarPanel() {
         <div class="min-w-0">
           <div class="flex items-center gap-1.5">
             <span class="font-mono font-bold text-emerald-400">${fmtBRL(f.price_brl)}</span>
-            ${f.coupon_code ? `<span class="px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-[9px]">🎟️ ${f.coupon_code}</span>` : ''}
-            <span class="text-[10px] font-mono text-slate-500">@${f.channel_id} • ${f.age_hours}h</span>
+            ${f.coupon_code ? `<span class="px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-xs">🎟️ ${f.coupon_code}</span>` : ''}
+            <span class="text-xs font-mono text-slate-500">@${f.channel_id} • ${f.age_hours}h</span>
           </div>
-          <div class="text-[11px] text-slate-300 truncate" title="${f.title}">${f.title}</div>
+          <div class="text-xs text-slate-300 truncate" title="${f.title}">${f.title}</div>
         </div>
-        <a href="${f.buy_url}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 text-[10px] font-semibold shrink-0">Abrir ↗</a>
+        <a href="${f.buy_url}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-sky-500 hover:text-slate-950 text-sky-300 text-xs font-semibold shrink-0">Abrir ↗</a>
       </div>
     `).join('');
   }
@@ -6105,7 +6105,7 @@ function _applyDealStatusInMemory(postId, buyUrl, couponCode, res, isStatic, not
     }
     if (btn) {
       btn.disabled = false;
-      btn.className = "px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold text-[11px]";
+      btn.className = "px-2 py-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-semibold text-xs";
       btn.innerHTML = res.status === 'out_of_stock' ? `⚠️ Esgotado` : `❌ Expirado`;
       btn.title = res.reason;
     }
@@ -6136,7 +6136,7 @@ function _applyDealStatusInMemory(postId, buyUrl, couponCode, res, isStatic, not
     }
     if (btn) {
       btn.disabled = false;
-      btn.className = "px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold text-[11px]";
+      btn.className = "px-2 py-1 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold text-xs";
       btn.innerHTML = `⚠️ No Carrinho`;
       btn.title = res.reason;
     }
@@ -6161,7 +6161,7 @@ function _applyDealStatusInMemory(postId, buyUrl, couponCode, res, isStatic, not
     }
     if (btn) {
       btn.disabled = false;
-      btn.className = "px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold text-[11px]";
+      btn.className = "px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-semibold text-xs";
       btn.innerHTML = `✅ Em Estoque`;
       btn.title = res.reason;
     }

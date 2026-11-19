@@ -540,7 +540,7 @@ function _renderDynamicLaptopPresets(pool) {
 
   container.innerHTML = presets.map(p => `
     <button type="button" onclick="setLaptopDuelPreset('${_escLapHtml(p.cand)}','${_escLapHtml(p.base)}')"
-      class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-800/90 hover:bg-purple-500/20 text-slate-200 hover:text-purple-200 border border-slate-700 hover:border-purple-500/40 transition cursor-pointer">
+      class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-800/90 hover:bg-purple-500/20 text-slate-200 hover:text-purple-200 border border-slate-700 hover:border-purple-500/40 transition cursor-pointer">
       ${p.label}
     </button>
   `).join('');
@@ -695,11 +695,11 @@ function _renderLaptopPickerMeta(lap, side) {
   if (specsEl) {
     const ramTag = lap.ram_soldered ? `${lap.ram_gb}GB Soldada` : `${lap.ram_gb}GB (Máx ${lap.ram_max_gb}GB)`;
     specsEl.innerHTML = `
-      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-200">⚡ ${_escLapHtml(lap.cpu_name)}</span>
-      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-purple-300">🎮 ${_escLapHtml(lap.gpu_name)}</span>
-      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-sky-300">🧠 ${ramTag} • ${lap.storage_gb >= 1024 ? (lap.storage_gb / 1024) + 'TB' : lap.storage_gb + 'GB'}</span>
-      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-emerald-300">📺 ${lap.screen_inches}" ${lap.screen_hz}Hz</span>
-      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-[11px] font-mono text-amber-300">⚖️ ${lap.weight_kg}kg • 🔋 ${lap.battery_wh}Wh</span>
+      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-slate-200">⚡ ${_escLapHtml(lap.cpu_name)}</span>
+      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-purple-300">🎮 ${_escLapHtml(lap.gpu_name)}</span>
+      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-sky-300">🧠 ${ramTag} • ${lap.storage_gb >= 1024 ? (lap.storage_gb / 1024) + 'TB' : lap.storage_gb + 'GB'}</span>
+      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-emerald-300">📺 ${lap.screen_inches}" ${lap.screen_hz}Hz</span>
+      <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-amber-300">⚖️ ${lap.weight_kg}kg • 🔋 ${lap.battery_wh}Wh</span>
     `;
   }
 }
@@ -843,7 +843,7 @@ function _renderLaptopSpecSheet(baseLap, candLap, basePrice, candPrice) {
     <div class="rounded-xl border border-slate-800 overflow-hidden bg-slate-950/60">
       <div class="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs font-bold text-slate-200">
         <span>${icon} ${title}</span>
-        <div class="hidden sm:flex items-center gap-4 text-[10px] font-mono">
+        <div class="hidden sm:flex items-center gap-4 text-xs font-mono">
           <span class="text-emerald-400">Base: ${_escLapHtml(shortLaptopChipName(baseLap))}</span>
           <span class="text-purple-400">Cand: ${_escLapHtml(shortLaptopChipName(candLap))}</span>
         </div>
@@ -1261,11 +1261,11 @@ function renderLaptopDuelAnalysis() {
     const cardSc = (label, aName, bName, pA, pB, rObj) => `
       <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
         <div class="flex items-center justify-between">
-          <span class="text-[10px] font-mono uppercase text-slate-400 font-bold">${label}</span>
-          <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${badgeMap[rObj.color] || badgeMap.sky}">${rObj.tier}</span>
+          <span class="text-xs font-mono uppercase text-slate-400 font-bold">${label}</span>
+          <span class="px-1.5 py-0.5 rounded text-xs font-mono font-bold ${badgeMap[rObj.color] || badgeMap.sky}">${rObj.tier}</span>
         </div>
         <div class="text-xs font-bold text-white">${_escLapHtml(candShortName)} (${fmtBRLShort(pB)}) vs ${_escLapHtml(shortLaptopChipName(baseLap))} (${fmtBRLShort(pA)})</div>
-        <div class="text-[11px] font-mono text-slate-300">Diferença: <strong>${rObj.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rObj.actualDelta)}</strong></div>
+        <div class="text-xs font-mono text-slate-300">Diferença: <strong>${rObj.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rObj.actualDelta)}</strong></div>
       </div>
     `;
     scenEl.innerHTML = [
@@ -1345,11 +1345,11 @@ function renderLaptopDuelAnalysis() {
         <button type="button" onclick="sendLaptopToDuel('${_escLapHtml(a.slug)}', true)" class="w-full text-left p-2.5 rounded-xl bg-slate-900/90 hover:bg-purple-500/15 border border-slate-800 hover:border-purple-500/40 transition cursor-pointer flex items-center justify-between gap-3">
           <div class="min-w-0">
             <div class="text-xs font-bold text-white truncate">${_escLapHtml(a.name)}</div>
-            <div class="text-[10px] font-mono text-slate-400 mt-0.5">${_escLapHtml(a.gpu_name)} • ${a.ram_gb}GB • ${a.screen_hz}Hz • C/B ${a._myCBScore}/100</div>
+            <div class="text-xs font-mono text-slate-400 mt-0.5">${_escLapHtml(a.gpu_name)} • ${a.ram_gb}GB • ${a.screen_hz}Hz • C/B ${a._myCBScore}/100</div>
           </div>
           <div class="text-right shrink-0">
             <div class="text-xs font-mono font-bold text-purple-300">${fmtBRLShort(a.price_brl)}</div>
-            <div class="text-[10px] font-mono text-${rVsB.color}-400">${rVsB.perfGainPct >= 0 ? '+' : ''}${rVsB.perfGainPct.toFixed(0)}% perf</div>
+            <div class="text-xs font-mono text-${rVsB.color}-400">${rVsB.perfGainPct >= 0 ? '+' : ''}${rVsB.perfGainPct.toFixed(0)}% perf</div>
           </div>
         </button>
       `;
@@ -1705,7 +1705,7 @@ function renderLaptopBuilder() {
       <div class="p-4 rounded-xl bg-slate-900/85 border border-purple-500/35 space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-xs font-mono uppercase text-purple-300 font-bold">1. Notebook Principal (Chassis Completo)</span>
-          <span class="text-[11px] font-mono text-slate-400">Categoria: ${LAP_CATEGORY_SHORT[lap.category] || lap.category} • C/B ${lap._myCBScore}/100</span>
+          <span class="text-xs font-mono text-slate-400">Categoria: ${LAP_CATEGORY_SHORT[lap.category] || lap.category} • C/B ${lap._myCBScore}/100</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
           <div class="sm:col-span-9">
@@ -1718,7 +1718,7 @@ function renderLaptopBuilder() {
             <input type="number" value="${Math.round(lapPrice)}" step="100" onchange="updateLaptopBuilderField('price', this.value)" class="w-full bg-transparent text-xs font-mono font-bold text-emerald-300 focus:outline-none">
           </div>
         </div>
-        <div class="flex flex-wrap gap-2 text-[11px] font-mono text-slate-300 pt-1">
+        <div class="flex flex-wrap gap-2 text-xs font-mono text-slate-300 pt-1">
           <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800">⚙️ ${_escLapHtml(lap.cpu_name)}</span>
           <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-purple-300">🎮 ${_escLapHtml(lap.gpu_name)}</span>
           <span class="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-sky-300">📺 ${lap.screen_inches}" ${lap.screen_hz}Hz (${lap.srgb_pct}% sRGB)</span>
@@ -1728,7 +1728,7 @@ function renderLaptopBuilder() {
       <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-800 space-y-2.5">
         <div class="flex items-center justify-between gap-2">
           <span class="text-xs font-bold text-sky-300">2. Expansão de Memória RAM (${lap.ram_gb}GB de fábrica • ${lap.ram_type})</span>
-          <span class="text-[11px] font-mono ${lap.ram_soldered ? 'text-amber-400' : 'text-emerald-400'}">
+          <span class="text-xs font-mono ${lap.ram_soldered ? 'text-amber-400' : 'text-emerald-400'}">
             ${lap.ram_soldered ? '🔒 RAM Soldada (sem upgrade)' : `🔓 ${lap.ram_slots} slots SO-DIMM • Máx ${lap.ram_max_gb}GB`}
           </span>
         </div>
@@ -1752,7 +1752,7 @@ function renderLaptopBuilder() {
       <div class="p-4 rounded-xl bg-slate-900/85 border border-slate-800 space-y-2.5">
         <div class="flex items-center justify-between gap-2">
           <span class="text-xs font-bold text-emerald-300">3. Expansão de SSD NVMe (${lap.storage_gb >= 1024 ? (lap.storage_gb / 1024) + 'TB' : lap.storage_gb + 'GB'} de fábrica)</span>
-          <span class="text-[11px] font-mono ${lap.extra_m2_slots > 0 ? 'text-emerald-400' : 'text-amber-300'}">
+          <span class="text-xs font-mono ${lap.extra_m2_slots > 0 ? 'text-emerald-400' : 'text-amber-300'}">
             ${lap.extra_m2_slots > 0 ? `✓ ${lap.extra_m2_slots} slot M.2 extra livre` : '⚠ Slot único (requer substituir SSD principal)'}
           </span>
         </div>
@@ -1800,24 +1800,24 @@ function renderLaptopBuilder() {
     powerEl.innerHTML = `
       <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
         <span class="text-xs font-mono uppercase text-amber-300 font-bold">Diagnóstico de Energia & Mobilidade</span>
-        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 font-mono text-[10px]">${lap.battery_wh} Wh</span>
+        <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 font-mono text-xs">${lap.battery_wh} Wh</span>
       </div>
       <div class="grid grid-cols-2 gap-2.5 text-xs">
         <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">Fonte / TGP</span>
+          <span class="text-xs text-slate-400 block">Fonte / TGP</span>
           <strong class="text-white font-mono">${lap.charger_w}W (${lap.usb_c_pd ? 'USB-C PD ✓' : 'Proprietário'})</strong>
         </div>
         <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">Autonomia Est.</span>
+          <span class="text-xs text-slate-400 block">Autonomia Est.</span>
           <strong class="text-emerald-300 font-mono">${lap.battery_hours_light}h leve / ${lap.battery_hours_heavy}h carga</strong>
         </div>
         <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">Peso & Perfil</span>
+          <span class="text-xs text-slate-400 block">Peso & Perfil</span>
           <strong class="text-sky-300 font-mono">${lap.weight_kg} kg • ${lap.thickness_mm} mm</strong>
         </div>
         <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-          <span class="text-[10px] text-slate-400 block">Portas</span>
-          <strong class="text-slate-200 font-mono text-[11px]">${_escLapHtml((lap.ports || []).slice(0, 3).join(', '))}</strong>
+          <span class="text-xs text-slate-400 block">Portas</span>
+          <strong class="text-slate-200 font-mono text-xs">${_escLapHtml((lap.ports || []).slice(0, 3).join(', '))}</strong>
         </div>
       </div>
     `;
@@ -1836,15 +1836,15 @@ function renderLaptopBuilder() {
   if (sumEl) {
     sumEl.innerHTML = `
       <div class="border-b border-slate-800 pb-3">
-        <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">Resumo Real do Investimento</span>
+        <span class="text-xs font-mono uppercase text-purple-400 font-bold">Resumo Real do Investimento</span>
         <div class="text-2xl font-mono font-black text-white mt-1">${fmtBRL(totalCost)}</div>
         <div class="text-xs text-slate-400 font-mono mt-0.5">Config Final: <strong>${effRam}GB RAM</strong> • <strong>${effSsd >= 1024 ? (effSsd / 1024) + 'TB' : effSsd + 'GB'} SSD</strong></div>
       </div>
       <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-[10px]">Jogos</span><strong class="text-emerald-300">${Math.round(lap.gaming_score)} pts</strong></div>
-        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-[10px]">Workstation</span><strong class="text-amber-300">${Math.round(lap._wsEff)} pts</strong></div>
-        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-[10px]">IA Local / VRAM</span><strong class="text-purple-300">${lap._effGpuMem}GB • ${lap.llm_8b_tok_s} t/s</strong></div>
-        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-[10px]">Versus Full</span><strong class="text-sky-300">${lap._overallVersusScore}/100</strong></div>
+        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-xs">Jogos</span><strong class="text-emerald-300">${Math.round(lap.gaming_score)} pts</strong></div>
+        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-xs">Workstation</span><strong class="text-amber-300">${Math.round(lap._wsEff)} pts</strong></div>
+        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-xs">IA Local / VRAM</span><strong class="text-purple-300">${lap._effGpuMem}GB • ${lap.llm_8b_tok_s} t/s</strong></div>
+        <div class="p-2 rounded bg-slate-950 border border-slate-800"><span class="text-slate-400 block text-xs">Versus Full</span><strong class="text-sky-300">${lap._overallVersusScore}/100</strong></div>
       </div>
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="sendLaptopToDuel('${_escLapHtml(lap.slug)}', true)" class="flex-1 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/35 text-purple-200 border border-purple-500/40 text-xs font-bold cursor-pointer">⚔️ Comparar no Duelo</button>
@@ -1933,21 +1933,21 @@ function renderLaptopUpgrades() {
         <div class="p-4 rounded-xl bg-slate-950/90 border ${idx === 0 ? 'border-emerald-500/60 shadow-lg shadow-emerald-500/10' : 'border-slate-800'} flex flex-col justify-between space-y-3">
           <div>
             <div class="flex items-center justify-between gap-2 mb-1.5">
-              <span class="px-2 py-0.5 rounded font-mono text-[10px] font-bold ${e.lap.ram_soldered ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}">
+              <span class="px-2 py-0.5 rounded font-mono text-xs font-bold ${e.lap.ram_soldered ? 'bg-amber-500/20 text-amber-300' : 'bg-emerald-500/20 text-emerald-300'}">
                 ${idx === 0 ? '🏆 MELHOR C/B FINAL' : (e.lap.ram_soldered ? '🔒 Pronto de Fábrica' : '🔓 Expansível')}
               </span>
-              <span class="text-[10px] font-mono text-slate-400">Score ${e.lap._overallVersusScore}/100</span>
+              <span class="text-xs font-mono text-slate-400">Score ${e.lap._overallVersusScore}/100</span>
             </div>
             <div class="text-xs font-bold text-white line-clamp-2">${_escLapHtml(e.lap.name)}</div>
-            <div class="text-[10px] font-mono text-purple-300 mt-1">${_escLapHtml(e.lap.gpu_name)}</div>
+            <div class="text-xs font-mono text-purple-300 mt-1">${_escLapHtml(e.lap.gpu_name)}</div>
           </div>
-          <div class="space-y-1 text-[11px] font-mono border-t border-slate-800 pt-2">
+          <div class="space-y-1 text-xs font-mono border-t border-slate-800 pt-2">
             <div class="flex justify-between"><span class="text-slate-400">Base hoje:</span><span class="text-white">${fmtBRLShort(e.lap.price_brl)}</span></div>
             <div class="flex justify-between"><span class="text-slate-400">RAM (${e.ramNote}):</span><span class="text-sky-300">${e.ramCost > 0 ? '+' + fmtBRLShort(e.ramCost) : 'R$ 0'}</span></div>
             <div class="flex justify-between"><span class="text-slate-400">SSD (${e.ssdNote}):</span><span class="text-emerald-300">${e.ssdCost > 0 ? '+' + fmtBRLShort(e.ssdCost) : 'R$ 0'}</span></div>
             <div class="flex justify-between pt-1 border-t border-slate-800 font-bold text-xs"><span class="text-slate-200">Total Configurado:</span><span class="text-amber-300">${fmtBRL(e.totalCost)}</span></div>
           </div>
-          <button type="button" onclick="applyLaptopUpgradePick('${_escLapHtml(e.lap.slug)}', ${targetRam}, ${targetSsd})" class="w-full py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/35 text-purple-200 border border-purple-500/40 text-[11px] font-bold cursor-pointer">
+          <button type="button" onclick="applyLaptopUpgradePick('${_escLapHtml(e.lap.slug)}', ${targetRam}, ${targetSsd})" class="w-full py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/35 text-purple-200 border border-purple-500/40 text-xs font-bold cursor-pointer">
             Carregar no Planejador →
           </button>
         </div>
@@ -1958,7 +1958,7 @@ function renderLaptopUpgrades() {
   const costsEl = document.getElementById('laptop-upg-costs-table');
   if (costsEl) {
     costsEl.innerHTML = `
-      <div class="grid grid-cols-2 gap-2 font-mono text-[11px]">
+      <div class="grid grid-cols-2 gap-2 font-mono text-xs">
         <div class="p-2 rounded bg-slate-950 border border-slate-800 flex justify-between"><span>Módulo 16GB DDR5 SO-DIMM</span><strong class="text-sky-300">~${fmtBRLShort(430)}</strong></div>
         <div class="p-2 rounded bg-slate-950 border border-slate-800 flex justify-between"><span>Kit 32GB DDR5 SO-DIMM</span><strong class="text-sky-300">~${fmtBRLShort(890)}</strong></div>
         <div class="p-2 rounded bg-slate-950 border border-slate-800 flex justify-between"><span>SSD NVMe Gen4 1TB</span><strong class="text-emerald-300">~${fmtBRLShort(480)}</strong></div>
@@ -1972,7 +1972,7 @@ function renderLaptopUpgrades() {
     const blockedCount = evaluated.filter(e => !e.canRam).length;
     const topPick = matching[0];
     vEl.innerHTML = `
-      <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">Diagnóstico de Engenharia & Expansão</span>
+      <span class="text-xs font-mono uppercase text-purple-400 font-bold">Diagnóstico de Engenharia & Expansão</span>
       <p class="text-slate-200 leading-relaxed">
         Dos <strong>${pool.length} notebooks</strong> analisados, <strong>${blockedCount}</strong> possuem memória soldada insuficiente ou limite abaixo de <strong>${targetRam}GB RAM</strong>.
         ${topPick
@@ -2085,24 +2085,24 @@ function renderLaptopSimulator() {
   if (heroEl) {
     heroEl.innerHTML = `
       <div class="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
-        <span class="text-[10px] font-mono uppercase text-slate-400">FPS Médio Estimado</span>
+        <span class="text-xs font-mono uppercase text-slate-400">FPS Médio Estimado</span>
         <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.avgFps} fps</span> vs <span class="text-emerald-300">${simB.avgFps} fps</span></div>
-        <div class="text-[10px] text-slate-400">Tela A: ${simA.targetHz}Hz • Tela B: ${simB.targetHz}Hz</div>
+        <div class="text-xs text-slate-400">Tela A: ${simA.targetHz}Hz • Tela B: ${simB.targetHz}Hz</div>
       </div>
       <div class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
-        <span class="text-[10px] font-mono uppercase text-slate-400">Workstation (Render/Dev)</span>
+        <span class="text-xs font-mono uppercase text-slate-400">Workstation (Render/Dev)</span>
         <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${Math.round(simA.wsEff)}</span> vs <span class="text-emerald-300">${Math.round(simB.wsEff)}</span></div>
-        <div class="text-[10px] text-slate-400">${simB.wsEff >= simA.wsEff ? `+${(((simB.wsEff / Math.max(1, simA.wsEff)) - 1) * 100).toFixed(0)}% p/ B` : `+${(((simA.wsEff / Math.max(1, simB.wsEff)) - 1) * 100).toFixed(0)}% p/ A`}</div>
+        <div class="text-xs text-slate-400">${simB.wsEff >= simA.wsEff ? `+${(((simB.wsEff / Math.max(1, simA.wsEff)) - 1) * 100).toFixed(0)}% p/ B` : `+${(((simA.wsEff / Math.max(1, simB.wsEff)) - 1) * 100).toFixed(0)}% p/ A`}</div>
       </div>
       <div class="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 space-y-1">
-        <span class="text-[10px] font-mono uppercase text-slate-400">IA Local (Llama 8B Q4)</span>
+        <span class="text-xs font-mono uppercase text-slate-400">IA Local (Llama 8B Q4)</span>
         <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.tok8b} t/s</span> vs <span class="text-emerald-300">${simB.tok8b} t/s</span></div>
-        <div class="text-[10px] text-slate-400">${lapA._effGpuMem}GB vs ${lapB._effGpuMem}GB GPU/Unif.</div>
+        <div class="text-xs text-slate-400">${lapA._effGpuMem}GB vs ${lapB._effGpuMem}GB GPU/Unif.</div>
       </div>
       <div class="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
-        <span class="text-[10px] font-mono uppercase text-slate-400">Bateria & Mobilidade</span>
+        <span class="text-xs font-mono uppercase text-slate-400">Bateria & Mobilidade</span>
         <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${lapA.battery_hours_light}h / ${lapA.weight_kg}kg</span> vs <span class="text-emerald-300">${lapB.battery_hours_light}h / ${lapB.weight_kg}kg</span></div>
-        <div class="text-[10px] text-slate-400">Fontes: ${lapA.charger_w}W vs ${lapB.charger_w}W</div>
+        <div class="text-xs text-slate-400">Fontes: ${lapA.charger_w}W vs ${lapB.charger_w}W</div>
       </div>
     `;
   }
@@ -2177,7 +2177,7 @@ function renderLaptopSimulator() {
     wsEl.innerHTML = `
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
         <span class="text-xs font-bold text-amber-300">Workstation Profissional (Respeita Pesos Render / Edição / Dev)</span>
-        <span class="text-[11px] font-mono text-slate-400">${_escLapHtml(lapA.cpu_name)} vs ${_escLapHtml(lapB.cpu_name)}</span>
+        <span class="text-xs font-mono text-slate-400">${_escLapHtml(lapA.cpu_name)} vs ${_escLapHtml(lapB.cpu_name)}</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         ${mkBar('Renderização 3D (Blender/CAD)', lapA.workstation_render_score * scaleA, lapB.workstation_render_score * scaleB)}
@@ -2194,7 +2194,7 @@ function renderLaptopSimulator() {
       return `
         <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
           <div class="font-bold text-slate-200 truncate">${_escLapHtml(gA.title)}</div>
-          <div class="flex items-center justify-between font-mono text-[11px] mt-1">
+          <div class="flex items-center justify-between font-mono text-xs mt-1">
             <span class="text-sky-300">A: <strong>${gA.fps} FPS</strong> (${gA.screenUtilizationPct}% ${gA.capHz}Hz)</span>
             <span class="text-emerald-300">B: <strong>${gB.fps} FPS</strong> (${gB.screenUtilizationPct}% ${gB.capHz}Hz)</span>
           </div>
@@ -2207,8 +2207,8 @@ function renderLaptopSimulator() {
   if (aiEl) {
     const mkLlm = (name, vA, vB, memReq) => `
       <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
-        <div class="flex justify-between"><strong class="text-slate-200">${name}</strong><span class="text-[10px] font-mono text-purple-300">Req: ~${memReq}GB</span></div>
-        <div class="flex justify-between font-mono text-[11px] mt-1">
+        <div class="flex justify-between"><strong class="text-slate-200">${name}</strong><span class="text-xs font-mono text-purple-300">Req: ~${memReq}GB</span></div>
+        <div class="flex justify-between font-mono text-xs mt-1">
           <span class="${lapA._effGpuMem >= memReq ? 'text-sky-300' : 'text-amber-400'}">A: ${vA > 0 ? vA + ' tok/s' : 'Offload CPU'}</span>
           <span class="${lapB._effGpuMem >= memReq ? 'text-emerald-300' : 'text-amber-400'}">B: ${vB > 0 ? vB + ' tok/s' : 'Offload CPU'}</span>
         </div>
@@ -2302,18 +2302,18 @@ function renderConfigLaptopSection() {
   el.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
       <div class="md:col-span-6">
-        <label class="text-[11px] font-bold text-slate-300 block mb-1">Selecionar Notebook do Catálogo (ou vazio para customizado)</label>
+        <label class="text-xs font-bold text-slate-300 block mb-1">Selecionar Notebook do Catálogo (ou vazio para customizado)</label>
         <select onchange="onConfigRefLaptopSelect(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
           <option value="">-- Nenhum / Digitar manualmente --</option>
           ${_buildGroupedLaptopOptionsHTML(pool, ref.slug)}
         </select>
       </div>
       <div class="md:col-span-4">
-        <label class="text-[11px] font-bold text-slate-300 block mb-1">Nome / Modelo Atual</label>
+        <label class="text-xs font-bold text-slate-300 block mb-1">Nome / Modelo Atual</label>
         <input type="text" value="${_escLapHtml(ref.name)}" placeholder="Ex: Dell Inspiron i5 16GB" oninput="onConfigRefLaptopField('name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
       </div>
       <div class="md:col-span-2">
-        <label class="text-[11px] font-bold text-slate-300 block mb-1">Valor Estimado (R$)</label>
+        <label class="text-xs font-bold text-slate-300 block mb-1">Valor Estimado (R$)</label>
         <input type="number" value="${Math.round(ref.price || 0)}" step="100" oninput="onConfigRefLaptopField('price', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300">
       </div>
     </div>
