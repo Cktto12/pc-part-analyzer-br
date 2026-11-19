@@ -83,6 +83,16 @@ Objetivo: deixar o site **simples, bonito e fácil de entender de cara**, sem re
 - [x] Ajustes para celular
 - [x] Animações de carregamento e mensagens para telas vazias
 
+### Fase 8 — Modo claro e modo escuro
+- [x] Modo claro (direção A · Clara e moderna): fundo claro, roxo-índigo, fonte Plus Jakarta Sans
+- [x] Modo escuro (direção C · Black Friday vibrante): preto, amarelo, fonte Outfit
+- [x] Botão "Modo claro / Modo escuro" no topo, lembrado no navegador; na primeira visita segue o tema do sistema
+- [x] Fonte de código (JetBrains Mono) removida; números com algarismos alinhados na fonte do tema
+- [x] `styles/themes.css` gerado por `tools/gen_themes.py`: tokens por tema e remapeamento das classes Tailwind de cor fixa
+- [x] Gráficos do Chart.js trocam de cor junto com o tema
+
+> Ao adicionar classes de cor novas no HTML/JS, rode `python tools/gen_themes.py styles/themes.css` para incluí-las no remapeamento.
+
 ## 5. Processo
 
 - Cada fase é testada no navegador (desktop e celular) antes do commit.

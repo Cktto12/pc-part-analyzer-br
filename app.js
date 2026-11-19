@@ -6029,3 +6029,32 @@ async function initApp() {
 }
 
 window.addEventListener('DOMContentLoaded', initApp);
+
+// ===================== Modo claro / escuro =====================
+function applyTheme(theme) {
+  const t = theme === 'light' ? 'light' : 'dark';
+  const root = document.documentElement;
+  root.classList.add('ui-theme-switching');
+  root.setAttribute('data-theme', t);
+  root.classList.toggle('dark', t === 'dark');
+  const lbl = document.getElementById('theme-toggle-label');
+  if (lbl) lbl.textContent = t === 'dark' ? 'Modo claro' : 'Modo escuro';
+  const btn = document.getElementById('btn-theme-toggle');
+  if (btn) btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  if (window.GCA_CHART_THEME && typeof window.GCA_CHART_THEME.refresh === 'function') {
+    window.GCA_CHART_THEME.refresh();
+  }
+  void root.offsetHeight; // aplica as cores novas antes de religar as transições
+  setTimeout(() => root.classList.remove('ui-theme-switching'), 50);
+}
+
+function toggleTheme() {
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('gca-theme', next); } catch (_) {}
+  applyTheme(next);
+}
+window.toggleTheme = toggleTheme;
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(document.documentElement.getAttribute('data-theme'));
+});

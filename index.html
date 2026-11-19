@@ -1,24 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+<html lang="pt-BR" class="dark" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    // Aplica o tema salvo (ou o do sistema) antes de pintar a página
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('gca-theme'); } catch (_) {}
+      if (t !== 'light' && t !== 'dark') {
+        t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', t);
+      document.documentElement.classList.toggle('dark', t === 'dark');
+    })();
+  </script>
   <title>GCA — GPU & CPU Analyzer: Duelo Relacional, Workstation, Black Friday & Custo-Benefício</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261119-3" />
-  <script src="styles/chart-theme.js?v=20261119-2"></script>
+  <link rel="stylesheet" href="styles/ui.css?v=20261119-5" />
+  <link rel="stylesheet" href="styles/themes.css?v=20261119-2" />
+  <script src="styles/chart-theme.js?v=20261119-3"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['var(--ui-font-sans)'],
+            mono: ['var(--ui-font-sans)'],
           },
           colors: {
             bgMain: '#090d16',
@@ -73,14 +86,14 @@
       height: 7px;
     }
     ::-webkit-scrollbar-track {
-      background: #070b12;
+      background: var(--ui-bg-canvas);
     }
     ::-webkit-scrollbar-thumb {
-      background: #1e293b;
+      background: var(--ui-border-strong);
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+      background: var(--ui-text-faint);
     }
   </style>
 </head>
@@ -205,6 +218,12 @@
 
         <!-- Right: Compact Actions (Radar, Sync, Settings Gear) -->
         <div class="ui-topbar-actions">
+          <button type="button" id="btn-theme-toggle" onclick="toggleTheme()" class="ui-theme-toggle" title="Alternar modo claro / escuro" aria-label="Alternar modo claro / escuro">
+            <svg class="ui-theme-icon-moon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <svg class="ui-theme-icon-sun" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <span class="ui-theme-label" id="theme-toggle-label">Modo escuro</span>
+          </button>
+
           <button type="button" id="btn-promo-radar" onclick="togglePromoRadarPanel()" class="ui-btn ui-btn--sm" title="Abrir aba Promoções e Radar ao Vivo">
             <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             <span class="hidden sm:inline">Promoções</span>
@@ -3023,7 +3042,7 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261119-7"></script>
+  <script src="app.js?v=20261119-9"></script>
   <script src="app_features.js?v=20261119-7"></script>
   <script src="laptop_mode.js?v=20261119-7"></script>
 </body>

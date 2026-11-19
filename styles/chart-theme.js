@@ -26,12 +26,12 @@
       textPrimary: readCssVar('--ui-text-primary', '#f1f5f9'),
       textSecondary: readCssVar('--ui-text-secondary', '#cbd5e1'),
       textMuted: readCssVar('--ui-text-muted', '#94a3b8'),
-      grid: 'rgba(148, 163, 184, 0.12)',
-      gridStrong: 'rgba(148, 163, 184, 0.22)',
-      tooltipBg: 'rgba(11, 18, 32, 0.96)',
-      tooltipBorder: 'rgba(148, 163, 184, 0.28)',
-      fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      fontMono: "'JetBrains Mono', ui-monospace, monospace"
+      grid: readCssVar('--ui-chart-grid', 'rgba(148, 163, 184, 0.12)'),
+      gridStrong: readCssVar('--ui-border-strong', 'rgba(148, 163, 184, 0.22)'),
+      tooltipBg: readCssVar('--ui-chart-tooltip', 'rgba(11, 18, 32, 0.96)'),
+      tooltipBorder: readCssVar('--ui-border-strong', 'rgba(148, 163, 184, 0.28)'),
+      fontSans: readCssVar('--ui-font-sans', "'Plus Jakarta Sans', sans-serif"),
+      fontMono: readCssVar('--ui-font-sans', "'Plus Jakarta Sans', sans-serif")
     };
   }
 
@@ -39,6 +39,7 @@
     if (typeof window.Chart === 'undefined') return;
     const C = window.Chart;
     const P = buildPalette();
+    if (window.GCA_CHART_THEME) window.GCA_CHART_THEME.palette = P;
 
     // Defaults globais de tipografia e cor
     C.defaults.color = P.textSecondary;
@@ -85,22 +86,15 @@
     }
 
     // Plugin leve para harmonizar opções locais antigas (ex.: fontes < 12px em escalas)
-    const gcaThemePlugin = {
-      id: 'gcaChartTheme',
-      beforeInit(chart) {
+    function styleScales(chart) {
+        const P = (window.GCA_CHART_THEME && window.GCA_CHART_THEME.palette) || buildPalette();
         const opts = chart.options || {};
         const scales = opts.scales || {};
         Object.keys(scales).forEach((key) => {
           const sc = scales[key];
           if (!sc) return;
-          if (sc.grid && !sc.grid._gcaStyled) {
-            sc.grid.color = P.grid;
-            sc.grid._gcaStyled = true;
-          }
-          if (sc.angleLines && !sc.angleLines._gcaStyled) {
-            sc.angleLines.color = P.gridStrong;
-            sc.angleLines._gcaStyled = true;
-          }
+          if (sc.grid) sc.grid.color = P.grid;
+          if (sc.angleLines) sc.angleLines.color = P.gridStrong;
           if (sc.pointLabels) {
             const isNarrow = typeof window !== 'undefined' && window.innerWidth < 640;
             const targetSize = isNarrow ? 10 : Math.max(12, (sc.pointLabels.font && sc.pointLabels.font.size) || 12);
@@ -120,7 +114,20 @@
             });
           }
         });
-      }
+        const pl = opts.plugins || {};
+        if (pl.tooltip) {
+          pl.tooltip.backgroundColor = P.tooltipBg;
+          pl.tooltip.borderColor = P.tooltipBorder;
+          pl.tooltip.titleColor = P.textPrimary;
+          pl.tooltip.bodyColor = P.textSecondary;
+        }
+        if (pl.legend && pl.legend.labels) pl.legend.labels.color = P.textSecondary;
+    }
+
+    const gcaThemePlugin = {
+      id: 'gcaChartTheme',
+      beforeInit: styleScales,
+      beforeUpdate: styleScales
     };
 
     try {
@@ -132,6 +139,11 @@
     // API pública reutilizável nas Fases 2–6 (ex.: sparklines da tabela CB)
     window.GCA_CHART_THEME = {
       palette: P,
+      refresh() {
+        applyChartTheme();
+        const inst = C.instances ? Object.values(C.instances) : [];
+        inst.forEach((ch) => { try { ch.update('none'); } catch (_) {} });
+      },
       getColors: buildPalette,
       sparklineOptions() {
         return {
