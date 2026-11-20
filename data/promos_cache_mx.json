@@ -1,17 +1,86 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "18:36:09",
-  "last_sitewise_test_at": "2026-11-20 18:36:09",
+  "scanned_at": "18:41:07",
+  "last_sitewise_test_at": "2026-11-20 18:41:10",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
     "cyberpuerta_ofertas"
   ],
-  "matched_count": 0,
-  "matched_deals": [],
+  "matched_count": 1,
+  "matched_deals": [
+    {
+      "post_id": "pdmx/1212092",
+      "channel_id": "promodescuentos_pc",
+      "channel_name": "Promodescuentos PC",
+      "store_name": "AliExpress",
+      "post_url": "https://www.promodescuentos.com/share-deal/1212092",
+      "timestamp": "2026-11-20T18:36:19+00:00",
+      "title": "AliExpress: AMD Ryzen 7 5700X",
+      "head_text": "AliExpress: AMD Ryzen 7 5700X $1,585 MXN",
+      "raw_text": "AliExpress: AMD Ryzen 7 5700X - AliExpress - $1,585 MXN",
+      "price_brl": 1585,
+      "raw_price_brl": 2688,
+      "discount_applied": 1104,
+      "coupon_code": "MXBF5",
+      "coupon_info": "Cupón MX: MXBF5",
+      "buy_url": "https://www.promodescuentos.com/share-deal/1212092",
+      "coupon_url": null,
+      "region_id": "mx",
+      "age_hours": 0.1,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-5700x",
+      "matched_name": "Ryzen 7 5700X",
+      "hb_price_brl": 3229.0,
+      "savings_vs_hb_brl": 1644.0,
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 1585,
+      "is_expired": false,
+      "deal_status": "untested",
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Estoque/preço na AliExpress não pôde ser confirmado automaticamente (verifique no link)",
+      "stock_verified": false
+    }
+  ],
   "best_by_slug": {},
   "recent_feed": [
+    {
+      "post_id": "pdmx/1212092",
+      "channel_id": "promodescuentos_pc",
+      "channel_name": "Promodescuentos PC",
+      "store_name": "AliExpress",
+      "post_url": "https://www.promodescuentos.com/share-deal/1212092",
+      "timestamp": "2026-11-20T18:36:19+00:00",
+      "title": "AliExpress: AMD Ryzen 7 5700X",
+      "head_text": "AliExpress: AMD Ryzen 7 5700X $1,585 MXN",
+      "raw_text": "AliExpress: AMD Ryzen 7 5700X - AliExpress - $1,585 MXN",
+      "price_brl": 1585,
+      "raw_price_brl": 2688,
+      "discount_applied": 1104,
+      "coupon_code": "MXBF5",
+      "coupon_info": "Cupón MX: MXBF5",
+      "buy_url": "https://www.promodescuentos.com/share-deal/1212092",
+      "coupon_url": null,
+      "region_id": "mx",
+      "age_hours": 0.1,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-5700x",
+      "matched_name": "Ryzen 7 5700X",
+      "hb_price_brl": 3229.0,
+      "savings_vs_hb_brl": 1644.0,
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 1585,
+      "is_expired": false,
+      "deal_status": "untested",
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Estoque/preço na AliExpress não pôde ser confirmado automaticamente (verifique no link)",
+      "stock_verified": false
+    },
     {
       "post_id": "pdmx/1211723",
       "channel_id": "promodescuentos_pc",
@@ -30,7 +99,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1211723",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 28.6
+      "age_hours": 28.7
     }
   ],
   "coupon_status": {
@@ -116,7 +185,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203080%2010GB",
-        "updated_at": "2026-11-20 18:31:17"
+        "updated_at": "2026-11-20 18:41:08"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%205600%20XT": {
         "status": "untested",
@@ -127,7 +196,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%205600%20XT",
-        "updated_at": "2026-11-20 18:31:18"
+        "updated_at": "2026-11-20 18:41:08"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203070%20Ti": {
         "status": "untested",
@@ -138,7 +207,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203070%20Ti",
-        "updated_at": "2026-11-20 18:31:18"
+        "updated_at": "2026-11-20 18:41:09"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203080%20Ti": {
         "status": "untested",
@@ -160,7 +229,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RTX%203050%208GB",
-        "updated_at": "2026-11-20 18:31:18"
+        "updated_at": "2026-11-20 18:41:09"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Core%20i3%2012100T": {
         "status": "untested",
@@ -171,7 +240,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Core%20i3%2012100T",
-        "updated_at": "2026-11-20 18:31:19"
+        "updated_at": "2026-11-20 18:41:09"
       },
       "pdmx/1211656": {
         "status": "untested",
@@ -216,8 +285,30 @@
         "store_name": "AliExpress",
         "final_url": "https://www.promodescuentos.com/ofertas/cusu-ddr4-memoria-de-escritorio-320omhz-ddr4-ram-8gb-16gb-8gbx2-16gbx2-135v12v-udimm-para-placa-base-1211685",
         "updated_at": "2026-11-19 06:56:02"
+      },
+      "pdmx/1212092": {
+        "status": "untested",
+        "reason": "Estoque/preço na AliExpress não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "AliExpress",
+        "final_url": "https://www.promodescuentos.com/ofertas/amd-ryzen-7-5700x-1212092",
+        "updated_at": "2026-11-20 18:41:10"
+      },
+      "https://www.promodescuentos.com/share-deal/1212092": {
+        "status": "untested",
+        "reason": "Estoque/preço na AliExpress não pôde ser confirmado automaticamente (verifique no link)",
+        "source": "live_test",
+        "live_price": null,
+        "stock_verified": false,
+        "coupon_status": null,
+        "store_name": "AliExpress",
+        "final_url": "https://www.promodescuentos.com/ofertas/amd-ryzen-7-5700x-1212092",
+        "updated_at": "2026-11-20 18:41:10"
       }
     },
-    "updated_at": "2026-11-20 18:31:19"
+    "updated_at": "2026-11-20 18:41:10"
   }
 }
