@@ -1,8 +1,8 @@
 {
   "ok": true,
   "region_id": "br",
-  "scanned_at": "18:21:07",
-  "last_sitewise_test_at": "2026-11-22 18:21:13",
+  "scanned_at": "18:25:56",
+  "last_sitewise_test_at": "2026-11-22 18:26:04",
   "channels_scanned": [
     "ofertasadrenaline",
     "peperaiohardware",
@@ -34,7 +34,7 @@
       "buy_url": "https://seuhardware.com/s/6J3EINQ",
       "coupon_url": "https://seuhardware.com/s/XUAgnQ6",
       "region_id": "br",
-      "age_hours": 0.3,
+      "age_hours": 0.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9700x",
       "matched_name": "Ryzen 7 9700X",
@@ -69,7 +69,7 @@
       "buy_url": "https://seuhardware.com/s/3GHEmy1",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 0.5,
+      "age_hours": 0.6,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -106,7 +106,7 @@
       "buy_url": "https://a.aliexpress.com/_c2xcIHSr",
       "coupon_url": "https://a.aliexpress.com/_c453oisf",
       "region_id": "br",
-      "age_hours": 5.9,
+      "age_hours": 6.0,
       "matched_kind": "ram",
       "matched_slug": "ddr4-16gb-3200",
       "matched_name": "DDR4 16 GB 3200 MT/s",
@@ -141,7 +141,7 @@
       "buy_url": "https://seuhardware.com/s/sZmq6ZN",
       "coupon_url": "https://seuhardware.com/s/RkiKcsi",
       "region_id": "br",
-      "age_hours": 0.3,
+      "age_hours": 0.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500x3d",
       "matched_name": "Ryzen 5 5500X3D",
@@ -176,7 +176,7 @@
       "buy_url": "https://amzn.to/3V3nrh1",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 4.1,
+      "age_hours": 4.2,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -211,7 +211,7 @@
       "buy_url": "https://link.amazon/B0huv9086",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.5,
+      "age_hours": 2.6,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -247,7 +247,7 @@
       "buy_url": "https://seuhardware.com/s/4s1wtOf",
       "coupon_url": "https://seuhardware.com/s/dMh12P3",
       "region_id": "br",
-      "age_hours": 0.3,
+      "age_hours": 0.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5600x",
       "matched_name": "Ryzen 5 5600X",
@@ -317,7 +317,7 @@
       "buy_url": "https://nerdofertas.com/t",
       "coupon_url": "https://ofertou.ai/hdcd-Acer",
       "region_id": "br",
-      "age_hours": 44.4,
+      "age_hours": 44.5,
       "matched_kind": "laptop",
       "matched_slug": "notebook-gamer-acer-nitro-v-anv15-51-76kq-intel-core-i7-13620h-15-16gb-ssd-512-gb-linux-geforce-rtx-4050",
       "matched_name": "Notebook Gamer Acer Nitro V Intel Core i7 13620H RTX 4050 15,6\" 16GB SSD 512GB Linux ANV15-51-76KQ",
@@ -329,7 +329,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (44.4h) sem confirmação de estoque ativo na E-commerce BR",
+      "deal_status_reason": "Oferta antiga (44.5h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false
     },
     {
@@ -387,7 +387,7 @@
       "buy_url": "https://www.amazon.com.br/dp/B0DKFMSMYK/?tag=vevsfps-20",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 29.8,
+      "age_hours": 29.9,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -396,11 +396,12 @@
       "requires_coupon": false,
       "promo_price_brl": 1999.0,
       "is_expired": true,
-      "deal_status": "expired",
+      "deal_status": "out_of_stock",
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (29.8h) sem confirmação de estoque ativo na KaBuM!",
-      "stock_verified": false
+      "deal_status_reason": "Oferta encerrada na KaBuM! — menor preço em estoque hoje: R$ 2,149.99 (era R$ 1,999.00)",
+      "stock_verified": false,
+      "live_store_price_brl": 2149.99
     },
     {
       "post_id": "ofertasadrenaline/60413",
@@ -422,7 +423,7 @@
       "buy_url": "https://link.amazon/B0gz6s31Z",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 24.1,
+      "age_hours": 24.2,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -434,7 +435,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (24.1h) sem confirmação de estoque ativo na Amazon BR",
+      "deal_status_reason": "Oferta antiga (24.2h) sem confirmação de estoque ativo na Amazon BR",
       "stock_verified": false
     },
     {
@@ -457,7 +458,7 @@
       "buy_url": "https://benchpromos.com.br/promocao/processador-amd-ryzen-7-9800x3d-cache-8mb-8-nucleos-16-threads-am5/cmwpnlm3b002lmh07dmxwlxzs",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 42.1,
+      "age_hours": 42.2,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -469,7 +470,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (42.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "deal_status_reason": "Oferta antiga (42.2h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false
     },
     {
@@ -492,7 +493,7 @@
       "buy_url": "https://curt.link/gQIRR",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 44.2,
+      "age_hours": 44.3,
       "matched_kind": "gpu",
       "matched_slug": "rtx-5060-ti-8gb",
       "matched_name": "RTX 5060 Ti 8GB",
@@ -504,7 +505,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (44.2h) sem confirmação de estoque ativo na Pichau",
+      "deal_status_reason": "Oferta antiga (44.3h) sem confirmação de estoque ativo na Pichau",
       "stock_verified": false
     },
     {
@@ -527,7 +528,7 @@
       "buy_url": "https://meli.la/2i6Jvwd",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 39.3,
+      "age_hours": 39.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -539,7 +540,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -562,7 +563,7 @@
       "buy_url": "https://seuhardware.com/s/f1nxNwb",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 39.3,
+      "age_hours": 39.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -574,7 +575,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -597,7 +598,7 @@
       "buy_url": "https://seuhardware.com/s/f1nxNwb",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 30.3,
+      "age_hours": 30.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -609,7 +610,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -667,7 +668,7 @@
       "buy_url": "https://meli.la/29zjesW",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 30.3,
+      "age_hours": 30.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -679,7 +680,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -702,7 +703,7 @@
       "buy_url": "https://seuhardware.com/s/sZmq6ZN",
       "coupon_url": "https://seuhardware.com/s/RkiKcsi",
       "region_id": "br",
-      "age_hours": 41.1,
+      "age_hours": 41.2,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500x3d",
       "matched_name": "Ryzen 5 5500X3D",
@@ -714,7 +715,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "deal_status_reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false
     },
     {
@@ -772,7 +773,7 @@
       "buy_url": "https://meli.la/22dfQXy",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 23.4,
+      "age_hours": 23.5,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -784,7 +785,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (23.4h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (23.5h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -807,7 +808,7 @@
       "buy_url": "https://seuhardware.com/s/RNjniLn",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 30.3,
+      "age_hours": 30.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -819,7 +820,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -877,7 +878,7 @@
       "buy_url": "https://seuhardware.com/s/EEPtgMj",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 30.3,
+      "age_hours": 30.4,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -889,7 +890,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+      "deal_status_reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
       "stock_verified": false
     },
     {
@@ -912,7 +913,7 @@
       "buy_url": "https://seuhardware.com/s/AMLSDxh",
       "coupon_url": "https://seuhardware.com/s/bMYvd10",
       "region_id": "br",
-      "age_hours": 41.1,
+      "age_hours": 41.2,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-5700x",
       "matched_name": "Ryzen 7 5700X",
@@ -924,7 +925,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+      "deal_status_reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false
     },
     {
@@ -982,7 +983,7 @@
       "buy_url": "https://curt.link/MarBH",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 44.2,
+      "age_hours": 44.3,
       "matched_kind": "gpu",
       "matched_slug": "rtx-5070",
       "matched_name": "RTX 5070",
@@ -994,7 +995,7 @@
       "deal_status": "expired",
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (44.2h) sem confirmação de estoque ativo na Pichau",
+      "deal_status_reason": "Oferta antiga (44.3h) sem confirmação de estoque ativo na Pichau",
       "stock_verified": false
     },
     {
@@ -1017,7 +1018,7 @@
       "buy_url": "https://seuhardware.com/s/3GHEmy1",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 29.8,
+      "age_hours": 29.9,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -1055,7 +1056,7 @@
       "buy_url": "https://seuhardware.com/s/3GHEmy1",
       "coupon_url": "https://seuhardware.com/s/IHeHRCL",
       "region_id": "br",
-      "age_hours": 16.7,
+      "age_hours": 16.8,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -1076,199 +1077,6 @@
   ],
   "best_by_slug": {},
   "recent_feed": [
-    {
-      "post_id": "IskandarSouza/199669",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/IskandarSouza/199669",
-      "timestamp": "2026-11-22T18:06:53+00:00",
-      "title": "Console portátil retrô R36H Sistema Linux Tela IPS de 3,5 + 64GB",
-      "head_text": "🔥 Console portátil retrô R36H Sistema Linux Tela IPS de 3,5 + 64GB 💰 Valor: R$ 160 + 353 moedas 🔖 Cupom: AFFBF02 ou BLACKAE2",
-      "raw_text": "🔥 Console portátil retrô R36H Sistema Linux Tela IPS de 3,5 + 64GB\n\n💰 Valor: R$ 160 + 353 moedas\n\n🔖 Cupom: AFFBF02 ou BLACKAE2\n\n👉 Link APP: https://a.aliexpress.com/_c3xmdbLn\n👉 Link PC: https://a.aliexpress.com/_c4CCGanj",
-      "price_brl": 160.0,
-      "raw_price_brl": 160.0,
-      "discount_applied": 0.0,
-      "coupon_code": "AFFBF02",
-      "coupon_info": "💰 Valor: R$ 160 + 353 moedas",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/SdHpYKIkB0HUkQhO6jVix7RT_IvX0LQdGQsdeJWyjKeDvYC090uF5IHJIGTem-QxPZwdoTMzYuDeN701GhdTgViJvgc4aFcpmR5FwvRbdbRpvrbqpXAAN85kSBHWaYbXkZtquBqm99BGQ_GLlbm7NG3EvK3HiQI5rOuPwJbz1PRohRgjHaLfICpZk3qiAmzCvYjGAuZcuPqUES1La5cYw145k9RwyzTc74ItGxWE4Gjm2x3IdrqJ9D70P5DIRMQsFppVheaYBae601fT45fws3ShmQjahLJ9a8Xmzk2lZ_-I9JTY7hxna1QFWg7Ozniv-yxnESKuxXw_WLqUiKGB1A.jpg",
-      "buy_url": "https://a.aliexpress.com/_c4CCGanj",
-      "coupon_url": "https://a.aliexpress.com/_c3xmdbLn",
-      "region_id": "br",
-      "age_hours": 0.2
-    },
-    {
-      "post_id": "IskandarSouza/199670",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "Mercado Livre",
-      "post_url": "https://t.me/IskandarSouza/199670",
-      "timestamp": "2026-11-22T18:09:42+00:00",
-      "title": "✨ Monitor Gamer AOC AGON G50 27\" 144Hz 0,5ms IPS HDR10 G-SYNC 27G50F",
-      "head_text": "Parcelado! ✨ Monitor Gamer AOC AGON G50 27\" 144Hz 0,5ms IPS HDR10 G-SYNC 27G50F 💰 R$ 586 em até 18x ‼️",
-      "raw_text": "Parcelado!\n\n✨ Monitor Gamer AOC AGON G50 27\" 144Hz 0,5ms IPS HDR10 G-SYNC 27G50F\n\n💰 R$ 586 em até 18x ‼️\n\n🪙 Cupom: R$ 30 OFF no Anúncio\n\n🔗 Link do produto: https://meli.la/1it1Y4U\n\n#anuncio",
-      "price_brl": 586.0,
-      "raw_price_brl": 616.0,
-      "discount_applied": 30.0,
-      "coupon_code": null,
-      "coupon_info": "🪙 Cupom: R$ 30 OFF no Anúncio",
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/CqVKqMozRJ1X6kbmTkyXndsAKGDyKk95vF6u_OJAgmqowVZ2vTiRrGU8gOvkyLFNhsWp2AkHGKVO9t8XaP43AJb2AUFgSjqm-gWqWehoB-tpEelf6zi-gsEgw4DmXGISUK8Vxc2tEKUAKedCIhRMmWg4dkDJjpWqeRlmkWz4vK79_k96X00ARA23AbYd7imdl94E8nmvt0IsKdsWKVAqCpQ-7rQzrRjchgXqzuOBZYr1KQwRIptcBYgBRpGryTPe4GHOzC0Dos8-04lpCqdtnDaVtHQN6rXHJdElt9h3SYdyQ_UZAOvvEHWjQWrKMmLUFzGph3EkCco-TVfU5PK6_w.jpg",
-      "buy_url": "https://meli.la/1it1Y4U",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 0.2
-    },
-    {
-      "post_id": "IskandarSouza/199671",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "Amazon BR",
-      "post_url": "https://t.me/IskandarSouza/199671",
-      "timestamp": "2026-11-22T18:10:02+00:00",
-      "title": "🇧🇷 Monitor Gamer AOC 27\" Full HD 144Hz Agon G50 IPS 0,5ms 27G50F/57 HDMI DisplayPort G-Sync - Bivolt",
-      "head_text": "🔥🇧🇷 Monitor Gamer AOC 27\" Full HD 144Hz Agon G50 IPS 0,5ms 27G50F/57 HDMI DisplayPort G-Sync - Bivolt - Vendido por Magalu 🇧🇷 Direto do Brasil 💰 R$ 524",
-      "raw_text": "🔥🇧🇷 Monitor Gamer AOC 27\" Full HD 144Hz Agon G50 IPS 0,5ms 27G50F/57 HDMI DisplayPort G-Sync - Bivolt\n\n- Vendido por Magalu 🇧🇷 Direto do Brasil\n\n💰 R$ 524\n📝 Cupom: AFFBF04 + 132 moedas no APP\n\n⬇️\nhttps://a.aliexpress.com/_c3CkbqpN\nhttps://a.aliexpress.com/_c3CkbqpN\n\n⬇️ NO PC\nhttps://a.aliexpress.com/_c3NRT3uX\n\n💰 R$ 546 na Amazon: https://www.amazon.com.br/dp/B0FLKL7DHZ/?tag=vevsfps-20",
-      "price_brl": 524.0,
-      "raw_price_brl": 546.0,
-      "discount_applied": 22.0,
-      "coupon_code": "AFFBF04",
-      "coupon_info": "📝 Cupom: AFFBF04 + 132 moedas no APP",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/DFl7I9Nk2kNmfUJb8v18-T20lv6HFDXe31f9G_OWBFd6p4cxS65-GABC16RPgQeZ-qz92q3B7pRuQ6hNQuomgYEjc--XPw2BE6EKWRwgQqnNh8bhJ3ra5-prhXgZPFbHsGtCSIQOpFzvwJiuasvjXBia7hZCPn2L8G4iTgh_gHje9zZpNcPldhk_p10trrcKlBTZR7ot4eyPJANRZjRkNEpfMeTwvqJo--obB4oRXzcQspjDBclwc6gxa7xD7EvOr18lpcGiYHF0nkP9jWDHqwF-ajnV_vIMo-c4kqRyoXk9-y8I2On0ClsGNWruXMVYNYemL4E-dq9JOqirlhdFjA.jpg",
-      "buy_url": "https://www.amazon.com.br/dp/B0FLKL7DHZ/?tag=vevsfps-20",
-      "coupon_url": "https://a.aliexpress.com/_c3CkbqpN",
-      "region_id": "br",
-      "age_hours": 0.2
-    },
-    {
-      "post_id": "peperaiohardware/124561",
-      "channel_id": "peperaiohardware",
-      "channel_name": "Peperaio Hardware",
-      "store_name": "Mercado Livre",
-      "post_url": "https://t.me/peperaiohardware/124561",
-      "timestamp": "2026-11-22T18:00:30+00:00",
-      "title": "- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos",
-      "head_text": "🔥 Cupom Mercado Livre - Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos 💸 15% OFF acima de R$ 249, Limite de R$ 80",
-      "raw_text": "🔥 Cupom Mercado Livre\n\n- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos\n\n💸 15% OFF acima de R$ 249, Limite de R$ 80\n🎟️ Cupom: CASA2211\n✅ Confira: https://meli.la/1rzAc8e\n\n💸 15% OFF acima de R$ 159, Limite de R$ 30\n🎟️ Cupom: ENTREGASFULL2211\n✅ Confira: https://meli.la/1tY8Qom\n\n✅ Resgate aqui\nhttps://mercadolivre.com/sec/1952Lr5",
-      "price_brl": 80.0,
-      "raw_price_brl": 249.0,
-      "discount_applied": 169.0,
-      "coupon_code": null,
-      "coupon_info": "Cupom Mercado Livre",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/qW-9DvukaO9MxxTx1SNFI1R1W5mLwfabBl_XkSKNxEE7A8ogUrLMhggYW2BQn2XAuaBaZoFDOPlcyOXSW7zaCrslrx1mzsvWhajwSnj7nXjMHAo3dvRT7G1oU-JbakurnF6IbwR6-t48M-wiUx53Ee0Sg-0MKd-nOdP5SYaSKdH8Rrj4tqsh4xkZvuc4VqlJHXftExnSpncQUqqR7MTNaOb29Sextt4R1j35fp5Aw9O-aXgBYPC7VcwL81f0xeQZXT-ALqgzwlF_z30FpCu4nmrMLLjpyxuyhxBUYU0alGNn3D7GrAe7wHhORtVNv0xCRgSzPMbasP_am8p2MBgPDw.jpg",
-      "buy_url": "https://mercadolivre.com/sec/1952Lr5",
-      "coupon_url": "https://meli.la/1rzAc8e",
-      "region_id": "br",
-      "age_hours": 0.3
-    },
-    {
-      "post_id": "IskandarSouza/199664",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/IskandarSouza/199664",
-      "timestamp": "2026-11-22T18:03:35+00:00",
-      "title": "🇧🇷 Ryzen 7 9700x 8/16 AMD RYZEN AM5 DDR5 processador r7 CPU",
-      "head_text": "🔥🇧🇷 Ryzen 7 9700x 8/16 AMD RYZEN AM5 DDR5 processador r7 CPU - Direto do Brasil 🇧🇷 💰 R$ 1.417",
-      "raw_text": "🔥🇧🇷 Ryzen 7 9700x 8/16 AMD RYZEN AM5 DDR5 processador r7 CPU\n\n- Direto do Brasil 🇧🇷\n\n💰 R$ 1.417\n📝 Cupom: 9700XLIBRETX ou LIBRETX97X + BLACKAE6 + 411 moedas no APP\n\n⬇️\nhttps://seuhardware.com/s/XUAgnQ6\n\n⬇️ NO PC\nhttps://seuhardware.com/s/6J3EINQ",
-      "price_brl": 1417.0,
-      "raw_price_brl": 1417.0,
-      "discount_applied": 0.0,
-      "coupon_code": "9700XLIBRETX",
-      "coupon_info": "📝 Cupom: 9700XLIBRETX ou LIBRETX97X + BLACKAE6 + 411 moedas no APP",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/Mh8DS3GHga7l77fEKPi5m1YxuoR4rPQWi_sy3ZOLC3Qwh97NFKOZaVdXi1mT5PV7YW_j7U51c1meuZ931nSiUFl_WADvOXHqrHogcqoFRZK3aluDhkpVAXPdyleCkhVSGVA3v45UP-GO7sFh8YCfg-qaSXxhRnGBheyD1V264DXx5GGnt34vMUTnwAzZx1IDj9fjf5pF-DCUNCRIpHgAxnZ8O6qqgISAcbjxP9PPWa37NkRVGaBvFL04QhCbCFIs7-Q-a3XwGa2cR8VTgNwfJhXlph--7nzP7erGE1za-s3hUNqE1fe9UNwXg0jRJm6827g-U6suFjDn4uqxfADP1A.jpg",
-      "buy_url": "https://seuhardware.com/s/6J3EINQ",
-      "coupon_url": "https://seuhardware.com/s/XUAgnQ6",
-      "region_id": "br",
-      "age_hours": 0.3,
-      "matched_kind": "cpu",
-      "matched_slug": "ryzen-7-9700x",
-      "matched_name": "Ryzen 7 9700X",
-      "hb_price_brl": 1606.32,
-      "savings_vs_hb_brl": 189.32,
-      "requires_coupon": true,
-      "promo_price_brl": 1417.0,
-      "is_expired": false,
-      "deal_status": "untested",
-      "is_coupon_expired": false,
-      "coupon_status": "unverified",
-      "deal_status_reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
-      "stock_verified": false
-    },
-    {
-      "post_id": "IskandarSouza/199665",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/IskandarSouza/199665",
-      "timestamp": "2026-11-22T18:04:02+00:00",
-      "title": "🇧🇷 Ryzen 5 5600x DDR4 AM4 Processador AMD R5 CPU Novo",
-      "head_text": "🔥🇧🇷 Ryzen 5 5600x DDR4 AM4 Processador AMD R5 CPU Novo - Direto do Brasil 🇧🇷 💰 R$ 797 em até 6x ‼️",
-      "raw_text": "🔥🇧🇷 Ryzen 5 5600x DDR4 AM4 Processador AMD R5 CPU Novo\n\n- Direto do Brasil 🇧🇷\n\n💰 R$ 797 em até 6x ‼️\n\n📝 Cupom: 56XLIBRETXB + BLACKAE5 + 301 moedas no APP\n\n⬇️\nhttps://seuhardware.com/s/dMh12P3\n\n⬇️ NO PC\nhttps://seuhardware.com/s/4s1wtOf",
-      "price_brl": 797.0,
-      "raw_price_brl": 797.0,
-      "discount_applied": 0.0,
-      "coupon_code": "56XLIBRETXB",
-      "coupon_info": "📝 Cupom: 56XLIBRETXB + BLACKAE5 + 301 moedas no APP",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/CjDmQ7dATBZIaCjFbvOUidVb7h-5km5PRfTO8DQmhaTp89xPWmhMciPTIsvfhlCov968ZNcB_5AD14uRum9wGkEjknPgO5hf_PQJJuRerZKFwo5pxa3miuf1tHD9kp27-3Y4SKaRkgWek_azGMUdrfLIMTFg5ih02Uh6TEs202WM9gAUNXSBoAOpbvaHfuKoIJqxqQLJqhdwnhxW2GRNDKBqggiHFYGuIOG7Z9W36neQgC8PH0pSJsemMcufdq5cTs1-Bnlf1w0LPTkY9uSLGaV8u84U_rfLt-7CknalsQ8BxtJ3k8Bz3tqjoyV9zFK2oheENbfgbvCvQmUuOk-F3g.jpg",
-      "buy_url": "https://seuhardware.com/s/4s1wtOf",
-      "coupon_url": "https://seuhardware.com/s/dMh12P3",
-      "region_id": "br",
-      "age_hours": 0.3,
-      "matched_kind": "cpu",
-      "matched_slug": "ryzen-5-5600x",
-      "matched_name": "Ryzen 5 5600X",
-      "hb_price_brl": 745.51,
-      "savings_vs_hb_brl": -51.49,
-      "requires_coupon": true,
-      "promo_price_brl": 797.0,
-      "is_expired": false,
-      "deal_status": "untested",
-      "is_coupon_expired": false,
-      "coupon_status": "unverified",
-      "deal_status_reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
-      "stock_verified": false
-    },
-    {
-      "post_id": "IskandarSouza/199666",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/IskandarSouza/199666",
-      "timestamp": "2026-11-22T18:04:33+00:00",
-      "title": "🇧🇷 Ryzen 5 5500x3D DDR4 AM4 Processador AMD R5 CPU Novo",
-      "head_text": "🔥🇧🇷 Ryzen 5 5500x3D DDR4 AM4 Processador AMD R5 CPU Novo - Direto do Brasil 🇧🇷 💰 R$ 1.295",
-      "raw_text": "🔥🇧🇷 Ryzen 5 5500x3D DDR4 AM4 Processador AMD R5 CPU Novo\n\n- Direto do Brasil 🇧🇷\n\n💰 R$ 1.295\n\n📝 Cupom: LIBRETX5X3DB ou X3D5LIBRETXB + BLACKAE6 ou IFPWJTZS ou IFP2B7VN + 413 moedas no APP\n\n⬇️\nhttps://seuhardware.com/s/RkiKcsi\n\n⬇️ NO PC\nhttps://seuhardware.com/s/sZmq6ZN",
-      "price_brl": 1295.0,
-      "raw_price_brl": 1295.0,
-      "discount_applied": 0.0,
-      "coupon_code": "LIBRETX5X3DB",
-      "coupon_info": "📝 Cupom: LIBRETX5X3DB ou X3D5LIBRETXB + BLACKAE6 ou IFPWJTZS ou IFP2B7VN + 413 moedas no APP",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/WwdkavcXARej5dKB0u3k6M8MQgnlnzGTCI-hSt-GKZeglleFAKd67RhWFBQgt0-IkCQzTfsjBBJjbpxXNMfCfV8E_91lwnyr-wiX-XaQaRgfxdTpGzXPpkmqB1tZr9lpjtrTLeREd33f4W8gw31-v-M0PV0mTKQHU88PiCoNrZB97Tg_IWTn93mG_6pafbvJ3QoAwSI0CPLvf00CUgXygIqBCEM4h3yTs05HycjKvB5SSSmG_FG_XVGWj8zEyq2HUYSIFUy9Zo1nL_07jW5DyrGQAK_Z-SNWfulD6CKP6J4Y9MIbXeYDchR-ePstl7atj4qUBP266gXdsDKIynG-ng.jpg",
-      "buy_url": "https://seuhardware.com/s/sZmq6ZN",
-      "coupon_url": "https://seuhardware.com/s/RkiKcsi",
-      "region_id": "br",
-      "age_hours": 0.3,
-      "matched_kind": "cpu",
-      "matched_slug": "ryzen-5-5500x3d",
-      "matched_name": "Ryzen 5 5500X3D",
-      "hb_price_brl": 1339.0,
-      "savings_vs_hb_brl": 44.0,
-      "requires_coupon": true,
-      "promo_price_brl": 1295.0,
-      "is_expired": false,
-      "deal_status": "untested",
-      "is_coupon_expired": false,
-      "coupon_status": "unverified",
-      "deal_status_reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
-      "stock_verified": false
-    },
     {
       "post_id": "IskandarSouza/199667",
       "channel_id": "iskandarsouza",
@@ -1305,6 +1113,199 @@
       "stock_verified": false
     },
     {
+      "post_id": "IskandarSouza/199669",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/IskandarSouza/199669",
+      "timestamp": "2026-11-22T18:06:53+00:00",
+      "title": "Console portátil retrô R36H Sistema Linux Tela IPS de 3,5 + 64GB",
+      "head_text": "🔥 Console portátil retrô R36H Sistema Linux Tela IPS de 3,5 + 64GB 💰 Valor: R$ 160 + 353 moedas 🔖 Cupom: AFFBF02 ou BLACKAE2",
+      "raw_text": "🔥 Console portátil retrô R36H Sistema Linux Tela IPS de 3,5 + 64GB\n\n💰 Valor: R$ 160 + 353 moedas\n\n🔖 Cupom: AFFBF02 ou BLACKAE2\n\n👉 Link APP: https://a.aliexpress.com/_c3xmdbLn\n👉 Link PC: https://a.aliexpress.com/_c4CCGanj",
+      "price_brl": 160.0,
+      "raw_price_brl": 160.0,
+      "discount_applied": 0.0,
+      "coupon_code": "AFFBF02",
+      "coupon_info": "💰 Valor: R$ 160 + 353 moedas",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/SdHpYKIkB0HUkQhO6jVix7RT_IvX0LQdGQsdeJWyjKeDvYC090uF5IHJIGTem-QxPZwdoTMzYuDeN701GhdTgViJvgc4aFcpmR5FwvRbdbRpvrbqpXAAN85kSBHWaYbXkZtquBqm99BGQ_GLlbm7NG3EvK3HiQI5rOuPwJbz1PRohRgjHaLfICpZk3qiAmzCvYjGAuZcuPqUES1La5cYw145k9RwyzTc74ItGxWE4Gjm2x3IdrqJ9D70P5DIRMQsFppVheaYBae601fT45fws3ShmQjahLJ9a8Xmzk2lZ_-I9JTY7hxna1QFWg7Ozniv-yxnESKuxXw_WLqUiKGB1A.jpg",
+      "buy_url": "https://a.aliexpress.com/_c4CCGanj",
+      "coupon_url": "https://a.aliexpress.com/_c3xmdbLn",
+      "region_id": "br",
+      "age_hours": 0.3
+    },
+    {
+      "post_id": "IskandarSouza/199670",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "Mercado Livre",
+      "post_url": "https://t.me/IskandarSouza/199670",
+      "timestamp": "2026-11-22T18:09:42+00:00",
+      "title": "✨ Monitor Gamer AOC AGON G50 27\" 144Hz 0,5ms IPS HDR10 G-SYNC 27G50F",
+      "head_text": "Parcelado! ✨ Monitor Gamer AOC AGON G50 27\" 144Hz 0,5ms IPS HDR10 G-SYNC 27G50F 💰 R$ 586 em até 18x ‼️",
+      "raw_text": "Parcelado!\n\n✨ Monitor Gamer AOC AGON G50 27\" 144Hz 0,5ms IPS HDR10 G-SYNC 27G50F\n\n💰 R$ 586 em até 18x ‼️\n\n🪙 Cupom: R$ 30 OFF no Anúncio\n\n🔗 Link do produto: https://meli.la/1it1Y4U\n\n#anuncio",
+      "price_brl": 586.0,
+      "raw_price_brl": 616.0,
+      "discount_applied": 30.0,
+      "coupon_code": null,
+      "coupon_info": "🪙 Cupom: R$ 30 OFF no Anúncio",
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/CqVKqMozRJ1X6kbmTkyXndsAKGDyKk95vF6u_OJAgmqowVZ2vTiRrGU8gOvkyLFNhsWp2AkHGKVO9t8XaP43AJb2AUFgSjqm-gWqWehoB-tpEelf6zi-gsEgw4DmXGISUK8Vxc2tEKUAKedCIhRMmWg4dkDJjpWqeRlmkWz4vK79_k96X00ARA23AbYd7imdl94E8nmvt0IsKdsWKVAqCpQ-7rQzrRjchgXqzuOBZYr1KQwRIptcBYgBRpGryTPe4GHOzC0Dos8-04lpCqdtnDaVtHQN6rXHJdElt9h3SYdyQ_UZAOvvEHWjQWrKMmLUFzGph3EkCco-TVfU5PK6_w.jpg",
+      "buy_url": "https://meli.la/1it1Y4U",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 0.3
+    },
+    {
+      "post_id": "IskandarSouza/199671",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "Amazon BR",
+      "post_url": "https://t.me/IskandarSouza/199671",
+      "timestamp": "2026-11-22T18:10:02+00:00",
+      "title": "🇧🇷 Monitor Gamer AOC 27\" Full HD 144Hz Agon G50 IPS 0,5ms 27G50F/57 HDMI DisplayPort G-Sync - Bivolt",
+      "head_text": "🔥🇧🇷 Monitor Gamer AOC 27\" Full HD 144Hz Agon G50 IPS 0,5ms 27G50F/57 HDMI DisplayPort G-Sync - Bivolt - Vendido por Magalu 🇧🇷 Direto do Brasil 💰 R$ 524",
+      "raw_text": "🔥🇧🇷 Monitor Gamer AOC 27\" Full HD 144Hz Agon G50 IPS 0,5ms 27G50F/57 HDMI DisplayPort G-Sync - Bivolt\n\n- Vendido por Magalu 🇧🇷 Direto do Brasil\n\n💰 R$ 524\n📝 Cupom: AFFBF04 + 132 moedas no APP\n\n⬇️\nhttps://a.aliexpress.com/_c3CkbqpN\nhttps://a.aliexpress.com/_c3CkbqpN\n\n⬇️ NO PC\nhttps://a.aliexpress.com/_c3NRT3uX\n\n💰 R$ 546 na Amazon: https://www.amazon.com.br/dp/B0FLKL7DHZ/?tag=vevsfps-20",
+      "price_brl": 524.0,
+      "raw_price_brl": 546.0,
+      "discount_applied": 22.0,
+      "coupon_code": "AFFBF04",
+      "coupon_info": "📝 Cupom: AFFBF04 + 132 moedas no APP",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/DFl7I9Nk2kNmfUJb8v18-T20lv6HFDXe31f9G_OWBFd6p4cxS65-GABC16RPgQeZ-qz92q3B7pRuQ6hNQuomgYEjc--XPw2BE6EKWRwgQqnNh8bhJ3ra5-prhXgZPFbHsGtCSIQOpFzvwJiuasvjXBia7hZCPn2L8G4iTgh_gHje9zZpNcPldhk_p10trrcKlBTZR7ot4eyPJANRZjRkNEpfMeTwvqJo--obB4oRXzcQspjDBclwc6gxa7xD7EvOr18lpcGiYHF0nkP9jWDHqwF-ajnV_vIMo-c4kqRyoXk9-y8I2On0ClsGNWruXMVYNYemL4E-dq9JOqirlhdFjA.jpg",
+      "buy_url": "https://www.amazon.com.br/dp/B0FLKL7DHZ/?tag=vevsfps-20",
+      "coupon_url": "https://a.aliexpress.com/_c3CkbqpN",
+      "region_id": "br",
+      "age_hours": 0.3
+    },
+    {
+      "post_id": "peperaiohardware/124561",
+      "channel_id": "peperaiohardware",
+      "channel_name": "Peperaio Hardware",
+      "store_name": "Mercado Livre",
+      "post_url": "https://t.me/peperaiohardware/124561",
+      "timestamp": "2026-11-22T18:00:30+00:00",
+      "title": "- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos",
+      "head_text": "🔥 Cupom Mercado Livre - Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos 💸 15% OFF acima de R$ 249, Limite de R$ 80",
+      "raw_text": "🔥 Cupom Mercado Livre\n\n- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos\n\n💸 15% OFF acima de R$ 249, Limite de R$ 80\n🎟️ Cupom: CASA2211\n✅ Confira: https://meli.la/1rzAc8e\n\n💸 15% OFF acima de R$ 159, Limite de R$ 30\n🎟️ Cupom: ENTREGASFULL2211\n✅ Confira: https://meli.la/1tY8Qom\n\n✅ Resgate aqui\nhttps://mercadolivre.com/sec/1952Lr5",
+      "price_brl": 80.0,
+      "raw_price_brl": 249.0,
+      "discount_applied": 169.0,
+      "coupon_code": null,
+      "coupon_info": "Cupom Mercado Livre",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/qW-9DvukaO9MxxTx1SNFI1R1W5mLwfabBl_XkSKNxEE7A8ogUrLMhggYW2BQn2XAuaBaZoFDOPlcyOXSW7zaCrslrx1mzsvWhajwSnj7nXjMHAo3dvRT7G1oU-JbakurnF6IbwR6-t48M-wiUx53Ee0Sg-0MKd-nOdP5SYaSKdH8Rrj4tqsh4xkZvuc4VqlJHXftExnSpncQUqqR7MTNaOb29Sextt4R1j35fp5Aw9O-aXgBYPC7VcwL81f0xeQZXT-ALqgzwlF_z30FpCu4nmrMLLjpyxuyhxBUYU0alGNn3D7GrAe7wHhORtVNv0xCRgSzPMbasP_am8p2MBgPDw.jpg",
+      "buy_url": "https://mercadolivre.com/sec/1952Lr5",
+      "coupon_url": "https://meli.la/1rzAc8e",
+      "region_id": "br",
+      "age_hours": 0.4
+    },
+    {
+      "post_id": "IskandarSouza/199664",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/IskandarSouza/199664",
+      "timestamp": "2026-11-22T18:03:35+00:00",
+      "title": "🇧🇷 Ryzen 7 9700x 8/16 AMD RYZEN AM5 DDR5 processador r7 CPU",
+      "head_text": "🔥🇧🇷 Ryzen 7 9700x 8/16 AMD RYZEN AM5 DDR5 processador r7 CPU - Direto do Brasil 🇧🇷 💰 R$ 1.417",
+      "raw_text": "🔥🇧🇷 Ryzen 7 9700x 8/16 AMD RYZEN AM5 DDR5 processador r7 CPU\n\n- Direto do Brasil 🇧🇷\n\n💰 R$ 1.417\n📝 Cupom: 9700XLIBRETX ou LIBRETX97X + BLACKAE6 + 411 moedas no APP\n\n⬇️\nhttps://seuhardware.com/s/XUAgnQ6\n\n⬇️ NO PC\nhttps://seuhardware.com/s/6J3EINQ",
+      "price_brl": 1417.0,
+      "raw_price_brl": 1417.0,
+      "discount_applied": 0.0,
+      "coupon_code": "9700XLIBRETX",
+      "coupon_info": "📝 Cupom: 9700XLIBRETX ou LIBRETX97X + BLACKAE6 + 411 moedas no APP",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/Mh8DS3GHga7l77fEKPi5m1YxuoR4rPQWi_sy3ZOLC3Qwh97NFKOZaVdXi1mT5PV7YW_j7U51c1meuZ931nSiUFl_WADvOXHqrHogcqoFRZK3aluDhkpVAXPdyleCkhVSGVA3v45UP-GO7sFh8YCfg-qaSXxhRnGBheyD1V264DXx5GGnt34vMUTnwAzZx1IDj9fjf5pF-DCUNCRIpHgAxnZ8O6qqgISAcbjxP9PPWa37NkRVGaBvFL04QhCbCFIs7-Q-a3XwGa2cR8VTgNwfJhXlph--7nzP7erGE1za-s3hUNqE1fe9UNwXg0jRJm6827g-U6suFjDn4uqxfADP1A.jpg",
+      "buy_url": "https://seuhardware.com/s/6J3EINQ",
+      "coupon_url": "https://seuhardware.com/s/XUAgnQ6",
+      "region_id": "br",
+      "age_hours": 0.4,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-9700x",
+      "matched_name": "Ryzen 7 9700X",
+      "hb_price_brl": 1606.32,
+      "savings_vs_hb_brl": 189.32,
+      "requires_coupon": true,
+      "promo_price_brl": 1417.0,
+      "is_expired": false,
+      "deal_status": "untested",
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
+      "stock_verified": false
+    },
+    {
+      "post_id": "IskandarSouza/199665",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/IskandarSouza/199665",
+      "timestamp": "2026-11-22T18:04:02+00:00",
+      "title": "🇧🇷 Ryzen 5 5600x DDR4 AM4 Processador AMD R5 CPU Novo",
+      "head_text": "🔥🇧🇷 Ryzen 5 5600x DDR4 AM4 Processador AMD R5 CPU Novo - Direto do Brasil 🇧🇷 💰 R$ 797 em até 6x ‼️",
+      "raw_text": "🔥🇧🇷 Ryzen 5 5600x DDR4 AM4 Processador AMD R5 CPU Novo\n\n- Direto do Brasil 🇧🇷\n\n💰 R$ 797 em até 6x ‼️\n\n📝 Cupom: 56XLIBRETXB + BLACKAE5 + 301 moedas no APP\n\n⬇️\nhttps://seuhardware.com/s/dMh12P3\n\n⬇️ NO PC\nhttps://seuhardware.com/s/4s1wtOf",
+      "price_brl": 797.0,
+      "raw_price_brl": 797.0,
+      "discount_applied": 0.0,
+      "coupon_code": "56XLIBRETXB",
+      "coupon_info": "📝 Cupom: 56XLIBRETXB + BLACKAE5 + 301 moedas no APP",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/CjDmQ7dATBZIaCjFbvOUidVb7h-5km5PRfTO8DQmhaTp89xPWmhMciPTIsvfhlCov968ZNcB_5AD14uRum9wGkEjknPgO5hf_PQJJuRerZKFwo5pxa3miuf1tHD9kp27-3Y4SKaRkgWek_azGMUdrfLIMTFg5ih02Uh6TEs202WM9gAUNXSBoAOpbvaHfuKoIJqxqQLJqhdwnhxW2GRNDKBqggiHFYGuIOG7Z9W36neQgC8PH0pSJsemMcufdq5cTs1-Bnlf1w0LPTkY9uSLGaV8u84U_rfLt-7CknalsQ8BxtJ3k8Bz3tqjoyV9zFK2oheENbfgbvCvQmUuOk-F3g.jpg",
+      "buy_url": "https://seuhardware.com/s/4s1wtOf",
+      "coupon_url": "https://seuhardware.com/s/dMh12P3",
+      "region_id": "br",
+      "age_hours": 0.4,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-5-5600x",
+      "matched_name": "Ryzen 5 5600X",
+      "hb_price_brl": 745.51,
+      "savings_vs_hb_brl": -51.49,
+      "requires_coupon": true,
+      "promo_price_brl": 797.0,
+      "is_expired": false,
+      "deal_status": "untested",
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
+      "stock_verified": false
+    },
+    {
+      "post_id": "IskandarSouza/199666",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/IskandarSouza/199666",
+      "timestamp": "2026-11-22T18:04:33+00:00",
+      "title": "🇧🇷 Ryzen 5 5500x3D DDR4 AM4 Processador AMD R5 CPU Novo",
+      "head_text": "🔥🇧🇷 Ryzen 5 5500x3D DDR4 AM4 Processador AMD R5 CPU Novo - Direto do Brasil 🇧🇷 💰 R$ 1.295",
+      "raw_text": "🔥🇧🇷 Ryzen 5 5500x3D DDR4 AM4 Processador AMD R5 CPU Novo\n\n- Direto do Brasil 🇧🇷\n\n💰 R$ 1.295\n\n📝 Cupom: LIBRETX5X3DB ou X3D5LIBRETXB + BLACKAE6 ou IFPWJTZS ou IFP2B7VN + 413 moedas no APP\n\n⬇️\nhttps://seuhardware.com/s/RkiKcsi\n\n⬇️ NO PC\nhttps://seuhardware.com/s/sZmq6ZN",
+      "price_brl": 1295.0,
+      "raw_price_brl": 1295.0,
+      "discount_applied": 0.0,
+      "coupon_code": "LIBRETX5X3DB",
+      "coupon_info": "📝 Cupom: LIBRETX5X3DB ou X3D5LIBRETXB + BLACKAE6 ou IFPWJTZS ou IFP2B7VN + 413 moedas no APP",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/WwdkavcXARej5dKB0u3k6M8MQgnlnzGTCI-hSt-GKZeglleFAKd67RhWFBQgt0-IkCQzTfsjBBJjbpxXNMfCfV8E_91lwnyr-wiX-XaQaRgfxdTpGzXPpkmqB1tZr9lpjtrTLeREd33f4W8gw31-v-M0PV0mTKQHU88PiCoNrZB97Tg_IWTn93mG_6pafbvJ3QoAwSI0CPLvf00CUgXygIqBCEM4h3yTs05HycjKvB5SSSmG_FG_XVGWj8zEyq2HUYSIFUy9Zo1nL_07jW5DyrGQAK_Z-SNWfulD6CKP6J4Y9MIbXeYDchR-ePstl7atj4qUBP266gXdsDKIynG-ng.jpg",
+      "buy_url": "https://seuhardware.com/s/sZmq6ZN",
+      "coupon_url": "https://seuhardware.com/s/RkiKcsi",
+      "region_id": "br",
+      "age_hours": 0.4,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-5-5500x3d",
+      "matched_name": "Ryzen 5 5500X3D",
+      "hb_price_brl": 1339.0,
+      "savings_vs_hb_brl": 44.0,
+      "requires_coupon": true,
+      "promo_price_brl": 1295.0,
+      "is_expired": false,
+      "deal_status": "untested",
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Estoque/preço na E-commerce BR não pôde ser confirmado automaticamente (verifique no link)",
+      "stock_verified": false
+    },
+    {
       "post_id": "IskandarSouza/199661",
       "channel_id": "iskandarsouza",
       "channel_name": "Iskandar Souza",
@@ -1324,7 +1325,7 @@
       "buy_url": "https://seuhardware.com/s/3GHEmy1",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 0.5,
+      "age_hours": 0.6,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
@@ -1360,7 +1361,7 @@
       "buy_url": "https://seuhardware.com/s/2xdLZxn",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 0.5
+      "age_hours": 0.6
     },
     {
       "post_id": "BenchPromos/28703",
@@ -1382,7 +1383,7 @@
       "buy_url": "https://benchpromos.com.br/promocao/headphone-audiotechnica-athad700x/cmws4dcg2002sp308s1n47bhq",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 0.7
+      "age_hours": 0.8
     },
     {
       "post_id": "BenchPromos/28704",
@@ -1404,7 +1405,7 @@
       "buy_url": "https://benchpromos.com.br/promocao/tocadiscos-vinil-audiotechnica-atlp60xbk-preto--automatico-bivolt-120240v/cmws4f2sc003nmh07va5gthik",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 0.7
+      "age_hours": 0.8
     },
     {
       "post_id": "peperaiohardware/124560",
@@ -1426,7 +1427,7 @@
       "buy_url": "https://meli.la/31c2P4V",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 1.9
+      "age_hours": 2.0
     },
     {
       "post_id": "IskandarSouza/199659",
@@ -1448,7 +1449,7 @@
       "buy_url": "https://seuhardware.com/s/gdLpr6i",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.0
+      "age_hours": 2.1
     },
     {
       "post_id": "ofertasadrenaline/60449",
@@ -1470,7 +1471,7 @@
       "buy_url": "https://link.amazon/B0fT0WYY5",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.1
+      "age_hours": 2.2
     },
     {
       "post_id": "ofertasadrenaline/60444",
@@ -1492,7 +1493,7 @@
       "buy_url": "https://link.amazon/B09JZ97PY",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.2
+      "age_hours": 2.3
     },
     {
       "post_id": "ofertasadrenaline/60445",
@@ -1514,7 +1515,7 @@
       "buy_url": "https://link.amazon/B0dQogvWU",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.2
+      "age_hours": 2.3
     },
     {
       "post_id": "ofertasadrenaline/60446",
@@ -1534,94 +1535,6 @@
       "is_conditional_voucher": false,
       "image_url": "https://cdn1.telesco.pe/file/XCvFfhIWRatxYOfiB9YBjtrK0rPqCIGMjg2WX5uf1eFeFrj9pv8kc16V8apCZTr8UQ10sfwr73ShwxU_kYUvcKJELYu7j8ppW34YDx2thxUizCuVLYe_rWVKNfqV4hM8qx_Kj-X_OvbdhQSjIYyL1JHBDKeW2hb9oA1a-8ddfn-JLth-wXJUk53xeRiHMz4BI6cxojhgdmqwTYK0k7lwO2lzPlLOGuj1Pz_k7DVKBRwE0I-S1SpXDLIBz9WBWnHrDDy1KjIQFs6i1_MHp_mtOEMRHdm1ctNb1unMxNlniYMXWmtyTJvZ6uTqKuPPZx9Y-GWXD-FHgu0aLVjJ3-ukmA.jpg",
       "buy_url": "https://link.amazon/B0iMr0YIU",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 2.2
-    },
-    {
-      "post_id": "IskandarSouza/199658",
-      "channel_id": "iskandarsouza",
-      "channel_name": "Iskandar Souza",
-      "store_name": "KaBuM!",
-      "post_url": "https://t.me/IskandarSouza/199658",
-      "timestamp": "2026-11-22T16:07:08+00:00",
-      "title": "🇧🇷  #Kabum -  FONTES 650W",
-      "head_text": "🇧🇷  #Kabum -  FONTES 650W 🏷 Cupom: BLACKFONTE 🚗 Frete Varia por Estado",
-      "raw_text": "🇧🇷  #Kabum -  FONTES 650W\n\n🏷 Cupom: BLACKFONTE\n🚗 Frete Varia por Estado\n\n✔️ Fonte 650W Branca Gamer Rise Mode Elektra,  Bronze, Full Modular, PFC Ativo, RM-PSU-ELKM-650-W\n💰 Valor : R$ 237,99\n✅ Link: https://seuhardware.com/s/Fbbko43\n\n✔️ Fonte 650W, Preto, Gamer Rise Mode Elektra, Bronze, Full Modular, PFC Ativo,  RM-PSU-ELKM-650-B\n💰 Valor : R$ 229,49\n✅ https://seuhardware.com/s/PvfdhSs\n\n✔️Fonte 65",
-      "price_brl": 203.99,
-      "raw_price_brl": 246.49,
-      "discount_applied": 42.5,
-      "coupon_code": "BLACKFONTE",
-      "coupon_info": "Cupom: BLACKFONTE",
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/Cz6vI6rgBUva3cognXYd25u42IvKDsR3Q6xTJNJKHjDThpDmrFqO7lHeybDAnsHk1GgIX0uodg-9NY6SArg9FkXN1xqcyRHXfXkjaMW7PE2Mc1DbnHE_uiYrlYAIUM4MyU_LlPJJstilc6qDhbV43dxzyGiVll1cy-6FBuUUozuWtFB-O1JFWkvegyXwWS2jhv8png_zBtrl_MbSrE5w7NrKZBpEHYvbCg0hGMop7rjgxY0MdMxQI_pQZKcc2z0y5GufS93vcweNHdSRUWWQzSHgEjq3pxiJzhuzMK71vLTIhdDlqjapkaHcd4jFTUnxBdUviEhffUuxxE8raosPrg.jpg",
-      "buy_url": "https://seuhardware.com/s/eKdDzAP",
-      "coupon_url": "https://seuhardware.com/s/Fbbko43",
-      "region_id": "br",
-      "age_hours": 2.2
-    },
-    {
-      "post_id": "ofertasadrenaline/60441",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/ofertasadrenaline/60441",
-      "timestamp": "2026-11-22T16:01:48+00:00",
-      "title": "Fonte Corsair RM850e, 850W, Full-Modular, ATX 3.1, PCIe 5.1, Cybenetics Gold, Preto por R$593,99",
-      "head_text": "Fonte Corsair RM850e, 850W, Full-Modular, ATX 3.1, PCIe 5.1, Cybenetics Gold, Preto por R$593,99 🎟️Com cupom PRUMO10OFF e pagando no PIX! ⚠️Compre aqui: https://curt.link/YlHBr",
-      "raw_text": "Fonte Corsair RM850e, 850W, Full-Modular, ATX 3.1, PCIe 5.1, Cybenetics Gold, Preto por R$593,99\n⠀\n🎟️Com cupom PRUMO10OFF e pagando no PIX!\n⠀\n⚠️Compre aqui: https://curt.link/YlHBr\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 593.99,
-      "raw_price_brl": 593.99,
-      "discount_applied": 0.0,
-      "coupon_code": "PRUMO10OFF",
-      "coupon_info": "Com cupom PRUMO10OFF e pagando no PIX!",
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/fP4DMI4U2HKQ2I_h0HopJDZuUPcu_vPXM1uZZuwOLYVG0l-TrgJ2o_Fkf_nmm-xk87a1mjrZlCxOw9BzSlIprNeIj3-Xv2SrBp0zkZxNfVtuE6MKSGIfvpwyRoYxncZRLcjZC7QM8jyO3AKr7YBFsbPp7fVgfj2G3SF6C9xF1aD3ieDriqM4X1jrGP1G9YEaX3hA-5E8ETxCBOFCZN7ktyzE1yA6C53JlwiFqAuGX6Nv7USyq8jtJCZl1FppVXcOVOBnhbCYgNl9NlMRFq1sbcOyMBPgdwyCZ-goA5L2vKAzbSykzk-ZWdHdQmtseBBA3ytNR-Sw8a6_IOSU4_LNxg.jpg",
-      "buy_url": "https://curt.link/YlHBr",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 2.3
-    },
-    {
-      "post_id": "ofertasadrenaline/60442",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/ofertasadrenaline/60442",
-      "timestamp": "2026-11-22T16:02:43+00:00",
-      "title": "Water Cooler Corsair Nautilus RS, 360mm, Display LCD, PWM, Intel-AMD, Preto por R$799,99",
-      "head_text": "Water Cooler Corsair Nautilus RS, 360mm, Display LCD, PWM, Intel-AMD, Preto por R$799,99 ⚠️Compre aqui: https://curt.link/daiZu 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Water Cooler Corsair Nautilus RS, 360mm, Display LCD, PWM, Intel-AMD, Preto por R$799,99\n⠀\n⚠️Compre aqui: https://curt.link/daiZu\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 799.99,
-      "raw_price_brl": 799.99,
-      "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": null,
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/Z2ZQ2dzsiD9XjnU9kxaKBU2bzWjoxk-9yMl-LRRGQsVJ26aOtjcjXa1UaBeCJK5rft7BPuJ2LhJ6F-HThDE9dnG0khQt-o2ajmfRvOZmPXQN9kU1Pk9qaj-Ya5quxQIlkFisVndClYsBTQ81hokmSWkTDIuLrxS1abrnj1CcRZY8eyUjVT8pbaW2xnXc74OIC_00EIkTSI_bxtpb7ocF0PSHsI2dTrxg0Pmzfhp2dk-8UCvWJYEz-uJAntooXET9Dlr9vHh8oA-VonF1P0ueyDX9EhVsd4-s_1ZWmWILzKdERvAI9MjQOfzhYAYgk6qLXijkUJMQuPlA-RnbRXyIqg.jpg",
-      "buy_url": "https://curt.link/daiZu",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 2.3
-    },
-    {
-      "post_id": "ofertasadrenaline/60443",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "E-commerce BR",
-      "post_url": "https://t.me/ofertasadrenaline/60443",
-      "timestamp": "2026-11-22T16:03:30+00:00",
-      "title": "Gabinete Gamer Hyte X50 Air Pitch Black, Mid Tower, Mesh, ATX, Sem Fonte, Sem Fans, Preto por R$1.099,99",
-      "head_text": "Gabinete Gamer Hyte X50 Air Pitch Black, Mid Tower, Mesh, ATX, Sem Fonte, Sem Fans, Preto por R$1.099,99 ⚠️Compre aqui: https://curt.link/JezVE 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Gabinete Gamer Hyte X50 Air Pitch Black, Mid Tower, Mesh, ATX, Sem Fonte, Sem Fans, Preto por R$1.099,99\n⠀\n⚠️Compre aqui: https://curt.link/JezVE\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 1099.99,
-      "raw_price_brl": 1099.99,
-      "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": null,
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/HITd5CEuOYvPa3izVaYN62Zjv1fpyO0WTfB7o9W6fWYO9CDLdZZ4gP8wRY49vycZVlTUcP9llRqal1m-XEjvCR-PZIR-asqiY3AVLA_dnuyo1hF3D9V-YjB688nBBWBsigcKHjITJfr9XNiYkGaflfQ_gq0Id8w5ZPEnuWMDGSKmEn8OM453QeHcortCu22io8IOpnd6gtIlLBxacV_mRz70XlTMsp9-OXpoaYD1Px3roI1zT-ybk8ikazYGQvwnoetS4FWwXb-HPanfRufKyjburXNzoutdjPRB7EcIjtMwF9jhtWui29gRSed6g0E_HktEa4wSRF7vp55pRowMOw.jpg",
-      "buy_url": "https://curt.link/JezVE",
       "coupon_url": null,
       "region_id": "br",
       "age_hours": 2.3
@@ -1649,106 +1562,92 @@
       "age_hours": 2.3
     },
     {
-      "post_id": "ofertasadrenaline/60439",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "Mercado Livre",
-      "post_url": "https://t.me/ofertasadrenaline/60439",
-      "timestamp": "2026-11-22T15:54:07+00:00",
-      "title": "Volante Gamer Logitech G920 Driving Force Xbox e PC Preto por R$1.295,19",
-      "head_text": "Volante Gamer Logitech G920 Driving Force Xbox e PC Preto por R$1.295,19 ⚠️Compre aqui: https://meli.la/1X4eCQs 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Volante Gamer Logitech G920 Driving Force Xbox e PC Preto por R$1.295,19\n⠀\n⚠️Compre aqui: https://meli.la/1X4eCQs\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 1295.19,
-      "raw_price_brl": 1295.19,
-      "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": null,
+      "post_id": "IskandarSouza/199658",
+      "channel_id": "iskandarsouza",
+      "channel_name": "Iskandar Souza",
+      "store_name": "KaBuM!",
+      "post_url": "https://t.me/IskandarSouza/199658",
+      "timestamp": "2026-11-22T16:07:08+00:00",
+      "title": "🇧🇷  #Kabum -  FONTES 650W",
+      "head_text": "🇧🇷  #Kabum -  FONTES 650W 🏷 Cupom: BLACKFONTE 🚗 Frete Varia por Estado",
+      "raw_text": "🇧🇷  #Kabum -  FONTES 650W\n\n🏷 Cupom: BLACKFONTE\n🚗 Frete Varia por Estado\n\n✔️ Fonte 650W Branca Gamer Rise Mode Elektra,  Bronze, Full Modular, PFC Ativo, RM-PSU-ELKM-650-W\n💰 Valor : R$ 237,99\n✅ Link: https://seuhardware.com/s/Fbbko43\n\n✔️ Fonte 650W, Preto, Gamer Rise Mode Elektra, Bronze, Full Modular, PFC Ativo,  RM-PSU-ELKM-650-B\n💰 Valor : R$ 229,49\n✅ https://seuhardware.com/s/PvfdhSs\n\n✔️Fonte 65",
+      "price_brl": 203.99,
+      "raw_price_brl": 246.49,
+      "discount_applied": 42.5,
+      "coupon_code": "BLACKFONTE",
+      "coupon_info": "Cupom: BLACKFONTE",
       "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/spYNA8GrXTinPTu9RoBehXduEWYgupwdzdx1eEpQBzZhB6IM9mBsXLLgqOD-vjhuccF8Q54eAalT9jXCaZexSrCSzc5Ll2hw_-xi2Msx3oPKD1_EfPojZYLoKvN_oHcDbAQSiaz5EWIKS-GdJr3AQ9_XxMc_jFYEBF0__EWByMhfhqVSIJ3F2eMU7CCqWxJVdETjfhsHq8I_smQgO2AmIu7ZPKueGVxzDc_JBDIqOISX5mym_HvWoRKaqZAgE0Kn6q_aY2l2QoTvublvmN3mUtQfKhsQ7XJ0q1Z_g34rrc9TagrKq6eLS1nTTjF8Eo_OOzHREDI6GZFMIr7bsrtXyA.jpg",
-      "buy_url": "https://meli.la/1X4eCQs",
-      "coupon_url": null,
+      "image_url": "https://cdn1.telesco.pe/file/Cz6vI6rgBUva3cognXYd25u42IvKDsR3Q6xTJNJKHjDThpDmrFqO7lHeybDAnsHk1GgIX0uodg-9NY6SArg9FkXN1xqcyRHXfXkjaMW7PE2Mc1DbnHE_uiYrlYAIUM4MyU_LlPJJstilc6qDhbV43dxzyGiVll1cy-6FBuUUozuWtFB-O1JFWkvegyXwWS2jhv8png_zBtrl_MbSrE5w7NrKZBpEHYvbCg0hGMop7rjgxY0MdMxQI_pQZKcc2z0y5GufS93vcweNHdSRUWWQzSHgEjq3pxiJzhuzMK71vLTIhdDlqjapkaHcd4jFTUnxBdUviEhffUuxxE8raosPrg.jpg",
+      "buy_url": "https://seuhardware.com/s/eKdDzAP",
+      "coupon_url": "https://seuhardware.com/s/Fbbko43",
       "region_id": "br",
-      "age_hours": 2.4
+      "age_hours": 2.3
     },
     {
-      "post_id": "BenchPromos/28702",
-      "channel_id": "benchpromos",
-      "channel_name": "BenchPromos",
+      "post_id": "ofertasadrenaline/60441",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
       "store_name": "E-commerce BR",
-      "post_url": "https://t.me/BenchPromos/28702",
-      "timestamp": "2026-11-22T15:54:38+00:00",
-      "title": "Volante Logitech G920 Driving Force para Xbox Series X|S, Xbox One e PC - R$ 1.295,19 🔥 #anúncio",
-      "head_text": "🔥 Volante Logitech G920 Driving Force para Xbox Series X|S, Xbox One e PC - R$ 1.295,19 🔥 #anúncio 💸 R$ 1.295,19 (À Vista) 💸 R$ 1.439,10 (Parcelado em 3x)",
-      "raw_text": "🔥 Volante Logitech G920 Driving Force para Xbox Series X|S, Xbox One e PC - R$ 1.295,19 🔥 #anúncio\n\n💸 R$ 1.295,19 (À Vista)\n💸 R$ 1.439,10 (Parcelado em 3x)\n\n🔗 https://benchpromos.com.br/promocao/volante-logitech-g920-driving-force-para-xbox-series-xs-xbox-one-e-pc/cmws0pagm003dmh0776ww399v",
-      "price_brl": 1295.19,
-      "raw_price_brl": 1295.19,
+      "post_url": "https://t.me/ofertasadrenaline/60441",
+      "timestamp": "2026-11-22T16:01:48+00:00",
+      "title": "Fonte Corsair RM850e, 850W, Full-Modular, ATX 3.1, PCIe 5.1, Cybenetics Gold, Preto por R$593,99",
+      "head_text": "Fonte Corsair RM850e, 850W, Full-Modular, ATX 3.1, PCIe 5.1, Cybenetics Gold, Preto por R$593,99 🎟️Com cupom PRUMO10OFF e pagando no PIX! ⚠️Compre aqui: https://curt.link/YlHBr",
+      "raw_text": "Fonte Corsair RM850e, 850W, Full-Modular, ATX 3.1, PCIe 5.1, Cybenetics Gold, Preto por R$593,99\n⠀\n🎟️Com cupom PRUMO10OFF e pagando no PIX!\n⠀\n⚠️Compre aqui: https://curt.link/YlHBr\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 593.99,
+      "raw_price_brl": 593.99,
       "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": null,
+      "coupon_code": "PRUMO10OFF",
+      "coupon_info": "Com cupom PRUMO10OFF e pagando no PIX!",
       "is_conditional_voucher": false,
-      "image_url": "https://cdn4.telesco.pe/file/V3LD7XHtsMiJID2m5Q5cBEz-e-8qajELGrlPmFaYhPIoOSoycWVkSP3ql26mxiR3vgWKFLUEFNN5KGvWZ5bEHL_leJNrzFOFu1noHhRH8urA4vdpUnku6NSd6kPtY35tzzbB-eB6Ko_FK5ff61O6_zQ89CVQ-NGyVB9uswD5wlcCX5YiRU4G6R07t8oW9SAxBoLp_YRDEMQJ78gG7v27luvf5eUm2qm3fzwnDkMRgmubhHGNKFQ9GrxU_Ihwt8ez7Fg6YW2uc_p1N9-S26YsSFzR8E5BEkL8d2oHhmqslE3s7meiSVKsRspj2AxeG6MBbb1uNp14BiHZvONViDs5zg.jpg",
-      "buy_url": "https://benchpromos.com.br/promocao/volante-logitech-g920-driving-force-para-xbox-series-xs-xbox-one-e-pc/cmws0pagm003dmh0776ww399v",
+      "image_url": "https://cdn1.telesco.pe/file/fP4DMI4U2HKQ2I_h0HopJDZuUPcu_vPXM1uZZuwOLYVG0l-TrgJ2o_Fkf_nmm-xk87a1mjrZlCxOw9BzSlIprNeIj3-Xv2SrBp0zkZxNfVtuE6MKSGIfvpwyRoYxncZRLcjZC7QM8jyO3AKr7YBFsbPp7fVgfj2G3SF6C9xF1aD3ieDriqM4X1jrGP1G9YEaX3hA-5E8ETxCBOFCZN7ktyzE1yA6C53JlwiFqAuGX6Nv7USyq8jtJCZl1FppVXcOVOBnhbCYgNl9NlMRFq1sbcOyMBPgdwyCZ-goA5L2vKAzbSykzk-ZWdHdQmtseBBA3ytNR-Sw8a6_IOSU4_LNxg.jpg",
+      "buy_url": "https://curt.link/YlHBr",
       "coupon_url": null,
       "region_id": "br",
       "age_hours": 2.4
     },
     {
-      "post_id": "ofertasadrenaline/60435",
+      "post_id": "ofertasadrenaline/60442",
       "channel_id": "ofertasadrenaline",
       "channel_name": "Ofertas Adrenaline",
-      "store_name": "Amazon BR",
-      "post_url": "https://t.me/ofertasadrenaline/60435",
-      "timestamp": "2026-11-22T15:48:47+00:00",
-      "title": "Jogo Persona 3 Reload, Mídi Física, PS5 por R$132,53",
-      "head_text": "Jogo Persona 3 Reload, Mídi Física, PS5 por R$132,53 🌎Compra Internacional com as tarifas inclusas! 🎟️Com desconto na finalização da compra e pagando em até 6x sem juros!",
-      "raw_text": "Jogo Persona 3 Reload, Mídi Física, PS5 por R$132,53\n⠀\n🌎Compra Internacional com as tarifas inclusas!\n🎟️Com desconto na finalização da compra e pagando em até 6x sem juros! \n⠀\n⚠️Compre aqui: https://link.amazon/B097e3a79\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 132.53,
-      "raw_price_brl": 132.53,
-      "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": "Com desconto na finalização da compra e pagando em até 6x sem juros!",
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/Mc72F5pumhwji6uzeNJmT-_XGFOriJwqsrToEhcdSX7Ga8fs2ytYcX421nLhVPJq3bv1582wr6oBzco6Kywn9vOtzFW8da1OICIApaP57cKB9WU8kF0ut4Vx1rgK77pzPY9HJ5hgaS2a3GojbGlrxHmWYC_Rr2LmZ7xBdnwrzJOKukJKj2wVA9qJ0zeN_PeKpGLSQXHyDvBBp7tAHebR1Uqe5CHOdMa_gMTrnBnbO9B_Giy9P6w6TnSRvUDR1cPEuhzc-iuHVOo8X8f7GM4yDeGaac0XMuLWoeQfEKhCnzeJiO-thfEl_6pXhhr4-ZARpH50baef26kfCPkgmsmuLQ.jpg",
-      "buy_url": "https://link.amazon/B097e3a79",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 2.5
-    },
-    {
-      "post_id": "ofertasadrenaline/60437",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "Amazon BR",
-      "post_url": "https://t.me/ofertasadrenaline/60437",
-      "timestamp": "2026-11-22T15:52:03+00:00",
-      "title": "Processador AMD Ryzen 5 5500, AMD AM4 por R$483,05",
-      "head_text": "Processador AMD Ryzen 5 5500, AMD AM4 por R$483,05 ⚠️Compre aqui: https://link.amazon/B0huv9086 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Processador AMD Ryzen 5 5500, AMD AM4 por R$483,05\n⠀\n⚠️Compre aqui: https://link.amazon/B0huv9086\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 483.05,
-      "raw_price_brl": 483.05,
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/ofertasadrenaline/60442",
+      "timestamp": "2026-11-22T16:02:43+00:00",
+      "title": "Water Cooler Corsair Nautilus RS, 360mm, Display LCD, PWM, Intel-AMD, Preto por R$799,99",
+      "head_text": "Water Cooler Corsair Nautilus RS, 360mm, Display LCD, PWM, Intel-AMD, Preto por R$799,99 ⚠️Compre aqui: https://curt.link/daiZu 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Water Cooler Corsair Nautilus RS, 360mm, Display LCD, PWM, Intel-AMD, Preto por R$799,99\n⠀\n⚠️Compre aqui: https://curt.link/daiZu\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 799.99,
+      "raw_price_brl": 799.99,
       "discount_applied": 0.0,
       "coupon_code": null,
       "coupon_info": null,
       "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/hKVemP9Fp1k-fF3FJ-2OWOOMCK0HR_Cvz_dIeh_Ej90xYz8X50RmR4FFBh8GCwq9JPncBF4SbNdyhFKLgY445KgyvWhBdf9B0q9_TN71GOfNhYeLXa3-Epa7S_eZ4mD4TDAeMqfGJUY7NEFuJVYINzdFkWr6SeGYps-UcUasSbLjCWT3npUel7HM5OkJ2cAtG1c32mYCkAKgWGPVIO45qcjoS0DSe3u4GZ3t_1YMXJblIIR8A5AYfrctIzC7UtAaquG-CsjIUjBzgkzas4rfIlLpG8WvlcrJtwC-vasa1TDpVd28XxfkbGYJqc6TzJFQuR0xrsCiJBnPwddAlYJV4Q.jpg",
-      "buy_url": "https://link.amazon/B0huv9086",
+      "image_url": "https://cdn1.telesco.pe/file/Z2ZQ2dzsiD9XjnU9kxaKBU2bzWjoxk-9yMl-LRRGQsVJ26aOtjcjXa1UaBeCJK5rft7BPuJ2LhJ6F-HThDE9dnG0khQt-o2ajmfRvOZmPXQN9kU1Pk9qaj-Ya5quxQIlkFisVndClYsBTQ81hokmSWkTDIuLrxS1abrnj1CcRZY8eyUjVT8pbaW2xnXc74OIC_00EIkTSI_bxtpb7ocF0PSHsI2dTrxg0Pmzfhp2dk-8UCvWJYEz-uJAntooXET9Dlr9vHh8oA-VonF1P0ueyDX9EhVsd4-s_1ZWmWILzKdERvAI9MjQOfzhYAYgk6qLXijkUJMQuPlA-RnbRXyIqg.jpg",
+      "buy_url": "https://curt.link/daiZu",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.5,
-      "matched_kind": "cpu",
-      "matched_slug": "ryzen-5-5500",
-      "matched_name": "Ryzen 5 5500",
-      "hb_price_brl": 476.2,
-      "savings_vs_hb_brl": -6.85,
-      "requires_coupon": false,
-      "promo_price_brl": 483.05,
-      "is_expired": false,
-      "deal_status": "untested",
-      "is_coupon_expired": false,
-      "coupon_status": "none",
-      "deal_status_reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
-      "stock_verified": false,
-      "live_store_price_brl": 483.65
+      "age_hours": 2.4
+    },
+    {
+      "post_id": "ofertasadrenaline/60443",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/ofertasadrenaline/60443",
+      "timestamp": "2026-11-22T16:03:30+00:00",
+      "title": "Gabinete Gamer Hyte X50 Air Pitch Black, Mid Tower, Mesh, ATX, Sem Fonte, Sem Fans, Preto por R$1.099,99",
+      "head_text": "Gabinete Gamer Hyte X50 Air Pitch Black, Mid Tower, Mesh, ATX, Sem Fonte, Sem Fans, Preto por R$1.099,99 ⚠️Compre aqui: https://curt.link/JezVE 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Gabinete Gamer Hyte X50 Air Pitch Black, Mid Tower, Mesh, ATX, Sem Fonte, Sem Fans, Preto por R$1.099,99\n⠀\n⚠️Compre aqui: https://curt.link/JezVE\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 1099.99,
+      "raw_price_brl": 1099.99,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": null,
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/HITd5CEuOYvPa3izVaYN62Zjv1fpyO0WTfB7o9W6fWYO9CDLdZZ4gP8wRY49vycZVlTUcP9llRqal1m-XEjvCR-PZIR-asqiY3AVLA_dnuyo1hF3D9V-YjB688nBBWBsigcKHjITJfr9XNiYkGaflfQ_gq0Id8w5ZPEnuWMDGSKmEn8OM453QeHcortCu22io8IOpnd6gtIlLBxacV_mRz70XlTMsp9-OXpoaYD1Px3roI1zT-ybk8ikazYGQvwnoetS4FWwXb-HPanfRufKyjburXNzoutdjPRB7EcIjtMwF9jhtWui29gRSed6g0E_HktEa4wSRF7vp55pRowMOw.jpg",
+      "buy_url": "https://curt.link/JezVE",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 2.4
     },
     {
       "post_id": "ofertasadrenaline/60438",
@@ -1773,114 +1672,84 @@
       "age_hours": 2.5
     },
     {
-      "post_id": "nerdofertas/154225",
-      "channel_id": "nerdofertas",
-      "channel_name": "Nerd Ofertas",
-      "store_name": "Shopee",
-      "post_url": "https://t.me/nerdofertas/154225",
-      "timestamp": "2026-11-22T15:49:26+00:00",
-      "title": "🏷️ R$15 OFF em compras acima de R$89",
-      "head_text": "🚨 Cupom Shopee Ativo 🏷️ R$15 OFF em compras acima de R$89 🏷️ Cupom: NOVESPORTE15OFF",
-      "raw_text": "🚨 Cupom Shopee Ativo \n\n🏷️ R$15 OFF em compras acima de R$89\n🏷️ Cupom: NOVESPORTE15OFF\n\n🚨 Resgate aqui: https://s.shopee.com.br/70AlZWfj1A\n🛒 Link carrinho: https://s.shopee.com.br/7KnbyAmn8b\n\nTotal de 17 Cupons Shopee Ativos no site: https://nerdcupons.com/shopee",
-      "price_brl": 89.0,
-      "raw_price_brl": 89.0,
+      "post_id": "ofertasadrenaline/60439",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "Mercado Livre",
+      "post_url": "https://t.me/ofertasadrenaline/60439",
+      "timestamp": "2026-11-22T15:54:07+00:00",
+      "title": "Volante Gamer Logitech G920 Driving Force Xbox e PC Preto por R$1.295,19",
+      "head_text": "Volante Gamer Logitech G920 Driving Force Xbox e PC Preto por R$1.295,19 ⚠️Compre aqui: https://meli.la/1X4eCQs 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Volante Gamer Logitech G920 Driving Force Xbox e PC Preto por R$1.295,19\n⠀\n⚠️Compre aqui: https://meli.la/1X4eCQs\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 1295.19,
+      "raw_price_brl": 1295.19,
       "discount_applied": 0.0,
       "coupon_code": null,
-      "coupon_info": "🚨 Cupom Shopee Ativo",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/qAxNo7CgUaMAoAbfxO3sbEetVXTEp1cib8XuiLzTWvfETw6Yh-7-ejO8F9Z5C5bWRsgms3gw9o-P3tRnqG8-xlNXWpt8k9AHC_x58O6sAdBtk7_G86Ic0U_ApYAqr9PDRwq2qHLYurgjjnGtSuJ_AvCuNvkpq5fb7wwqjbl7oTTfvtL6RqBkcd-BpEHhBnn3ttlTUeGheedJoXVLpfWBfjfZ2HZQkriXJ-KHIwQxaCTp73UFp1ZIwVtzB9RxVIbKNzOXaBP9K84U5syFuOe066NRong8HRs_zlvorwX_zL2KSElvCl8p_Y5b3tCAXrHVJH9C-Ujpl2yOcP9FfHjm6g.jpg",
-      "buy_url": "https://nerdcupons.com/shopee",
-      "coupon_url": "https://s.shopee.com.br/70AlZWfj1A",
+      "coupon_info": null,
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/spYNA8GrXTinPTu9RoBehXduEWYgupwdzdx1eEpQBzZhB6IM9mBsXLLgqOD-vjhuccF8Q54eAalT9jXCaZexSrCSzc5Ll2hw_-xi2Msx3oPKD1_EfPojZYLoKvN_oHcDbAQSiaz5EWIKS-GdJr3AQ9_XxMc_jFYEBF0__EWByMhfhqVSIJ3F2eMU7CCqWxJVdETjfhsHq8I_smQgO2AmIu7ZPKueGVxzDc_JBDIqOISX5mym_HvWoRKaqZAgE0Kn6q_aY2l2QoTvublvmN3mUtQfKhsQ7XJ0q1Z_g34rrc9TagrKq6eLS1nTTjF8Eo_OOzHREDI6GZFMIr7bsrtXyA.jpg",
+      "buy_url": "https://meli.la/1X4eCQs",
+      "coupon_url": null,
       "region_id": "br",
       "age_hours": 2.5
     },
     {
-      "post_id": "ofertasadrenaline/60430",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "Amazon BR",
-      "post_url": "https://t.me/ofertasadrenaline/60430",
-      "timestamp": "2026-11-22T15:43:33+00:00",
-      "title": "Controle sem fio PlayStation DualSense – Starlight Blue por R$334,79",
-      "head_text": "Controle sem fio PlayStation DualSense – Starlight Blue por R$334,79 ⚠️Compre aqui: https://link.amazon/B0f8z41Bs 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Controle sem fio PlayStation DualSense – Starlight Blue por R$334,79\n⠀\n⚠️Compre aqui: https://link.amazon/B0f8z41Bs\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 334.79,
-      "raw_price_brl": 334.79,
+      "post_id": "BenchPromos/28702",
+      "channel_id": "benchpromos",
+      "channel_name": "BenchPromos",
+      "store_name": "E-commerce BR",
+      "post_url": "https://t.me/BenchPromos/28702",
+      "timestamp": "2026-11-22T15:54:38+00:00",
+      "title": "Volante Logitech G920 Driving Force para Xbox Series X|S, Xbox One e PC - R$ 1.295,19 🔥 #anúncio",
+      "head_text": "🔥 Volante Logitech G920 Driving Force para Xbox Series X|S, Xbox One e PC - R$ 1.295,19 🔥 #anúncio 💸 R$ 1.295,19 (À Vista) 💸 R$ 1.439,10 (Parcelado em 3x)",
+      "raw_text": "🔥 Volante Logitech G920 Driving Force para Xbox Series X|S, Xbox One e PC - R$ 1.295,19 🔥 #anúncio\n\n💸 R$ 1.295,19 (À Vista)\n💸 R$ 1.439,10 (Parcelado em 3x)\n\n🔗 https://benchpromos.com.br/promocao/volante-logitech-g920-driving-force-para-xbox-series-xs-xbox-one-e-pc/cmws0pagm003dmh0776ww399v",
+      "price_brl": 1295.19,
+      "raw_price_brl": 1295.19,
       "discount_applied": 0.0,
       "coupon_code": null,
       "coupon_info": null,
       "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/LBONVRzVePjfzI90ESOJ6x0EfVnvqr4nqkoeFn7-jZsIH4uR_20eoQQHaJkiwl8J3f1gRI8NkL1gP9rmXBCBy1pbbA6KNfA2GgiWXPbmHJXUFGNjSbWW7ujTuNfa1zpedZoa5tTQH6J-F6xWJByyaw5LuiTKWu5_8qspHJ8B-YjkR7MC4PDo6Gzf7jevF5vMwYmrrmgu7YA1RLp9rCTLcm7GJOxXqnaUAgY77-StDvn2fnbJtOFSOKVYgKwuZatuu2I0l8IR-sG9zoGw729u1OE1qu8hPYK7hiB8J1LYhmlnZF76nAyNTUb1gHhb9hrxZxcI-Vo01KoLqlJLMyUb4A.jpg",
-      "buy_url": "https://link.amazon/B0f8z41Bs",
+      "image_url": "https://cdn4.telesco.pe/file/V3LD7XHtsMiJID2m5Q5cBEz-e-8qajELGrlPmFaYhPIoOSoycWVkSP3ql26mxiR3vgWKFLUEFNN5KGvWZ5bEHL_leJNrzFOFu1noHhRH8urA4vdpUnku6NSd6kPtY35tzzbB-eB6Ko_FK5ff61O6_zQ89CVQ-NGyVB9uswD5wlcCX5YiRU4G6R07t8oW9SAxBoLp_YRDEMQJ78gG7v27luvf5eUm2qm3fzwnDkMRgmubhHGNKFQ9GrxU_Ihwt8ez7Fg6YW2uc_p1N9-S26YsSFzR8E5BEkL8d2oHhmqslE3s7meiSVKsRspj2AxeG6MBbb1uNp14BiHZvONViDs5zg.jpg",
+      "buy_url": "https://benchpromos.com.br/promocao/volante-logitech-g920-driving-force-para-xbox-series-xs-xbox-one-e-pc/cmws0pagm003dmh0776ww399v",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.6
+      "age_hours": 2.5
     },
     {
-      "post_id": "ofertasadrenaline/60431",
+      "post_id": "ofertasadrenaline/60437",
       "channel_id": "ofertasadrenaline",
       "channel_name": "Ofertas Adrenaline",
       "store_name": "Amazon BR",
-      "post_url": "https://t.me/ofertasadrenaline/60431",
-      "timestamp": "2026-11-22T15:44:31+00:00",
-      "title": "Controle sem fio PlayStation DualSense – Rhythm Blue por R$375,81",
-      "head_text": "Controle sem fio PlayStation DualSense – Rhythm Blue por R$375,81 ⚠️Compre aqui: https://link.amazon/B0ipMprh6 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Controle sem fio PlayStation DualSense – Rhythm Blue por R$375,81\n⠀\n⚠️Compre aqui: https://link.amazon/B0ipMprh6\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 375.81,
-      "raw_price_brl": 375.81,
+      "post_url": "https://t.me/ofertasadrenaline/60437",
+      "timestamp": "2026-11-22T15:52:03+00:00",
+      "title": "Processador AMD Ryzen 5 5500, AMD AM4 por R$483,05",
+      "head_text": "Processador AMD Ryzen 5 5500, AMD AM4 por R$483,05 ⚠️Compre aqui: https://link.amazon/B0huv9086 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Processador AMD Ryzen 5 5500, AMD AM4 por R$483,05\n⠀\n⚠️Compre aqui: https://link.amazon/B0huv9086\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 483.05,
+      "raw_price_brl": 483.05,
       "discount_applied": 0.0,
       "coupon_code": null,
       "coupon_info": null,
       "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/TZhpKr8_ryRSo2ycZPliiQSIV3M56yzH90wDExv_XYvgMDGLo9CPpo9EOCP_DnaY1lEDItHEdeSOBcyJgqmHbez5gwaPScmPmLq38_MCcb9NzU5Qt4YPPycGEvj8lA3qJAvUHex3z1T4tv9afSEZSrkbH4dUNS24JB9aPxPY6URap8pfqmucgvnR2dI-kIhd5jUkbUEpb-Dz6kR0OCaPSqq2JLPZdLfYcCTYBrbrV17VtkLjTnMrfLl2DgMnPWLG2JW8SFBWGchI6GSzSSGcRZrLtYIdwpYKR7STEY6IQOF5bNXt6uAnUhsN6H8ZBYqx2CITVjUhgIU99owlQn1szA.jpg",
-      "buy_url": "https://link.amazon/B0ipMprh6",
+      "image_url": "https://cdn1.telesco.pe/file/hKVemP9Fp1k-fF3FJ-2OWOOMCK0HR_Cvz_dIeh_Ej90xYz8X50RmR4FFBh8GCwq9JPncBF4SbNdyhFKLgY445KgyvWhBdf9B0q9_TN71GOfNhYeLXa3-Epa7S_eZ4mD4TDAeMqfGJUY7NEFuJVYINzdFkWr6SeGYps-UcUasSbLjCWT3npUel7HM5OkJ2cAtG1c32mYCkAKgWGPVIO45qcjoS0DSe3u4GZ3t_1YMXJblIIR8A5AYfrctIzC7UtAaquG-CsjIUjBzgkzas4rfIlLpG8WvlcrJtwC-vasa1TDpVd28XxfkbGYJqc6TzJFQuR0xrsCiJBnPwddAlYJV4Q.jpg",
+      "buy_url": "https://link.amazon/B0huv9086",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.6
-    },
-    {
-      "post_id": "ofertasadrenaline/60432",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "Amazon BR",
-      "post_url": "https://t.me/ofertasadrenaline/60432",
-      "timestamp": "2026-11-22T15:45:21+00:00",
-      "title": "Headset Gamer Logitech G PRO X, 7.1 Dolby Surround, Blue VO!CE por R$758,99",
-      "head_text": "Headset Gamer Logitech G PRO X, 7.1 Dolby Surround, Blue VO!CE por R$758,99 ⚠️Compre aqui: https://link.amazon/B02WfiLvx 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Headset Gamer Logitech G PRO X, 7.1 Dolby Surround, Blue VO!CE por R$758,99\n⠀\n⚠️Compre aqui: https://link.amazon/B02WfiLvx\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 758.99,
-      "raw_price_brl": 758.99,
-      "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": null,
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/Cojkv-NQ_d88iYKUjKVdVIyX3h0qJEGHc1_sMVhbdLltjWNBxs_UndcttsMArZmgAlOU5dazzjLajeET69KhtqRutSy4Mff019jlt3O-X4kopy1ykxLrTW1KprfJx5SS915zgzrX8JgHuFn6uzobTJ-9GEtfo9_TGqgh3AQ5Yy395MOnbVzVk5O1w683Y2HzgKcZO8aNgOVmKMj2fc1VMNGTBFojQvbkWIwbmpW3izr9eXfEMf1boP36YVvy2Uv9WDDIQgVCoYLSC6D6Dx5yyAwypeh-K6KyAu15sak4nFjGBokuVtPriGDoqlhHsbTZtl76uCqSjbRYsCIBrcEXkQ.jpg",
-      "buy_url": "https://link.amazon/B02WfiLvx",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 2.6
-    },
-    {
-      "post_id": "ofertasadrenaline/60433",
-      "channel_id": "ofertasadrenaline",
-      "channel_name": "Ofertas Adrenaline",
-      "store_name": "Amazon BR",
-      "post_url": "https://t.me/ofertasadrenaline/60433",
-      "timestamp": "2026-11-22T15:46:08+00:00",
-      "title": "Teclado Gamer de Membrana Redragon Shiva RGB V2, Preto, K512RGB V2 por R$131,31",
-      "head_text": "Teclado Gamer de Membrana Redragon Shiva RGB V2, Preto, K512RGB V2 por R$131,31 ⚠️Compre aqui: https://link.amazon/B047tIsnJ 💰Entre no nosso grupo de ofertas:",
-      "raw_text": "Teclado Gamer de Membrana Redragon Shiva RGB V2, Preto, K512RGB V2 por R$131,31\n⠀\n⚠️Compre aqui: https://link.amazon/B047tIsnJ\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
-      "price_brl": 131.31,
-      "raw_price_brl": 131.31,
-      "discount_applied": 0.0,
-      "coupon_code": null,
-      "coupon_info": null,
-      "is_conditional_voucher": false,
-      "image_url": "https://cdn1.telesco.pe/file/NgKZcEqHCiDYJ-0hmvgcVpfhsyCgjpf_8bopMnaYWUF9CveYyq38EE05n287Hh1eGAkuwmWSUZ_BfhXdRtIkE05nNs-Ex0civEHAnvxBX7p7ZxdA3HvQ3TCTYU4jk9Bqzgc22xzub5ud-N4K50w_y29L-zMgfVQcncZ-ewkttGxF9fjCBBcnrEucR0jFuvCdHJmGgg_xKe4ArB49BevEN4dm3h1l-g0TWioX-Vo4bo0zynaV7iQAnN9SoAwl4qhFdSaIiyQJEpkU1vi4dkKfX2MlLAdG769z6haq4FqcovRnhZEBR4w3LAT92cvBO1v7INvXhv4pmYhIRyA0TPNB1w.jpg",
-      "buy_url": "https://link.amazon/B047tIsnJ",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 2.6
+      "age_hours": 2.6,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-5-5500",
+      "matched_name": "Ryzen 5 5500",
+      "hb_price_brl": 476.2,
+      "savings_vs_hb_brl": -6.85,
+      "requires_coupon": false,
+      "promo_price_brl": 483.05,
+      "is_expired": false,
+      "deal_status": "untested",
+      "is_coupon_expired": false,
+      "coupon_status": "none",
+      "deal_status_reason": "Estoque/preço na Amazon BR não pôde ser confirmado automaticamente (verifique no link)",
+      "stock_verified": false,
+      "live_store_price_brl": 483.65
     },
     {
       "post_id": "ofertasadrenaline/60434",
@@ -1905,6 +1774,138 @@
       "age_hours": 2.6
     },
     {
+      "post_id": "ofertasadrenaline/60435",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "Amazon BR",
+      "post_url": "https://t.me/ofertasadrenaline/60435",
+      "timestamp": "2026-11-22T15:48:47+00:00",
+      "title": "Jogo Persona 3 Reload, Mídi Física, PS5 por R$132,53",
+      "head_text": "Jogo Persona 3 Reload, Mídi Física, PS5 por R$132,53 🌎Compra Internacional com as tarifas inclusas! 🎟️Com desconto na finalização da compra e pagando em até 6x sem juros!",
+      "raw_text": "Jogo Persona 3 Reload, Mídi Física, PS5 por R$132,53\n⠀\n🌎Compra Internacional com as tarifas inclusas!\n🎟️Com desconto na finalização da compra e pagando em até 6x sem juros! \n⠀\n⚠️Compre aqui: https://link.amazon/B097e3a79\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 132.53,
+      "raw_price_brl": 132.53,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": "Com desconto na finalização da compra e pagando em até 6x sem juros!",
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/Mc72F5pumhwji6uzeNJmT-_XGFOriJwqsrToEhcdSX7Ga8fs2ytYcX421nLhVPJq3bv1582wr6oBzco6Kywn9vOtzFW8da1OICIApaP57cKB9WU8kF0ut4Vx1rgK77pzPY9HJ5hgaS2a3GojbGlrxHmWYC_Rr2LmZ7xBdnwrzJOKukJKj2wVA9qJ0zeN_PeKpGLSQXHyDvBBp7tAHebR1Uqe5CHOdMa_gMTrnBnbO9B_Giy9P6w6TnSRvUDR1cPEuhzc-iuHVOo8X8f7GM4yDeGaac0XMuLWoeQfEKhCnzeJiO-thfEl_6pXhhr4-ZARpH50baef26kfCPkgmsmuLQ.jpg",
+      "buy_url": "https://link.amazon/B097e3a79",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 2.6
+    },
+    {
+      "post_id": "nerdofertas/154225",
+      "channel_id": "nerdofertas",
+      "channel_name": "Nerd Ofertas",
+      "store_name": "Shopee",
+      "post_url": "https://t.me/nerdofertas/154225",
+      "timestamp": "2026-11-22T15:49:26+00:00",
+      "title": "🏷️ R$15 OFF em compras acima de R$89",
+      "head_text": "🚨 Cupom Shopee Ativo 🏷️ R$15 OFF em compras acima de R$89 🏷️ Cupom: NOVESPORTE15OFF",
+      "raw_text": "🚨 Cupom Shopee Ativo \n\n🏷️ R$15 OFF em compras acima de R$89\n🏷️ Cupom: NOVESPORTE15OFF\n\n🚨 Resgate aqui: https://s.shopee.com.br/70AlZWfj1A\n🛒 Link carrinho: https://s.shopee.com.br/7KnbyAmn8b\n\nTotal de 17 Cupons Shopee Ativos no site: https://nerdcupons.com/shopee",
+      "price_brl": 89.0,
+      "raw_price_brl": 89.0,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": "🚨 Cupom Shopee Ativo",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/qAxNo7CgUaMAoAbfxO3sbEetVXTEp1cib8XuiLzTWvfETw6Yh-7-ejO8F9Z5C5bWRsgms3gw9o-P3tRnqG8-xlNXWpt8k9AHC_x58O6sAdBtk7_G86Ic0U_ApYAqr9PDRwq2qHLYurgjjnGtSuJ_AvCuNvkpq5fb7wwqjbl7oTTfvtL6RqBkcd-BpEHhBnn3ttlTUeGheedJoXVLpfWBfjfZ2HZQkriXJ-KHIwQxaCTp73UFp1ZIwVtzB9RxVIbKNzOXaBP9K84U5syFuOe066NRong8HRs_zlvorwX_zL2KSElvCl8p_Y5b3tCAXrHVJH9C-Ujpl2yOcP9FfHjm6g.jpg",
+      "buy_url": "https://nerdcupons.com/shopee",
+      "coupon_url": "https://s.shopee.com.br/70AlZWfj1A",
+      "region_id": "br",
+      "age_hours": 2.6
+    },
+    {
+      "post_id": "ofertasadrenaline/60430",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "Amazon BR",
+      "post_url": "https://t.me/ofertasadrenaline/60430",
+      "timestamp": "2026-11-22T15:43:33+00:00",
+      "title": "Controle sem fio PlayStation DualSense – Starlight Blue por R$334,79",
+      "head_text": "Controle sem fio PlayStation DualSense – Starlight Blue por R$334,79 ⚠️Compre aqui: https://link.amazon/B0f8z41Bs 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Controle sem fio PlayStation DualSense – Starlight Blue por R$334,79\n⠀\n⚠️Compre aqui: https://link.amazon/B0f8z41Bs\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 334.79,
+      "raw_price_brl": 334.79,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": null,
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/LBONVRzVePjfzI90ESOJ6x0EfVnvqr4nqkoeFn7-jZsIH4uR_20eoQQHaJkiwl8J3f1gRI8NkL1gP9rmXBCBy1pbbA6KNfA2GgiWXPbmHJXUFGNjSbWW7ujTuNfa1zpedZoa5tTQH6J-F6xWJByyaw5LuiTKWu5_8qspHJ8B-YjkR7MC4PDo6Gzf7jevF5vMwYmrrmgu7YA1RLp9rCTLcm7GJOxXqnaUAgY77-StDvn2fnbJtOFSOKVYgKwuZatuu2I0l8IR-sG9zoGw729u1OE1qu8hPYK7hiB8J1LYhmlnZF76nAyNTUb1gHhb9hrxZxcI-Vo01KoLqlJLMyUb4A.jpg",
+      "buy_url": "https://link.amazon/B0f8z41Bs",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 2.7
+    },
+    {
+      "post_id": "ofertasadrenaline/60431",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "Amazon BR",
+      "post_url": "https://t.me/ofertasadrenaline/60431",
+      "timestamp": "2026-11-22T15:44:31+00:00",
+      "title": "Controle sem fio PlayStation DualSense – Rhythm Blue por R$375,81",
+      "head_text": "Controle sem fio PlayStation DualSense – Rhythm Blue por R$375,81 ⚠️Compre aqui: https://link.amazon/B0ipMprh6 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Controle sem fio PlayStation DualSense – Rhythm Blue por R$375,81\n⠀\n⚠️Compre aqui: https://link.amazon/B0ipMprh6\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 375.81,
+      "raw_price_brl": 375.81,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": null,
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/TZhpKr8_ryRSo2ycZPliiQSIV3M56yzH90wDExv_XYvgMDGLo9CPpo9EOCP_DnaY1lEDItHEdeSOBcyJgqmHbez5gwaPScmPmLq38_MCcb9NzU5Qt4YPPycGEvj8lA3qJAvUHex3z1T4tv9afSEZSrkbH4dUNS24JB9aPxPY6URap8pfqmucgvnR2dI-kIhd5jUkbUEpb-Dz6kR0OCaPSqq2JLPZdLfYcCTYBrbrV17VtkLjTnMrfLl2DgMnPWLG2JW8SFBWGchI6GSzSSGcRZrLtYIdwpYKR7STEY6IQOF5bNXt6uAnUhsN6H8ZBYqx2CITVjUhgIU99owlQn1szA.jpg",
+      "buy_url": "https://link.amazon/B0ipMprh6",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 2.7
+    },
+    {
+      "post_id": "ofertasadrenaline/60432",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "Amazon BR",
+      "post_url": "https://t.me/ofertasadrenaline/60432",
+      "timestamp": "2026-11-22T15:45:21+00:00",
+      "title": "Headset Gamer Logitech G PRO X, 7.1 Dolby Surround, Blue VO!CE por R$758,99",
+      "head_text": "Headset Gamer Logitech G PRO X, 7.1 Dolby Surround, Blue VO!CE por R$758,99 ⚠️Compre aqui: https://link.amazon/B02WfiLvx 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Headset Gamer Logitech G PRO X, 7.1 Dolby Surround, Blue VO!CE por R$758,99\n⠀\n⚠️Compre aqui: https://link.amazon/B02WfiLvx\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 758.99,
+      "raw_price_brl": 758.99,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": null,
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/Cojkv-NQ_d88iYKUjKVdVIyX3h0qJEGHc1_sMVhbdLltjWNBxs_UndcttsMArZmgAlOU5dazzjLajeET69KhtqRutSy4Mff019jlt3O-X4kopy1ykxLrTW1KprfJx5SS915zgzrX8JgHuFn6uzobTJ-9GEtfo9_TGqgh3AQ5Yy395MOnbVzVk5O1w683Y2HzgKcZO8aNgOVmKMj2fc1VMNGTBFojQvbkWIwbmpW3izr9eXfEMf1boP36YVvy2Uv9WDDIQgVCoYLSC6D6Dx5yyAwypeh-K6KyAu15sak4nFjGBokuVtPriGDoqlhHsbTZtl76uCqSjbRYsCIBrcEXkQ.jpg",
+      "buy_url": "https://link.amazon/B02WfiLvx",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 2.7
+    },
+    {
+      "post_id": "ofertasadrenaline/60433",
+      "channel_id": "ofertasadrenaline",
+      "channel_name": "Ofertas Adrenaline",
+      "store_name": "Amazon BR",
+      "post_url": "https://t.me/ofertasadrenaline/60433",
+      "timestamp": "2026-11-22T15:46:08+00:00",
+      "title": "Teclado Gamer de Membrana Redragon Shiva RGB V2, Preto, K512RGB V2 por R$131,31",
+      "head_text": "Teclado Gamer de Membrana Redragon Shiva RGB V2, Preto, K512RGB V2 por R$131,31 ⚠️Compre aqui: https://link.amazon/B047tIsnJ 💰Entre no nosso grupo de ofertas:",
+      "raw_text": "Teclado Gamer de Membrana Redragon Shiva RGB V2, Preto, K512RGB V2 por R$131,31\n⠀\n⚠️Compre aqui: https://link.amazon/B047tIsnJ\n⠀\n💰Entre no nosso grupo de ofertas:\nTelegram: https://t.me/ofertasadrenaline\nWhatsapp: https://bit.ly/canalofertasadrenaline\n⠀\n*anúncio",
+      "price_brl": 131.31,
+      "raw_price_brl": 131.31,
+      "discount_applied": 0.0,
+      "coupon_code": null,
+      "coupon_info": null,
+      "is_conditional_voucher": false,
+      "image_url": "https://cdn1.telesco.pe/file/NgKZcEqHCiDYJ-0hmvgcVpfhsyCgjpf_8bopMnaYWUF9CveYyq38EE05n287Hh1eGAkuwmWSUZ_BfhXdRtIkE05nNs-Ex0civEHAnvxBX7p7ZxdA3HvQ3TCTYU4jk9Bqzgc22xzub5ud-N4K50w_y29L-zMgfVQcncZ-ewkttGxF9fjCBBcnrEucR0jFuvCdHJmGgg_xKe4ArB49BevEN4dm3h1l-g0TWioX-Vo4bo0zynaV7iQAnN9SoAwl4qhFdSaIiyQJEpkU1vi4dkKfX2MlLAdG769z6haq4FqcovRnhZEBR4w3LAT92cvBO1v7INvXhv4pmYhIRyA0TPNB1w.jpg",
+      "buy_url": "https://link.amazon/B047tIsnJ",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 2.7
+    },
+    {
       "post_id": "nerdofertas/154223",
       "channel_id": "nerdofertas",
       "channel_name": "Nerd Ofertas",
@@ -1924,7 +1925,7 @@
       "buy_url": "https://nerdofertas.com/t",
       "coupon_url": "https://ofertou.ai/ijdU-Magalu",
       "region_id": "br",
-      "age_hours": 2.7,
+      "age_hours": 2.8,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (29.9h) sem confirmação de estoque ativo na Amazon BR",
       "stock_verified": false,
@@ -1950,7 +1951,7 @@
       "buy_url": "https://meli.la/2CXkk5x",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 2.9
+      "age_hours": 3.0
     },
     {
       "post_id": "IskandarSouza/199653",
@@ -1972,7 +1973,7 @@
       "buy_url": "https://meli.la/29nexow",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.0
+      "age_hours": 3.1
     },
     {
       "post_id": "IskandarSouza/199652",
@@ -1994,7 +1995,7 @@
       "buy_url": "https://www.pichau.com.br/water-cooler-aigo-darkflash-nebula-dn-360-argb-360mm-branco-dn-360-wh",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.1
+      "age_hours": 3.2
     },
     {
       "post_id": "peperaiohardware/124557",
@@ -2016,7 +2017,7 @@
       "buy_url": "https://meli.la/1oaPXPU",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.2
+      "age_hours": 3.3
     },
     {
       "post_id": "peperaiohardware/124558",
@@ -2038,7 +2039,7 @@
       "buy_url": "https://s.shopee.com.br/7KykYm3NEp",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.2
+      "age_hours": 3.3
     },
     {
       "post_id": "peperaiohardware/124556",
@@ -2060,7 +2061,7 @@
       "buy_url": "https://meli.la/1Mdcsim",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.3
+      "age_hours": 3.4
     },
     {
       "post_id": "peperaiohardware/124554",
@@ -2082,7 +2083,7 @@
       "buy_url": "https://aoferta.net/002pM3Yn-Terabyte",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.9
+      "age_hours": 4.0
     },
     {
       "post_id": "peperaiohardware/124555",
@@ -2104,7 +2105,7 @@
       "buy_url": "https://meli.la/1r6TEe5",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 3.9
+      "age_hours": 4.0
     },
     {
       "post_id": "nerdofertas/154218",
@@ -2126,7 +2127,7 @@
       "buy_url": "https://nerdofertas.com/t",
       "coupon_url": "https://nerdofertas.com.br/chat",
       "region_id": "br",
-      "age_hours": 4.0,
+      "age_hours": 4.1,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (29.9h) sem confirmação de estoque ativo na Amazon BR",
       "stock_verified": false,
@@ -2152,7 +2153,7 @@
       "buy_url": "https://nerdofertas.com/t",
       "coupon_url": "https://ofertou.ai/bxNPB-Magalu",
       "region_id": "br",
-      "age_hours": 4.0,
+      "age_hours": 4.1,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (29.9h) sem confirmação de estoque ativo na Amazon BR",
       "stock_verified": false,
@@ -2178,7 +2179,7 @@
       "buy_url": "https://amzn.to/3V3nrh1",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 4.1,
+      "age_hours": 4.2,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5500",
       "matched_name": "Ryzen 5 5500",
@@ -2213,33 +2214,11 @@
       "buy_url": "https://cutt.ly/LyebwPCv",
       "coupon_url": "https://a.aliexpress.com/_c3pPee1n",
       "region_id": "br",
-      "age_hours": 4.1,
+      "age_hours": 4.2,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false,
       "is_expired": true
-    },
-    {
-      "post_id": "peperaiohardware/124550",
-      "channel_id": "peperaiohardware",
-      "channel_name": "Peperaio Hardware",
-      "store_name": "Mercado Livre",
-      "post_url": "https://t.me/peperaiohardware/124550",
-      "timestamp": "2026-11-22T14:01:06+00:00",
-      "title": "- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos",
-      "head_text": "🔥 Cupom Mercado Livre - Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos 💸 30% OFF acima de R$ 29, Limite de R$ 500",
-      "raw_text": "🔥 Cupom Mercado Livre\n\n- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos\n\n💸 30% OFF acima de R$ 29, Limite de R$ 500\n🎟️ Cupom: PEGAESSA\n\n✅ Resgate aqui\nhttps://meli.la/27943EW",
-      "price_brl": 500.0,
-      "raw_price_brl": 714.29,
-      "discount_applied": 214.29,
-      "coupon_code": null,
-      "coupon_info": "Cupom Mercado Livre",
-      "is_conditional_voucher": true,
-      "image_url": "https://cdn1.telesco.pe/file/ihjzWjQDHM02Rmng4OJjEbT11H3j1TWVrg1RJTFM-mX8nTospc9hIXBaZf699QFvJbexn42wUSY6d_eKcDLWdmYo0yCvjvCCIT8M0TQKTPT9265t6AzdlVkpdC-3tqdC6J6g9Xq5zikjRPkz_0Evxub4T-rWdwX1CFYeHSLFo_ik1DJfjIj5DUYl0eZS_4G5UQxR-1EBFOfCZW2mRsL0kEnH0wVCVpeDZxC6TG7QmPHN7dTuiTaJyHskE0SduMtQjm8PuPRjj01ujEEdcARQyQe8uJ8y4r3-cy450HX_ColY-ehdh2Vy-8qBVFBIK9ecy9vyKCs02i99-dDBxt-LEQ.jpg",
-      "buy_url": "https://meli.la/27943EW",
-      "coupon_url": null,
-      "region_id": "br",
-      "age_hours": 4.3
     },
     {
       "post_id": "peperaiohardware/124551",
@@ -2264,6 +2243,28 @@
       "age_hours": 4.3
     },
     {
+      "post_id": "peperaiohardware/124550",
+      "channel_id": "peperaiohardware",
+      "channel_name": "Peperaio Hardware",
+      "store_name": "Mercado Livre",
+      "post_url": "https://t.me/peperaiohardware/124550",
+      "timestamp": "2026-11-22T14:01:06+00:00",
+      "title": "- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos",
+      "head_text": "🔥 Cupom Mercado Livre - Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos 💸 30% OFF acima de R$ 29, Limite de R$ 500",
+      "raw_text": "🔥 Cupom Mercado Livre\n\n- Em itens selecionados, clique no link e após isso em \"Mostrar mais\" para ver a lista de produtos\n\n💸 30% OFF acima de R$ 29, Limite de R$ 500\n🎟️ Cupom: PEGAESSA\n\n✅ Resgate aqui\nhttps://meli.la/27943EW",
+      "price_brl": 500.0,
+      "raw_price_brl": 714.29,
+      "discount_applied": 214.29,
+      "coupon_code": null,
+      "coupon_info": "Cupom Mercado Livre",
+      "is_conditional_voucher": true,
+      "image_url": "https://cdn1.telesco.pe/file/ihjzWjQDHM02Rmng4OJjEbT11H3j1TWVrg1RJTFM-mX8nTospc9hIXBaZf699QFvJbexn42wUSY6d_eKcDLWdmYo0yCvjvCCIT8M0TQKTPT9265t6AzdlVkpdC-3tqdC6J6g9Xq5zikjRPkz_0Evxub4T-rWdwX1CFYeHSLFo_ik1DJfjIj5DUYl0eZS_4G5UQxR-1EBFOfCZW2mRsL0kEnH0wVCVpeDZxC6TG7QmPHN7dTuiTaJyHskE0SduMtQjm8PuPRjj01ujEEdcARQyQe8uJ8y4r3-cy450HX_ColY-ehdh2Vy-8qBVFBIK9ecy9vyKCs02i99-dDBxt-LEQ.jpg",
+      "buy_url": "https://meli.la/27943EW",
+      "coupon_url": null,
+      "region_id": "br",
+      "age_hours": 4.4
+    },
+    {
       "post_id": "peperaiohardware/124549",
       "channel_id": "peperaiohardware",
       "channel_name": "Peperaio Hardware",
@@ -2283,7 +2284,7 @@
       "buy_url": "https://aoferta.net/000DSE7R-Terabyte",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 4.5
+      "age_hours": 4.6
     },
     {
       "post_id": "peperaiohardware/124548",
@@ -2305,7 +2306,7 @@
       "buy_url": "https://cutt.ly/LyebwPCv",
       "coupon_url": "https://a.aliexpress.com/_c42ViNkZ",
       "region_id": "br",
-      "age_hours": 4.7,
+      "age_hours": 4.8,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false,
@@ -2331,7 +2332,7 @@
       "buy_url": "https://cutt.ly/LyebwPCv",
       "coupon_url": "https://a.aliexpress.com/_c4b2YDzL",
       "region_id": "br",
-      "age_hours": 4.9,
+      "age_hours": 5.0,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false,
@@ -2357,7 +2358,7 @@
       "buy_url": "https://meli.la/1gpFYyt",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 5.1
+      "age_hours": 5.2
     },
     {
       "post_id": "peperaiohardware/124544",
@@ -2379,7 +2380,7 @@
       "buy_url": "https://meli.la/2veZhQL",
       "coupon_url": null,
       "region_id": "br",
-      "age_hours": 5.3
+      "age_hours": 5.4
     },
     {
       "post_id": "peperaiohardware/124545",
@@ -2401,7 +2402,7 @@
       "buy_url": "https://cutt.ly/LyebwPCv",
       "coupon_url": "https://a.aliexpress.com/_c3vhDN5T",
       "region_id": "br",
-      "age_hours": 5.3,
+      "age_hours": 5.4,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false,
@@ -2427,7 +2428,7 @@
       "buy_url": "https://cutt.ly/LyebwPCv",
       "coupon_url": "https://a.aliexpress.com/_c3Op3npT",
       "region_id": "br",
-      "age_hours": 5.4,
+      "age_hours": 5.5,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false,
@@ -2453,7 +2454,7 @@
       "buy_url": "https://cutt.ly/LyebwPCv",
       "coupon_url": "https://a.aliexpress.com/_c31ouujL",
       "region_id": "br",
-      "age_hours": 5.6,
+      "age_hours": 5.7,
       "deal_status": "expired",
       "deal_status_reason": "Oferta antiga (21.4h) sem confirmação de estoque ativo na E-commerce BR",
       "stock_verified": false,
@@ -2479,7 +2480,7 @@
       "buy_url": "https://seuhardware.com/s/Gd4HAET",
       "coupon_url": "https://seuhardware.com/s/8qiczxE",
       "region_id": "br",
-      "age_hours": 5.7
+      "age_hours": 5.8
     },
     {
       "post_id": "IskandarSouza/199636",
@@ -2501,7 +2502,7 @@
       "buy_url": "https://seuhardware.com/s/6zHupAL",
       "coupon_url": "https://seuhardware.com/s/bxxZa2G",
       "region_id": "br",
-      "age_hours": 5.7
+      "age_hours": 5.8
     },
     {
       "post_id": "IskandarSouza/199629",
@@ -2523,7 +2524,7 @@
       "buy_url": "https://a.aliexpress.com/_c2xcIHSr",
       "coupon_url": "https://a.aliexpress.com/_c453oisf",
       "region_id": "br",
-      "age_hours": 5.9,
+      "age_hours": 6.0,
       "matched_kind": "ram",
       "matched_slug": "ddr4-16gb-3200",
       "matched_name": "DDR4 16 GB 3200 MT/s",
@@ -2635,13 +2636,13 @@
         "status": "expired",
         "reason": "Cupom SABADOX3D expirado/inativo na KaBuM! — preço atual em estoque sem cupom: R$ 2,149.99",
         "source": "live_test",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "DOMINGOX3D": {
         "status": "unverified",
         "reason": "Em estoque na KaBuM! por R$ 2,149.99 (sem cupom). Valor de R$ 1,999.00 depende do cupom DOMINGOX3D aplicar no carrinho",
         "source": "live_test",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       }
     },
     "deals": {
@@ -2785,8 +2786,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=89611d05ba14417eb86c45a42d214646-1795371672849-05702-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=89611d05ba14417eb86c45a42d214646-1795371672849-05702-_c3RkGwqr&terminal_id=fb7e83093bd74366b5eaae37737b890c&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:13"
+        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=56a11ec721bc414a9522959edc55d8f2-1795371964364-04482-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=56a11ec721bc414a9522959edc55d8f2-1795371964364-04482-_c3RkGwqr&terminal_id=062fc89b62ca405491cc5f0b1d99970a&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/198501": {
         "status": "expired",
@@ -2812,14 +2813,14 @@
       },
       "https://seuhardware.com/s/AMLSDxh": {
         "status": "expired",
-        "reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=e5c8ad5a8091407cb3b0e536d831d7e2-1795371672462-07128-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=e5c8ad5a8091407cb3b0e536d831d7e2-1795371672462-07128-_c3NkewUP&terminal_id=d77247b35d0d40aea3f043f7631be010&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=d83c3e965edc4f13883aeab49b0f3d40-1795371964580-08939-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=d83c3e965edc4f13883aeab49b0f3d40-1795371964580-08939-_c3NkewUP&terminal_id=cc8764a8205b41719e83247a39befe13&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/198500": {
         "status": "expired",
@@ -2845,14 +2846,14 @@
       },
       "https://seuhardware.com/s/sZmq6ZN": {
         "status": "expired",
-        "reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=0bc08e113b5f4593b3ccf181fd319055-1795371672436-02757-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=0bc08e113b5f4593b3ccf181fd319055-1795371672436-02757-_c3u2KSyx&terminal_id=71d9f8de801e443a8bb070e0b923d235&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=ae4b7492d7cd4ec986c18ec10839c496-1795371964269-06039-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=ae4b7492d7cd4ec986c18ec10839c496-1795371964269-06039-_c3u2KSyx&terminal_id=cf9ec9df13fc4908914bcc73dd15dd8a&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "peperaiohardware/123847": {
         "status": "expired",
@@ -3149,7 +3150,7 @@
         "coupon_status": null,
         "store_name": "E-commerce BR",
         "final_url": "https://aceleraafiliado.com/bots/peperaio",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "ofertasadrenaline/60059": {
         "status": "expired",
@@ -3335,8 +3336,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/maintain.html",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=0d6ae70eb95a42d4aec5ef4de37a16dc-1795371961611-02186-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=0d6ae70eb95a42d4aec5ef4de37a16dc-1795371961611-02186-_c2xcIHSr&terminal_id=ffa5380247324537b005d3190e0f949d",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/198460": {
         "status": "expired",
@@ -3439,14 +3440,14 @@
       },
       "https://seuhardware.com/s/f1nxNwb": {
         "status": "expired",
-        "reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-        "updated_at": "2026-11-22 18:21:13"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/198603": {
         "status": "expired",
@@ -3556,7 +3557,7 @@
         "coupon_status": null,
         "store_name": "Amazon BR",
         "final_url": "https://nerdofertas.com/t",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/197522": {
         "status": "expired",
@@ -3665,8 +3666,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=0fdee99089894f67a27baa1ffd8348fd-1795371672776-05772-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=0fdee99089894f67a27baa1ffd8348fd-1795371672776-05772-_c4EIyWsJ&terminal_id=e17c17f2b32d4effb18cadb393af99e7",
-        "updated_at": "2026-11-22 18:21:13"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=ee9db0f0122548a19011167dd2423b3f-1795371964218-07757-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=ee9db0f0122548a19011167dd2423b3f-1795371964218-07757-_c4EIyWsJ&terminal_id=1724ef1ad5974b2d9072afecc309d53d",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/197695": {
         "status": "untested",
@@ -4842,8 +4843,8 @@
         "stock_verified": true,
         "coupon_status": "expired",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371672_044b1c79267b319aba085e12c27c1993&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371962_d179d8891e1b1a9cbcb460a42d76b3f3&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/198699": {
         "status": "expired",
@@ -4887,7 +4888,7 @@
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BKUZyUOx2osgXFaN9%2BkBZq0Cd2zzi0v5%2FYgMdjzS1r%2BKv5am9Nm1Ae8WkYBSW9GEbcprBpUA0IruiToiHrKcSu950OSCz%2FrANEY9LwULF8y6iHhjJvx%2FLWOSZ19Rg%2BIc98%2Foq5bNi%2FFG3jP2SmBhziMFUQmd0bOd8SZJE%2Ba6W7SY3NsSJj%2FtAGzkOpUeOtF206uXk5RXEw%3D%3D",
-        "updated_at": "2026-11-22 18:21:08"
+        "updated_at": "2026-11-22 18:25:57"
       },
       "https://meli.la/12yen4W": {
         "status": "out_of_stock",
@@ -4898,7 +4899,7 @@
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BP7jduOi6fXppDNrWUlENYL7TCJj3SzqtySUTFkxjYdeqW0WvA7Ue5WuDyv%2BS68OzLh1wj6UQcLUFunW4QrdYgm%2FKYuKidrzoUgLwihcakDnDJyDmZ943hOvUKaNkEeTrds9B8LsBnS3iphnsDjDNo4yauRNQ6Asj3KAHD29Zs%2F244QMtiyae0NnZemtDwcibKUQBHVALEK8x%2Bf2ulNSwPxEiLWKyJh%2BKKMuK%2FlQW621C0ZvQKqtG3T3hPvJMZ%2F9dTve",
-        "updated_at": "2026-11-22 18:21:08"
+        "updated_at": "2026-11-22 18:25:58"
       },
       "https://meli.la/1RR9uCm": {
         "status": "untested",
@@ -4909,7 +4910,7 @@
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BBeUPiVkryWURiHlijZXU8fbAmz7u1busAFFMsqoydin0N30TH2BrZu3C39%2FT5o%2BO0G5%2BDVlWlHjr3pHHXWUX5hYFiBsIYQb0ZdR%2Fiu4F9v8pTPm9gtQt%2F89E9QfbERzguwLUfH%2FrrL9Fumd9P2aRZGr3JcaGMkSkdaPYSP3SZwZOPBah%2BoyZ86GZ9DssMr6R7BEveynHmacutgR%2FU%2BdleYQLOY%2BFiY2NZXcNH6%2BlxGSGhJIXrC%2Fd%2B3ImPCYZy60tg6F",
-        "updated_at": "2026-11-22 18:21:09"
+        "updated_at": "2026-11-22 18:25:58"
       },
       "https://meli.la/119B9ZF": {
         "status": "untested",
@@ -4931,7 +4932,7 @@
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BDSUjlDfpVAAusQl6Rj6mJTQYWEOHAq9d%2F7rhDTNWWwhxtuWD%2FDlWK82yPksENR5tDTXtuBhF0%2BnbxmgZyLzoROc%2FCQnSKAcd8Ox6FL9m0y0z88C%2BW%2Bu4dMgsy5hxas6%2BpRQwgqFAjG2SdqQjjnZM1CJqBlisg976n6PUbtohZN73yhnhJZDsToWMkHYSBEqKveaM14nOzrNugFmvjfLWmcUAMhXgjhFAWIf4o%2F5d1H1SsS85tAd7LFMGgHy2xZwidxT",
-        "updated_at": "2026-11-22 18:21:09"
+        "updated_at": "2026-11-22 18:25:59"
       },
       "https://meli.la/1LafAks": {
         "status": "untested",
@@ -4942,7 +4943,7 @@
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/hardwarebarato?matt_word=hardwarebarato&matt_tool=12713973&forceInApp=true&ref=BJ%2B3AqcjvyF3tlcBOA2tDcbKA0IpZzCkyKAB4cGtjXmn8ShWgjALu6j7QMjpjdH0OKbXFMlA5XuH%2BRq4qvLiu9eQtBprv1qX%2FC7sT%2BaYk3t%2BAgmektmZpnJtFAFNq2YUjTHPkfk75Zx97mhCyc58K2gAq2I7pAUjIx0CRR%2F4j%2B3RyIq9sHDTP3xcLxkDT2nnYSAzb8eIlDmZK4x50TSoUszhr0iM5MqqfsqjsVPyc33dVCkMR7N%2BLZJ2rmOkUaIO6YCL",
-        "updated_at": "2026-11-22 18:21:10"
+        "updated_at": "2026-11-22 18:26:00"
       },
       "https://meli.la/2ECbxAP": {
         "status": "out_of_stock",
@@ -6585,14 +6586,14 @@
       },
       "https://seuhardware.com/s/RNjniLn": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BLwuGDgeUObEn1hCacYdm3YO74tdgDfk1E4V3N28vHO8MqcqIwiOt6bzk2ceEATztzye9Xd%2F6VzwjBa%2BzWc3pLExKCz2zIzDSGUgJ4Xp5YXRkdyzIVb9A6P0Go%2FwzM8TWLEVzUoE5%2FPaj1HLcf9DwpiDw47Eham1abdg8J4PMGR2fkZxj1Firmo%2B2AkvnY0FEkj%2BJbc%3D",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/199235": {
         "status": "expired",
@@ -6794,58 +6795,58 @@
       },
       "nerdofertas/154078": {
         "status": "expired",
-        "reason": "Oferta antiga (44.4h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (44.5h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
         "final_url": "https://nerdofertas.com/t",
-        "updated_at": "2026-11-22 18:21:10"
+        "updated_at": "2026-11-22 18:26:00"
       },
       "ofertasadrenaline/60368": {
         "status": "expired",
-        "reason": "Oferta antiga (44.2h) sem confirmação de estoque ativo na Pichau",
+        "reason": "Oferta antiga (44.3h) sem confirmação de estoque ativo na Pichau",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Pichau",
         "final_url": "https://www.pichau.com.br/placa-de-video-asus-geforce-rtx-5060-ti-dual-oc-8gb-gddr7-128-bit-dual-rtx5060ti-o8g?affiliated_code=7d96b9",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "https://curt.link/gQIRR": {
         "status": "expired",
-        "reason": "Oferta antiga (44.2h) sem confirmação de estoque ativo na Pichau",
+        "reason": "Oferta antiga (44.3h) sem confirmação de estoque ativo na Pichau",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Pichau",
         "final_url": "https://www.pichau.com.br/placa-de-video-asus-geforce-rtx-5060-ti-dual-oc-8gb-gddr7-128-bit-dual-rtx5060ti-o8g?affiliated_code=7d96b9",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "ofertasadrenaline/60369": {
         "status": "expired",
-        "reason": "Oferta antiga (44.2h) sem confirmação de estoque ativo na Pichau",
+        "reason": "Oferta antiga (44.3h) sem confirmação de estoque ativo na Pichau",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Pichau",
         "final_url": "https://www.pichau.com.br/placa-de-video-asus-geforce-rtx-5070-ats-oc-12gb-gddr7-192-bit-ats-rtx5070-o12g-v2?affiliated_code=7d96b9",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "https://curt.link/MarBH": {
         "status": "expired",
-        "reason": "Oferta antiga (44.2h) sem confirmação de estoque ativo na Pichau",
+        "reason": "Oferta antiga (44.3h) sem confirmação de estoque ativo na Pichau",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Pichau",
         "final_url": "https://www.pichau.com.br/placa-de-video-asus-geforce-rtx-5070-ats-oc-12gb-gddr7-192-bit-ats-rtx5070-o12g-v2?affiliated_code=7d96b9",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199399": {
         "status": "expired",
@@ -6870,48 +6871,48 @@
         "updated_at": "2026-11-22 18:06:17"
       },
       "https://www.amazon.com.br/dp/B0DKFMSMYK/?tag=vevsfps-20": {
-        "status": "expired",
-        "reason": "Oferta antiga (29.8h) sem confirmação de estoque ativo na KaBuM!",
+        "status": "out_of_stock",
+        "reason": "Oferta encerrada na KaBuM! — menor preço em estoque hoje: R$ 2,149.99 (era R$ 1,999.00)",
         "source": "live_test",
-        "live_price": null,
+        "live_price": 2149.99,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "KaBuM!",
         "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK/?tag=vevsfps-20",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "BenchPromos/28695": {
         "status": "expired",
-        "reason": "Oferta antiga (42.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (42.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
         "final_url": "https://benchpromos.com.br/promocao/processador-amd-ryzen-7-9800x3d-cache-8mb-8-nucleos-16-threads-am5/cmwpnlm3b002lmh07dmxwlxzs",
-        "updated_at": "2026-11-22 18:21:13"
+        "updated_at": "2026-11-22 18:26:03"
       },
       "benchpromos/28695": {
         "status": "expired",
-        "reason": "Oferta antiga (42.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (42.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
         "final_url": "https://benchpromos.com.br/promocao/processador-amd-ryzen-7-9800x3d-cache-8mb-8-nucleos-16-threads-am5/cmwpnlm3b002lmh07dmxwlxzs",
-        "updated_at": "2026-11-22 18:21:13"
+        "updated_at": "2026-11-22 18:26:03"
       },
       "https://benchpromos.com.br/promocao/processador-amd-ryzen-7-9800x3d-cache-8mb-8-nucleos-16-threads-am5/cmwpnlm3b002lmh07dmxwlxzs": {
         "status": "expired",
-        "reason": "Oferta antiga (42.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (42.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
         "final_url": "https://benchpromos.com.br/promocao/processador-amd-ryzen-7-9800x3d-cache-8mb-8-nucleos-16-threads-am5/cmwpnlm3b002lmh07dmxwlxzs",
-        "updated_at": "2026-11-22 18:21:13"
+        "updated_at": "2026-11-22 18:26:03"
       },
       "IskandarSouza/199415": {
         "status": "expired",
@@ -6921,8 +6922,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=0fdee99089894f67a27baa1ffd8348fd-1795371672776-05772-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=0fdee99089894f67a27baa1ffd8348fd-1795371672776-05772-_c4EIyWsJ&terminal_id=e17c17f2b32d4effb18cadb393af99e7",
-        "updated_at": "2026-11-22 18:21:13"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=ee9db0f0122548a19011167dd2423b3f-1795371964218-07757-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=ee9db0f0122548a19011167dd2423b3f-1795371964218-07757-_c4EIyWsJ&terminal_id=1724ef1ad5974b2d9072afecc309d53d",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199415": {
         "status": "expired",
@@ -6932,30 +6933,30 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=0fdee99089894f67a27baa1ffd8348fd-1795371672776-05772-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=0fdee99089894f67a27baa1ffd8348fd-1795371672776-05772-_c4EIyWsJ&terminal_id=e17c17f2b32d4effb18cadb393af99e7",
-        "updated_at": "2026-11-22 18:21:13"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=ee9db0f0122548a19011167dd2423b3f-1795371964218-07757-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=ee9db0f0122548a19011167dd2423b3f-1795371964218-07757-_c4EIyWsJ&terminal_id=1724ef1ad5974b2d9072afecc309d53d",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/199418": {
         "status": "expired",
-        "reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=e5c8ad5a8091407cb3b0e536d831d7e2-1795371672462-07128-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=e5c8ad5a8091407cb3b0e536d831d7e2-1795371672462-07128-_c3NkewUP&terminal_id=d77247b35d0d40aea3f043f7631be010&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=d83c3e965edc4f13883aeab49b0f3d40-1795371964580-08939-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=d83c3e965edc4f13883aeab49b0f3d40-1795371964580-08939-_c3NkewUP&terminal_id=cc8764a8205b41719e83247a39befe13&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199418": {
         "status": "expired",
-        "reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=e5c8ad5a8091407cb3b0e536d831d7e2-1795371672462-07128-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=e5c8ad5a8091407cb3b0e536d831d7e2-1795371672462-07128-_c3NkewUP&terminal_id=d77247b35d0d40aea3f043f7631be010&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=d83c3e965edc4f13883aeab49b0f3d40-1795371964580-08939-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=d83c3e965edc4f13883aeab49b0f3d40-1795371964580-08939-_c3NkewUP&terminal_id=cc8764a8205b41719e83247a39befe13&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/199416": {
         "status": "expired",
@@ -6965,8 +6966,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=89611d05ba14417eb86c45a42d214646-1795371672849-05702-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=89611d05ba14417eb86c45a42d214646-1795371672849-05702-_c3RkGwqr&terminal_id=fb7e83093bd74366b5eaae37737b890c&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:13"
+        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=56a11ec721bc414a9522959edc55d8f2-1795371964364-04482-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=56a11ec721bc414a9522959edc55d8f2-1795371964364-04482-_c3RkGwqr&terminal_id=062fc89b62ca405491cc5f0b1d99970a&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199416": {
         "status": "expired",
@@ -6976,30 +6977,30 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=89611d05ba14417eb86c45a42d214646-1795371672849-05702-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=89611d05ba14417eb86c45a42d214646-1795371672849-05702-_c3RkGwqr&terminal_id=fb7e83093bd74366b5eaae37737b890c&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:13"
+        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=56a11ec721bc414a9522959edc55d8f2-1795371964364-04482-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=56a11ec721bc414a9522959edc55d8f2-1795371964364-04482-_c3RkGwqr&terminal_id=062fc89b62ca405491cc5f0b1d99970a&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/199417": {
         "status": "expired",
-        "reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=0bc08e113b5f4593b3ccf181fd319055-1795371672436-02757-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=0bc08e113b5f4593b3ccf181fd319055-1795371672436-02757-_c3u2KSyx&terminal_id=71d9f8de801e443a8bb070e0b923d235&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=ae4b7492d7cd4ec986c18ec10839c496-1795371964269-06039-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=ae4b7492d7cd4ec986c18ec10839c496-1795371964269-06039-_c3u2KSyx&terminal_id=cf9ec9df13fc4908914bcc73dd15dd8a&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199417": {
         "status": "expired",
-        "reason": "Oferta antiga (41.1h) sem confirmação de estoque ativo na E-commerce BR",
+        "reason": "Oferta antiga (41.2h) sem confirmação de estoque ativo na E-commerce BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=0bc08e113b5f4593b3ccf181fd319055-1795371672436-02757-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=0bc08e113b5f4593b3ccf181fd319055-1795371672436-02757-_c3u2KSyx&terminal_id=71d9f8de801e443a8bb070e0b923d235&afSmartRedirect=y",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=ae4b7492d7cd4ec986c18ec10839c496-1795371964269-06039-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=ae4b7492d7cd4ec986c18ec10839c496-1795371964269-06039-_c3u2KSyx&terminal_id=cf9ec9df13fc4908914bcc73dd15dd8a&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/199422": {
         "status": "untested",
@@ -7025,146 +7026,146 @@
       },
       "peperaiohardware/124374": {
         "status": "expired",
-        "reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=acelera&matt_tool=16873625&forceInApp=true&ref=BDj%2FK4TStuda7bbrwLs%2BWL31gZ4g%2By9%2FewBTMIqhhGbw6Z7JaoSSPe9xRPXBCfGVIUotolmi6aj4y7fu0YKsIoLPzRwQXegj3q%2F0%2FwCVZTf2wfMdryjUkzJe0eOHv8lCOdsh9yoJgNKrPsq5G8odTj732V0csRARcsHn3%2BDDTN%2FGoJFiXhAO8uR8vmLgpklGCmx7SOk%3D",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:00"
       },
       "https://meli.la/2i6Jvwd": {
         "status": "expired",
-        "reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=acelera&matt_tool=16873625&forceInApp=true&ref=BDj%2FK4TStuda7bbrwLs%2BWL31gZ4g%2By9%2FewBTMIqhhGbw6Z7JaoSSPe9xRPXBCfGVIUotolmi6aj4y7fu0YKsIoLPzRwQXegj3q%2F0%2FwCVZTf2wfMdryjUkzJe0eOHv8lCOdsh9yoJgNKrPsq5G8odTj732V0csRARcsHn3%2BDDTN%2FGoJFiXhAO8uR8vmLgpklGCmx7SOk%3D",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:00"
       },
       "IskandarSouza/199429": {
         "status": "expired",
-        "reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-        "updated_at": "2026-11-22 18:21:13"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199429": {
         "status": "expired",
-        "reason": "Oferta antiga (39.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (39.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-        "updated_at": "2026-11-22 18:21:13"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "IskandarSouza/199469": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BLwuGDgeUObEn1hCacYdm3YO74tdgDfk1E4V3N28vHO8MqcqIwiOt6bzk2ceEATztzye9Xd%2F6VzwjBa%2BzWc3pLExKCz2zIzDSGUgJ4Xp5YXRkdyzIVb9A6P0Go%2FwzM8TWLEVzUoE5%2FPaj1HLcf9DwpiDw47Eham1abdg8J4PMGR2fkZxj1Firmo%2B2AkvnY0FEkj%2BJbc%3D",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199469": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BLwuGDgeUObEn1hCacYdm3YO74tdgDfk1E4V3N28vHO8MqcqIwiOt6bzk2ceEATztzye9Xd%2F6VzwjBa%2BzWc3pLExKCz2zIzDSGUgJ4Xp5YXRkdyzIVb9A6P0Go%2FwzM8TWLEVzUoE5%2FPaj1HLcf9DwpiDw47Eham1abdg8J4PMGR2fkZxj1Firmo%2B2AkvnY0FEkj%2BJbc%3D",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "peperaiohardware/124394": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=tanner&matt_tool=16873625&forceInApp=true&ref=BBwvKHka0Ms4D3Cj9Bdr%2Fs8c5Q85y7XubYK%2F8x2FuHE4i8gqEec4OrI0aaov%2F%2FCmOmLVJ5aoA0Zn5K6gVzaa27r1h9Aecxka80DPCPuxZGUWnBCohdCmfGvddkdbtAXksAKfVlpJU%2B7ecDgRxyYyB24tFkJXtsNYNsdTR0pn6Ek%2BSy2XdfDawAwosR4KXV2eiZ3gPtXyV3K6zqcB3P7biD6CmdRPYMANeoq6cnosO7M%2FQ2rMOd%2FTVG7Ma%2BapdJZ2KGGNsp2SLFSdUyOb",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "https://meli.la/29zjesW": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=tanner&matt_tool=16873625&forceInApp=true&ref=BBwvKHka0Ms4D3Cj9Bdr%2Fs8c5Q85y7XubYK%2F8x2FuHE4i8gqEec4OrI0aaov%2F%2FCmOmLVJ5aoA0Zn5K6gVzaa27r1h9Aecxka80DPCPuxZGUWnBCohdCmfGvddkdbtAXksAKfVlpJU%2B7ecDgRxyYyB24tFkJXtsNYNsdTR0pn6Ek%2BSy2XdfDawAwosR4KXV2eiZ3gPtXyV3K6zqcB3P7biD6CmdRPYMANeoq6cnosO7M%2FQ2rMOd%2FTVG7Ma%2BapdJZ2KGGNsp2SLFSdUyOb",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/199472": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "iskandarsouza/199472": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=vevsfps&matt_tool=34969354&forceInApp=true&ref=BFRVXIMNQJC07BccvF8VBOUJVOuvOu0EficfyhhD0vpEe5RascR5EpyzUw3lny71UcXTThjkOpkKS3eTSGHt3%2FXBdtgFUXGl2Gk0U%2B9MOpCno6RYI9H0MiRSeRoc4k%2F8XXpIVlNb%2FRjKJfcjdtaCtO2x0U1AkDLgZVSc2%2FIgV80btjzY7WV%2FSSVmF%2FdQ%2BFLly2BMwQFO2UqTazNMbzxIsOponEmpI4lB%2F3vrAg7lH2EKiugv7QcIyXmzLUMLlDivQneDOr%2BVmTGezbn5M9E3DZFASldA6VME5GZv",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/199467": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=marcosmx&matt_tool=34969354&forceInApp=true&ref=BLA9reH45%2BrNHR6nK5t2hmD%2F7cZAJnQ%2B%2FjGMlmxyIntBFex6ZihblGkrlg2dDtPIOXY7BQJwzRuSRqiwAPg5Ob9hEj%2FD%2FHRjMd5Nz6HC6XOV9MQoEjpxZnbnvQfbx2QVxEEBE86YeNu10RIclWdI7%2BjsNyUXCMoBkt%2FGtOSF4rd72DzFznr7CUyjawdkN0Lo4egGhZ8%3D",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "iskandarsouza/199467": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=marcosmx&matt_tool=34969354&forceInApp=true&ref=BLA9reH45%2BrNHR6nK5t2hmD%2F7cZAJnQ%2B%2FjGMlmxyIntBFex6ZihblGkrlg2dDtPIOXY7BQJwzRuSRqiwAPg5Ob9hEj%2FD%2FHRjMd5Nz6HC6XOV9MQoEjpxZnbnvQfbx2QVxEEBE86YeNu10RIclWdI7%2BjsNyUXCMoBkt%2FGtOSF4rd72DzFznr7CUyjawdkN0Lo4egGhZ8%3D",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "https://seuhardware.com/s/EEPtgMj": {
         "status": "expired",
-        "reason": "Oferta antiga (30.3h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (30.4h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/iskandarsouza?matt_word=marcosmx&matt_tool=34969354&forceInApp=true&ref=BLA9reH45%2BrNHR6nK5t2hmD%2F7cZAJnQ%2B%2FjGMlmxyIntBFex6ZihblGkrlg2dDtPIOXY7BQJwzRuSRqiwAPg5Ob9hEj%2FD%2FHRjMd5Nz6HC6XOV9MQoEjpxZnbnvQfbx2QVxEEBE86YeNu10RIclWdI7%2BjsNyUXCMoBkt%2FGtOSF4rd72DzFznr7CUyjawdkN0Lo4egGhZ8%3D",
-        "updated_at": "2026-11-22 18:21:12"
+        "updated_at": "2026-11-22 18:26:04"
       },
       "nerdofertas/154121": {
         "status": "expired",
@@ -7175,7 +7176,7 @@
         "coupon_status": null,
         "store_name": "Amazon BR",
         "final_url": "https://nerdofertas.com/t",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199507": {
         "status": "expired",
@@ -7185,8 +7186,8 @@
         "stock_verified": true,
         "coupon_status": "expired",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371672_044b1c79267b319aba085e12c27c1993&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371962_d179d8891e1b1a9cbcb460a42d76b3f3&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "iskandarsouza/199507": {
         "status": "expired",
@@ -7196,74 +7197,74 @@
         "stock_verified": true,
         "coupon_status": "expired",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371672_044b1c79267b319aba085e12c27c1993&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371962_d179d8891e1b1a9cbcb460a42d76b3f3&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/199508": {
-        "status": "expired",
-        "reason": "Oferta antiga (29.8h) sem confirmação de estoque ativo na KaBuM!",
+        "status": "out_of_stock",
+        "reason": "Oferta encerrada na KaBuM! — menor preço em estoque hoje: R$ 2,149.99 (era R$ 1,999.00)",
         "source": "live_test",
-        "live_price": null,
+        "live_price": 2149.99,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "KaBuM!",
         "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK/?tag=vevsfps-20",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "iskandarsouza/199508": {
-        "status": "expired",
-        "reason": "Oferta antiga (29.8h) sem confirmação de estoque ativo na KaBuM!",
+        "status": "out_of_stock",
+        "reason": "Oferta encerrada na KaBuM! — menor preço em estoque hoje: R$ 2,149.99 (era R$ 1,999.00)",
         "source": "live_test",
-        "live_price": null,
+        "live_price": 2149.99,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "KaBuM!",
         "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK/?tag=vevsfps-20",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "ofertasadrenaline/60413": {
         "status": "expired",
-        "reason": "Oferta antiga (24.1h) sem confirmação de estoque ativo na Amazon BR",
+        "reason": "Oferta antiga (24.2h) sem confirmação de estoque ativo na Amazon BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Amazon BR",
-        "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=8e41b377bf8575415e05838ca2e80531&ref_=as_li_ss_tl&ascsubtag=srctok-0ddc4d55466d3423&btn_type=ss&btn_ref=srctok-0ddc4d55466d3423",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=8e41b377bf8575415e05838ca2e80531&ref_=as_li_ss_tl&ascsubtag=srctok-51b9ed082c81da7d&btn_type=ss&btn_ref=srctok-51b9ed082c81da7d",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "https://link.amazon/B0gz6s31Z": {
         "status": "expired",
-        "reason": "Oferta antiga (24.1h) sem confirmação de estoque ativo na Amazon BR",
+        "reason": "Oferta antiga (24.2h) sem confirmação de estoque ativo na Amazon BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Amazon BR",
-        "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=8e41b377bf8575415e05838ca2e80531&ref_=as_li_ss_tl&ascsubtag=srctok-0ddc4d55466d3423&btn_type=ss&btn_ref=srctok-0ddc4d55466d3423",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.amazon.com.br/dp/B0DKFMSMYK?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=8e41b377bf8575415e05838ca2e80531&ref_=as_li_ss_tl&ascsubtag=srctok-51b9ed082c81da7d&btn_type=ss&btn_ref=srctok-51b9ed082c81da7d",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "peperaiohardware/124500": {
         "status": "expired",
-        "reason": "Oferta antiga (23.4h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (23.5h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=tanner&matt_tool=16873625&forceInApp=true&ref=BA4FkWIF6gcu8cacgYTSKEZxn0k%2FzMVC8P8gDjzFSBNfNZWm2fZdm974zAJ1ZTgNtA6qmvWDHMZ56VeZWGugUpmgfm6NjVRzO73Ehf6cbDyF5UlsxDG8N53puAPY3rj9TBGFUymlxbU5dJothZEXf6n52F76BCi%2BWfouuQl9hfW%2Bn5M8l2VevchHuqUKI0ZUkqpMMSvsTjZygdV4GjC9ReceH4xNA%2B6c92QvgLEtCooxSe170%2BM7lQkzB8MpJTK7bPsyez%2FYuulP12Yj",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "https://meli.la/22dfQXy": {
         "status": "expired",
-        "reason": "Oferta antiga (23.4h) sem confirmação de estoque ativo na Mercado Livre",
+        "reason": "Oferta antiga (23.5h) sem confirmação de estoque ativo na Mercado Livre",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Mercado Livre",
         "final_url": "https://www.mercadolivre.com.br/social/peperaiopeperaio?matt_word=tanner&matt_tool=16873625&forceInApp=true&ref=BA4FkWIF6gcu8cacgYTSKEZxn0k%2FzMVC8P8gDjzFSBNfNZWm2fZdm974zAJ1ZTgNtA6qmvWDHMZ56VeZWGugUpmgfm6NjVRzO73Ehf6cbDyF5UlsxDG8N53puAPY3rj9TBGFUymlxbU5dJothZEXf6n52F76BCi%2BWfouuQl9hfW%2Bn5M8l2VevchHuqUKI0ZUkqpMMSvsTjZygdV4GjC9ReceH4xNA%2B6c92QvgLEtCooxSe170%2BM7lQkzB8MpJTK7bPsyez%2FYuulP12Yj",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199546": {
         "status": "expired",
@@ -7273,8 +7274,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/maintain.html",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=0d6ae70eb95a42d4aec5ef4de37a16dc-1795371961611-02186-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=0d6ae70eb95a42d4aec5ef4de37a16dc-1795371961611-02186-_c2xcIHSr&terminal_id=ffa5380247324537b005d3190e0f949d",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "iskandarsouza/199546": {
         "status": "expired",
@@ -7284,8 +7285,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/maintain.html",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=0d6ae70eb95a42d4aec5ef4de37a16dc-1795371961611-02186-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=0d6ae70eb95a42d4aec5ef4de37a16dc-1795371961611-02186-_c2xcIHSr&terminal_id=ffa5380247324537b005d3190e0f949d",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "peperaiohardware/124517": {
         "status": "expired",
@@ -7296,7 +7297,7 @@
         "coupon_status": null,
         "store_name": "E-commerce BR",
         "final_url": "https://aceleraafiliado.com/bots/peperaio",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/199591": {
         "status": "untested",
@@ -7328,8 +7329,8 @@
         "stock_verified": true,
         "coupon_status": "expired",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371671_113599a49651d188e1b6c2dd89c9a0cf&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371961_604fe39a48a7d5d2bffcb21c73654419&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "iskandarsouza/199596": {
         "status": "expired",
@@ -7339,8 +7340,8 @@
         "stock_verified": true,
         "coupon_status": "expired",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371671_113599a49651d188e1b6c2dd89c9a0cf&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371961_604fe39a48a7d5d2bffcb21c73654419&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "IskandarSouza/199629": {
         "status": "untested",
@@ -7350,8 +7351,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=eb34922906194ddab014c97b2849423c-1795371670599-07207-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=eb34922906194ddab014c97b2849423c-1795371670599-07207-_c2xcIHSr&terminal_id=8d276450943546f58e3594c16c84d6d3",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=4fbad021bcbe42c883b3bf040546f4c6-1795371960497-07029-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=4fbad021bcbe42c883b3bf040546f4c6-1795371960497-07029-_c2xcIHSr&terminal_id=abec91e172aa4e76a1fc3bfd8ba8bf78",
+        "updated_at": "2026-11-22 18:26:00"
       },
       "iskandarsouza/199629": {
         "status": "untested",
@@ -7361,8 +7362,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=eb34922906194ddab014c97b2849423c-1795371670599-07207-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=eb34922906194ddab014c97b2849423c-1795371670599-07207-_c2xcIHSr&terminal_id=8d276450943546f58e3594c16c84d6d3",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007871648778.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=4fbad021bcbe42c883b3bf040546f4c6-1795371960497-07029-_c2xcIHSr&tt=API&aff_fsk=_c2xcIHSr&aff_platform=api-new-link-generate&sk=_c2xcIHSr&aff_trace_key=4fbad021bcbe42c883b3bf040546f4c6-1795371960497-07029-_c2xcIHSr&terminal_id=abec91e172aa4e76a1fc3bfd8ba8bf78",
+        "updated_at": "2026-11-22 18:26:00"
       },
       "peperaiohardware/124552": {
         "status": "untested",
@@ -7373,7 +7374,7 @@
         "coupon_status": null,
         "store_name": "Amazon BR",
         "final_url": "https://www.amazon.com.br/dp/B09VCJ171S?tag=tannerr-20&linkCode=ogi&language=pt-BR&th=1",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "https://amzn.to/3V3nrh1": {
         "status": "untested",
@@ -7384,7 +7385,7 @@
         "coupon_status": null,
         "store_name": "Amazon BR",
         "final_url": "https://www.amazon.com.br/dp/B09VCJ171S?tag=tannerr-20&linkCode=ogi&language=pt-BR&th=1",
-        "updated_at": "2026-11-22 18:21:11"
+        "updated_at": "2026-11-22 18:26:01"
       },
       "ofertasadrenaline/60437": {
         "status": "untested",
@@ -7394,8 +7395,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Amazon BR",
-        "final_url": "https://www.amazon.com.br/dp/B09VCJ171S?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=be0cb324bc098413982303698f2a21f8&ref_=as_li_ss_tl&ascsubtag=srctok-5defb93accd3897a&btn_type=ss&btn_ref=srctok-5defb93accd3897a",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.amazon.com.br/dp/B09VCJ171S?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=be0cb324bc098413982303698f2a21f8&ref_=as_li_ss_tl&ascsubtag=srctok-0f044cd42670cdc2&btn_type=ss&btn_ref=srctok-0f044cd42670cdc2",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "https://link.amazon/B0huv9086": {
         "status": "untested",
@@ -7405,8 +7406,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "Amazon BR",
-        "final_url": "https://www.amazon.com.br/dp/B09VCJ171S?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=be0cb324bc098413982303698f2a21f8&ref_=as_li_ss_tl&ascsubtag=srctok-5defb93accd3897a&btn_type=ss&btn_ref=srctok-5defb93accd3897a",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.amazon.com.br/dp/B09VCJ171S?th=1&linkCode=sl2&tag=colaboradoradrmc-20&linkId=be0cb324bc098413982303698f2a21f8&ref_=as_li_ss_tl&ascsubtag=srctok-0f044cd42670cdc2&btn_type=ss&btn_ref=srctok-0f044cd42670cdc2",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199661": {
         "status": "unverified_coupon",
@@ -7416,8 +7417,8 @@
         "stock_verified": true,
         "coupon_status": "unverified",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371670_2cc52548dc674e46456dc34dd3de71e1&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371961_2147cc92e040d845e26d257cf5b9f241&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "iskandarsouza/199661": {
         "status": "unverified_coupon",
@@ -7427,8 +7428,8 @@
         "stock_verified": true,
         "coupon_status": "unverified",
         "store_name": "KaBuM!",
-        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371670_2cc52548dc674e46456dc34dd3de71e1&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.kabum.com.br/produto/662405/processador-amd-ryzen-7-9800x3d-4-7ghz-5-2ghz-max-turbo-cache-104mb-8-nucleos-16-threads-am5-com-video-integrado-100-100001084wof?aw_affid=1062989&sv1=affiliate&sv_campaign_id=1062989&awc=17729_1795371961_2147cc92e040d845e26d257cf5b9f241&utm_source=AWIN&utm_medium=AFILIADOS&utm_content=vevsfps&utm_term=1062989",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199666": {
         "status": "untested",
@@ -7438,8 +7439,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.us/item/3256809376131008.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=5a3b8ad6222446bbb6426965d55cf387-1795371671113-06882-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=5a3b8ad6222446bbb6426965d55cf387-1795371671113-06882-_c3u2KSyx&terminal_id=131bcbd8d28141f9a44a98822847b02d&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=5d7db85beab24359928028facdd36f0c-1795371961084-09766-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=5d7db85beab24359928028facdd36f0c-1795371961084-09766-_c3u2KSyx&terminal_id=1b487790e6884138bc484566b105a0b3&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "iskandarsouza/199666": {
         "status": "untested",
@@ -7449,8 +7450,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.us/item/3256809376131008.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=5a3b8ad6222446bbb6426965d55cf387-1795371671113-06882-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=5a3b8ad6222446bbb6426965d55cf387-1795371671113-06882-_c3u2KSyx&terminal_id=131bcbd8d28141f9a44a98822847b02d&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
-        "updated_at": "2026-11-22 18:21:12"
+        "final_url": "https://www.aliexpress.com/item/1005009562445760.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=5d7db85beab24359928028facdd36f0c-1795371961084-09766-_c3u2KSyx&tt=API&aff_fsk=_c3u2KSyx&aff_platform=api-new-link-generate&sk=_c3u2KSyx&aff_trace_key=5d7db85beab24359928028facdd36f0c-1795371961084-09766-_c3u2KSyx&terminal_id=1b487790e6884138bc484566b105a0b3&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199665": {
         "status": "untested",
@@ -7460,8 +7461,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.us/item/3256809283699197.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8687b665d0364171a0acf73947cb0a45-1795371670834-00437-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=8687b665d0364171a0acf73947cb0a45-1795371670834-00437-_c3RkGwqr&terminal_id=1f02c8f40b574726bc17be3467d7acbe&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=d9d426767ea04182baedfa912ee96269-1795371961240-08922-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=d9d426767ea04182baedfa912ee96269-1795371961240-08922-_c3RkGwqr&terminal_id=01c9ad485f5c4d79aa51bebb5a240f72&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "iskandarsouza/199665": {
         "status": "untested",
@@ -7471,8 +7472,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.us/item/3256809283699197.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8687b665d0364171a0acf73947cb0a45-1795371670834-00437-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=8687b665d0364171a0acf73947cb0a45-1795371670834-00437-_c3RkGwqr&terminal_id=1f02c8f40b574726bc17be3467d7acbe&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.aliexpress.com/item/1005009470013949.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=d9d426767ea04182baedfa912ee96269-1795371961240-08922-_c3RkGwqr&tt=API&aff_fsk=_c3RkGwqr&aff_platform=api-new-link-generate&sk=_c3RkGwqr&aff_trace_key=d9d426767ea04182baedfa912ee96269-1795371961240-08922-_c3RkGwqr&terminal_id=01c9ad485f5c4d79aa51bebb5a240f72&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199667": {
         "status": "untested",
@@ -7482,8 +7483,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.us/item/3256808720597044.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8bec88fd972d4cec9ef8cd33611a567b-1795371671497-01004-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=8bec88fd972d4cec9ef8cd33611a567b-1795371671497-01004-_c3NkewUP&terminal_id=27b37d69727e431b84f1b221b9612263&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=4a8cc6f9894d46e6a1111de44d0d7f1b-1795371961489-06268-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=4a8cc6f9894d46e6a1111de44d0d7f1b-1795371961489-06268-_c3NkewUP&terminal_id=46a5d332bacd4982bb1d96f054fe918c&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "iskandarsouza/199667": {
         "status": "untested",
@@ -7493,8 +7494,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.us/item/3256808720597044.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=8bec88fd972d4cec9ef8cd33611a567b-1795371671497-01004-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=8bec88fd972d4cec9ef8cd33611a567b-1795371671497-01004-_c3NkewUP&terminal_id=27b37d69727e431b84f1b221b9612263&afSmartRedirect=y&gatewayAdapt=glo2usa4itemAdapt&_randl_shipto=US",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://www.aliexpress.com/item/1005008906911796.html?sourceType=620&channel=coin&improveDiscount=Y&BuyNow=true&utm=iskandarsouzo_sophie&aff_fcid=4a8cc6f9894d46e6a1111de44d0d7f1b-1795371961489-06268-_c3NkewUP&tt=API&aff_fsk=_c3NkewUP&aff_platform=api-new-link-generate&sk=_c3NkewUP&aff_trace_key=4a8cc6f9894d46e6a1111de44d0d7f1b-1795371961489-06268-_c3NkewUP&terminal_id=46a5d332bacd4982bb1d96f054fe918c&afSmartRedirect=y",
+        "updated_at": "2026-11-22 18:26:01"
       },
       "IskandarSouza/199664": {
         "status": "untested",
@@ -7504,8 +7505,8 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/maintain.html",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=eca66c620b2b4ea9aa45cf90cc28118b-1795371961231-00555-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=eca66c620b2b4ea9aa45cf90cc28118b-1795371961231-00555-_c4EIyWsJ&terminal_id=b983759d7c334ee3ad13e108755057a5",
+        "updated_at": "2026-11-22 18:26:02"
       },
       "iskandarsouza/199664": {
         "status": "untested",
@@ -7515,10 +7516,10 @@
         "stock_verified": false,
         "coupon_status": null,
         "store_name": "E-commerce BR",
-        "final_url": "https://www.aliexpress.com/maintain.html",
-        "updated_at": "2026-11-22 18:21:11"
+        "final_url": "https://star.aliexpress.com/share/share.htm?platform=AE&businessType=ProductDetail&redirectUrl=https%3A%2F%2Fpt.aliexpress.com%2Fitem%2F1005007453597372.html%3FsourceType%3D620%26channel%3Dcoin%26improveDiscount%3DY%26BuyNow%3Dtrue%26utm%3Diskandarsouzo_sophie&aff_fcid=eca66c620b2b4ea9aa45cf90cc28118b-1795371961231-00555-_c4EIyWsJ&tt=API&aff_fsk=_c4EIyWsJ&aff_platform=api-new-link-generate&sk=_c4EIyWsJ&aff_trace_key=eca66c620b2b4ea9aa45cf90cc28118b-1795371961231-00555-_c4EIyWsJ&terminal_id=b983759d7c334ee3ad13e108755057a5",
+        "updated_at": "2026-11-22 18:26:02"
       }
     },
-    "updated_at": "2026-11-22 18:21:13"
+    "updated_at": "2026-11-22 18:26:04"
   }
 }
