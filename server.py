@@ -247,6 +247,43 @@ def get_alert_config_path(reg_id=None):
     reg = (reg_id or get_active_region_id()).lower()
     return os.path.join(BASE_DIR, "data", "alert_config.json" if reg == "br" else f"alert_config_{reg}.json")
 
+DEFAULT_NOTIFY_CATEGORIES = {
+    "gpu": True,
+    "cpu": True,
+    "ram": True,
+    "mobo": True,
+    "psu": True,
+    "laptop": False,
+}
+
+DEFAULT_SPEC_FILTERS = {
+    "mobo": {},
+    "ram": {},
+    "cpu": {},
+    "gpu": {},
+    "psu": {},
+    "laptop": {},
+}
+
+
+def _with_alert_pref_defaults(cfg_dict):
+    cfg = dict(cfg_dict or {})
+    merged_cats = dict(DEFAULT_NOTIFY_CATEGORIES)
+    if isinstance(cfg.get("notifyCategories"), dict):
+        for k, v in cfg["notifyCategories"].items():
+            if k in merged_cats and isinstance(v, bool):
+                merged_cats[k] = v
+    cfg["notifyCategories"] = merged_cats
+
+    merged_specs = {k: dict(v) for k, v in DEFAULT_SPEC_FILTERS.items()}
+    if isinstance(cfg.get("specFilters"), dict):
+        for k, v in cfg["specFilters"].items():
+            if k in merged_specs and isinstance(v, dict):
+                merged_specs[k] = dict(v)
+    cfg["specFilters"] = merged_specs
+    return cfg
+
+
 def load_alert_config(reg_id=None):
     """Loads alert preferences and target items from alert_config[_<reg>].json."""
     reg = (reg_id or get_active_region_id()).lower()
@@ -254,7 +291,7 @@ def load_alert_config(reg_id=None):
     if os.path.exists(fpath):
         try:
             with open(fpath, "r", encoding="utf-8") as f:
-                return json.load(f)
+                return _with_alert_pref_defaults(json.load(f))
         except Exception:
             pass
 
@@ -267,7 +304,7 @@ def load_alert_config(reg_id=None):
             pass
 
     if reg == "mx":
-        return {
+        return _with_alert_pref_defaults({
             "notifyEnabled": base_cfg.get("notifyEnabled", True),
             "intervalMins": base_cfg.get("intervalMins", 10),
             "notifyWinToast": base_cfg.get("notifyWinToast", True),
@@ -289,8 +326,8 @@ def load_alert_config(reg_id=None):
                 {"slug": "rtx-5070", "name": "RTX 5070", "max_price": 14000},
                 {"slug": "rtx-4060", "name": "RTX 4060", "max_price": 6800}
             ]
-        }
-    return base_cfg or {
+        })
+    return _with_alert_pref_defaults(base_cfg or {
         "notifyEnabled": True,
         "intervalMins": 10,
         "notifyWinToast": True,
@@ -311,10 +348,11 @@ def load_alert_config(reg_id=None):
             {"slug": "rtx-5060", "name": "RTX 5060", "max_price": 2300},
             {"slug": "rtx-5070", "name": "RTX 5070", "max_price": 3800}
         ]
-    }
+    })
 
 def save_alert_config(cfg, reg_id=None):
     """Saves alert preferences to alert_config[_<reg>].json."""
+    cfg = _with_alert_pref_defaults(cfg)
     reg = (reg_id or cfg.get("region_id") or get_active_region_id()).lower()
     fpath = get_alert_config_path(reg)
     os.makedirs(os.path.dirname(fpath), exist_ok=True)
@@ -373,6 +411,8 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     reasons_line = " • ".join(reasons_list) if reasons_list else ("🔥 Oferta Detectada" if reg == "br" else "🔥 Oferta en México")
     bf_banner = (d.get("bf_alert_banner") or "").strip()
     bf_banner_line = f"{bf_banner}\n" if bf_banner else ""
+    mem_warn_text = "⚠️ Conferir se é DDR4 ou DDR5 no anúncio!" if d.get("unverified_memory_type") else ""
+    mem_warn_line = f"\n{mem_warn_text}" if (mem_warn_text and "DDR4/DDR5" not in reasons_line) else ""
     coupon_line = f"\n🎟️ {coupon_word}: {coup}" if coup else ""
 
     savings_brl = d.get("savings_vs_hb_brl", 0)
@@ -384,9 +424,10 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     channel_line = f"\n📢 {channel_word}: {store_or_ch}"
     deal_title = (d.get("title") or "").strip()[:140]
 
-    message = f"{bf_banner_line}{reasons_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
+    message = f"{bf_banner_line}{reasons_line}{mem_warn_line}{coupon_line}{diff_line}{channel_line}\n{deal_title}"
     url = d.get("buy_url") or d.get("post_url") or ""
-    line1 = f"{(bf_banner + ' • ') if bf_banner else ''}{reasons_line}{' | ' + coupon_word + ': ' + coup if coup else ''}"
+    extra_flag = f" | {mem_warn_text}" if (mem_warn_text and "DDR4/DDR5" not in reasons_line) else ""
+    line1 = f"{(bf_banner + ' • ') if bf_banner else ''}{reasons_line}{extra_flag}{' | ' + coupon_word + ': ' + coup if coup else ''}"
     line2 = f"{store_or_ch} — {deal_title[:80]}"
     return title, message, line1, line2, url
 
@@ -464,11 +505,199 @@ def _get_bf_pricing_alert_tag(price, it):
     return False, None, None
 
 
+def _psu_cert_tier(cert_str):
+    low = (cert_str or "").lower()
+    if "platinum" in low or "titanium" in low:
+        return 3
+    if "gold" in low:
+        return 2
+    if "bronze" in low:
+        return 1
+    return 0
+
+
+def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
+    """Returns True if `deal` passes user's enabled categories and per-category hardware spec filters."""
+    if not isinstance(deal, dict):
+        return False
+    deal["unverified_memory_type"] = False
+    cfg = _with_alert_pref_defaults(cfg)
+    kind = (deal.get("matched_kind") or "gpu").lower().strip()
+    cats = cfg.get("notifyCategories") or DEFAULT_NOTIFY_CATEGORIES
+    if not cats.get(kind, kind != "laptop"):
+        return False
+
+    sf = (cfg.get("specFilters") or {}).get(kind) or {}
+    if not sf:
+        return True
+
+    max_price = sf.get("max_price")
+    if max_price and float(max_price) > 0:
+        if float(deal.get("price_brl") or 0) > float(max_price):
+            return False
+
+    slug = deal.get("matched_slug") or ""
+    cat_entry = (catalog_by_slug or {}).get(slug)
+    cat_item = cat_entry[1] if (cat_entry and len(cat_entry) > 1) else {}
+    specs = dict(deal.get("item_specs") or {})
+    post_txt = f"{deal.get('title') or ''} {deal.get('head_text') or ''}".strip()
+    txt = f"{post_txt} {cat_item.get('name') or ''}".strip()
+    is_direct = (deal.get("channel_id") == "catalogo_direto") or bool(deal.get("_isStoreDirect"))
+
+    parsed_mobo_post = {}
+    try:
+        import promo_radar
+        if kind == "mobo":
+            parsed_mobo_post = promo_radar.extract_mobo_specs_from_text(post_txt)
+            parsed = promo_radar.extract_mobo_specs_from_text(txt)
+            for fk in ("socket", "memory_type", "chipset", "brand"):
+                if not specs.get(fk) and parsed.get(fk):
+                    if fk == "memory_type" and specs.get("memory_type_ambiguous"):
+                        continue
+                    specs[fk] = parsed[fk]
+        elif kind == "psu":
+            parsed = promo_radar.extract_psu_specs_from_text(txt)
+            for fk in ("watts", "modularity", "cert", "brand"):
+                if not specs.get(fk) and parsed.get(fk):
+                    specs[fk] = parsed[fk]
+    except Exception:
+        pass
+
+    if kind == "mobo":
+        sock = str(specs.get("socket") or parsed_mobo_post.get("socket") or cat_item.get("socket") or "").strip().upper()
+        req_sockets = [str(s).strip().upper() for s in (sf.get("sockets") or []) if str(s).strip()]
+        if req_sockets:
+            if not sock or sock not in req_sockets:
+                return False
+        req_mems = [str(m).strip().upper() for m in (sf.get("memory_types") or []) if str(m).strip()]
+        if req_mems:
+            if is_direct:
+                mem = str(specs.get("memory_type") or cat_item.get("memory_type") or parsed_mobo_post.get("memory_type") or "").strip().upper()
+            elif sock in ("AM4", "AM5", "LGA1851"):
+                mem = str(parsed_mobo_post.get("memory_type") or specs.get("memory_type") or cat_item.get("memory_type") or "").strip().upper()
+            else:
+                # Dual-DDR socket (e.g. LGA1700) on Telegram/social listing: do NOT rely on fuzzy catalog DDR5 fallback
+                if parsed_mobo_post.get("memory_type"):
+                    mem = str(parsed_mobo_post["memory_type"]).strip().upper()
+                elif not specs.get("memory_type_ambiguous"):
+                    mem = str(specs.get("memory_type") or "").strip().upper()
+                else:
+                    mem = ""
+
+            if mem:
+                if mem not in req_mems:
+                    return False
+            else:
+                allow_ambig = sf.get("allow_ambiguous_mem", True) is not False
+                if allow_ambig:
+                    deal["unverified_memory_type"] = True
+                else:
+                    return False
+        chip_q = (sf.get("chipset_query") or "").strip().lower()
+        if chip_q:
+            tokens = [t.strip() for t in re.split(r"[,;\s]+", chip_q) if t.strip()]
+            hay = f"{specs.get('chipset', '')} {txt} {slug}".lower()
+            if tokens and not any(tok in hay for tok in tokens):
+                return False
+
+    elif kind == "ram":
+        req_mems = [str(m).strip().upper() for m in (sf.get("memory_types") or []) if str(m).strip()]
+        if req_mems:
+            mem = str(specs.get("memory_type") or cat_item.get("memory_type") or "").strip().upper()
+            if not mem:
+                m = re.search(r"\b(ddr4|ddr5)\b", txt, re.I)
+                mem = m.group(1).upper() if m else ""
+            if not mem or mem not in req_mems:
+                return False
+        min_cap = int(sf.get("min_capacity_gb") or 0)
+        if min_cap > 0:
+            cap = int(specs.get("capacity_gb") or cat_item.get("capacity_gb") or 0)
+            if not cap:
+                m_c = re.search(r"\b(8|16|32|48|64|96|128)\s*gb\b", txt, re.I)
+                cap = int(m_c.group(1)) if m_c else 0
+            if cap < min_cap:
+                return False
+        min_spd = int(sf.get("min_speed_mtps") or 0)
+        if min_spd > 0:
+            spd = int(specs.get("speed_mtps") or cat_item.get("speed_mtps") or 0)
+            if not spd:
+                m_s = re.search(r"\b([2-9]\d{3})\s*(?:mhz|mt/?s)?\b", txt, re.I)
+                spd = int(m_s.group(1)) if m_s else 0
+            if spd < min_spd:
+                return False
+
+    elif kind == "cpu":
+        req_sockets = [str(s).strip().upper() for s in (sf.get("sockets") or []) if str(s).strip()]
+        if req_sockets:
+            sock = str(specs.get("socket") or cat_item.get("socket") or "").strip().upper()
+            if not sock or sock not in req_sockets:
+                return False
+        req_brands = [str(b).strip().lower() for b in (sf.get("brands") or []) if str(b).strip()]
+        if req_brands:
+            name_l = txt.lower()
+            brand = (specs.get("brand") or ("amd" if ("ryzen" in name_l or "threadripper" in name_l) else ("intel" if ("core" in name_l or "xeon" in name_l or "intel" in name_l) else ""))).lower()
+            if not brand or brand not in req_brands:
+                return False
+
+    elif kind == "gpu":
+        req_brands = [str(b).strip().lower() for b in (sf.get("brands") or []) if str(b).strip()]
+        if req_brands:
+            brand = str(specs.get("brand") or cat_item.get("brand") or "").strip().lower()
+            if not brand:
+                if "rtx" in txt.lower() or "geforce" in txt.lower():
+                    brand = "nvidia"
+                elif "radeon" in txt.lower() or "rx " in txt.lower():
+                    brand = "amd"
+                elif "arc " in txt.lower():
+                    brand = "intel"
+            if not brand or brand not in req_brands:
+                return False
+        min_vram = int(sf.get("min_vram_gb") or 0)
+        if min_vram > 0:
+            vram = int(specs.get("vram_gb") or cat_item.get("vram_gb") or 0)
+            if vram < min_vram:
+                return False
+
+    elif kind == "psu":
+        min_watts = int(sf.get("min_watts") or 0)
+        if min_watts > 0:
+            watts = int(specs.get("watts") or cat_item.get("watts") or 0)
+            if watts < min_watts:
+                return False
+        req_mods = [str(m).strip().lower() for m in (sf.get("modularity") or []) if str(m).strip()]
+        if req_mods:
+            mod = str(specs.get("modularity") or cat_item.get("modularity") or "").strip().lower()
+            if not mod or mod not in req_mods:
+                return False
+        min_cert = (sf.get("min_cert") or "").strip().lower()
+        if min_cert:
+            req_tier = _psu_cert_tier(min_cert)
+            certs = cat_item.get("certs") or []
+            cert_str = str(specs.get("cert") or (certs[0] if certs else "") or deal.get("title") or "")
+            if _psu_cert_tier(cert_str) < req_tier:
+                return False
+
+    elif kind == "laptop":
+        min_ram = int(sf.get("min_ram_gb") or 0)
+        if min_ram > 0:
+            ram_gb = int(specs.get("ram_gb") or cat_item.get("ram_gb") or 0)
+            if ram_gb < min_ram:
+                return False
+        if sf.get("dedicated_gpu_only"):
+            is_dgpu = bool(specs.get("gpu_is_dedicated") or cat_item.get("gpu_is_dedicated"))
+            if not is_dgpu:
+                return False
+
+    return True
+
+
 def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None, fast_poll=False):
     """Evaluates latest promo deals against user alert rules and dispatches Windows and Phone alerts with strict regional isolation."""
     reg_id = (region_id or (cfg.get("region_id") if cfg else None) or get_active_region_id()).lower()
     if cfg is None:
         cfg = load_alert_config(reg_id)
+    else:
+        cfg = _with_alert_pref_defaults(cfg)
     if not cfg.get("notifyEnabled", True) and not force_notify:
         return {"notified": 0, "status": "disabled", "region_id": reg_id}
 
@@ -484,8 +713,8 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     pass
 
     catalog_by_slug = {}
-    for grp in ("gpus", "cpus", "rams", "motherboards", "psus"):
-        kind_name = "gpu" if grp == "gpus" else ("cpu" if grp == "cpus" else ("ram" if grp == "rams" else ("mobo" if grp == "motherboards" else "psu")))
+    for grp in ("gpus", "cpus", "rams", "motherboards", "psus", "laptops"):
+        kind_name = "gpu" if grp == "gpus" else ("cpu" if grp == "cpus" else ("ram" if grp == "rams" else ("mobo" if grp == "motherboards" else ("psu" if grp == "psus" else "laptop"))))
         for it in db.get(grp, []):
             if it.get("slug"):
                 catalog_by_slug[it["slug"]] = (kind_name, it)
@@ -515,6 +744,8 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         if d.get("deal_status") in ("expired", "out_of_stock", "untested"):
             continue
         if reg_id == "br" and not d.get("stock_verified", False):
+            continue
+        if not force_notify and not _deal_matches_alert_prefs(d, cfg, catalog_by_slug):
             continue
 
         # STRICT REGIONAL ISOLATION CHECK
@@ -598,6 +829,8 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     reasons.append(bf_reason)
 
         if qualifies:
+            if d.get("unverified_memory_type") and not any("DDR4/DDR5" in str(r) for r in reasons):
+                reasons.append("⚠️ Verificar tipo de RAM (DDR4/DDR5)")
             _dispatch_alert_channels(cfg, d, reasons, reg_id)
             history[post_id] = time.time()
             history[price_key] = time.time()
@@ -610,8 +843,10 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         import coupon_tracker
         target_map = {t.get("slug"): float(t.get("max_price") or 0) for t in targets if t.get("slug")}
         cat_candidates = []
-        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu")):
+        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu")):
             for it in db.get(grp, []):
+                if it.get("slug") == "x99-p4-lga2011" or it.get("is_xeon") or it.get("store_name") == "referencia":
+                    continue
                 slug = it.get("slug")
                 cur_p = float(it.get("price_brl") or 0)
                 offer_url = it.get("offer_url") or ""
@@ -626,6 +861,13 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 is_custom_tgt = (slug in target_map and target_map[slug] > 0 and cur_p <= target_map[slug])
                 # Skip stale static catalog items unless they are a custom target or dropped >= 3% vs yesterday
                 if not force_notify and not is_custom_tgt and not dropped_today:
+                    continue
+                probe_deal = {"matched_kind": kind_name, "matched_slug": slug, "price_brl": cur_p, "title": it.get("name", ""), "channel_id": "catalogo_direto", "item_specs": {}}
+                if not force_notify and not _deal_matches_alert_prefs(
+                    probe_deal,
+                    cfg,
+                    catalog_by_slug,
+                ):
                     continue
 
                 reasons = []
@@ -643,10 +885,12 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     bf_banner = bf_b
                     if trig_bf:
                         reasons.append(bf_reason)
+                if probe_deal.get("unverified_memory_type"):
+                    reasons.append("⚠️ Verificar tipo de RAM (DDR4/DDR5)")
                 if reasons:
-                    cat_candidates.append((kind_name, it, cur_p, price_key, reasons, bf_banner))
+                    cat_candidates.append((kind_name, it, cur_p, price_key, reasons, bf_banner, bool(probe_deal.get("unverified_memory_type"))))
 
-        for kind_name, it, cur_p, price_key, reasons, bf_banner in cat_candidates[:5]:
+        for kind_name, it, cur_p, price_key, reasons, bf_banner, unverified_mem in cat_candidates[:5]:
             slug = it["slug"]
             ver = coupon_tracker.test_deal_url_and_coupon(
                 it["offer_url"], expected_price=cur_p, matched_slug=slug, matched_kind=kind_name, reg_id=reg_id
@@ -670,6 +914,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 "coupon_status": ver.get("coupon_status", "none"),
                 "stock_verified": True,
                 "requires_coupon": False,
+                "unverified_memory_type": unverified_mem,
                 "bf_alert_banner": bf_banner,
                 "region_id": reg_id
             }

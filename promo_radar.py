@@ -34,7 +34,7 @@ DEFAULT_BR_CHANNELS = [
 ]
 
 DEFAULT_SEARCH_QUERIES = [
-    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "notebook", "macbook", "nitro", "loq", "expirou", "acabou", "esgotou"
+    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "placa mãe", "B760", "H610", "B550", "B650", "Fonte", "notebook", "macbook", "nitro", "loq", "expirou", "acabou", "esgotou"
 ]
 
 LAPTOP_CLUE_RE = re.compile(
@@ -119,6 +119,7 @@ CPU_MATCH_RULES = [
     ("ryzen-5-5600g",    r"\bryzen\s*5\s*5600g(?!t|e)\b"),
     ("ryzen-5-5600",     r"\bryzen\s*5\s*5600(?!\s*x|\s*g)\b"),
     ("ryzen-5-5500",     r"\bryzen\s*5\s*5500(?!x3d)\b"),
+    ("ryzen-3-3200g",    r"\bryzen\s*3\s*3200g\b|\b3200g\b"),
     ("core-i5-14600kf",  r"\bi5[\s-]*14600kf\b"),
     ("core-i5-14400f",   r"\bi5[\s-]*14400f\b"),
     ("core-i5-13400f",   r"\bi5[\s-]*13400f\b"),
@@ -271,6 +272,255 @@ def extract_price_and_coupon(lines):
     return round(final_price, 2), round(raw_price, 2), round(discount_applied, 2), coupon_code, coupon_info, is_conditional_voucher
 
 
+_MOBO_CHIPSET_SOCKET = {
+    "h610": "LGA1700", "b660": "LGA1700", "b760": "LGA1700", "z690": "LGA1700", "z790": "LGA1700",
+    "h810": "LGA1851", "b860": "LGA1851", "z890": "LGA1851",
+    "a520": "AM4", "b450": "AM4", "b550": "AM4", "x570": "AM4",
+    "a620": "AM5", "b650": "AM5", "b840": "AM5", "b850": "AM5", "x670": "AM5", "x870": "AM5",
+}
+
+
+def extract_mobo_specs_from_text(text):
+    t = text or ""
+    low = t.lower()
+    m_chip = re.search(r"\b((?:h610|b660|b760|z690|z790|h810|b860|z890|a520|b450|b550|x570|a620|b650|b840|b850|x670|x870)[a-z0-9\-]*)\b", low)
+    chipset = m_chip.group(1).upper() if m_chip else ""
+    chip_base = chipset[:4].lower() if chipset else ""
+
+    socket = None
+    if re.search(r"\blga\s*1700\b", low):
+        socket = "LGA1700"
+    elif re.search(r"\blga\s*1851\b", low):
+        socket = "LGA1851"
+    elif re.search(r"\bam5\b", low):
+        socket = "AM5"
+    elif re.search(r"\bam4\b", low):
+        socket = "AM4"
+    elif chip_base in _MOBO_CHIPSET_SOCKET:
+        socket = _MOBO_CHIPSET_SOCKET[chip_base]
+
+    memory_type = None
+    if re.search(r"\bddr4\b|\bd4\b", low):
+        memory_type = "DDR4"
+    elif re.search(r"\bddr5\b|\bd5\b", low):
+        memory_type = "DDR5"
+    elif socket == "AM4":
+        memory_type = "DDR4"
+    elif socket in ("AM5", "LGA1851"):
+        memory_type = "DDR5"
+
+    brand = ""
+    for b in ("ASUS", "MSI", "Gigabyte", "ASRock", "Biostar", "Maxsun", "Colorful", "SuperFrame", "Pichau", "Mancer", "Husky"):
+        if b.lower() in low:
+            brand = b
+            break
+
+    return {"brand": brand, "socket": socket, "memory_type": memory_type, "chipset": chipset}
+
+
+def match_mobo_catalog_item(text, db):
+    t = text or ""
+    low = t.lower()
+    if re.search(r"\bkit\s*upgrade\b|placa[\s-]*m[ãa]e[\s\S]{0,80}?\+\s*(?:processador|ryzen|core\s*i[3579]|mem[óo]ria)|\bkit\s*(?:com\s+)?placa[\s-]*m[ãa]e\b", low):
+        return None, None
+    has_mobo_word = bool(re.search(r"placa[\s-]*m[ãa]e|motherboard|\bmobo\b", low))
+    specs = extract_mobo_specs_from_text(t)
+    has_non_mobo_primary = bool(re.search(r"^\s*[^a-z0-9]*(?:processador|cpu|placa\s*de\s*v[íi]deo|mem[óo]ria)\b|\b(?:rtx|rx\s*\d|radeon|geforce|ryzen|core\s*i[3579])\b", low))
+    if not has_mobo_word and (not specs["chipset"] or has_non_mobo_primary):
+        return None, None
+
+    mobos = [m for m in (db.get("motherboards") or []) if m.get("slug") != "x99-p4-lga2011"]
+    chip_base = (specs["chipset"] or "")[:4].lower()
+    best_item = None
+    best_score = 0
+    for m in mobos:
+        m_sock = m.get("socket") or ""
+        m_mem = (m.get("memory_type") or "").upper()
+        if specs["socket"] and m_sock and m_sock != specs["socket"]:
+            continue
+        if specs["memory_type"] and m_mem and m_mem != specs["memory_type"]:
+            continue
+        if specs["brand"] and m.get("brand") and specs["brand"].lower() != m.get("brand", "").lower():
+            continue
+        m_name = (m.get("name") or "").lower()
+        m_slug = (m.get("slug") or "").lower()
+        score = 0
+        if specs["socket"] and m_sock == specs["socket"]:
+            score += 10
+        if specs["memory_type"] and m_mem == specs["memory_type"]:
+            score += 10
+        if chip_base and (chip_base in m_name or chip_base in m_slug):
+            score += 35
+        if specs["brand"] and specs["brand"].lower() in (m.get("brand", "").lower() + " " + m_name):
+            score += 20
+        for tok in re.findall(r"[a-z0-9]{3,}", m_slug):
+            if tok not in ("pro", "ddr4", "ddr5", "wifi", "plus", "gaming") and tok in low:
+                score += 12
+        if score > best_score:
+            best_score = score
+            best_item = m
+
+    if best_item and best_score >= 35:
+        item_out = dict(best_item)
+        if specs["chipset"]:
+            item_out["_chipset"] = specs["chipset"]
+        return "mobo", item_out
+
+    if not has_mobo_word and not specs["chipset"]:
+        return None, None
+
+    pool = [
+        float(m.get("price_brl") or 0) for m in mobos
+        if float(m.get("price_brl") or 0) > 0
+        and (not specs["socket"] or m.get("socket") == specs["socket"])
+        and (not specs["memory_type"] or (m.get("memory_type") or "").upper() == specs["memory_type"])
+    ]
+    if not pool and specs["socket"]:
+        pool = [float(m.get("price_brl") or 0) for m in mobos if float(m.get("price_brl") or 0) > 0 and m.get("socket") == specs["socket"]]
+    med_price = round(sorted(pool)[len(pool) // 2], 2) if pool else 0.0
+    label_parts = [p for p in ("Placa-Mãe", specs["brand"], specs["chipset"] or specs["socket"], specs["memory_type"]) if p]
+    synth_slug = f"mobo-{(specs['socket'] or 'any').lower()}-{(specs['memory_type'] or 'any').lower()}"
+    return "mobo", {
+        "slug": synth_slug,
+        "name": " ".join(label_parts),
+        "brand": specs["brand"],
+        "socket": specs["socket"] or "",
+        "memory_type": specs["memory_type"] or "",
+        "chipset": specs["chipset"],
+        "price_brl": med_price,
+    }
+
+
+def extract_psu_specs_from_text(text):
+    t = text or ""
+    low = t.lower()
+    m_w = re.search(r"\b([4-9]\d0|1[0-6]\d0)\s*w\b", low)
+    watts = int(m_w.group(1)) if m_w else 0
+
+    modularity = "Non-Modular"
+    if re.search(r"semi[\s-]*modular", low):
+        modularity = "Semi-Modular"
+    elif re.search(r"full[\s-]*modular|\bmodular\b", low) and "n\u00e3o modular" not in low:
+        modularity = "Modular"
+
+    cert = ""
+    for pat, label in (
+        (r"80\s*(?:plus|\+)\s*platinum", "80 Plus Platinum"),
+        (r"80\s*(?:plus|\+)\s*gold", "80 Plus Gold"),
+        (r"80\s*(?:plus|\+)\s*bronze", "80 Plus Bronze"),
+        (r"80\s*(?:plus|\+)\s*(?:white|standard)", "80 Plus White"),
+    ):
+        if re.search(pat, low):
+            cert = label
+            break
+
+    brand = ""
+    for b in ("Corsair", "MSI", "XPG", "Cooler Master", " Seasonic", "EVGA", "Gigabyte", "ASUS", "Thermaltake", "Gamemax", "Pichau", "Mancer", "SuperFrame", "Redragon", "Duex", "Rise Mode", "DeepCool"):
+        if b.strip().lower() in low:
+            brand = b.strip()
+            break
+
+    return {"brand": brand, "watts": watts, "modularity": modularity, "cert": cert}
+
+
+def match_psu_catalog_item(text, db):
+    t = text or ""
+    low = t.lower()
+    if re.search(r"fonte\s*(?:para|p/|de)\s*(?:notebook|monitor|celular|led|cftv|xbox|ps[45]|carregador)|\bnobreak\b|\bestabilizador\b", low):
+        return None, None
+    if not re.search(r"\bfonte\b", low):
+        return None, None
+    specs = extract_psu_specs_from_text(t)
+    watts = specs["watts"]
+    if not watts:
+        return None, None
+
+    psus = db.get("psus") or []
+    best_item = None
+    best_score = 0
+    for ps in psus:
+        ps_w = int(ps.get("watts") or 0)
+        if ps_w != watts:
+            continue
+        if specs["brand"] and ps.get("brand") and specs["brand"].lower() != ps.get("brand", "").lower():
+            continue
+        ps_name = (ps.get("name") or "").lower()
+        ps_slug = (ps.get("slug") or "").lower()
+        score = 15
+        if specs["brand"] and specs["brand"].lower() in ((ps.get("brand") or "").lower() + " " + ps_name):
+            score += 25
+        if specs["modularity"] and (ps.get("modularity") or "") == specs["modularity"]:
+            score += 10
+        for tok in re.findall(r"[a-z0-9]{3,}", ps_slug):
+            if tok != f"{watts}w" and tok in low:
+                score += 15
+        if score > best_score:
+            best_score = score
+            best_item = ps
+
+    if best_item and best_score >= 30:
+        return "psu", best_item
+
+    pool = [float(p.get("price_brl") or 0) for p in psus if float(p.get("price_brl") or 0) > 0 and int(p.get("watts") or 0) == watts]
+    med_price = round(sorted(pool)[len(pool) // 2], 2) if pool else 0.0
+    label_parts = [p for p in ("Fonte", specs["brand"], f"{watts}W", specs["cert"]) if p]
+    return "psu", {
+        "slug": f"psu-{watts}w",
+        "name": " ".join(label_parts),
+        "brand": specs["brand"],
+        "watts": watts,
+        "modularity": specs["modularity"],
+        "certs": [specs["cert"]] if specs["cert"] else [],
+        "price_brl": med_price,
+    }
+
+
+def extract_item_specs(kind, item, cat_item):
+    kind = (kind or "gpu").lower()
+    cat = cat_item or {}
+    txt = f"{item.get('title', '')} {item.get('head_text', '')}".strip()
+    if kind == "gpu":
+        return {"brand": cat.get("brand") or "", "vram_gb": cat.get("vram_gb") or 0}
+    if kind == "cpu":
+        name_l = (cat.get("name") or "").lower()
+        brand = "AMD" if ("ryzen" in name_l or "threadripper" in name_l or "athlon" in name_l) else ("Intel" if ("core" in name_l or "xeon" in name_l or "intel" in name_l) else "")
+        return {"brand": brand, "socket": cat.get("socket") or "", "ddr": cat.get("ddr") or ""}
+    if kind == "ram":
+        return {"memory_type": (cat.get("memory_type") or "").upper(), "capacity_gb": cat.get("capacity_gb") or 0, "speed_mtps": cat.get("speed_mtps") or 0}
+    if kind == "mobo":
+        parsed = extract_mobo_specs_from_text(txt)
+        resolved_sock = (parsed["socket"] or cat.get("socket") or "").upper()
+        # Dual-DDR sockets (e.g. LGA1700) exist in both DDR4 and DDR5 variants; if the post didn't
+        # explicitly mention DDR4/D4 or DDR5/D5, mark memory_type ambiguous instead of assuming the catalog match.
+        if resolved_sock in ("AM4", "AM5", "LGA1851") or parsed["memory_type"]:
+            resolved_mem = (parsed["memory_type"] or cat.get("memory_type") or "").upper()
+            mem_ambiguous = False
+        else:
+            resolved_mem = ""
+            mem_ambiguous = True
+        return {
+            "brand": cat.get("brand") or parsed["brand"] or "",
+            "socket": resolved_sock,
+            "memory_type": resolved_mem,
+            "memory_type_ambiguous": mem_ambiguous,
+            "chipset": cat.get("_chipset") or cat.get("chipset") or parsed["chipset"] or "",
+        }
+    if kind == "psu":
+        parsed = extract_psu_specs_from_text(txt)
+        certs = cat.get("certs") or ([] if not parsed["cert"] else [parsed["cert"]])
+        raw_mod = cat.get("modularity") or ""
+        mod = parsed["modularity"] if (not raw_mod or raw_mod.startswith("$")) else raw_mod
+        return {
+            "brand": cat.get("brand") or parsed["brand"] or "",
+            "watts": int(cat.get("watts") or parsed["watts"] or 0),
+            "modularity": mod or "Non-Modular",
+            "cert": certs[0] if certs else parsed["cert"] or "",
+        }
+    if kind == "laptop":
+        return {"brand": cat.get("brand") or "", "ram_gb": cat.get("ram_gb") or 0, "gpu_is_dedicated": bool(cat.get("gpu_is_dedicated"))}
+    return {}
+
+
 def match_laptop_catalog_item(text, db):
     laptops = db.get("laptops") or []
     if not laptops or LAPTOP_ACCESSORY_RE.search(text or ""):
@@ -340,9 +590,15 @@ def match_catalog_item(title_and_first_lines, db):
     if LAPTOP_CLUE_RE.search(title_and_first_lines or "") and not LAPTOP_ACCESSORY_RE.search(title_and_first_lines or ""):
         return match_laptop_catalog_item(title_and_first_lines, db)
 
-    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|tarjeta\s*de\s*video|tarjeta\s*gr[áa]fica|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram|procesador)\b", title_and_first_lines, re.I))
+    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|tarjeta\s*de\s*video|tarjeta\s*gr[áa]fica|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram|procesador|placa[\s-]*m[ãa]e|motherboard|mobo|fonte)\b", title_and_first_lines, re.I))
     if not has_component_clue and EXCLUDE_SYSTEM_RE.search(title_and_first_lines):
         return None, None
+
+    is_explicit_mobo = bool(re.search(r"placa[\s-]*m[ãa]e|motherboard|\bmobo\b", title_and_first_lines or "", re.I)) and not re.search(r"\bkit\s*upgrade\b|\+\s*(?:processador|ryzen|core\s*i)", title_and_first_lines or "", re.I)
+    if is_explicit_mobo:
+        mkind, mitem = match_mobo_catalog_item(title_and_first_lines, db)
+        if mkind and mitem:
+            return mkind, mitem
 
     for slug, pat in GPU_MATCH_RULES:
         if re.search(pat, title_and_first_lines, re.IGNORECASE):
@@ -355,6 +611,14 @@ def match_catalog_item(title_and_first_lines, db):
             cpu = next((c for c in db.get("cpus", []) if c["slug"] == slug), None)
             if cpu:
                 return "cpu", cpu
+
+    mkind, mitem = match_mobo_catalog_item(title_and_first_lines, db)
+    if mkind and mitem:
+        return mkind, mitem
+
+    pkind, pitem = match_psu_catalog_item(title_and_first_lines, db)
+    if pkind and pitem:
+        return pkind, pitem
 
     for slug, pat in RAM_MATCH_RULES:
         if re.search(pat, title_and_first_lines, re.IGNORECASE):
@@ -680,14 +944,20 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
 
         kind, cat_item = match_catalog_item(item.get("head_text", "") or item.get("title", ""), db)
         if kind and cat_item:
+            if kind == "mobo" and float(item.get("price_brl") or 0) < 220:
+                kind, cat_item = None, None
+            elif kind == "psu" and float(item.get("price_brl") or 0) < 110:
+                kind, cat_item = None, None
+        if kind and cat_item:
             hb_price = float(cat_item.get("price_brl") or 0)
-            if hb_price > 0 and (item["price_brl"] < hb_price * 0.45 or item["price_brl"] > hb_price * 1.30):
+            if hb_price > 0 and (item["price_brl"] < hb_price * 0.45 or item["price_brl"] > hb_price * 1.35):
                 continue
             item["matched_kind"] = kind
             item["matched_slug"] = cat_item["slug"]
             item["matched_name"] = cat_item["name"]
             item["hb_price_brl"] = hb_price
-            item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2)
+            item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2) if hb_price > 0 else 0.0
+            item["item_specs"] = extract_item_specs(kind, item, cat_item)
             is_cond = bool(item.get("is_conditional_voucher") or re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", item.get("raw_text", ""), re.I))
             item["is_conditional_voucher"] = is_cond
             requires_coup = bool(

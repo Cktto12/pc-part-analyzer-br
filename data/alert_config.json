@@ -1,9 +1,9 @@
 {
   "notifyEnabled": true,
-  "intervalMins": 1,
+  "intervalMins": 3,
   "intervalSecs": 30,
   "notifyWinToast": true,
-  "notifyPhone": true,
+  "notifyPhone": false,
   "phoneService": "ntfy",
   "ntfyTopic": "alerta_deal_jz265i",
   "ntfyRing": false,
@@ -18,6 +18,49 @@
   "trigAvg30d": true,
   "avg30dMinPct": 5,
   "notifyLogic": "OR",
+  "notifyCategories": {
+    "gpu": true,
+    "cpu": true,
+    "ram": true,
+    "mobo": true,
+    "psu": true,
+    "laptop": false
+  },
+  "specFilters": {
+    "mobo": {
+      "sockets": [
+        "LGA1700"
+      ],
+      "memory_types": [
+        "DDR4"
+      ],
+      "chipset_query": "",
+      "max_price": 0,
+      "allow_ambiguous_mem": true
+    },
+    "ram": {
+      "min_capacity_gb": 0,
+      "min_speed_mtps": 0,
+      "max_price": 0
+    },
+    "cpu": {
+      "max_price": 0
+    },
+    "gpu": {
+      "min_vram_gb": 0,
+      "max_price": 0
+    },
+    "psu": {
+      "min_watts": 0,
+      "min_cert": "",
+      "max_price": 0
+    },
+    "laptop": {
+      "min_ram_gb": 0,
+      "max_price": 0,
+      "dedicated_gpu_only": false
+    }
+  },
   "custom_targets": [
     {
       "slug": "rtx-5060",

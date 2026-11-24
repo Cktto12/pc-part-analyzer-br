@@ -19,7 +19,7 @@
       warn: readCssVar('--ui-warn', '#f59e0b'),
       bad: readCssVar('--ui-bad', '#ef4444'),
       compareA: readCssVar('--ui-compare-a', '#38bdf8'),
-      compareAFill: 'rgba(56, 189, 248, 0.18)',
+      compareAFill: readCssVar('--ui-compare-a-soft', 'rgba(56, 189, 248, 0.18)'),
       compareB: readCssVar('--ui-compare-b', '#a78bfa'),
       compareBFill: 'rgba(167, 139, 250, 0.18)',
       ref: readCssVar('--ui-compare-ref', '#94a3b8'),

@@ -524,6 +524,22 @@ def build_database(output_path):
         "store_name": "atual",
         "offer_url": "https://www.hardwarebarato.com/produtos/processadores",
         "history": []
+    }, {
+        "slug": "ryzen-3-3200g",
+        "name": "Ryzen 3 3200G",
+        "tdp_w": 65,
+        "benchmark": 1900,
+        "single_core_factor": 0.67,
+        "price_brl": 480.0,
+        "regular_price_brl": 480.0,
+        "coupon_price_brl": None,
+        "coupon": None,
+        "coupon_label": "Entrada / APU Vega 8",
+        "socket": "AM4",
+        "ddr": "DDR4",
+        "store_name": "referencia",
+        "offer_url": "https://www.hardwarebarato.com/produtos/processadores",
+        "history": []
     }]
     for c in raw_cpus:
         lp = c.get('lowestPrice') or {}
@@ -550,6 +566,7 @@ def build_database(output_path):
         else:
             socket, ddr = "LGA1200/Other", "DDR4"
 
+        cpus = [x for x in cpus if x.get('slug') != c['slug']]
         cpus.append({
             "slug": c['slug'],
             "name": name,

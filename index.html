@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#5b5bf0" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#0c0c0c" media="(prefers-color-scheme: dark)" />
   <script>
-    // Aplica o tema salvo (ou o do sistema) antes de pintar a página
+    // Aplica o tema salvo (ou o do sistema) e cor personalizada antes de pintar a página
     (function () {
       var t = null;
       try { t = localStorage.getItem('gca-theme'); } catch (_) {}
@@ -16,13 +16,20 @@
       }
       document.documentElement.setAttribute('data-theme', t);
       document.documentElement.classList.toggle('dark', t === 'dark');
+      try {
+        var ac = JSON.parse(localStorage.getItem('gca-accent-config') || 'null');
+        if (ac && ac.mode === 'custom' && /^#[0-9a-f]{6}$/i.test(ac.color || '')) {
+          document.documentElement.style.setProperty('--ui-brand', ac.color);
+          document.documentElement.style.setProperty('--ui-compare-a', ac.color);
+        }
+      } catch (_) {}
     })();
   </script>
   <title>GCA · Preços de Hardware & Black Friday</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261123-3" />
-  <link rel="stylesheet" href="styles/themes.css?v=20261119-4" />
-  <script src="styles/chart-theme.js?v=20261119-5"></script>
+  <link rel="stylesheet" href="styles/ui.css?v=20261124-3" />
+  <link rel="stylesheet" href="styles/themes.css?v=20261124-1" />
+  <script src="styles/chart-theme.js?v=20261124-1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1875,6 +1882,10 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="togglePromoPreferencesPanel()" id="btn-promo-preferences" class="ui-btn ui-btn--sm" style="border-color: var(--ui-brand-border); color: var(--ui-brand-hover);" aria-expanded="false" aria-controls="promo-prefs-panel" title="Configurar categorias (GPU, CPU, RAM, Placa-Mãe, Fonte, Notebook) e filtros específicos como LGA1700 + DDR4">
+              <span>⚙️ Categorias &amp; Specs</span>
+              <span id="promo-prefs-summary-badge" class="ui-badge ui-badge--brand !py-0 !px-1.5 ui-mono">5 cat.</span>
+            </button>
             <button type="button" onclick="testAllRadarCoupons()" id="btn-test-all-coupons" class="ui-btn ui-btn--sm" title="Testa se os cupons e links de ofertas continuam ativos na loja">
               Testar Cupons
             </button>
@@ -1884,6 +1895,276 @@
             <button type="button" onclick="pollBFLiveCardsFeed(true); scanLivePromos(true);" id="btn-scan-promos-now" class="ui-btn ui-btn--primary ui-btn--sm">
               Atualizar Agora
             </button>
+          </div>
+        </div>
+
+        <!-- Inline Expandable Categories & Spec Filters Panel -->
+        <div id="promo-prefs-panel" class="hidden rounded-xl p-4 space-y-4 ui-promo-prefs-panel" role="region" aria-label="Categorias e especificações monitoradas">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Categorias &amp; Especificações Monitoradas</h3>
+              <p class="text-xs text-slate-400">Define o que aparece em Promoções, Top Ofertas da Home e Alertas em segundo plano.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="prefillPromoSpecsFromRefPC()" class="ui-btn ui-btn--good ui-btn--sm" title="Preenche socket e DDR com base no seu PC de Referência">
+                ⚡ Usar Meu PC
+              </button>
+              <button type="button" onclick="clearPromoSpecFilters()" class="ui-btn ui-btn--sm ui-btn--ghost">
+                Limpar Specs
+              </button>
+              <button type="button" onclick="openPromoAlertTriggersSection()" class="ui-btn ui-btn--sm">
+                Alertas &amp; Canais ▾
+              </button>
+              <button type="button" onclick="togglePromoPreferencesPanel(false)" class="ui-btn ui-btn--sm ui-btn--ghost" aria-label="Fechar painel de categorias">
+                Fechar ✕
+              </button>
+            </div>
+          </div>
+
+          <!-- Category Toggles -->
+          <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Categorias ativas">
+            <span class="text-xs font-semibold text-slate-400 mr-1">Categorias ativas:</span>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-gpu" checked onchange="onPromoCategoryToggle('gpu', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>GPUs</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-cpu" checked onchange="onPromoCategoryToggle('cpu', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>CPUs</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-ram" checked onchange="onPromoCategoryToggle('ram', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Memórias RAM</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-mobo" checked onchange="onPromoCategoryToggle('mobo', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Placas-Mãe</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-psu" checked onchange="onPromoCategoryToggle('psu', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Fontes (PSU)</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-laptop" onchange="onPromoCategoryToggle('laptop', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Notebooks</span>
+            </label>
+          </div>
+
+          <!-- Per-Category Spec Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-xs">
+            <!-- Placas-Mãe -->
+            <div id="spec-card-mobo" class="ui-spec-card space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Placas-Mãe (MOBO)</span>
+                <span class="ui-mono text-[11px] text-sky-400">Ex: LGA1700 + DDR4</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Socket</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="mobo" data-spec-key="sockets" data-spec-val="AM4" aria-pressed="false" onclick="onTogglePromoSpecChip('mobo','sockets','AM4')">AM4</button>
+                  <button type="button" class="ui-chip" data-spec-cat="mobo" data-spec-key="sockets" data-spec-val="AM5" aria-pressed="false" onclick="onTogglePromoSpecChip('mobo','sockets','AM5')">AM5</button>
+                  <button type="button" class="ui-chip" data-spec-cat="mobo" data-spec-key="sockets" data-spec-val="LGA1700" aria-pressed="false" onclick="onTogglePromoSpecChip('mobo','sockets','LGA1700')">LGA1700</button>
+                  <button type="button" class="ui-chip" data-spec-cat="mobo" data-spec-key="sockets" data-spec-val="LGA1851" aria-pressed="false" onclick="onTogglePromoSpecChip('mobo','sockets','LGA1851')">LGA1851</button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Memória</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="mobo" data-spec-key="memory_types" data-spec-val="DDR4" aria-pressed="false" onclick="onTogglePromoSpecChip('mobo','memory_types','DDR4')">DDR4</button>
+                  <button type="button" class="ui-chip" data-spec-cat="mobo" data-spec-key="memory_types" data-spec-val="DDR5" aria-pressed="false" onclick="onTogglePromoSpecChip('mobo','memory_types','DDR5')">DDR5</button>
+                </div>
+                <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer pt-0.5" title="Em sockets que aceitam DDR4 e DDR5 (ex: LGA1700), inclui anúncios sem DDR especificado no título e adiciona aviso na notificação para conferir o tipo de RAM.">
+                  <input type="checkbox" id="spec-mobo-allow-ambiguous" checked onchange="onPromoSpecInputChange()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                  <span>Arriscar sem DDR no título (avisar na notificação)</span>
+                </label>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Chipset / Modelo</span>
+                  <input type="text" id="spec-mobo-chipset" oninput="onPromoSpecInputChange()" placeholder="H610, B760, B550" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white" />
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                  <input type="number" id="spec-mobo-max-price" min="0" step="50" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Memórias RAM -->
+            <div id="spec-card-ram" class="ui-spec-card space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Memórias RAM</span>
+                <span class="ui-mono text-[11px] text-slate-400">Tipo / GB / MT/s</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Tipo</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="ram" data-spec-key="memory_types" data-spec-val="DDR4" aria-pressed="false" onclick="onTogglePromoSpecChip('ram','memory_types','DDR4')">DDR4</button>
+                  <button type="button" class="ui-chip" data-spec-cat="ram" data-spec-key="memory_types" data-spec-val="DDR5" aria-pressed="false" onclick="onTogglePromoSpecChip('ram','memory_types','DDR5')">DDR5</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Capacidade mín.</span>
+                  <select id="spec-ram-min-cap" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                    <option value="0">Qualquer</option>
+                    <option value="8">8 GB+</option>
+                    <option value="16">16 GB+</option>
+                    <option value="32">32 GB+</option>
+                    <option value="64">64 GB+</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Velocidade mín.</span>
+                  <select id="spec-ram-min-speed" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                    <option value="0">Qualquer</option>
+                    <option value="3200">3200+ MT/s</option>
+                    <option value="3600">3600+ MT/s</option>
+                    <option value="5200">5200+ MT/s</option>
+                    <option value="6000">6000+ MT/s</option>
+                  </select>
+                </label>
+              </div>
+              <label class="space-y-1 block">
+                <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                <input type="number" id="spec-ram-max-price" min="0" step="50" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+              </label>
+            </div>
+
+            <!-- Processadores (CPU) -->
+            <div id="spec-card-cpu" class="ui-spec-card space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Processadores (CPU)</span>
+                <span class="ui-mono text-[11px] text-slate-400">Socket / Marca</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Socket</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="cpu" data-spec-key="sockets" data-spec-val="AM4" aria-pressed="false" onclick="onTogglePromoSpecChip('cpu','sockets','AM4')">AM4</button>
+                  <button type="button" class="ui-chip" data-spec-cat="cpu" data-spec-key="sockets" data-spec-val="AM5" aria-pressed="false" onclick="onTogglePromoSpecChip('cpu','sockets','AM5')">AM5</button>
+                  <button type="button" class="ui-chip" data-spec-cat="cpu" data-spec-key="sockets" data-spec-val="LGA1700" aria-pressed="false" onclick="onTogglePromoSpecChip('cpu','sockets','LGA1700')">LGA1700</button>
+                  <button type="button" class="ui-chip" data-spec-cat="cpu" data-spec-key="sockets" data-spec-val="LGA1851" aria-pressed="false" onclick="onTogglePromoSpecChip('cpu','sockets','LGA1851')">LGA1851</button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Marca</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="cpu" data-spec-key="brands" data-spec-val="AMD" aria-pressed="false" onclick="onTogglePromoSpecChip('cpu','brands','AMD')">AMD</button>
+                  <button type="button" class="ui-chip" data-spec-cat="cpu" data-spec-key="brands" data-spec-val="Intel" aria-pressed="false" onclick="onTogglePromoSpecChip('cpu','brands','Intel')">Intel</button>
+                </div>
+              </div>
+              <label class="space-y-1 block">
+                <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                <input type="number" id="spec-cpu-max-price" min="0" step="50" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+              </label>
+            </div>
+
+            <!-- Placas de Vídeo (GPU) -->
+            <div id="spec-card-gpu" class="ui-spec-card space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Placas de Vídeo (GPU)</span>
+                <span class="ui-mono text-[11px] text-slate-400">Marca / VRAM</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Fabricante do chip</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="gpu" data-spec-key="brands" data-spec-val="NVIDIA" aria-pressed="false" onclick="onTogglePromoSpecChip('gpu','brands','NVIDIA')">NVIDIA</button>
+                  <button type="button" class="ui-chip" data-spec-cat="gpu" data-spec-key="brands" data-spec-val="AMD" aria-pressed="false" onclick="onTogglePromoSpecChip('gpu','brands','AMD')">AMD</button>
+                  <button type="button" class="ui-chip" data-spec-cat="gpu" data-spec-key="brands" data-spec-val="Intel" aria-pressed="false" onclick="onTogglePromoSpecChip('gpu','brands','Intel')">Intel</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">VRAM mínima</span>
+                  <select id="spec-gpu-min-vram" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                    <option value="0">Qualquer</option>
+                    <option value="8">8 GB+</option>
+                    <option value="12">12 GB+</option>
+                    <option value="16">16 GB+</option>
+                    <option value="24">24 GB+</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                  <input type="number" id="spec-gpu-max-price" min="0" step="100" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Fontes (PSU) -->
+            <div id="spec-card-psu" class="ui-spec-card space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Fontes (PSU)</span>
+                <span class="ui-mono text-[11px] text-slate-400">Watts / Selo</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Modularidade</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="psu" data-spec-key="modularity" data-spec-val="Modular" aria-pressed="false" onclick="onTogglePromoSpecChip('psu','modularity','Modular')">Modular</button>
+                  <button type="button" class="ui-chip" data-spec-cat="psu" data-spec-key="modularity" data-spec-val="Semi-Modular" aria-pressed="false" onclick="onTogglePromoSpecChip('psu','modularity','Semi-Modular')">Semi</button>
+                  <button type="button" class="ui-chip" data-spec-cat="psu" data-spec-key="modularity" data-spec-val="Non-Modular" aria-pressed="false" onclick="onTogglePromoSpecChip('psu','modularity','Non-Modular')">Não-Mod</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-1.5">
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Potência mín.</span>
+                  <select id="spec-psu-min-watts" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-white">
+                    <option value="0">Qualquer</option>
+                    <option value="500">500W+</option>
+                    <option value="600">600W+</option>
+                    <option value="650">650W+</option>
+                    <option value="750">750W+</option>
+                    <option value="850">850W+</option>
+                    <option value="1000">1000W+</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Selo 80+ mín.</span>
+                  <select id="spec-psu-min-cert" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs text-white">
+                    <option value="">Qualquer</option>
+                    <option value="bronze">Bronze+</option>
+                    <option value="gold">Gold+</option>
+                    <option value="platinum">Platinum+</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Preço máx</span>
+                  <input type="number" id="spec-psu-max-price" min="0" step="50" oninput="onPromoSpecInputChange()" placeholder="Sem lim." class="w-full bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-xs ui-mono text-white" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Notebooks -->
+            <div id="spec-card-laptop" class="ui-spec-card is-disabled space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Notebooks</span>
+                <span id="spec-laptop-status-tag" class="ui-mono text-[11px] text-slate-500">Desativado</span>
+              </div>
+              <p id="spec-laptop-off-note" class="text-[11px] text-slate-400">
+                Categoria desativada: notebooks estão ocultos das promoções e dos alertas automáticos.
+              </p>
+              <div id="spec-laptop-fields" class="hidden space-y-2">
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="space-y-1">
+                    <span class="text-[11px] text-slate-400 block">RAM mín.</span>
+                    <select id="spec-laptop-min-ram" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                      <option value="0">Qualquer</option>
+                      <option value="8">8 GB+</option>
+                      <option value="16">16 GB+</option>
+                      <option value="32">32 GB+</option>
+                    </select>
+                  </label>
+                  <label class="space-y-1">
+                    <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                    <input type="number" id="spec-laptop-max-price" min="0" step="200" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                  </label>
+                </div>
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                  <input type="checkbox" id="spec-laptop-dgpu" onchange="onPromoSpecInputChange()" class="w-3.5 h-3.5 accent-sky-400" />
+                  <span>Somente com GPU dedicada (RTX / GTX)</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1921,6 +2202,8 @@
               <button type="button" onclick="setBFCardsFilter('gpu')" data-bf-filter="gpu" class="ui-chip">GPUs</button>
               <button type="button" onclick="setBFCardsFilter('cpu')" data-bf-filter="cpu" class="ui-chip">CPUs</button>
               <button type="button" onclick="setBFCardsFilter('ram')" data-bf-filter="ram" class="ui-chip">RAM</button>
+              <button type="button" onclick="setBFCardsFilter('mobo')" data-bf-filter="mobo" class="ui-chip">Placas-Mãe</button>
+              <button type="button" onclick="setBFCardsFilter('psu')" data-bf-filter="psu" class="ui-chip">Fontes</button>
               <button type="button" onclick="setBFCardsFilter('laptop')" data-bf-filter="laptop" class="ui-chip">Notebooks</button>
               <button type="button" onclick="setBFCardsFilter('in_stock')" data-bf-filter="in_stock" class="ui-chip">Em estoque</button>
               <button type="button" onclick="setBFCardsFilter('store_direct')" data-bf-filter="store_direct" class="ui-chip">Lojas diretas</button>
@@ -1934,6 +2217,7 @@
               <input type="text" id="bf-cards-search" oninput="renderBFPromosCardsTab()" placeholder="Buscar modelo, loja, cupom..." class="w-full sm:w-56 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:border-sky-400 focus:outline-none" />
             </div>
           </div>
+          <div id="promo-active-prefs-bar" class="hidden flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/70 text-xs"></div>
         </div>
 
         <!-- Responsive Card Grid -->
@@ -2138,6 +2422,10 @@
                         <input type="checkbox" id="chk-notify-prod-ram" checked onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
                         <span>Memórias RAM</span>
                       </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-laptop" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Notebooks</span>
+                      </label>
                     </div>
                   </div>
                 </div>
@@ -2298,21 +2586,31 @@
     <section id="tab-sim" class="hidden space-y-5">
       <div id="sim-desktop-view" class="ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div class="flex items-center gap-2">
-            <h2 class="ui-title-lg">Simulador de Desempenho Real</h2>
-            <span class="ui-info ui-info--bottom">
-              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
-              <span class="ui-info-popover" role="tooltip">Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.</span>
-            </span>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-lg">Simulador de Desempenho Real</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Simulação de taxa de quadros (FPS com e sem gargalo de CPU), inferência local de IA e simulações técnicas.</span>
+              </span>
+            </div>
+            <div class="ui-segmented" id="sim-compare-toggle" role="group" aria-label="Modo de simulação">
+              <button type="button" id="btn-sim-mode-single" onclick="setSimCompareEnabled(false)" class="ui-segmented-btn" aria-pressed="false" title="Simular apenas 1 setup sem comparação">
+                <span>1 Setup</span>
+              </button>
+              <button type="button" id="btn-sim-mode-compare" onclick="setSimCompareEnabled(true)" class="ui-segmented-btn is-active" aria-pressed="true" title="Comparar Setup A vs Setup B">
+                <span>Comparar A vs B</span>
+              </button>
+            </div>
           </div>
           <!-- Controls: Setup A (Azul) vs Setup B (Roxo) + Upscaling & Modes -->
           <div class="flex flex-wrap items-center gap-2.5">
             <!-- Setup A Group (Fixed Compare A — Blue) -->
-            <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-900/90 border w-full sm:w-auto" style="border-color: var(--ui-compare-a-border);">
-              <span class="ui-badge ui-badge--a ui-mono">Setup A</span>
+            <div id="sim-setup-a-group" class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-900/90 border w-full sm:w-auto" style="border-color: var(--ui-compare-a-border);">
+              <span id="sim-setup-a-badge" class="ui-badge ui-badge--a ui-mono">Setup A</span>
               <div class="flex items-center gap-1 min-w-0">
                 <span class="text-xs text-slate-400 ui-mono">GPU:</span>
-                <select id="sim-select-gpu-a" onchange="renderSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
+                <select id="sim-select-gpu-a" onchange="onSimGpuChange(this.value, 'a')" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
               </div>
               <div class="flex items-center gap-1 min-w-0">
                 <span class="text-xs text-slate-400 ui-mono">CPU:</span>
@@ -2321,16 +2619,16 @@
             </div>
 
             <!-- Swap Button -->
-            <button type="button" onclick="swapSimulatorSetups()" title="Inverter Setup A e Setup B" class="ui-btn ui-btn--icon">
+            <button type="button" id="btn-sim-swap" onclick="swapSimulatorSetups()" title="Inverter Setup A e Setup B" class="ui-btn ui-btn--icon">
               ⇄
             </button>
 
             <!-- Setup B Group (Fixed Compare B — Purple) -->
-            <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-900/90 border w-full sm:w-auto" style="border-color: var(--ui-compare-b-border);">
+            <div id="sim-setup-b-group" class="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-900/90 border w-full sm:w-auto" style="border-color: var(--ui-compare-b-border);">
               <span class="ui-badge ui-badge--b ui-mono">Setup B</span>
               <div class="flex items-center gap-1 min-w-0">
                 <span class="text-xs text-slate-400 ui-mono">GPU:</span>
-                <select id="sim-select-gpu-b" onchange="renderSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
+                <select id="sim-select-gpu-b" onchange="onSimGpuChange(this.value, 'b')" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[140px] sm:max-w-[170px] truncate"></select>
               </div>
               <div class="flex items-center gap-1 min-w-0">
                 <span class="text-xs text-slate-400 ui-mono">CPU:</span>
@@ -2341,19 +2639,86 @@
             <!-- Hidden legacy CPU selector to maintain backwards compatibility -->
             <select id="sim-select-cpu" class="hidden"></select>
 
-            <!-- Mode & Upscaling -->
+            <!-- Mode & Hidden Legacy Upscale State -->
             <div class="flex flex-wrap items-center gap-2">
               <select id="sim-select-cpu-mode" onchange="renderSimulator()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-100">
                 <option value="both" selected>GPU + CPU (Setup Completo)</option>
                 <option value="gpu">Apenas GPU (Gráficos Puros)</option>
                 <option value="cpu">Apenas CPU (Processamento Puro)</option>
               </select>
-              <select id="sim-select-upscale" onchange="onSimDlssModeChange(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
-                <option value="perceived" selected>Realista (DLSS 4 + Latência)</option>
-                <option value="sr">Só Upscaling Qualidade (DLSS / FSR)</option>
-                <option value="native">Raster Nativo Puro (Sem DLSS / Sem FG)</option>
-                <option value="max_fg">Máximo Bruto (DLSS 4 + MFG 4×)</option>
-              </select>
+              <input type="hidden" id="sim-select-upscale" value="native" />
+            </div>
+          </div>
+        </div>
+
+        <!-- PRESET DE QUALIDADE GRÁFICA (MUITO BAIXO -> ULTRA + PATH TRACING) & TOGGLES DLSS / FSR / MFG -->
+        <div id="sim-graphics-bar" class="sim-graphics-bar grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+          <div class="lg:col-span-7 space-y-2 min-w-0">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <label for="sim-preset-slider" class="ui-label">Qualidade Gráfica</label>
+                <span id="sim-preset-active-badge" class="ui-badge ui-badge--brand ui-mono">Alto</span>
+              </div>
+              <button type="button" id="sim-res-live-pill" onclick="switchTab('config')" title="Alterar resolução / taxa de atualização nas Configurações" class="ui-badge ui-mono cursor-pointer hover:border-slate-500">
+                2560×1440 @ 144 Hz
+              </button>
+            </div>
+            <input type="range" id="sim-preset-slider" min="0" max="4" step="1" value="3" list="sim-preset-ticks" aria-label="Preset de qualidade gráfica" oninput="setSimQualityPreset(this.value)" onchange="setSimQualityPreset(this.value)" class="sim-preset-range" />
+            <datalist id="sim-preset-ticks">
+              <option value="0" label="M. Baixo"></option>
+              <option value="1" label="Baixo"></option>
+              <option value="2" label="Médio"></option>
+              <option value="3" label="Alto"></option>
+              <option value="4" label="Ultra + PT"></option>
+            </datalist>
+            <div id="sim-preset-step-labels" class="sim-preset-steps">
+              <button type="button" data-preset="0" onclick="setSimQualityPreset(0)" class="sim-preset-step-btn">M. Baixo</button>
+              <button type="button" data-preset="1" onclick="setSimQualityPreset(1)" class="sim-preset-step-btn">Baixo</button>
+              <button type="button" data-preset="2" onclick="setSimQualityPreset(2)" class="sim-preset-step-btn">Médio</button>
+              <button type="button" data-preset="3" onclick="setSimQualityPreset(3)" class="sim-preset-step-btn is-active">Alto</button>
+              <button type="button" data-preset="4" onclick="setSimQualityPreset(4)" class="sim-preset-step-btn">Ultra + PT</button>
+            </div>
+            <p id="sim-preset-desc" class="text-xs text-slate-400">
+              Texturas altas e sombras detalhadas na resolução selecionada.
+            </p>
+          </div>
+
+          <div class="lg:col-span-5 space-y-2 min-w-0 lg:border-l lg:border-slate-800 lg:pl-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="ui-label">Upscaling &amp; Frame Gen</span>
+              <div id="sim-mfg-mult-wrap" class="hidden flex items-center gap-1" role="group" aria-label="Multiplicador MFG">
+                <span class="text-xs text-slate-400 ui-mono">MFG:</span>
+                <button type="button" data-mfg-mult="auto" onclick="setSimMfgMult('auto')" class="sim-mfg-pill is-active">Auto</button>
+                <button type="button" data-mfg-mult="2" onclick="setSimMfgMult(2)" class="sim-mfg-pill">2×</button>
+                <button type="button" data-mfg-mult="3" onclick="setSimMfgMult(3)" class="sim-mfg-pill">3×</button>
+                <button type="button" data-mfg-mult="4" onclick="setSimMfgMult(4)" class="sim-mfg-pill">4×</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" id="sim-toggle-dlss" onclick="toggleSimTech('dlss')" aria-pressed="false" class="sim-tech-toggle">
+                <div class="sim-tech-toggle-head">
+                  <span class="sim-tech-toggle-title">DLSS</span>
+                  <span class="sim-tech-toggle-dot"></span>
+                </div>
+                <span class="sim-tech-toggle-sub">NVIDIA RTX</span>
+              </button>
+              <button type="button" id="sim-toggle-fsr" onclick="toggleSimTech('fsr')" aria-pressed="false" class="sim-tech-toggle">
+                <div class="sim-tech-toggle-head">
+                  <span class="sim-tech-toggle-title">FSR</span>
+                  <span class="sim-tech-toggle-dot"></span>
+                </div>
+                <span class="sim-tech-toggle-sub">AMD / Todos</span>
+              </button>
+              <button type="button" id="sim-toggle-mfg" onclick="toggleSimTech('mfg')" aria-pressed="false" class="sim-tech-toggle">
+                <div class="sim-tech-toggle-head">
+                  <span class="sim-tech-toggle-title">MFG / FG</span>
+                  <span class="sim-tech-toggle-dot"></span>
+                </div>
+                <span class="sim-tech-toggle-sub">Quadros IA</span>
+              </button>
+            </div>
+            <div id="sim-tech-compat-summary" class="text-xs text-slate-400 ui-mono">
+              Raster nativo — FPS real limitado pelo teto da CPU.
             </div>
           </div>
         </div>
@@ -2369,7 +2734,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div>
               <span class="ui-label">Radar Hexagonal de Capacidades</span>
-              <h3 class="ui-title-md mt-0.5">Comparativo Multidimensional: Setup A vs Setup B</h3>
+              <h3 id="sim-radar-title" class="ui-title-md mt-0.5">Comparativo Multidimensional: Setup A vs Setup B</h3>
             </div>
             <div id="sim-radar-winner-badge" class="flex items-center gap-2"></div>
           </div>
@@ -2455,20 +2820,30 @@
       <!-- LAPTOP REAL-WORLD PERFORMANCE SIMULATOR (FULL SYSTEM + BATTERY/TGP + SCREEN HZ) -->
       <div id="sim-laptop-view" class="hidden ui-card space-y-5">
         <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
-          <div class="flex items-center gap-2">
-            <h2 class="ui-title-lg">Simulador de Notebooks</h2>
-            <span class="ui-info ui-info--bottom">
-              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
-              <span class="ui-info-popover" role="tooltip">Simulação em Jogos (considerando TGP móvel, limite de CPU, tela nativa em Hz e bateria vs tomada), Workstation e IA Local (CUDA / Apple MLX).</span>
-            </span>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-lg">Simulador de Notebooks</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Simulação em Jogos (considerando TGP móvel, limite de CPU, tela nativa em Hz e bateria vs tomada), Workstation e IA Local (CUDA / Apple MLX).</span>
+              </span>
+            </div>
+            <div class="ui-segmented" id="sim-laptop-compare-toggle" role="group" aria-label="Modo de simulação de notebooks">
+              <button type="button" id="btn-sim-laptop-mode-single" onclick="setSimCompareEnabled(false)" class="ui-segmented-btn" aria-pressed="false" title="Simular apenas 1 notebook sem comparação">
+                <span>1 Notebook</span>
+              </button>
+              <button type="button" id="btn-sim-laptop-mode-compare" onclick="setSimCompareEnabled(true)" class="ui-segmented-btn is-active" aria-pressed="true" title="Comparar Notebook A vs Notebook B">
+                <span>Comparar A vs B</span>
+              </button>
+            </div>
           </div>
           <div class="flex flex-wrap items-center gap-2.5">
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-a-border);">
-              <span class="ui-badge ui-badge--a ui-mono">Notebook A</span>
+            <div id="sim-laptop-a-group" class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-a-border);">
+              <span id="sim-laptop-a-badge" class="ui-badge ui-badge--a ui-mono">Notebook A</span>
               <select id="sim-select-laptop-a" onchange="renderLaptopSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[220px]"></select>
             </div>
-            <button type="button" onclick="swapSimulatorLaptops()" title="Inverter Notebook A e Notebook B" class="ui-btn ui-btn--icon">⇄</button>
-            <div class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-b-border);">
+            <button type="button" id="btn-sim-laptop-swap" onclick="swapSimulatorLaptops()" title="Inverter Notebook A e Notebook B" class="ui-btn ui-btn--icon">⇄</button>
+            <div id="sim-laptop-b-group" class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-b-border);">
               <span class="ui-badge ui-badge--b ui-mono">Notebook B</span>
               <select id="sim-select-laptop-b" onchange="renderLaptopSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[220px]"></select>
             </div>
@@ -2483,6 +2858,69 @@
           </div>
         </div>
 
+        <!-- LAPTOP PRESET DE QUALIDADE GRÁFICA & TOGGLES DLSS / FSR / MFG -->
+        <div id="sim-laptop-graphics-bar" class="sim-graphics-bar grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+          <div class="lg:col-span-7 space-y-2 min-w-0">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <label for="sim-laptop-preset-slider" class="ui-label">Qualidade Gráfica</label>
+                <span id="sim-laptop-preset-active-badge" class="ui-badge ui-badge--brand ui-mono">Alto</span>
+              </div>
+              <span id="sim-laptop-res-live-pill" class="ui-badge ui-mono">Tela Nativa</span>
+            </div>
+            <input type="range" id="sim-laptop-preset-slider" min="0" max="4" step="1" value="3" list="sim-preset-ticks" aria-label="Preset de qualidade gráfica para notebooks" oninput="setSimQualityPreset(this.value)" onchange="setSimQualityPreset(this.value)" class="sim-preset-range" />
+            <div id="sim-laptop-preset-step-labels" class="sim-preset-steps">
+              <button type="button" data-preset="0" onclick="setSimQualityPreset(0)" class="sim-preset-step-btn">M. Baixo</button>
+              <button type="button" data-preset="1" onclick="setSimQualityPreset(1)" class="sim-preset-step-btn">Baixo</button>
+              <button type="button" data-preset="2" onclick="setSimQualityPreset(2)" class="sim-preset-step-btn">Médio</button>
+              <button type="button" data-preset="3" onclick="setSimQualityPreset(3)" class="sim-preset-step-btn is-active">Alto</button>
+              <button type="button" data-preset="4" onclick="setSimQualityPreset(4)" class="sim-preset-step-btn">Ultra + PT</button>
+            </div>
+            <p id="sim-laptop-preset-desc" class="text-xs text-slate-400">
+              Texturas altas e sombras detalhadas respeitando a resolução selecionada.
+            </p>
+          </div>
+
+          <div class="lg:col-span-5 space-y-2 min-w-0 lg:border-l lg:border-slate-800 lg:pl-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="ui-label">Upscaling &amp; Frame Gen</span>
+              <div id="sim-laptop-mfg-mult-wrap" class="hidden flex items-center gap-1" role="group" aria-label="Multiplicador MFG para notebook">
+                <span class="text-xs text-slate-400 ui-mono">MFG:</span>
+                <button type="button" data-mfg-mult="auto" onclick="setSimMfgMult('auto')" class="sim-mfg-pill is-active">Auto</button>
+                <button type="button" data-mfg-mult="2" onclick="setSimMfgMult(2)" class="sim-mfg-pill">2×</button>
+                <button type="button" data-mfg-mult="3" onclick="setSimMfgMult(3)" class="sim-mfg-pill">3×</button>
+                <button type="button" data-mfg-mult="4" onclick="setSimMfgMult(4)" class="sim-mfg-pill">4×</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <button type="button" id="sim-laptop-toggle-dlss" onclick="toggleSimTech('dlss')" aria-pressed="false" class="sim-tech-toggle">
+                <div class="sim-tech-toggle-head">
+                  <span class="sim-tech-toggle-title">DLSS</span>
+                  <span class="sim-tech-toggle-dot"></span>
+                </div>
+                <span class="sim-tech-toggle-sub">NVIDIA RTX</span>
+              </button>
+              <button type="button" id="sim-laptop-toggle-fsr" onclick="toggleSimTech('fsr')" aria-pressed="false" class="sim-tech-toggle">
+                <div class="sim-tech-toggle-head">
+                  <span class="sim-tech-toggle-title">FSR</span>
+                  <span class="sim-tech-toggle-dot"></span>
+                </div>
+                <span class="sim-tech-toggle-sub">AMD / Todos</span>
+              </button>
+              <button type="button" id="sim-laptop-toggle-mfg" onclick="toggleSimTech('mfg')" aria-pressed="false" class="sim-tech-toggle">
+                <div class="sim-tech-toggle-head">
+                  <span class="sim-tech-toggle-title">MFG / FG</span>
+                  <span class="sim-tech-toggle-dot"></span>
+                </div>
+                <span class="sim-tech-toggle-sub">Quadros IA</span>
+              </button>
+            </div>
+            <div id="sim-laptop-tech-compat-summary" class="text-xs text-slate-400 ui-mono">
+              Raster nativo — limitado por TGP e teto da CPU móvel.
+            </div>
+          </div>
+        </div>
+
         <div id="sim-laptop-status-banner"></div>
         <div id="sim-laptop-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
 
@@ -2490,7 +2928,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
             <div>
               <span class="ui-label">Radar Full-System</span>
-              <h3 class="ui-title-md mt-0.5">Notebook A vs Notebook B — 6 Dimensões Reais</h3>
+              <h3 id="sim-laptop-radar-title" class="ui-title-md mt-0.5">Notebook A vs Notebook B — 6 Dimensões Reais</h3>
             </div>
             <div id="sim-laptop-radar-winner-badge" class="flex items-center gap-2"></div>
           </div>
@@ -2545,7 +2983,10 @@
               <span class="ui-info-popover" role="tooltip">Personalize seu PC/Notebook de referência, monitor, pesos de uso, base de dados, escala gráfica e região.</span>
             </span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="openPromoPreferencesFromConfig()" class="ui-btn ui-btn--sm" title="Abrir configuração de categorias e especificações das promoções">
+              🎯 Filtros de Promoções
+            </button>
             <button type="button" onclick="saveUserReferencePC()" class="ui-btn ui-btn--primary">
               Salvar Configurações
             </button>
@@ -3078,6 +3519,51 @@
             </div>
           </div>
         </details>
+
+        <!-- 6. APARÊNCIA & COR PRINCIPAL -->
+        <details id="cfg-section-appearance" class="ui-details" open>
+          <summary class="ui-details-summary">
+            <span>6. Aparência &amp; Cor Principal</span>
+            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Cor do navegador (Opera GX) ou personalizada</span>
+          </summary>
+          <div class="ui-details-body space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="ui-segmented" role="group" aria-label="Modo de cor principal">
+                <button type="button" id="btn-accent-mode-auto" onclick="setSiteAccentMode('auto')" class="ui-segmented-btn is-active" aria-pressed="true" title="Usa a cor de destaque informada pelo navegador (ex: Opera GX / Chromium) ou o amarelo padrão">
+                  Auto (Navegador / Padrão)
+                </button>
+                <button type="button" id="btn-accent-mode-default" onclick="setSiteAccentMode('default')" class="ui-segmented-btn" aria-pressed="false" title="Força a paleta padrão do site">
+                  Padrão (Amarelo)
+                </button>
+                <button type="button" id="btn-accent-mode-custom" onclick="openSiteAccentPicker()" class="ui-segmented-btn" aria-pressed="false" title="Escolher uma cor principal personalizada">
+                  Personalizada
+                </button>
+              </div>
+
+              <label for="cfg-accent-color-picker" class="ui-btn ui-btn--sm cursor-pointer" style="position:relative;">
+                <span id="cfg-accent-preview-dot" class="w-3.5 h-3.5 rounded-full border border-white/30 shrink-0" style="background-color: var(--ui-brand);"></span>
+                <span>Alterar cor principal</span>
+                <span id="cfg-accent-hex-label" class="ui-mono text-xs text-slate-400">#FFCC00</span>
+                <input type="color" id="cfg-accent-color-picker" value="#ffcc00" oninput="setSiteCustomAccent(this.value)" onchange="setSiteCustomAccent(this.value)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;pointer-events:none;border:0;padding:0;margin:0;" aria-label="Selecionar cor principal do site" />
+              </label>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs text-slate-400 mr-1">Predefinições:</span>
+              <button type="button" onclick="setSiteCustomAccent('#ffcc00')" data-accent-hex="#ffcc00" title="Amarelo Padrão (#FFCC00)" aria-label="Cor Amarelo Padrão" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#ffcc00;"></button>
+              <button type="button" onclick="setSiteCustomAccent('#fa1e4e')" data-accent-hex="#fa1e4e" title="Opera GX Vermelho (#FA1E4E)" aria-label="Cor Opera GX Vermelho" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#fa1e4e;"></button>
+              <button type="button" onclick="setSiteCustomAccent('#38bdf8')" data-accent-hex="#38bdf8" title="Azul / Ciano (#38BDF8)" aria-label="Cor Ciano Azul" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#38bdf8;"></button>
+              <button type="button" onclick="setSiteCustomAccent('#a855f7')" data-accent-hex="#a855f7" title="Roxo Neon (#A855F7)" aria-label="Cor Roxo Neon" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#a855f7;"></button>
+              <button type="button" onclick="setSiteCustomAccent('#22c55e')" data-accent-hex="#22c55e" title="Verde Esmeralda (#22C55E)" aria-label="Cor Verde Esmeralda" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#22c55e;"></button>
+              <button type="button" onclick="setSiteCustomAccent('#ff6b2b')" data-accent-hex="#ff6b2b" title="Laranja (#FF6B2B)" aria-label="Cor Laranja" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#ff6b2b;"></button>
+              <button type="button" onclick="setSiteCustomAccent('#ec4899')" data-accent-hex="#ec4899" title="Rosa (#EC4899)" aria-label="Cor Rosa" class="cfg-accent-swatch w-7 h-7 rounded-full border-2 border-slate-700 cursor-pointer transition-transform hover:scale-110" style="background-color:#ec4899;"></button>
+            </div>
+
+            <div id="cfg-accent-status" class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300">
+              Detectando cor do navegador (Opera GX / CSS AccentColor)...
+            </div>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -3111,9 +3597,9 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261123-4"></script>
-  <script src="app_features.js?v=20261123-4"></script>
-  <script src="laptop_mode.js?v=20261123-3"></script>
+  <script src="app.js?v=20261124-6"></script>
+  <script src="app_features.js?v=20261124-7"></script>
+  <script src="laptop_mode.js?v=20261124-5"></script>
   <script src="styles/combo.js?v=20261119-3"></script>
   <script src="mobile_mode.js?v=20261123-2"></script>
 </body>

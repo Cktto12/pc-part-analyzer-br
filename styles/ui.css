@@ -2026,3 +2026,210 @@ select.gca-combo-native {
 .gca-logo-mark { width: 100%; height: 100%; display: block; }
 .ui-sidebar-brand:hover .gca-logo-mark path { stroke-dasharray: 24; animation: gca-logo-drop 700ms ease-out; }
 @keyframes gca-logo-drop { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+
+/* Promo Categories & Spec Filter Preferences Panel */
+.ui-promo-prefs-panel {
+  background: var(--ui-bg-surface);
+  border: 1px solid var(--ui-brand-border);
+  box-shadow: var(--ui-shadow-md);
+}
+.ui-spec-card {
+  background: var(--ui-bg-canvas);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  padding: 0.75rem;
+  transition: opacity var(--ui-transition), border-color var(--ui-transition);
+}
+.ui-spec-card:hover {
+  border-color: var(--ui-border-strong);
+}
+.ui-spec-card.is-disabled {
+  opacity: 0.52;
+}
+.ui-cat-pill-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--ui-radius-pill);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg-canvas);
+  color: var(--ui-text-secondary);
+  font-size: var(--ui-text-label);
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--ui-transition), background var(--ui-transition), color var(--ui-transition);
+}
+.ui-cat-pill-toggle:hover {
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text-primary);
+}
+.ui-cat-pill-toggle:has(input:checked) {
+  background: var(--ui-brand-soft);
+  border-color: var(--ui-brand-border);
+  color: var(--ui-brand-hover);
+}
+.ui-spec-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.45rem;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-bg-subtle);
+  border: 1px solid var(--ui-border);
+  color: var(--ui-text-secondary);
+  font-size: 0.6875rem;
+  font-family: var(--ui-font-mono);
+}
+
+/* ==========================================================================
+   Simulator Graphics Quality Preset Slider & Tech Toggles (DLSS / FSR / MFG)
+   ========================================================================== */
+.sim-graphics-bar {
+  background: var(--ui-bg-inset, var(--ui-bg-surface));
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  padding: 0.9rem 1rem;
+}
+.sim-preset-range {
+  width: 100%;
+  height: 0.45rem;
+  accent-color: var(--ui-brand);
+  cursor: pointer;
+}
+.sim-preset-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.25rem;
+  width: 100%;
+}
+.sim-preset-step-btn {
+  padding: 0.25rem 0.2rem;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ui-text-muted);
+  font-size: clamp(0.64rem, 1.7vw, 0.74rem);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color var(--ui-transition), border-color var(--ui-transition), color var(--ui-transition);
+  white-space: nowrap;
+}
+.sim-preset-step-btn:hover {
+  color: var(--ui-text-primary);
+  background: var(--ui-bg-hover);
+}
+.sim-preset-step-btn.is-active {
+  background: var(--ui-brand-soft);
+  border-color: var(--ui-brand-border);
+  color: var(--ui-brand-hover);
+  font-weight: 700;
+}
+.sim-preset-step-btn[data-preset="4"].is-active {
+  background: var(--ui-warn-soft);
+  border-color: var(--ui-warn-border);
+  color: var(--ui-warn-text);
+}
+.sim-tech-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.2rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--ui-radius-md);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg-sunken, var(--ui-bg-surface));
+  color: var(--ui-text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color var(--ui-transition), background-color var(--ui-transition), color var(--ui-transition);
+}
+.sim-tech-toggle:hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-bg-hover);
+}
+.sim-tech-toggle.is-active {
+  background: var(--ui-brand-soft);
+  border-color: var(--ui-brand-border);
+  color: var(--ui-text-primary);
+}
+.sim-tech-toggle.is-warn {
+  border-color: var(--ui-warn-border);
+}
+.sim-tech-toggle-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.35rem;
+}
+.sim-tech-toggle-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ui-text-primary);
+}
+.sim-tech-toggle-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: var(--ui-border-strong);
+  flex-shrink: 0;
+  transition: background-color var(--ui-transition), box-shadow var(--ui-transition);
+}
+.sim-tech-toggle.is-active .sim-tech-toggle-dot {
+  background: var(--ui-brand);
+  box-shadow: 0 0 8px var(--ui-brand);
+}
+.sim-tech-toggle.is-warn .sim-tech-toggle-dot {
+  background: var(--ui-warn);
+  box-shadow: 0 0 8px var(--ui-warn);
+}
+.sim-tech-toggle-sub {
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: var(--ui-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.sim-mfg-pill {
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--ui-radius-sm);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-bg-sunken, var(--ui-bg-surface));
+  color: var(--ui-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--ui-transition), background-color var(--ui-transition), color var(--ui-transition);
+}
+.sim-mfg-pill:hover {
+  border-color: var(--ui-border-strong);
+  color: var(--ui-text-primary);
+}
+.sim-mfg-pill.is-active {
+  background: var(--ui-brand-soft);
+  border-color: var(--ui-brand-border);
+  color: var(--ui-brand-hover);
+}
+.sim-cpu-lock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.45rem;
+  border-radius: var(--ui-radius-sm);
+  background: var(--ui-warn-soft);
+  border: 1px solid var(--ui-warn-border);
+  color: var(--ui-warn-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+}

@@ -1053,6 +1053,11 @@ function getCpuSpecs(cpu) {
     archName = 'Zen 3';
     smtType = 'AMD SMT 2-Way (2T/C)';
     smtGainPct = 28; l3CacheMB = /5600x\b|ryzen-5-5600\b/i.test(slug) ? 32 : 16; nodeNm = 'TSMC 7nm'; singleBench = 84;
+  } else if (/3200g/i.test(slug)) {
+    cores = 4; threads = 4; pCores = 4; eCores = 0;
+    archName = 'Zen+ (Picasso APU + Vega 8)';
+    smtType = 'Nativo 1T/C (Sem SMT)';
+    smtGainPct = 0; l3CacheMB = 4; nodeNm = 'GF 12nm'; singleBench = 56;
   } else if (/xeon|2680/i.test(slug)) {
     cores = 14; threads = 28; pCores = 14; eCores = 0;
     archName = 'Broadwell-EP (LGA2011-3)';
@@ -1538,6 +1543,10 @@ function switchTab(tabId) {
 
   renderAreaSubnav(tabId);
   closeSidebar();
+  if (STATE._selectorsDirty && tabId !== 'sim') {
+    STATE._selectorsDirty = false;
+    populateSelectors();
+  }
   renderActiveTab();
   if (tabId === 'bf-promos' && typeof startBFLivePolling === 'function') {
     startBFLivePolling();
@@ -1760,7 +1769,16 @@ function renderHomeTab() {
   // 3. KPI: Ofertas ativas hoje + Top 5 melhores ofertas do dia
   const promoData = (typeof PROMO_STATE !== 'undefined' && PROMO_STATE.lastData) ? PROMO_STATE.lastData : null;
   const activeDeals = (promoData && Array.isArray(promoData.matched_deals))
-    ? promoData.matched_deals.filter(d => d && d.price_brl > 0 && !d.is_expired && !d.is_coupon_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired' && (d.age_hours || 0) <= 24)
+    ? promoData.matched_deals.filter(d =>
+        d &&
+        d.price_brl > 0 &&
+        !d.is_expired &&
+        !d.is_coupon_expired &&
+        d.deal_status !== 'out_of_stock' &&
+        d.deal_status !== 'expired' &&
+        (d.age_hours || 0) <= 24 &&
+        (typeof dealMatchesPromoPreferences !== 'function' || dealMatchesPromoPreferences(d))
+      )
     : [];
 
   const kpiDeals = document.getElementById('home-kpi-deals');
@@ -2387,26 +2405,43 @@ function populateSelectors() {
   const simASel = document.getElementById('sim-select-gpu-a');
   const simBSel = document.getElementById('sim-select-gpu-b');
 
+  const setOptionsIfChanged = (sel, html, sig) => {
+    if (!sel) return;
+    if (sel.dataset.optsSig !== sig) {
+      sel.innerHTML = html;
+      sel.dataset.optsSig = sig;
+    }
+  };
+
   if (baseSel && candSel && sortedGPUs.length) {
+    const validGpuSlugs = new Set(sortedGPUs.map(g => g.slug));
     const optionsHTML = sortedGPUs.map(g =>
       `<option value="${g.slug}">${g.name} (${g.vram_gb}GB ${g.memory_type}) — ${fmtBRL(g.price_brl)}</option>`
     ).join('');
+    const gpuSig = sortedGPUs.map(g => `${g.slug}:${Math.round(Number(g.price_brl) || 0)}`).join('|');
 
-    baseSel.innerHTML = optionsHTML;
-    candSel.innerHTML = optionsHTML;
+    setOptionsIfChanged(baseSel, optionsHTML, gpuSig);
+    setOptionsIfChanged(candSel, optionsHTML, gpuSig);
     if (cbRelSel) {
-      cbRelSel.innerHTML = sortedGPUs.map(g =>
+      const cbRelHTML = sortedGPUs.map(g =>
         `<option value="${g.slug}">${g.name} (${fmtBRLShort(g.price_brl)})</option>`
       ).join('');
+      setOptionsIfChanged(cbRelSel, cbRelHTML, 'cbRel|' + gpuSig);
     }
-    if (simASel) simASel.innerHTML = optionsHTML;
-    if (simBSel) simBSel.innerHTML = optionsHTML;
+    setOptionsIfChanged(simASel, optionsHTML, gpuSig);
+    setOptionsIfChanged(simBSel, optionsHTML, gpuSig);
 
-    baseSel.value = STATE.duelBaseSlug;
-    candSel.value = STATE.duelCandSlug;
-    if (cbRelSel) cbRelSel.value = STATE.cbRelBaseSlug;
-    if (simASel) simASel.value = STATE.duelCandSlug;
-    if (simBSel) simBSel.value = 'rx-580-8gb-ref';
+    const pickGpuSlug = (cand, fb) => (cand && validGpuSlugs.has(cand)) ? cand : (validGpuSlugs.has(fb) ? fb : sortedGPUs[0].slug);
+    const simGpuASlug = pickGpuSlug(STATE.simGpuASlug || (simASel && simASel.value), STATE.duelCandSlug);
+    const simGpuBSlug = pickGpuSlug(STATE.simGpuBSlug || (simBSel && simBSel.value), 'rx-580-8gb-ref');
+    STATE.simGpuASlug = simGpuASlug;
+    STATE.simGpuBSlug = simGpuBSlug;
+
+    baseSel.value = pickGpuSlug(STATE.duelBaseSlug, sortedGPUs[0].slug);
+    candSel.value = pickGpuSlug(STATE.duelCandSlug, sortedGPUs[0].slug);
+    if (cbRelSel) cbRelSel.value = pickGpuSlug(STATE.cbRelBaseSlug, sortedGPUs[0].slug);
+    if (simASel) simASel.value = simGpuASlug;
+    if (simBSel) simBSel.value = simGpuBSlug;
     syncDuelPriceInputsFromSelection();
   }
 
@@ -2415,23 +2450,26 @@ function populateSelectors() {
   const cpuCandSel = document.getElementById('cpu-duel-select-cand');
   const cpuCbRelSel = document.getElementById('cpu-cb-filter-base-rel');
   const sortedCPUs = [...(DB.cpus || [])].sort((a, b) => a.name.localeCompare(b.name));
+  const validCpuSlugs = new Set(sortedCPUs.map(c => c.slug));
+  const cpuSig = sortedCPUs.map(c => `${c.slug}:${Math.round(Number(c.price_brl) || 0)}`).join('|');
 
   if (cpuBaseSel && cpuCandSel && sortedCPUs.length) {
     const cpuOptionsHTML = sortedCPUs.map(c =>
       `<option value="${c.slug}">${c.name} (${c.socket || 'CPU'}, ${c.tdp_w || 65}W) — ${fmtBRL(c.price_brl)}</option>`
     ).join('');
 
-    cpuBaseSel.innerHTML = cpuOptionsHTML;
-    cpuCandSel.innerHTML = cpuOptionsHTML;
+    setOptionsIfChanged(cpuBaseSel, cpuOptionsHTML, cpuSig);
+    setOptionsIfChanged(cpuCandSel, cpuOptionsHTML, cpuSig);
     if (cpuCbRelSel) {
-      cpuCbRelSel.innerHTML = sortedCPUs.map(c =>
+      const cpuCbHTML = sortedCPUs.map(c =>
         `<option value="${c.slug}">Base: ${c.name} (${fmtBRLShort(c.price_brl)})</option>`
       ).join('');
-      if (STATE.cpuCbRelBaseSlug) cpuCbRelSel.value = STATE.cpuCbRelBaseSlug;
+      setOptionsIfChanged(cpuCbRelSel, cpuCbHTML, 'cpuCb|' + cpuSig);
+      if (STATE.cpuCbRelBaseSlug && validCpuSlugs.has(STATE.cpuCbRelBaseSlug)) cpuCbRelSel.value = STATE.cpuCbRelBaseSlug;
     }
 
-    if (STATE.cpuDuelBaseSlug) cpuBaseSel.value = STATE.cpuDuelBaseSlug;
-    if (STATE.cpuDuelCandSlug) cpuCandSel.value = STATE.cpuDuelCandSlug;
+    if (STATE.cpuDuelBaseSlug && validCpuSlugs.has(STATE.cpuDuelBaseSlug)) cpuBaseSel.value = STATE.cpuDuelBaseSlug;
+    if (STATE.cpuDuelCandSlug && validCpuSlugs.has(STATE.cpuDuelCandSlug)) cpuCandSel.value = STATE.cpuDuelCandSlug;
 
     if (typeof syncCpuDuelPriceInputsFromSelection === 'function') {
       syncCpuDuelPriceInputsFromSelection();
@@ -2442,22 +2480,24 @@ function populateSelectors() {
   const simCpuASel = document.getElementById('sim-select-cpu-a');
   const simCpuBSel = document.getElementById('sim-select-cpu-b');
   const simCpuSel = document.getElementById('sim-select-cpu');
-  if (DB.cpus && DB.cpus.length) {
-    const defaultASlug = STATE.simCpuASlug || STATE.build?.cpu?.slug || 'ryzen-5-5600';
-    const defaultBSlug = STATE.simCpuBSlug || 'ryzen-7-7800x3d';
-    const cpusSorted = [...DB.cpus].sort((a, b) => a.name.localeCompare(b.name));
-    const cpusHTML = cpusSorted.map(c => `<option value="${c.slug}">${c.name}${c.price_brl ? ' — ' + fmtBRLShort(c.price_brl) : ''}</option>`).join('');
+  if (sortedCPUs.length) {
+    const pickCpuSlug = (cand, fb) => (cand && validCpuSlugs.has(cand)) ? cand : (validCpuSlugs.has(fb) ? fb : sortedCPUs[0].slug);
+    const defaultASlug = pickCpuSlug(STATE.simCpuASlug || (simCpuASel && simCpuASel.value) || STATE.build?.cpu?.slug, 'ryzen-5-5600');
+    const defaultBSlug = pickCpuSlug(STATE.simCpuBSlug || (simCpuBSel && simCpuBSel.value), 'ryzen-7-7800x3d');
+    STATE.simCpuASlug = defaultASlug;
+    STATE.simCpuBSlug = defaultBSlug;
+    const cpusHTML = sortedCPUs.map(c => `<option value="${c.slug}">${c.name}${c.price_brl ? ' — ' + fmtBRLShort(c.price_brl) : ''}</option>`).join('');
 
     if (simCpuASel) {
-      simCpuASel.innerHTML = cpusHTML;
-      simCpuASel.value = (DB.cpus.some(c => c.slug === defaultASlug) ? defaultASlug : DB.cpus[0].slug);
+      setOptionsIfChanged(simCpuASel, cpusHTML, 'simCpu|' + cpuSig);
+      simCpuASel.value = defaultASlug;
     }
     if (simCpuBSel) {
-      simCpuBSel.innerHTML = cpusHTML;
-      simCpuBSel.value = (DB.cpus.some(c => c.slug === defaultBSlug) ? defaultBSlug : (DB.cpus[1] || DB.cpus[0]).slug);
+      setOptionsIfChanged(simCpuBSel, cpusHTML, 'simCpu|' + cpuSig);
+      simCpuBSel.value = defaultBSlug;
     }
     if (simCpuSel) {
-      simCpuSel.innerHTML = cpusHTML;
+      setOptionsIfChanged(simCpuSel, cpusHTML, 'simCpu|' + cpuSig);
       simCpuSel.value = defaultASlug;
     }
   }
@@ -2472,6 +2512,8 @@ function swapSimulatorSetups() {
     const tmpGpu = gpuASel.value;
     gpuASel.value = gpuBSel.value;
     gpuBSel.value = tmpGpu;
+    STATE.simGpuASlug = gpuASel.value;
+    STATE.simGpuBSlug = gpuBSel.value;
   }
   if (cpuASel && cpuBSel) {
     const tmpCpu = cpuASel.value;
@@ -2480,6 +2522,7 @@ function swapSimulatorSetups() {
     STATE.simCpuASlug = cpuASel.value;
     STATE.simCpuBSlug = cpuBSel.value;
   }
+  if (typeof saveUserPrefs === 'function') saveUserPrefs();
   if (typeof renderSimulator === 'function') {
     renderSimulator();
   }
@@ -5176,14 +5219,16 @@ function updateBuilderPowerAndDiagnostics() {
 // TAB 4: SIMULADOR DE FPS, IA (LLMs / DIFFUSION) & SOFTWARES
 // ============================================================================
 function renderSimulatorLegacy() {
-  const slugA = document.getElementById('sim-select-gpu-a').value || STATE.build.gpu.slug;
-  const slugB = document.getElementById('sim-select-gpu-b').value || STATE.duelBaseSlug;
+  const compareOn = STATE.simCompareEnabled !== false;
+  const slugA = document.getElementById('sim-select-gpu-a').value || STATE.simGpuASlug || STATE.build.gpu.slug;
+  const slugB = document.getElementById('sim-select-gpu-b').value || STATE.simGpuBSlug || STATE.duelBaseSlug;
   const res = ({ '768p': '1080p', '900p': '1080p', '1080p': '1080p', 'uw1080p': '1440p', '1440p': '1440p', 'uw1440p': '4k', '4k': '4k' })[STATE.monitorRes] || '1440p';
-  const upscale = document.getElementById('sim-select-upscale').value || 'native';
+  const upscale = (document.getElementById('sim-select-upscale') || {}).value || 'native';
 
   const gpuA = DB.gpus.find(g => g.slug === slugA) || DB.gpus[0];
-  const gpuB = DB.gpus.find(g => g.slug === slugB) || DB.gpus[1];
-  if (!gpuA || !gpuB) return;
+  const gpuB = DB.gpus.find(g => g.slug === slugB) || DB.gpus[1] || gpuA;
+  if (!gpuA || (compareOn && !gpuB)) return;
+  const safeGpuB = gpuB || gpuA;
 
   // CPU bottleneck factor from current build
   const cpuBench = STATE.build.cpu.benchmark || 3000;
@@ -5217,13 +5262,13 @@ function renderSimulatorLegacy() {
 
   document.getElementById('sim-games-list').innerHTML = games.map(gm => {
     const fpsA = calcFPS(gpuA, gm);
-    const fpsB = calcFPS(gpuB, gm);
-    const maxFps = Math.max(fpsA, fpsB, 120);
+    const fpsB = calcFPS(safeGpuB, gm);
+    const maxFps = compareOn ? Math.max(fpsA, fpsB, 120) : Math.max(fpsA, 120);
     return `
       <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1.5">
         <div class="flex justify-between text-xs font-semibold text-white">
           <span>${gm.title}</span>
-          <span class="font-mono text-emerald-400">+${Math.round(((fpsA / Math.max(1, fpsB)) - 1) * 100)}%</span>
+          <span class="font-mono text-emerald-400">${compareOn ? `+${Math.round(((fpsA / Math.max(1, fpsB)) - 1) * 100)}%` : `${fpsA} FPS`}</span>
         </div>
         <div class="space-y-1 text-xs font-mono">
           <div class="flex items-center gap-2">
@@ -5233,13 +5278,14 @@ function renderSimulatorLegacy() {
             </div>
             <span class="w-16 text-right font-bold text-white">${fpsA} FPS</span>
           </div>
+          ${compareOn ? `
           <div class="flex items-center gap-2">
-            <span class="w-24 truncate text-emerald-300">${gpuB.name}:</span>
+            <span class="w-24 truncate text-emerald-300">${safeGpuB.name}:</span>
             <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
               <div class="h-full bg-emerald-500 rounded-full" style="width:${Math.min(100, (fpsB / maxFps) * 100)}%"></div>
             </div>
             <span class="w-16 text-right text-slate-300">${fpsB} FPS</span>
-          </div>
+          </div>` : ''}
         </div>
       </div>
     `;
@@ -5252,33 +5298,39 @@ function renderSimulatorLegacy() {
       title: 'Llama 3.1 / Qwen 2.5 (8B Q4 — 5.5 GB VRAM)',
       desc: 'Chat e assistente de código local',
       valA: `${gpuA.llm_8b_tok_s} tok/s`,
-      valB: `${gpuB.llm_8b_tok_s} tok/s`,
+      valB: `${safeGpuB.llm_8b_tok_s} tok/s`,
       pctA: Math.min(100, (gpuA.llm_8b_tok_s / 140) * 100),
-      pctB: Math.min(100, (gpuB.llm_8b_tok_s / 140) * 100),
-      gain: Math.round(((gpuA.llm_8b_tok_s / Math.max(1, gpuB.llm_8b_tok_s)) - 1) * 100),
-      note: gpuA.vram_gb >= 8 ? '100% na VRAM em ambas' : 'Requer 6GB+ VRAM'
+      pctB: Math.min(100, (safeGpuB.llm_8b_tok_s / 140) * 100),
+      gain: Math.round(((gpuA.llm_8b_tok_s / Math.max(1, safeGpuB.llm_8b_tok_s)) - 1) * 100),
+      note: compareOn
+        ? (gpuA.vram_gb >= 8 ? '100% na VRAM em ambas' : 'Requer 6GB+ VRAM')
+        : (gpuA.vram_gb >= 8 ? '100% na VRAM nesta GPU' : 'Requer 6GB+ VRAM')
     },
     {
       title: 'Qwen 2.5 Coder / DeepSeek-R1 (14B Q4 — 9.2 GB VRAM)',
       desc: 'Limiar crítico entre 8GB vs 12GB/16GB',
       valA: `${gpuA.llm_14b_tok_s} tok/s`,
-      valB: `${gpuB.llm_14b_tok_s} tok/s`,
+      valB: `${safeGpuB.llm_14b_tok_s} tok/s`,
       pctA: Math.min(100, (gpuA.llm_14b_tok_s / 90) * 100),
-      pctB: Math.min(100, (gpuB.llm_14b_tok_s / 90) * 100),
-      gain: Math.round(((gpuA.llm_14b_tok_s / Math.max(1, gpuB.llm_14b_tok_s)) - 1) * 100),
-      note: (gpuB.vram_gb <= 8 && gpuA.vram_gb >= 12)
-        ? `🚨 ${gpuB.name} (8GB) cai para offload lento na RAM! ${gpuA.name} até ${(gpuA.llm_14b_tok_s / Math.max(1, gpuB.llm_14b_tok_s)).toFixed(1)}x mais rápida`
-        : `Banda: ${gpuA.bandwidth_gbs} vs ${gpuB.bandwidth_gbs} GB/s`
+      pctB: Math.min(100, (safeGpuB.llm_14b_tok_s / 90) * 100),
+      gain: Math.round(((gpuA.llm_14b_tok_s / Math.max(1, safeGpuB.llm_14b_tok_s)) - 1) * 100),
+      note: compareOn
+        ? ((safeGpuB.vram_gb <= 8 && gpuA.vram_gb >= 12)
+            ? `🚨 ${safeGpuB.name} (8GB) cai para offload lento na RAM! ${gpuA.name} até ${(gpuA.llm_14b_tok_s / Math.max(1, safeGpuB.llm_14b_tok_s)).toFixed(1)}x mais rápida`
+            : `Banda: ${gpuA.bandwidth_gbs} vs ${safeGpuB.bandwidth_gbs} GB/s`)
+        : (gpuA.vram_gb >= 12
+            ? `100% na VRAM (${gpuA.bandwidth_gbs} GB/s)`
+            : `⚠️ ${gpuA.vram_gb}GB VRAM: parte do modelo cai na RAM do sistema`)
     },
     {
       title: 'Modelos 32B Q4 & Geração de Imagem (Flux.1 / ComfyUI)',
       desc: 'Geração pesada e modelos grandes',
       valA: gpuA.vram_gb >= 16 ? 'Roda Nativo' : (gpuA.vram_gb >= 12 ? 'Roda Flux / 14B' : 'Offload RAM'),
-      valB: gpuB.vram_gb >= 16 ? 'Roda Nativo' : (gpuB.vram_gb >= 12 ? 'Roda Flux / 14B' : 'Offload RAM'),
+      valB: safeGpuB.vram_gb >= 16 ? 'Roda Nativo' : (safeGpuB.vram_gb >= 12 ? 'Roda Flux / 14B' : 'Offload RAM'),
       pctA: Math.min(100, (getEffectiveAIScore(gpuA) / 6000) * 100),
-      pctB: Math.min(100, (getEffectiveAIScore(gpuB) / 6000) * 100),
-      gain: Math.round(((getEffectiveAIScore(gpuA) / Math.max(1, getEffectiveAIScore(gpuB))) - 1) * 100),
-      note: `VRAM: ${gpuA.vram_gb}GB vs ${gpuB.vram_gb}GB`
+      pctB: Math.min(100, (getEffectiveAIScore(safeGpuB) / 6000) * 100),
+      gain: Math.round(((getEffectiveAIScore(gpuA) / Math.max(1, getEffectiveAIScore(safeGpuB))) - 1) * 100),
+      note: compareOn ? `VRAM: ${gpuA.vram_gb}GB vs ${safeGpuB.vram_gb}GB` : `VRAM disponível: ${gpuA.vram_gb} GB`
     }
   ];
 
@@ -5286,7 +5338,7 @@ function renderSimulatorLegacy() {
     <div class="p-3 rounded-xl bg-slate-900/80 border border-purple-500/25 space-y-1.5">
       <div class="flex items-center justify-between text-xs font-semibold text-white">
         <span class="flex items-center gap-1">${robotSvg} ${w.title}</span>
-        <span class="font-mono text-purple-300 font-bold">${w.gain >= 0 ? '+' : ''}${w.gain}%</span>
+        <span class="font-mono text-purple-300 font-bold">${compareOn ? `${w.gain >= 0 ? '+' : ''}${w.gain}%` : w.valA}</span>
       </div>
       <div class="text-xs text-slate-400">${w.desc}</div>
       <div class="space-y-1 text-xs font-mono pt-1">
@@ -5297,13 +5349,14 @@ function renderSimulatorLegacy() {
           </div>
           <span class="w-28 text-right font-bold text-white">${w.valA}</span>
         </div>
+        ${compareOn ? `
         <div class="flex items-center gap-2">
-          <span class="w-24 truncate text-emerald-300">${gpuB.name}:</span>
+          <span class="w-24 truncate text-emerald-300">${safeGpuB.name}:</span>
           <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
             <div class="h-full bg-emerald-500 rounded-full" style="width:${w.pctB}%"></div>
           </div>
           <span class="w-28 text-right text-slate-300">${w.valB}</span>
-        </div>
+        </div>` : ''}
       </div>
       <div class="text-xs text-purple-300/90 pt-0.5">${w.note}</div>
     </div>
@@ -5311,12 +5364,13 @@ function renderSimulatorLegacy() {
 
   // 3. AI Training, Ethernet Frame / Packet Processing & OpenDSS Power Co-Simulation
   const circuitSvg = `<svg class="w-3.5 h-3.5 text-amber-400 inline-block mr-1 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></svg>`;
+  const activeCpuName = (typeof getSimCpu === 'function' && getSimCpu('a')?.name) || STATE.build.cpu.name;
   const engWorkloads = [
     {
       title: 'AI Training 3D & Simulação Física (Omniverse / CUDA / PhysX)',
       desc: 'Treinamento de redes, física acelerada e IA acoplada na VRAM',
       scoreA: Math.round(getEffectiveEngineeringScore(gpuA) * (gpuA.vram_gb >= 12 ? 1.15 : 0.72)),
-      scoreB: Math.round(getEffectiveEngineeringScore(gpuB) * (gpuB.vram_gb >= 12 ? 1.15 : 0.72)),
+      scoreB: Math.round(getEffectiveEngineeringScore(safeGpuB) * (safeGpuB.vram_gb >= 12 ? 1.15 : 0.72)),
       unit: ' pts (RT/CUDA)',
       note: gpuA.brand === 'NVIDIA' && gpuA.vram_gb >= 12
         ? `✅ ${gpuA.name} suporta Omniverse RTX + IA simultânea sem esgotar VRAM`
@@ -5326,30 +5380,32 @@ function renderSimulatorLegacy() {
       title: 'Processamento de Frames Ethernet / PCAP (CUDA / RAPIDS cuDF)',
       desc: 'Inspeção profunda de pacotes e ring-buffer GPU para detecção de anomalias',
       scoreA: Math.round((gpuA.bandwidth_gbs * 12.5 + gpuA.fp16_tflops * 45) * (gpuA.brand === 'NVIDIA' ? 1.35 : 0.75)),
-      scoreB: Math.round((gpuB.bandwidth_gbs * 12.5 + gpuB.fp16_tflops * 45) * (gpuB.brand === 'NVIDIA' ? 1.35 : 0.75)),
+      scoreB: Math.round((safeGpuB.bandwidth_gbs * 12.5 + safeGpuB.fp16_tflops * 45) * (safeGpuB.brand === 'NVIDIA' ? 1.35 : 0.75)),
       unit: ' Mpps (Score)',
-      note: `Largura de banda: ${gpuA.bandwidth_gbs} vs ${gpuB.bandwidth_gbs} GB/s + CuPy/RAPIDS`
+      note: compareOn
+        ? `Largura de banda: ${gpuA.bandwidth_gbs} vs ${safeGpuB.bandwidth_gbs} GB/s + CuPy/RAPIDS`
+        : `Largura de banda: ${gpuA.bandwidth_gbs} GB/s + CuPy/RAPIDS`
     },
     {
       title: 'OpenDSS + Co-Simulação de Redes Elétricas (Monte Carlo / CuPy)',
       desc: 'Execução massiva QSTS, matrizes esparsas cuSPARSE e PINNs',
       scoreA: Math.round((getEffectiveEngineeringScore(gpuA) * 0.90) + (gpuA.fp16_tflops * 22)),
-      scoreB: Math.round((getEffectiveEngineeringScore(gpuB) * 0.90) + (gpuB.fp16_tflops * 22)),
+      scoreB: Math.round((getEffectiveEngineeringScore(safeGpuB) * 0.90) + (safeGpuB.fp16_tflops * 22)),
       unit: ' cenários/min',
-      note: `Com múltiplos núcleos no seu processador (${STATE.build.cpu.name}), execute processos paralelos alimentando tensores na GPU`
+      note: `Com múltiplos núcleos no seu processador (${activeCpuName}), execute processos paralelos alimentando tensores na GPU`
     }
   ];
 
   document.getElementById('sim-soft-list').innerHTML = engWorkloads.map(sf => {
     const sA = sf.scoreA;
     const sB = sf.scoreB;
-    const maxS = Math.max(sA, sB, 5000);
+    const maxS = compareOn ? Math.max(sA, sB, 5000) : Math.max(sA, 5000);
     const gain = Math.round(((sA / Math.max(1, sB)) - 1) * 100);
     return `
       <div class="p-3 rounded-xl bg-slate-900/80 border border-amber-500/25 space-y-1.5">
         <div class="flex items-center justify-between text-xs font-semibold text-white">
           <span class="flex items-center gap-1">${circuitSvg} ${sf.title}</span>
-          <span class="font-mono text-amber-400 font-bold">${gain >= 0 ? '+' : ''}${gain}%</span>
+          <span class="font-mono text-amber-400 font-bold">${compareOn ? `${gain >= 0 ? '+' : ''}${gain}%` : `${sA}${sf.unit}`}</span>
         </div>
         <div class="text-xs text-slate-400">${sf.desc}</div>
         <div class="space-y-1 text-xs font-mono pt-1">
@@ -5360,13 +5416,14 @@ function renderSimulatorLegacy() {
             </div>
             <span class="w-28 text-right font-bold text-white">${sA}${sf.unit}</span>
           </div>
+          ${compareOn ? `
           <div class="flex items-center gap-2">
-            <span class="w-24 truncate text-emerald-300">${gpuB.name}:</span>
+            <span class="w-24 truncate text-emerald-300">${safeGpuB.name}:</span>
             <div class="flex-1 h-2 bg-slate-950 rounded-full overflow-hidden">
               <div class="h-full bg-emerald-500 rounded-full" style="width:${Math.min(100, (sB / maxS) * 100)}%"></div>
             </div>
             <span class="w-28 text-right text-slate-300">${sB}${sf.unit}</span>
-          </div>
+          </div>` : ''}
         </div>
         <div class="text-xs text-amber-300/90 pt-0.5">${sf.note}</div>
       </div>
@@ -6190,7 +6247,305 @@ async function initApp() {
 
 window.addEventListener('DOMContentLoaded', initApp);
 
-// ===================== Modo claro / escuro =====================
+// ===================== Modo claro / escuro & Cor Principal =====================
+const ACCENT_CONFIG_KEY = 'gca-accent-config';
+const ACCENT_DEFAULT_DARK = '#ffcc00';
+const ACCENT_DEFAULT_LIGHT = '#5b5bf0';
+const ACCENT_STOCK_BROWSER_DEFAULTS = new Set(['#0075ff', '#0060df', '#3b99fc', '#0050ff', '#767676', '#0078d4', '#0078d7', '#0066cc']);
+const ACCENT_OVERRIDE_VARS = [
+  '--ui-brand', '--ui-brand-hover', '--ui-brand-ink', '--ui-brand-soft',
+  '--ui-brand-border', '--ui-brand-faint', '--ui-brand-zero',
+  '--ui-compare-a', '--ui-compare-a-text', '--ui-compare-a-soft', '--ui-compare-a-border'
+];
+
+function _normalizeHexColor(val) {
+  if (!val) return null;
+  const s = String(val).trim();
+  const m3 = s.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+  if (m3) return `#${m3[1]}${m3[1]}${m3[2]}${m3[2]}${m3[3]}${m3[3]}`.toLowerCase();
+  const m6 = s.match(/^#[0-9a-f]{6}$/i);
+  if (m6) return s.toLowerCase();
+  const mRgb = s.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/i);
+  if (mRgb) {
+    if (mRgb[4] !== undefined && parseFloat(mRgb[4]) <= 0.05) return null;
+    const hex = [mRgb[1], mRgb[2], mRgb[3]].map(n => Math.max(0, Math.min(255, parseInt(n, 10))).toString(16).padStart(2, '0')).join('');
+    return `#${hex}`.toLowerCase();
+  }
+  return null;
+}
+
+function _hexToRgbArr(hex) {
+  const h = _normalizeHexColor(hex);
+  if (!h) return null;
+  return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+}
+
+function _rgbArrToHex(rgb) {
+  return '#' + rgb.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+}
+
+function _rgbToHslArr(r, g, b) {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case rn: h = (gn - bn) / d + (gn < bn ? 6 : 0); break;
+      case gn: h = (bn - rn) / d + 2; break;
+      default: h = (rn - gn) / d + 4; break;
+    }
+    h /= 6;
+  }
+  return [h, s, l];
+}
+
+function _hslToRgbArr(h, s, l) {
+  if (s === 0) {
+    const v = l * 255;
+    return [v, v, v];
+  }
+  const hue2rgb = (p, q, t) => {
+    let tt = t;
+    if (tt < 0) tt += 1;
+    if (tt > 1) tt -= 1;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  return [hue2rgb(p, q, h + 1 / 3) * 255, hue2rgb(p, q, h) * 255, hue2rgb(p, q, h - 1 / 3) * 255];
+}
+
+function _relLuminanceHex(hex) {
+  const rgb = _hexToRgbArr(hex);
+  if (!rgb) return 0.5;
+  const chan = rgb.map(v => {
+    const srgb = v / 255;
+    return srgb <= 0.03928 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * chan[0] + 0.7152 * chan[1] + 0.0722 * chan[2];
+}
+
+function _mixHexColors(hexA, hexB, weightB) {
+  const a = _hexToRgbArr(hexA);
+  const b = _hexToRgbArr(hexB);
+  if (!a || !b) return hexA;
+  const w = Math.max(0, Math.min(1, weightB));
+  return _rgbArrToHex([
+    a[0] * (1 - w) + b[0] * w,
+    a[1] * (1 - w) + b[1] * w,
+    a[2] * (1 - w) + b[2] * w
+  ]);
+}
+
+function _readAccentConfig() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ACCENT_CONFIG_KEY) || 'null');
+    if (parsed && typeof parsed === 'object') {
+      const mode = ['auto', 'default', 'custom'].includes(parsed.mode) ? parsed.mode : 'auto';
+      const color = _normalizeHexColor(parsed.color) || ACCENT_DEFAULT_DARK;
+      return { mode, color };
+    }
+  } catch (_) {}
+  return { mode: 'auto', color: ACCENT_DEFAULT_DARK };
+}
+
+function _saveAccentConfig(cfg) {
+  try {
+    localStorage.setItem(ACCENT_CONFIG_KEY, JSON.stringify({
+      mode: ['auto', 'default', 'custom'].includes(cfg.mode) ? cfg.mode : 'auto',
+      color: _normalizeHexColor(cfg.color) || ACCENT_DEFAULT_DARK
+    }));
+  } catch (_) {}
+}
+
+function detectBrowserAccentColor() {
+  try {
+    const rootStyle = getComputedStyle(document.documentElement);
+    for (const v of ['--gx-accent', '--opera-gx-accent', '--browser-accent']) {
+      const raw = rootStyle.getPropertyValue(v).trim();
+      const hex = _normalizeHexColor(raw);
+      if (hex) return { hex, source: 'browser' };
+    }
+    if (typeof window !== 'undefined' && window.CSS && typeof CSS.supports === 'function' && CSS.supports('color', 'AccentColor')) {
+      const mount = document.body || document.documentElement;
+      const probe = document.createElement('span');
+      probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;background-color:AccentColor;';
+      mount.appendChild(probe);
+      const computed = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      const hex = _normalizeHexColor(computed);
+      if (hex && !ACCENT_STOCK_BROWSER_DEFAULTS.has(hex)) {
+        const rgb = _hexToRgbArr(hex);
+        const [, s, l] = _rgbToHslArr(rgb[0], rgb[1], rgb[2]);
+        if (s >= 0.18 && l >= 0.08 && l <= 0.94) {
+          return { hex, source: 'browser' };
+        }
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
+function _buildDerivedBrandTokens(hex, isLight) {
+  let brand = _normalizeHexColor(hex) || (isLight ? ACCENT_DEFAULT_LIGHT : ACCENT_DEFAULT_DARK);
+  const rgb0 = _hexToRgbArr(brand);
+  const [h, s, l] = _rgbToHslArr(rgb0[0], rgb0[1], rgb0[2]);
+  if (!isLight && l < 0.38) {
+    brand = _rgbArrToHex(_hslToRgbArr(h, Math.min(1, s), 0.50));
+  }
+  const rgb = _hexToRgbArr(brand);
+  const lum = _relLuminanceHex(brand);
+  const hover = isLight ? _mixHexColors(brand, '#0f172a', 0.22) : _mixHexColors(brand, '#ffffff', 0.24);
+  let compareText = brand;
+  if (isLight && lum > 0.32) {
+    compareText = _rgbArrToHex(_hslToRgbArr(h, Math.min(1, Math.max(s, 0.45)), 0.34));
+  } else if (!isLight) {
+    compareText = hover;
+  }
+  const ink = (isLight ? lum > 0.42 : lum > 0.36) ? '#121212' : '#ffffff';
+  const rgba = (a) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+  return {
+    brand,
+    hover,
+    ink,
+    soft: rgba(isLight ? 0.12 : 0.15),
+    border: rgba(isLight ? 0.38 : 0.42),
+    faint: rgba(0.07),
+    zero: rgba(0),
+    compareA: isLight && lum > 0.45 ? compareText : brand,
+    compareAText: compareText
+  };
+}
+
+function syncAccentConfigUI(resolved = null) {
+  const cfg = _readAccentConfig();
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const info = resolved || _resolveSiteAccent(cfg, isLight);
+
+  const setPressed = (id, active) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('is-active', !!active);
+    el.setAttribute('aria-pressed', active ? 'true' : 'false');
+  };
+  setPressed('btn-accent-mode-auto', cfg.mode === 'auto');
+  setPressed('btn-accent-mode-default', cfg.mode === 'default');
+  setPressed('btn-accent-mode-custom', cfg.mode === 'custom');
+
+  const picker = document.getElementById('cfg-accent-color-picker');
+  if (picker) picker.value = info.hex;
+  const dot = document.getElementById('cfg-accent-preview-dot');
+  if (dot) dot.style.backgroundColor = info.hex;
+  const hexLbl = document.getElementById('cfg-accent-hex-label');
+  if (hexLbl) hexLbl.textContent = info.hex.toUpperCase();
+
+  document.querySelectorAll('.cfg-accent-swatch[data-accent-hex]').forEach(btn => {
+    const swHex = _normalizeHexColor(btn.getAttribute('data-accent-hex'));
+    const active = swHex === info.hex && cfg.mode !== 'default';
+    btn.style.outline = active ? '2px solid var(--ui-text-primary)' : '';
+    btn.style.outlineOffset = active ? '2px' : '';
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+
+  const statusEl = document.getElementById('cfg-accent-status');
+  if (statusEl) {
+    if (cfg.mode === 'custom') {
+      statusEl.innerHTML = `<span class="font-semibold text-slate-100">Cor personalizada ativa:</span> <span class="ui-mono font-bold">${info.hex.toUpperCase()}</span> — aplicada aos botões, destaques e gráficos.`;
+    } else if (cfg.mode === 'auto' && info.source === 'browser') {
+      statusEl.innerHTML = `<span class="font-semibold text-emerald-300">Cor detectada do navegador (CSS AccentColor / Opera GX):</span> <span class="ui-mono font-bold">${info.hex.toUpperCase()}</span>.`;
+    } else if (cfg.mode === 'auto') {
+      statusEl.innerHTML = `O navegador não informou uma cor de destaque personalizada; usando a cor padrão do site (<span class="ui-mono font-bold">${info.hex.toUpperCase()}</span>). Você pode escolher outra cor ao lado.`;
+    } else {
+      statusEl.innerHTML = `Usando a cor padrão do site (<span class="ui-mono font-bold">${info.hex.toUpperCase()}</span>).`;
+    }
+  }
+}
+
+function _resolveSiteAccent(cfg, isLight) {
+  const defaultHex = isLight ? ACCENT_DEFAULT_LIGHT : ACCENT_DEFAULT_DARK;
+  if (cfg.mode === 'custom' && cfg.color) {
+    return { hex: cfg.color, source: 'custom', useFactoryDefault: false };
+  }
+  if (cfg.mode === 'auto') {
+    const detected = detectBrowserAccentColor();
+    if (detected && detected.hex) {
+      return { hex: detected.hex, source: 'browser', useFactoryDefault: false };
+    }
+  }
+  return { hex: defaultHex, source: 'default', useFactoryDefault: true };
+}
+
+function applySiteAccentColor(opts = {}) {
+  const root = document.documentElement;
+  const isLight = root.getAttribute('data-theme') === 'light';
+  const cfg = _readAccentConfig();
+  const resolved = _resolveSiteAccent(cfg, isLight);
+
+  if (resolved.useFactoryDefault) {
+    ACCENT_OVERRIDE_VARS.forEach(v => root.style.removeProperty(v));
+  } else {
+    const t = _buildDerivedBrandTokens(resolved.hex, isLight);
+    root.style.setProperty('--ui-brand', t.brand);
+    root.style.setProperty('--ui-brand-hover', t.hover);
+    root.style.setProperty('--ui-brand-ink', t.ink);
+    root.style.setProperty('--ui-brand-soft', t.soft);
+    root.style.setProperty('--ui-brand-border', t.border);
+    root.style.setProperty('--ui-brand-faint', t.faint);
+    root.style.setProperty('--ui-brand-zero', t.zero);
+    root.style.setProperty('--ui-compare-a', t.compareA);
+    root.style.setProperty('--ui-compare-a-text', t.compareAText);
+    root.style.setProperty('--ui-compare-a-soft', t.soft);
+    root.style.setProperty('--ui-compare-a-border', t.border);
+  }
+
+  syncAccentConfigUI(resolved);
+  if (opts.refreshCharts !== false && window.GCA_CHART_THEME && typeof window.GCA_CHART_THEME.refresh === 'function') {
+    window.GCA_CHART_THEME.refresh();
+  }
+}
+
+function setSiteAccentMode(mode) {
+  const cur = _readAccentConfig();
+  const nextMode = ['auto', 'default', 'custom'].includes(mode) ? mode : 'auto';
+  _saveAccentConfig({ mode: nextMode, color: cur.color });
+  applySiteAccentColor({ refreshCharts: true });
+}
+
+function setSiteCustomAccent(hex) {
+  const norm = _normalizeHexColor(hex);
+  if (!norm) return;
+  _saveAccentConfig({ mode: 'custom', color: norm });
+  applySiteAccentColor({ refreshCharts: true });
+}
+
+function openSiteAccentPicker() {
+  const cur = _readAccentConfig();
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const res = _resolveSiteAccent(cur, isLight);
+  if (cur.mode !== 'custom') {
+    _saveAccentConfig({ mode: 'custom', color: res.hex });
+    applySiteAccentColor({ refreshCharts: true });
+  }
+  const picker = document.getElementById('cfg-accent-color-picker');
+  if (picker) {
+    picker.value = res.hex;
+    picker.click();
+  }
+}
+
+window.setSiteAccentMode = setSiteAccentMode;
+window.setSiteCustomAccent = setSiteCustomAccent;
+window.openSiteAccentPicker = openSiteAccentPicker;
+window.applySiteAccentColor = applySiteAccentColor;
+window.syncAccentConfigUI = syncAccentConfigUI;
+window.detectBrowserAccentColor = detectBrowserAccentColor;
+
 function applyTheme(theme) {
   const t = theme === 'light' ? 'light' : 'dark';
   const root = document.documentElement;
@@ -6201,6 +6556,7 @@ function applyTheme(theme) {
   if (lbl) lbl.textContent = t === 'dark' ? 'Modo claro' : 'Modo escuro';
   const btn = document.getElementById('btn-theme-toggle');
   if (btn) btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  applySiteAccentColor({ refreshCharts: false });
   if (window.GCA_CHART_THEME && typeof window.GCA_CHART_THEME.refresh === 'function') {
     window.GCA_CHART_THEME.refresh();
   }

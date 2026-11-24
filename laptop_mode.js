@@ -671,11 +671,21 @@ function populateLaptopSelectors() {
   const selSimA = document.getElementById('sim-select-laptop-a');
   const selSimB = document.getElementById('sim-select-laptop-b');
 
-  if (selBase) selBase.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopDuelBaseSlug);
-  if (selCand) selCand.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopDuelCandSlug);
-  if (selCbBase) selCbBase.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.laptopCbRelBaseSlug);
-  if (selSimA) selSimA.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.simLaptopASlug);
-  if (selSimB) selSimB.innerHTML = _buildGroupedLaptopOptionsHTML(pool, STATE.simLaptopBSlug);
+  const lapOptsSig = pool.map(l => `${l.slug}:${Math.round(Number(l.price_brl) || 0)}`).join('|');
+  const setLapSelect = (sel, targetSlug) => {
+    if (!sel) return;
+    if (sel.dataset.optsSig !== lapOptsSig) {
+      sel.innerHTML = _buildGroupedLaptopOptionsHTML(pool, targetSlug);
+      sel.dataset.optsSig = lapOptsSig;
+    } else if (targetSlug && sel.value !== targetSlug) {
+      sel.value = targetSlug;
+    }
+  };
+  setLapSelect(selBase, STATE.laptopDuelBaseSlug);
+  setLapSelect(selCand, STATE.laptopDuelCandSlug);
+  setLapSelect(selCbBase, STATE.laptopCbRelBaseSlug);
+  setLapSelect(selSimA, STATE.simLaptopASlug);
+  setLapSelect(selSimB, STATE.simLaptopBSlug);
 
   _renderDynamicLaptopPresets(pool);
   syncLaptopDuelPriceInputsFromSelection();
@@ -1934,7 +1944,7 @@ function renderLaptopBuilder() {
       </div>
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="sendLaptopToDuel('${_escLapHtml(lap.slug)}', true)" class="flex-1 py-2 rounded-xl bg-purple-500/20 hover:bg-purple-500/35 text-purple-200 border border-purple-500/40 text-xs font-bold cursor-pointer">⚔️ Comparar no Duelo</button>
-        <button type="button" onclick="STATE.simLaptopBSlug='${_escLapHtml(lap.slug)}'; populateLaptopSelectors(); switchTab('sim');" class="flex-1 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 text-emerald-200 border border-emerald-500/40 text-xs font-bold cursor-pointer">🔬 Simular FPS/IA</button>
+        <button type="button" onclick="if (STATE.simCompareEnabled === false) { STATE.simLaptopASlug='${_escLapHtml(lap.slug)}'; } else { STATE.simLaptopBSlug='${_escLapHtml(lap.slug)}'; } populateLaptopSelectors(); switchTab('sim');" class="flex-1 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 text-emerald-200 border border-emerald-500/40 text-xs font-bold cursor-pointer">🔬 Simular FPS/IA</button>
       </div>
     `;
   }
@@ -2081,12 +2091,63 @@ function swapSimulatorLaptops() {
   const sB = document.getElementById('sim-select-laptop-b');
   if (sA) sA.value = STATE.simLaptopASlug;
   if (sB) sB.value = STATE.simLaptopBSlug;
+  if (typeof saveUserPrefs === 'function') saveUserPrefs();
   renderLaptopSimulator();
 }
 
 function _parseScreenHeight(resStr) {
   const m = String(resStr || '1920x1080').match(/(\d+)\s*x\s*(\d+)/i);
   return m ? parseInt(m[2], 10) : 1080;
+}
+
+function _parseScreenPixels(resStr) {
+  const m = String(resStr || '1920x1080').match(/(\d+)\s*x\s*(\d+)/i);
+  if (m) return parseInt(m[1], 10) * parseInt(m[2], 10);
+  const h = _parseScreenHeight(resStr);
+  return Math.round(h * (16 / 9) * h);
+}
+
+function _laptopToVirtualGpu(lap) {
+  return {
+    slug: lap.slug || '',
+    name: lap.gpu_name || '',
+    brand: lap.gpu_brand || '',
+    gpu_brand: lap.gpu_brand || '',
+    arch: lap.gpu_arch || '',
+    vram_gb: Number(lap._effGpuMem || lap.gpu_vram_gb || 6),
+    gpu_vram_gb: Number(lap._effGpuMem || lap.gpu_vram_gb || 6),
+    gpu_is_dedicated: !!lap.gpu_is_dedicated,
+    is_apple_unified: !!lap.is_apple_unified,
+    gaming_score: Number(lap.gaming_score || 400)
+  };
+}
+
+function _describeLapTech(lap, sg) {
+  const vGpu = _laptopToVirtualGpu(lap);
+  const cap = typeof getGpuHardwareCapabilities === 'function'
+    ? getGpuHardwareCapabilities(vGpu)
+    : { hasDLSS: false, hasFSR: true, dlssLabel: 'DLSS', fsrLabel: 'FSR', maxFgMult: 1, hasNativeFG: false, hasFsrFg: false, canFsrFgWithFsr: false };
+  const useDlss = !!(sg.dlss && cap.hasDLSS);
+  const useFsr = !useDlss && !!(sg.fsr && cap.hasFSR);
+  const parts = [];
+  if (sg.dlss && !cap.hasDLSS && !useFsr) parts.push('⚠️ Sem DLSS (Nativo)');
+  else if (useDlss && sg.fsr) parts.push(`${cap.dlssLabel} (prioritário s/ FSR)`);
+  else if (useDlss) parts.push(cap.dlssLabel);
+  else if (useFsr) parts.push(cap.fsrLabel);
+  else parts.push('Nativo');
+
+  if (sg.mfg) {
+    if (cap.maxFgMult >= 4) parts.push(`MFG ${sg.mfgMult === 'auto' ? 'Auto 2–4×' : sg.mfgMult + '×'}`);
+    else if (cap.hasNativeFG) parts.push('DLSS FG 2×');
+    else if (cap.hasFsrFg) parts.push('FSR FG 2×');
+    else if (cap.canFsrFgWithFsr && sg.fsr) parts.push('FSR 3 FG 2×');
+    else parts.push(cap.canFsrFgWithFsr ? '⚠️ Ative FSR p/ FG' : '⚠️ Sem FG/MFG');
+  }
+  return {
+    text: parts.join(' + '),
+    dlssWarn: !!(sg.dlss && !cap.hasDLSS),
+    mfgWarn: !!(sg.mfg && !(cap.maxFgMult > 1 || (cap.canFsrFgWithFsr && sg.fsr)))
+  };
 }
 
 function _simulateLaptopSnapshot(lap, powerMode, resMode) {
@@ -2096,14 +2157,38 @@ function _simulateLaptopSnapshot(lap, powerMode, resMode) {
   const cpuPowerScale = onBattery ? (lap.is_apple_unified ? 0.96 : 0.70) : 1.0;
 
   let targetResHeight = _parseScreenHeight(lap.screen_res);
+  let targetPixels = _parseScreenPixels(lap.screen_res);
   let targetHz = Number(lap.screen_hz || 60);
+  let targetResLabel = String(lap.screen_res || '1920x1080');
   if (resMode === 'external') {
-    const extRes = (typeof STATE !== 'undefined' && STATE.monitorRes) || '1440p';
-    targetResHeight = extRes.includes('4k') || extRes.includes('2160') ? 2160 : (extRes.includes('1440') ? 1440 : 1080);
+    const extResKey = (typeof STATE !== 'undefined' && STATE.monitorRes) || '1440p';
+    const monObj = (typeof MONITOR_RES !== 'undefined' && MONITOR_RES[extResKey]) || { w: 2560, h: 1440, label: '2560×1440' };
+    targetResHeight = monObj.h;
+    targetPixels = typeof getMonitorPixels === 'function' ? getMonitorPixels() : (monObj.w * monObj.h);
     targetHz = Number((typeof STATE !== 'undefined' && STATE.monitorMaxFps) || 144);
+    targetResLabel = monObj.label;
   }
-  const resScale = targetResHeight >= 2160 ? 0.48 : (targetResHeight >= 1440 ? 0.76 : (targetResHeight >= 1200 ? 0.90 : 1.0));
 
+  const sg = (typeof getSimGraphicsState === 'function')
+    ? getSimGraphicsState()
+    : { preset: 3, dlss: false, fsr: false, mfg: false, mfgMult: 'auto' };
+  const presets = (typeof SIM_QUALITY_PRESETS !== 'undefined' && SIM_QUALITY_PRESETS) || [
+    { index: 0, shortLabel: 'M. Baixo', gpuRasterMult: 1.88, vramMult: 0.52, cpuCapMult: 1.08, rtMode: 'off' },
+    { index: 1, shortLabel: 'Baixo', gpuRasterMult: 1.52, vramMult: 0.66, cpuCapMult: 1.04, rtMode: 'off' },
+    { index: 2, shortLabel: 'Médio', gpuRasterMult: 1.24, vramMult: 0.80, cpuCapMult: 1.00, rtMode: 'off' },
+    { index: 3, shortLabel: 'Alto', gpuRasterMult: 1.00, vramMult: 1.00, cpuCapMult: 1.00, rtMode: 'light' },
+    { index: 4, shortLabel: 'Ultra + PT', gpuRasterMult: 0.82, vramMult: 1.22, cpuCapMult: 0.94, rtMode: 'ultra_pt' }
+  ];
+  const pIdx = Math.max(0, Math.min(4, parseInt(sg.preset, 10) || 0));
+  const preset = presets[pIdx] || presets[3];
+
+  const vGpu = _laptopToVirtualGpu(lap);
+  const cap = typeof getGpuHardwareCapabilities === 'function'
+    ? getGpuHardwareCapabilities(vGpu)
+    : { hasDLSS: false, dlssSrGain: 1.0, dlssLabel: 'DLSS', hasFSR: true, fsrSrGain: 1.28, fsrLabel: 'FSR', maxFgMult: 1, hasNativeFG: false, hasFsrFg: false, canFsrFgWithFsr: false, vramFgOverhead: 0, hasHwRT: false, rtArchMult: 0.5, ptArchMult: 0.25 };
+
+  const refPixels = 2560 * 1440;
+  const resScale = targetResHeight >= 2160 ? 0.48 : (targetResHeight >= 1440 ? 0.76 : (targetResHeight >= 1200 ? 0.90 : 1.0));
   const gamingEff = Number(lap.gaming_score || 400) * gpuPowerScale * resScale;
   const wsEff = getLaptopWorkstationScore(lap) * cpuPowerScale * (lap.gpu_is_dedicated && onBattery ? 0.72 : 1.0);
   const aiEff = getLaptopAIScore(lap) * (lap.is_apple_unified ? (onBattery ? 0.95 : 1.0) : (onBattery ? 0.58 : 1.0));
@@ -2113,28 +2198,145 @@ function _simulateLaptopSnapshot(lap, powerMode, resMode) {
   const gamesPool = (typeof STATE !== 'undefined' && Array.isArray(STATE.games) && STATE.games.length)
     ? STATE.games
     : (typeof DEFAULT_GAMES !== 'undefined' ? DEFAULT_GAMES : [
-        { id: 'cyberpunk', title: 'Cyberpunk 2077 (High/RT)', fps1440: 48, cpuFps: 160, vramReq: 8, relevant: true },
-        { id: 'cs2', title: 'Counter-Strike 2', fps1440: 260, cpuFps: 600, vramReq: 4, relevant: true }
+        { id: 'cyberpunk', title: 'Cyberpunk 2077 (RT Ultra)', fps1440: 48, cpuFps: 160, vramReq: 10, relevant: true },
+        { id: 'cs2', title: 'Counter-Strike 2 (Competitivo)', fps1440: 260, cpuFps: 600, vramReq: 4, relevant: true }
       ]);
   const relevantGames = gamesPool.filter(g => g.relevant !== false);
   const useGames = relevantGames.length ? relevantGames : gamesPool.slice(0, 5);
 
-  const desktopRefGamingScore = 2900; // calibrates 1440p review baseline
+  const useDlss = !!(sg.dlss && cap.hasDLSS);
+  const useFsr = !useDlss && !!(sg.fsr && cap.hasFSR);
+  const usingUpscaler = useDlss || useFsr;
+  const dlssUnsupported = !!(sg.dlss && !cap.hasDLSS && !useFsr);
+  const activeUpscalerLabel = useDlss ? cap.dlssLabel : (useFsr ? cap.fsrLabel : 'Nativo');
+
+  let gpuMaxFg = cap.maxFgMult;
+  let fgTechLabel = cap.isBlackwell ? 'DLSS 4 MFG' : (cap.isAda ? 'DLSS FG 2×' : (cap.hasFsrFg ? 'FSR FG 2×' : 'Sem FG'));
+  if (gpuMaxFg <= 1 && cap.canFsrFgWithFsr && sg.fsr) {
+    gpuMaxFg = 2;
+    fgTechLabel = 'FSR 3 FG 2×';
+  }
+
+  const desktopRefGamingScore = 2900; // calibrates mobile scores to 1440p review baseline
+  const macPenalty = lap.is_apple_unified ? 0.68 : 1.0;
+
   const gameResults = useGames.map(g => {
+    const prof = typeof getGameSimProfile === 'function'
+      ? getGameSimProfile(g)
+      : { supportsPT: false, supportsRT: false, supportsFG: true, presetSens: 0.82, ptCost: 0.42, rtCost: 0.72, vramPtExtra: 2.8, vramRtExtra: 1.4, rtCpuMult: 0.86, ptCpuMult: 0.76 };
+    const dispTitle = typeof getSimGameDisplayTitle === 'function' ? getSimGameDisplayTitle(g) : g.title;
+
     const base1440Fps = Number(g.fps1440 || 60);
-    const estGpuFps = base1440Fps * (Number(lap.gaming_score || 400) / desktopRefGamingScore) * gpuPowerScale * (targetResHeight >= 2160 ? 0.62 : (targetResHeight >= 1440 ? 1.0 : 1.32));
-    const estCpuCap = Number(g.cpuFps || 180) * (Number(lap.cpu_single_score || 70) / 88) * cpuPowerScale;
-    const vramReq = Number(g.vramReq || 6);
-    const vramPenalty = lap._effGpuMem < vramReq ? Math.max(0.58, lap._effGpuMem / vramReq) : 1.0;
-    const macPenalty = lap.is_apple_unified ? 0.68 : 1.0; // compatibility / Rosetta / Metal headroom vs DirectX
-    const fps = Math.max(12, Math.round(Math.min(estCpuCap, estGpuFps) * vramPenalty * macPenalty));
-    return { title: g.title, fps, capHz: targetHz, screenUtilizationPct: Math.min(100, Math.round((fps / targetHz) * 100)) };
+    const presetRasterFactor = 1 + ((preset.gpuRasterMult - 1) * prof.presetSens);
+    let rtPtFactor = 1.0;
+    let extraRtVram = 0;
+    let ptActive = false;
+    let rtActive = false;
+
+    if (preset.rtMode === 'ultra_pt' && prof.supportsPT) {
+      ptActive = true;
+      rtActive = true;
+      rtPtFactor = prof.ptCost * cap.ptArchMult;
+      extraRtVram = prof.vramPtExtra;
+    } else if (preset.rtMode === 'ultra_pt' && prof.supportsRT) {
+      rtActive = true;
+      rtPtFactor = prof.rtCost * cap.rtArchMult;
+      extraRtVram = prof.vramRtExtra;
+    } else if (preset.rtMode === 'light' && prof.supportsRT) {
+      rtActive = true;
+      rtPtFactor = prof.baselineHasLightRT
+        ? Math.max(0.55, Math.min(1.12, 0.72 + 0.28 * cap.rtArchMult))
+        : Math.max(0.70, Math.min(1.06, 0.84 + 0.16 * cap.rtArchMult));
+    } else if (preset.rtMode === 'off' && prof.baselineHasLightRT) {
+      rtPtFactor = 1.12;
+    }
+
+    let srMult = useDlss ? cap.dlssSrGain : (useFsr ? cap.fsrSrGain : 1.0);
+    if (ptActive && useDlss && (cap.isBlackwell || cap.isAda)) srMult *= 1.05;
+
+    const wantFg = !!sg.mfg;
+    const fgAllowedByGame = prof.supportsFG !== false;
+    const canUseFG = wantFg && fgAllowedByGame && gpuMaxFg > 1;
+    const extraFgVram = canUseFG ? (cap.vramFgOverhead || 0.5) : 0;
+
+    const resFactor = Math.pow(refPixels / Math.max(1, targetPixels), ptActive ? 0.86 : 0.80);
+    const vramBase = Number(g.vramReq || 6) * preset.vramMult * Math.pow(targetPixels / refPixels, 0.35) * (usingUpscaler ? 0.88 : 1.0);
+    const vramNeeded = vramBase + extraRtVram + extraFgVram;
+    const vramDiff = Number(lap._effGpuMem || lap.gpu_vram_gb || 6) - vramNeeded;
+    let vramPenalty = 1.0;
+    if (vramDiff < -3.5) vramPenalty = 0.50;
+    else if (vramDiff < -1.8) vramPenalty = 0.64;
+    else if (vramDiff < -0.2) vramPenalty = 0.80;
+    if (ptActive && Number(lap._effGpuMem || 8) <= 8) vramPenalty *= 0.86;
+
+    const fgOverheadMult = canUseFG ? (Number(lap._effGpuMem || 8) <= 8 && vramNeeded >= 7.5 ? 0.91 : 0.95) : 1.0;
+
+    const rawGpuFps = base1440Fps * (Number(lap.gaming_score || 400) / desktopRefGamingScore) * gpuPowerScale * resFactor * presetRasterFactor * rtPtFactor * srMult * vramPenalty * fgOverheadMult * macPenalty;
+    const estGpuFps = Math.max(4, rawGpuFps);
+
+    let estCpuCap = Number(g.cpuFps || 180) * (Number(lap.cpu_single_score || 70) / 88) * cpuPowerScale * preset.cpuCapMult * (lap.is_apple_unified ? 0.86 : 1.0);
+    if (ptActive) estCpuCap *= prof.ptCpuMult;
+    else if (rtActive) estCpuCap *= (preset.rtMode === 'ultra_pt' ? prof.rtCpuMult : (1 - (1 - prof.rtCpuMult) * 0.45));
+    estCpuCap = Math.max(10, estCpuCap);
+    const cpuCapInt = Math.round(estCpuCap);
+
+    const k = (estGpuFps < 0.70 * estCpuCap) ? 6 : 4;
+    const combined = 1 / Math.pow(Math.pow(1 / estGpuFps, k) + Math.pow(1 / estCpuCap, k), 1 / k);
+    const baseRenderFps = Math.min(cpuCapInt, Math.max(4, Math.round(combined)));
+    const basePureFps = Math.max(4, Math.round(estGpuFps));
+    const isCpuLocked = estGpuFps >= estCpuCap * 0.96 || baseRenderFps >= cpuCapInt;
+
+    let activeFgMult = 1;
+    let netFgFactor = 1.0;
+    if (canUseFG) {
+      if (gpuMaxFg >= 4) {
+        if (sg.mfgMult === 2 || sg.mfgMult === 3 || sg.mfgMult === 4) activeFgMult = sg.mfgMult;
+        else if (baseRenderFps * 1.74 >= targetHz) activeFgMult = 2;
+        else if (baseRenderFps * 2.40 >= targetHz) activeFgMult = 3;
+        else activeFgMult = 4;
+      } else {
+        activeFgMult = 2;
+      }
+      netFgFactor = activeFgMult === 4 ? 3.05 : activeFgMult === 3 ? 2.40 : 1.74;
+    }
+
+    const displayedFps = canUseFG ? Math.max(baseRenderFps, Math.round(baseRenderFps * netFgFactor)) : baseRenderFps;
+    const latencyMs = Math.round((1000 / Math.max(10, baseRenderFps)) * (canUseFG ? (activeFgMult >= 3 ? 1.38 : 1.28) : 1.05));
+
+    return {
+      id: g.id,
+      title: g.title,
+      displayTitle: dispTitle,
+      fps: displayedFps,
+      basePureFps,
+      baseRenderFps,
+      displayedFps,
+      cpuCap: cpuCapInt,
+      isCpuLocked,
+      canUseFG,
+      activeFgMult,
+      fgTechLabel,
+      activeUpscalerLabel,
+      dlssUnsupported,
+      ptActive,
+      rtActive,
+      noHwRtPt: ptActive && !cap.hasHwRT,
+      vramShort: vramDiff < -0.2,
+      vramNeeded: +vramNeeded.toFixed(1),
+      latencyMs,
+      capHz: targetHz,
+      screenUtilizationPct: Math.min(100, Math.round((displayedFps / Math.max(1, targetHz)) * 100))
+    };
   });
 
   const avgFps = gameResults.length ? Math.round(gameResults.reduce((s, g) => s + g.fps, 0) / gameResults.length) : 0;
+  const avgRealFps = gameResults.length ? Math.round(gameResults.reduce((s, g) => s + g.baseRenderFps, 0) / gameResults.length) : 0;
+  const lockedCount = gameResults.filter(g => g.isCpuLocked).length;
   return {
-    lap, gamingEff, wsEff, aiEff, softEff, targetHz, targetResHeight,
-    gameResults, avgFps,
+    lap, gamingEff, wsEff, aiEff, softEff, targetHz, targetResHeight, targetResLabel,
+    preset, sg, cap, gameResults, avgFps, avgRealFps, lockedCount,
+    fgActiveAny: gameResults.some(g => g.canUseFG),
+    techSummary: _describeLapTech(lap, sg),
     tok8b: +(Number(lap.llm_8b_tok_s || 4) * (lap.is_apple_unified ? (onBattery ? 0.95 : 1) : (onBattery ? 0.60 : 1))).toFixed(1),
     tok14b: +(Number(lap.llm_14b_tok_s || 0) * (lap.is_apple_unified ? (onBattery ? 0.95 : 1) : (onBattery ? 0.60 : 1))).toFixed(1),
     tok32b: +(Number(lap.llm_32b_tok_s || 0) * (lap.is_apple_unified ? (onBattery ? 0.95 : 1) : (onBattery ? 0.60 : 1))).toFixed(1)
@@ -2145,52 +2347,103 @@ function renderLaptopSimulator() {
   const pool = getLaptopPool();
   if (!pool.length) return;
   enrichLaptopsWithContextualMetrics();
+  if (typeof syncSimCompareUI === 'function') syncSimCompareUI();
+  if (typeof syncSimGraphicsUI === 'function') syncSimGraphicsUI();
+  const compareOn = (typeof STATE === 'undefined' || STATE.simCompareEnabled !== false);
 
   const selA = document.getElementById('sim-select-laptop-a');
   const selB = document.getElementById('sim-select-laptop-b');
+  const selChanged = (selA && selA.value && selA.value !== STATE.simLaptopASlug) || (selB && selB.value && selB.value !== STATE.simLaptopBSlug);
   if (selA && selA.value) STATE.simLaptopASlug = selA.value;
   if (selB && selB.value) STATE.simLaptopBSlug = selB.value;
+  if (selChanged && typeof saveUserPrefs === 'function') saveUserPrefs();
 
   const lapA = findLaptopBySlug(STATE.simLaptopASlug) || pool[0];
-  const lapB = findLaptopBySlug(STATE.simLaptopBSlug) || pool[Math.min(1, pool.length - 1)];
+  const lapB = findLaptopBySlug(STATE.simLaptopBSlug) || pool[Math.min(1, pool.length - 1)] || lapA;
 
   const powerMode = document.getElementById('sim-laptop-power-mode')?.value || 'ac';
   const resMode = document.getElementById('sim-laptop-res-mode')?.value || 'native';
 
   const simA = _simulateLaptopSnapshot(lapA, powerMode, resMode);
-  const simB = _simulateLaptopSnapshot(lapB, powerMode, resMode);
+  const simB = compareOn ? _simulateLaptopSnapshot(lapB, powerMode, resMode) : simA;
+
+  const resPill = document.getElementById('sim-laptop-res-live-pill');
+  if (resPill) {
+    resPill.textContent = compareOn
+      ? `A: ${simA.targetResLabel} @ ${simA.targetHz >= 999 ? 'Livre' : simA.targetHz + 'Hz'} • B: ${simB.targetResLabel}`
+      : `${simA.targetResLabel} @ ${simA.targetHz >= 999 ? 'Livre' : simA.targetHz + 'Hz'}`;
+  }
+  const compatEl = document.getElementById('sim-laptop-tech-compat-summary');
+  if (compatEl) {
+    compatEl.innerHTML = compareOn
+      ? `<span class="text-sky-300 font-semibold">A:</span> ${simA.techSummary.text} <span class="text-slate-600 mx-1">•</span> <span class="text-emerald-300 font-semibold">B:</span> ${simB.techSummary.text}`
+      : `<span class="text-sky-300 font-semibold">${shortLaptopChipName(lapA)}:</span> ${simA.techSummary.text} <span class="text-slate-500">• Base real limitada na CPU</span>`;
+  }
+  const btnLapDlss = document.getElementById('sim-laptop-toggle-dlss');
+  if (btnLapDlss) btnLapDlss.classList.toggle('is-warn', simA.techSummary.dlssWarn && (!compareOn || simB.techSummary.dlssWarn));
+  const btnLapMfg = document.getElementById('sim-laptop-toggle-mfg');
+  if (btnLapMfg) btnLapMfg.classList.toggle('is-warn', simA.techSummary.mfgWarn && (!compareOn || simB.techSummary.mfgWarn));
 
   const bannerEl = document.getElementById('sim-laptop-status-banner');
   if (bannerEl) {
+    const presetName = simA.preset ? simA.preset.label : 'Alto';
     bannerEl.innerHTML = powerMode === 'battery'
-      ? `<div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-xs text-amber-200">🔋 <strong>Modo Bateria Ativo:</strong> Notebooks Windows com GPU dedicada reduzem TGP para ~45% fora da tomada; MacBooks Apple Silicon mantêm ~95% do desempenho máximo.</div>`
-      : `<div class="p-3 rounded-xl bg-emerald-950/35 border border-emerald-500/35 text-xs text-emerald-200">🔌 <strong>Modo Tomada (TGP Máximo):</strong> Simulando potência térmica completa de CPU + GPU (${resMode === 'native' ? 'Tela Nativa de cada Notebook' : 'Monitor Externo Configurado'}).</div>`;
+      ? `<div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/40 text-xs text-amber-200">🔋 <strong>Modo Bateria (${presetName}):</strong> Notebooks Windows com GPU dedicada reduzem TGP para ~45% fora da tomada; MacBooks Apple Silicon mantêm ~95% do desempenho máximo.</div>`
+      : `<div class="p-3 rounded-xl bg-emerald-950/35 border border-emerald-500/35 text-xs text-emerald-200">🔌 <strong>Modo Tomada (${presetName}):</strong> Simulando TGP térmico completo de CPU + GPU (${resMode === 'native' ? 'Tela Nativa de cada Notebook' : 'Monitor Externo Configurado'}) com teto rígido de CPU.</div>`;
   }
 
   const heroEl = document.getElementById('sim-laptop-hero-cards');
   if (heroEl) {
-    heroEl.innerHTML = `
-      <div class="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
-        <span class="text-xs font-mono uppercase text-slate-400">FPS Médio Estimado</span>
-        <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.avgFps} fps</span> vs <span class="text-emerald-300">${simB.avgFps} fps</span></div>
-        <div class="text-xs text-slate-400">Tela A: ${simA.targetHz}Hz • Tela B: ${simB.targetHz}Hz</div>
-      </div>
-      <div class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
-        <span class="text-xs font-mono uppercase text-slate-400">Workstation (Render/Dev)</span>
-        <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${Math.round(simA.wsEff)}</span> vs <span class="text-emerald-300">${Math.round(simB.wsEff)}</span></div>
-        <div class="text-xs text-slate-400">${simB.wsEff >= simA.wsEff ? `+${(((simB.wsEff / Math.max(1, simA.wsEff)) - 1) * 100).toFixed(0)}% p/ B` : `+${(((simA.wsEff / Math.max(1, simB.wsEff)) - 1) * 100).toFixed(0)}% p/ A`}</div>
-      </div>
-      <div class="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 space-y-1">
-        <span class="text-xs font-mono uppercase text-slate-400">IA Local (Llama 8B Q4)</span>
-        <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.tok8b} t/s</span> vs <span class="text-emerald-300">${simB.tok8b} t/s</span></div>
-        <div class="text-xs text-slate-400">${lapA._effGpuMem}GB vs ${lapB._effGpuMem}GB GPU/Unif.</div>
-      </div>
-      <div class="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
-        <span class="text-xs font-mono uppercase text-slate-400">Bateria & Mobilidade</span>
-        <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${lapA.battery_hours_light}h / ${lapA.weight_kg}kg</span> vs <span class="text-emerald-300">${lapB.battery_hours_light}h / ${lapB.weight_kg}kg</span></div>
-        <div class="text-xs text-slate-400">Fontes: ${lapA.charger_w}W vs ${lapB.charger_w}W</div>
-      </div>
-    `;
+    if (!compareOn) {
+      heroEl.innerHTML = `
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-mono uppercase text-slate-400">FPS Médio (${simA.preset.shortLabel})</span>
+            ${simA.lockedCount > 0 ? `<span class="sim-cpu-lock-pill">🔒 Travado CPU (${simA.lockedCount}/${simA.gameResults.length})</span>` : ''}
+          </div>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.avgFps} fps</span>${simA.fgActiveAny ? ` <span class="text-xs text-slate-400">(Real: ${simA.avgRealFps})</span>` : ''}</div>
+          <div class="text-xs text-slate-400">Tela: ${simA.targetHz}Hz • ${simA.targetResLabel}</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">Workstation (Render/Dev)</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${Math.round(simA.wsEff)} pts</span></div>
+          <div class="text-xs text-slate-400 truncate" title="${_escLapHtml(lapA.cpu_name)}">CPU: ${_escLapHtml(lapA.cpu_name)}</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">IA Local (Llama 8B Q4)</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.tok8b} t/s</span></div>
+          <div class="text-xs text-slate-400">${lapA._effGpuMem}GB GPU/Unif. • 14B: ${simA.tok14b} t/s</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">Bateria & Mobilidade</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${lapA.battery_hours_light}h / ${lapA.weight_kg}kg</span></div>
+          <div class="text-xs text-slate-400">Fonte: ${lapA.charger_w}W</div>
+        </div>
+      `;
+    } else {
+      heroEl.innerHTML = `
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-sky-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">FPS Médio (${simA.preset.shortLabel})</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.lockedCount > 0 ? '🔒' : ''}${simA.avgFps} fps</span> vs <span class="text-emerald-300">${simB.lockedCount > 0 ? '🔒' : ''}${simB.avgFps} fps</span></div>
+          <div class="text-xs text-slate-400">Real: ${simA.avgRealFps} vs ${simB.avgRealFps} • ${simA.targetHz}Hz / ${simB.targetHz}Hz</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">Workstation (Render/Dev)</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${Math.round(simA.wsEff)}</span> vs <span class="text-emerald-300">${Math.round(simB.wsEff)}</span></div>
+          <div class="text-xs text-slate-400">${simB.wsEff >= simA.wsEff ? `+${(((simB.wsEff / Math.max(1, simA.wsEff)) - 1) * 100).toFixed(0)}% p/ B` : `+${(((simA.wsEff / Math.max(1, simB.wsEff)) - 1) * 100).toFixed(0)}% p/ A`}</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-purple-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">IA Local (Llama 8B Q4)</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${simA.tok8b} t/s</span> vs <span class="text-emerald-300">${simB.tok8b} t/s</span></div>
+          <div class="text-xs text-slate-400">${lapA._effGpuMem}GB vs ${lapB._effGpuMem}GB GPU/Unif.</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 space-y-1">
+          <span class="text-xs font-mono uppercase text-slate-400">Bateria & Mobilidade</span>
+          <div class="text-sm font-mono font-bold text-white"><span class="text-sky-300">${lapA.battery_hours_light}h / ${lapA.weight_kg}kg</span> vs <span class="text-emerald-300">${lapB.battery_hours_light}h / ${lapB.weight_kg}kg</span></div>
+          <div class="text-xs text-slate-400">Fontes: ${lapA.charger_w}W vs ${lapB.charger_w}W</div>
+        </div>
+      `;
+    }
   }
 
   // Sim 6-axis Radar
@@ -2206,16 +2459,19 @@ function renderLaptopSimulator() {
     Number(s.lap.portability_score || 60)
   ];
   const rDataA = toSimRad(simA);
-  const rDataB = toSimRad(simB);
+  const rDataB = compareOn ? toSimRad(simB) : rDataA;
   if (radCanvas && typeof Chart !== 'undefined') {
+    const datasets = [
+      { label: compareOn ? `A: ${shortLaptopChipName(lapA)}` : shortLaptopChipName(lapA), data: rDataA, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.22)', borderWidth: 2 }
+    ];
+    if (compareOn) {
+      datasets.push({ label: `B: ${shortLaptopChipName(lapB)}`, data: rDataB, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.22)', borderWidth: 2 });
+    }
     chartSimLaptopRadar = new Chart(radCanvas.getContext('2d'), {
       type: 'radar',
       data: {
         labels: ['Jogos (Real)', 'Workstation', 'IA / LLM', 'Tela', 'Bateria', 'Portabilidade'],
-        datasets: [
-          { label: `A: ${shortLaptopChipName(lapA)}`, data: rDataA, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.22)', borderWidth: 2 },
-          { label: `B: ${shortLaptopChipName(lapB)}`, data: rDataB, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.22)', borderWidth: 2 }
-        ]
+        datasets
       },
       options: {
         responsive: true,
@@ -2230,7 +2486,9 @@ function renderLaptopSimulator() {
   if (winBadgeEl) {
     const avgA = Math.round(rDataA.reduce((a, b) => a + b, 0) / 6);
     const avgB = Math.round(rDataB.reduce((a, b) => a + b, 0) / 6);
-    winBadgeEl.innerHTML = `<span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs text-white">Média Simulada: <strong class="text-sky-300">A ${avgA}</strong> vs <strong class="text-emerald-300">B ${avgB}</strong></span>`;
+    winBadgeEl.innerHTML = compareOn
+      ? `<span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-mono text-xs text-white">Média Simulada: <strong class="text-sky-300">A ${avgA}</strong> vs <strong class="text-emerald-300">B ${avgB}</strong></span>`
+      : `<span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-sky-500/40 font-mono text-xs text-white">Média Simulada: <strong class="text-sky-300">${avgA}/100</strong></span>`;
   }
 
   const brkEl = document.getElementById('sim-laptop-radar-metrics-breakdown');
@@ -2239,7 +2497,9 @@ function renderLaptopSimulator() {
     brkEl.innerHTML = dims.map((d, i) => `
       <div class="p-2 rounded-lg bg-slate-900/90 border border-slate-800 flex items-center justify-between">
         <span class="text-slate-300">${d}</span>
-        <span><strong class="text-sky-300">${rDataA[i]}</strong> <span class="text-slate-600">vs</span> <strong class="text-emerald-300">${rDataB[i]}</strong></span>
+        ${compareOn
+          ? `<span><strong class="text-sky-300">${rDataA[i]}</strong> <span class="text-slate-600">vs</span> <strong class="text-emerald-300">${rDataB[i]}</strong></span>`
+          : `<span><strong class="text-sky-300">${rDataA[i]}/100</strong></span>`}
       </div>
     `).join('');
   }
@@ -2248,8 +2508,19 @@ function renderLaptopSimulator() {
   if (wsEl) {
     const scaleA = powerMode === 'battery' ? (lapA.is_apple_unified ? 0.95 : 0.72) : 1.0;
     const scaleB = powerMode === 'battery' ? (lapB.is_apple_unified ? 0.95 : 0.72) : 1.0;
-    const mkBar = (lbl, vA, vB) => {
-      const m = Math.max(vA, vB, 1);
+    const maxRender = Math.max(100, ...pool.map(l => Number(l.workstation_render_score || 0)));
+    const maxEdit = Math.max(100, ...pool.map(l => Number(l.workstation_editing_score || 0)));
+    const maxCompile = Math.max(100, ...pool.map(l => Number(l.workstation_compile_score || 0)));
+    const mkBar = (lbl, vA, vB, catMax) => {
+      const m = compareOn ? Math.max(vA, vB, 1) : Math.max(vA, catMax, 1);
+      if (!compareOn) {
+        return `
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between font-mono"><span class="text-slate-300">${lbl}</span><span><strong class="text-sky-300">${Math.round(vA)} pts</strong></span></div>
+            <div class="h-2 bg-slate-950 rounded-full overflow-hidden"><div class="h-full bg-sky-400" style="width:${Math.min(100, (vA / m) * 100).toFixed(0)}%"></div></div>
+          </div>
+        `;
+      }
       return `
         <div class="space-y-1 text-xs">
           <div class="flex justify-between font-mono"><span class="text-slate-300">${lbl}</span><span><strong class="text-sky-300">${Math.round(vA)}</strong> vs <strong class="text-emerald-300">${Math.round(vB)}</strong></span></div>
@@ -2263,12 +2534,12 @@ function renderLaptopSimulator() {
     wsEl.innerHTML = `
       <div class="flex items-center justify-between border-b border-slate-800 pb-2">
         <span class="text-xs font-bold text-amber-300">Workstation Profissional (Respeita Pesos Render / Edição / Dev)</span>
-        <span class="text-xs font-mono text-slate-400">${_escLapHtml(lapA.cpu_name)} vs ${_escLapHtml(lapB.cpu_name)}</span>
+        <span class="text-xs font-mono text-slate-400">${compareOn ? `${_escLapHtml(lapA.cpu_name)} vs ${_escLapHtml(lapB.cpu_name)}` : _escLapHtml(lapA.cpu_name)}</span>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        ${mkBar('Renderização 3D (Blender/CAD)', lapA.workstation_render_score * scaleA, lapB.workstation_render_score * scaleB)}
-        ${mkBar('Edição de Vídeo 4K (Premiere/Resolve)', lapA.workstation_editing_score * scaleA, lapB.workstation_editing_score * scaleB)}
-        ${mkBar('Compilação & Dev (Docker/Rust/C++)', lapA.workstation_compile_score * scaleA, lapB.workstation_compile_score * scaleB)}
+        ${mkBar('Renderização 3D (Blender/CAD)', lapA.workstation_render_score * scaleA, lapB.workstation_render_score * scaleB, maxRender)}
+        ${mkBar('Edição de Vídeo 4K (Premiere/Resolve)', lapA.workstation_editing_score * scaleA, lapB.workstation_editing_score * scaleB, maxEdit)}
+        ${mkBar('Compilação & Dev (Docker/Rust/C++)', lapA.workstation_compile_score * scaleA, lapB.workstation_compile_score * scaleB, maxCompile)}
       </div>
     `;
   }
@@ -2277,13 +2548,37 @@ function renderLaptopSimulator() {
   if (gamesEl) {
     gamesEl.innerHTML = simA.gameResults.map((gA, idx) => {
       const gB = simB.gameResults[idx] || gA;
+      const modeTag = gA.ptActive
+        ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs ui-mono">✨ Path Tracing</span>`
+        : (gA.rtActive ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-xs ui-mono">${simA.preset.shortLabel} + RT</span>` : `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-xs ui-mono">${simA.preset.shortLabel}</span>`);
+      const lockLineA = gA.isCpuLocked ? `<span class="sim-cpu-lock-pill">🔒 ${compareOn ? 'A ' : ''}Travado CPU (${gA.cpuCap})</span>` : '';
+      const lockLineB = compareOn && gB.isCpuLocked ? `<span class="sim-cpu-lock-pill">🔒 B Travado CPU (${gB.cpuCap})</span>` : '';
+      const fgNote = (gA.canUseFG || (compareOn && gB.canUseFG))
+        ? `<div class="text-xs text-emerald-300/90 font-mono mt-1">✨ ${compareOn
+            ? `MFG/FG: A ${gA.displayedFps} FPS (${gA.activeFgMult}× sobre ${gA.baseRenderFps} reais) vs B ${gB.displayedFps} FPS (${gB.activeFgMult}× sobre ${gB.baseRenderFps})`
+            : `MFG/FG ${gA.activeFgMult}×: ${gA.displayedFps} FPS na tela (Base real: ${gA.baseRenderFps}, ~${gA.latencyMs}ms)`}</div>`
+        : '';
+      const warnParts = [];
+      if (gA.dlssUnsupported || (compareOn && gB.dlssUnsupported)) warnParts.push('⚠️ DLSS indisponível');
+      if (gA.noHwRtPt || (compareOn && gB.noHwRtPt)) warnParts.push('⚠️ Sem HW RT (PT pesado)');
+      if (gA.vramShort || (compareOn && gB.vramShort)) warnParts.push('⚠️ VRAM apertada');
       return `
-        <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
-          <div class="font-bold text-slate-200 truncate">${_escLapHtml(gA.title)}</div>
-          <div class="flex items-center justify-between font-mono text-xs mt-1">
-            <span class="text-sky-300">A: <strong>${gA.fps} FPS</strong> (${gA.screenUtilizationPct}% ${gA.capHz}Hz)</span>
-            <span class="text-emerald-300">B: <strong>${gB.fps} FPS</strong> (${gB.screenUtilizationPct}% ${gB.capHz}Hz)</span>
+        <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs space-y-1">
+          <div class="flex flex-wrap items-center justify-between gap-1">
+            <span class="font-bold text-slate-200 truncate">${_escLapHtml(gA.displayTitle)}</span>
+            ${modeTag}
           </div>
+          <div class="flex flex-wrap items-center justify-between font-mono text-xs gap-2">
+            ${compareOn
+              ? `<span class="text-sky-300">A: <strong>${gA.baseRenderFps} real</strong>${gA.canUseFG ? ` → ${gA.displayedFps}` : ''} (${gA.screenUtilizationPct}% ${gA.capHz}Hz)</span>
+                 <span class="text-emerald-300">B: <strong>${gB.baseRenderFps} real</strong>${gB.canUseFG ? ` → ${gB.displayedFps}` : ''} (${gB.screenUtilizationPct}% ${gB.capHz}Hz)</span>`
+              : `<span class="text-sky-300"><strong>${gA.baseRenderFps} FPS real</strong> <span class="text-slate-400">(GPU: ${gA.basePureFps} / Teto CPU: ${gA.cpuCap})</span></span>
+                 <span class="text-slate-400">${gA.screenUtilizationPct}% de ${gA.capHz}Hz</span>`}
+          </div>
+          ${fgNote}
+          ${(lockLineA || lockLineB || warnParts.length)
+            ? `<div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-800/70 font-mono text-xs">${lockLineA}${lockLineB}${warnParts.length ? `<span class="text-amber-300">${warnParts.join(' • ')}</span>` : ''}</div>`
+            : ''}
         </div>
       `;
     }).join('');
@@ -2295,8 +2590,11 @@ function renderLaptopSimulator() {
       <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs">
         <div class="flex justify-between"><strong class="text-slate-200">${name}</strong><span class="text-xs font-mono text-purple-300">Req: ~${memReq}GB</span></div>
         <div class="flex justify-between font-mono text-xs mt-1">
-          <span class="${lapA._effGpuMem >= memReq ? 'text-sky-300' : 'text-amber-400'}">A: ${vA > 0 ? vA + ' tok/s' : 'Offload CPU'}</span>
-          <span class="${lapB._effGpuMem >= memReq ? 'text-emerald-300' : 'text-amber-400'}">B: ${vB > 0 ? vB + ' tok/s' : 'Offload CPU'}</span>
+          ${compareOn
+            ? `<span class="${lapA._effGpuMem >= memReq ? 'text-sky-300' : 'text-amber-400'}">A: ${vA > 0 ? vA + ' tok/s' : 'Offload CPU'}</span>
+               <span class="${lapB._effGpuMem >= memReq ? 'text-emerald-300' : 'text-amber-400'}">B: ${vB > 0 ? vB + ' tok/s' : 'Offload CPU'}</span>`
+            : `<span class="${lapA._effGpuMem >= memReq ? 'text-sky-300' : 'text-amber-400'}">${vA > 0 ? vA + ' tok/s' : 'Offload CPU'}</span>
+               <span class="text-slate-400">${lapA._effGpuMem >= memReq ? 'Na VRAM/Unif.' : 'Excede VRAM'}</span>`}
         </div>
       </div>
     `;
@@ -2312,15 +2610,21 @@ function renderLaptopSimulator() {
     softEl.innerHTML = `
       <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs flex justify-between font-mono">
         <span class="text-slate-300">AI Training / Fine-Tune Index</span>
-        <span><strong class="text-sky-300">${Math.round(simA.aiEff)}</strong> vs <strong class="text-emerald-300">${Math.round(simB.aiEff)}</strong></span>
+        ${compareOn
+          ? `<span><strong class="text-sky-300">${Math.round(simA.aiEff)}</strong> vs <strong class="text-emerald-300">${Math.round(simB.aiEff)}</strong></span>`
+          : `<span><strong class="text-sky-300">${Math.round(simA.aiEff)} pts</strong></span>`}
       </div>
       <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs flex justify-between font-mono">
         <span class="text-slate-300">Engenharia / CAD / FEA</span>
-        <span><strong class="text-sky-300">${Math.round(simA.softEff)}</strong> vs <strong class="text-emerald-300">${Math.round(simB.softEff)}</strong></span>
+        ${compareOn
+          ? `<span><strong class="text-sky-300">${Math.round(simA.softEff)}</strong> vs <strong class="text-emerald-300">${Math.round(simB.softEff)}</strong></span>`
+          : `<span><strong class="text-sky-300">${Math.round(simA.softEff)} pts</strong></span>`}
       </div>
       <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs flex justify-between font-mono">
         <span class="text-slate-300">Autonomia Carga Pesada</span>
-        <span><strong class="text-sky-300">${lapA.battery_hours_heavy}h</strong> vs <strong class="text-emerald-300">${lapB.battery_hours_heavy}h</strong></span>
+        ${compareOn
+          ? `<span><strong class="text-sky-300">${lapA.battery_hours_heavy}h</strong> vs <strong class="text-emerald-300">${lapB.battery_hours_heavy}h</strong></span>`
+          : `<span><strong class="text-sky-300">${lapA.battery_hours_heavy}h</strong></span>`}
       </div>
     `;
   }
