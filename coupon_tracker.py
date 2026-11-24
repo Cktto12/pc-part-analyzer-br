@@ -17,6 +17,7 @@ import html
 import threading
 import urllib.request
 import urllib.error
+import urllib.parse
 import concurrent.futures
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -86,8 +87,30 @@ OOS_PATTERNS_MX = [
 ]
 
 
+def unwrap_affiliate_url(url_str):
+    """Decodes HTML entities and unwraps affiliate redirectors (e.g. awin1 cread.php?ued=...)."""
+    u = html.unescape((url_str or "").strip())
+    for _ in range(3):
+        low = u.lower()
+        if "awin1.com" in low or "cread.php" in low:
+            try:
+                parsed = urllib.parse.urlparse(u)
+                qs = urllib.parse.parse_qs(parsed.query)
+                ued = qs.get("ued") or qs.get("p")
+                if ued and ued[0]:
+                    candidate = html.unescape(urllib.parse.unquote(ued[0]).strip())
+                    if candidate.startswith("http"):
+                        u = candidate
+                        continue
+            except Exception:
+                pass
+        break
+    return u
+
+
 def normalize_br_store_key(url_str="", store_name=""):
-    u = (url_str or "").lower()
+    unwrapped = unwrap_affiliate_url(url_str)
+    u = (unwrapped or url_str or "").lower()
     s = (store_name or "").lower()
     if "kabum" in u or "kabum" in s:
         return "kabum", "KaBuM!"
@@ -99,7 +122,7 @@ def normalize_br_store_key(url_str="", store_name=""):
         return "shopee", "Shopee"
     if "mercadolivre" in u or "meli.la" in u or "mercado livre" in s or "mercado-livre" in s:
         return "mercado-livre", "Mercado Livre"
-    if "amazon.com.br" in u or "amzn.to" in u or "amazon" in s:
+    if "amazon.com.br" in u or "amzn.to" in u or "a.co/" in u or "link.amazon" in u or "amazon" in s:
         return "amazon", "Amazon BR"
     if "magalu" in u or "magazine" in u or "magalu" in s or "magazine-luiza" in s:
         return "magazine-luiza", "Magalu"
@@ -113,6 +136,12 @@ def normalize_br_store_key(url_str="", store_name=""):
         return "fgtec", "FGTEC"
     if "mainfostore" in u or "ma-infostore" in s:
         return "ma-infostore", "MA Infostore"
+    if "waz.com.br" in u or "waz" == s.strip():
+        return "waz", "WAZ"
+    if "microgem" in u or "microgem" in s:
+        return "microgem", "Microgem"
+    if "ciapc" in u or "ciapc" in s:
+        return "ciapc", "CiaPC"
     return None, (store_name or "Loja")
 
 
@@ -285,7 +314,8 @@ def extract_store_price_and_availability(body, final_url=""):
         if m_nd:
             s_nd = m_nd.group(1)
             avail_m = re.search(r'"available"\s*:\s*(true|false)', s_nd)
-            if avail_m and avail_m.group(1) == "false":
+            stock_m = re.search(r'"hasStock"\s*:\s*(true|false)', s_nd)
+            if (avail_m and avail_m.group(1) == "false") or (stock_m and stock_m.group(1) == "false"):
                 return None, False, page_coupons
             pwd_m = re.findall(r'"priceWithDiscount"\s*:\s*([0-9]+(?:\.[0-9]+)?)', s_nd)
             valid_pwd = [float(x) for x in pwd_m if float(x) > 50]
@@ -326,8 +356,8 @@ def extract_store_price_and_availability(body, final_url=""):
                 return p, True, page_coupons
 
     # 4. Amazon BR (priceToPay / apexPriceToPay cash price & stock check)
-    if "amazon.com.br" in u_low or "amzn.to" in u_low:
-        if re.search(r'Não temos previsão de quando este produto estará novamente em estoque|Atualmente indisponível|Disponibilidade:\s*Não disponível', body, re.I):
+    if "amazon.com.br" in u_low or "amzn.to" in u_low or "a.co/" in u_low:
+        if re.search(r'Não temos previsão de quando este produto estará novamente em estoque|Atualmente indisponível|Disponibilidade:\s*Não disponível|Este item não está disponível|id=[\'"]outOfStock[\'"]', body, re.I):
             return None, False, page_coupons
         az_m = re.search(r'class=[\'"][^\'"]*(?:priceToPay|apexPriceToPay)[^\'"]*[\'"][\s\S]{1,300}?class=[\'"]a-offscreen[\'"][^>]*>\s*R?\$?\s*([0-9\.,]+)', body, re.I)
         if az_m:
@@ -365,6 +395,38 @@ def extract_store_price_and_availability(body, final_url=""):
             if p and p > 50:
                 return p, True, page_coupons
 
+    # Parse JSON-LD Schema.org availability BEFORE meta tags so OOS overrides stale price meta tags
+    json_ld_prices = []
+    json_ld_blocks = re.findall(r'<script[^>]+type=[\'"]application/ld\+json[\'"][^>]*>([\s\S]*?)</script>', body, re.I)
+    def _iter_jsonld_items(obj):
+        if isinstance(obj, dict):
+            yield obj
+            if isinstance(obj.get("@graph"), list):
+                for sub in obj["@graph"]:
+                    yield from _iter_jsonld_items(sub)
+        elif isinstance(obj, list):
+            for sub in obj:
+                yield from _iter_jsonld_items(sub)
+
+    for block in json_ld_blocks:
+        try:
+            parsed_ld = json.loads(block)
+            for item in _iter_jsonld_items(parsed_ld):
+                offers = item.get("offers")
+                offer_list = [offers] if isinstance(offers, dict) else (offers if isinstance(offers, list) else [])
+                for off in offer_list:
+                    if not isinstance(off, dict):
+                        continue
+                    avail = str(off.get("availability", "")).lower()
+                    if any(tok in avail for tok in ("outofstock", "soldout", "discontinued")):
+                        return None, False, page_coupons
+                    if "price" in off:
+                        p = parse_price_str(str(off["price"]))
+                        if p and p > 50:
+                            json_ld_prices.append(p)
+        except Exception:
+            pass
+
     # 6. Meta tags (Amazon, Magalu, Pichau, Terabyte, Cyberpuerta)
     meta_p = re.findall(r'<meta[^>]+property=[\'"]product:price:amount[\'"][^>]+content=[\'"]([\d\.,]+)[\'"]', body, re.I)
     meta_p += re.findall(r'<meta[^>]+content=[\'"]([\d\.,]+)[\'"][^>]+property=[\'"]product:price:amount[\'"]', body, re.I)
@@ -375,30 +437,9 @@ def extract_store_price_and_availability(body, final_url=""):
         if p and p > 50:
             return p, True, page_coupons
 
-    # 7. JSON-LD schema (offers.price)
-    json_ld = re.findall(r'<script[^>]+type=[\'"]application/ld\+json[\'"][^>]*>([\s\S]*?)</script>', body, re.I)
-    for block in json_ld:
-        try:
-            data = json.loads(block)
-            offers = data.get('offers')
-            if isinstance(offers, dict):
-                avail = str(offers.get('availability', '')).lower()
-                if 'outofstock' in avail or 'discontinued' in avail:
-                    return None, False, page_coupons
-                if 'price' in offers:
-                    p = parse_price_str(str(offers['price']))
-                    if p and p > 50:
-                        return p, True, page_coupons
-            elif isinstance(offers, list) and offers:
-                avail = str(offers[0].get('availability', '')).lower()
-                if 'outofstock' in avail or 'discontinued' in avail:
-                    return None, False, page_coupons
-                if 'price' in offers[0]:
-                    p = parse_price_str(str(offers[0]['price']))
-                    if p and p > 50:
-                        return p, True, page_coupons
-        except Exception:
-            pass
+    # 7. JSON-LD schema fallback prices
+    if json_ld_prices:
+        return json_ld_prices[0], True, page_coupons
 
     # 8. Promodescuentos thread price
     if "promodescuentos.com" in u_low:
@@ -583,6 +624,108 @@ def _infer_slug_from_cache(post_id=None, buy_url=None, reg_id="br"):
     return None, "gpu", False, 1.0, ""
 
 
+def _is_direct_store_product_url(url_str):
+    low = (url_str or "").lower()
+    if any(s in low for s in ("kabum.com.br/produto", "terabyteshop.com.br/produto", "amazon.com.br/dp", "amazon.com.br/gp/product", "mercadolivre.com.br/p/", "mercadolivre.com.br/mlb")):
+        return True
+    if "pichau.com.br/" in low:
+        try:
+            return len(urllib.parse.urlparse(low).path.strip("/")) > 3
+        except Exception:
+            return False
+    return False
+
+
+def _extract_aggregator_outgoing_url(body_html, base_url):
+    unescaped = html.unescape(body_html or "")
+    candidates = re.findall(
+        r'(https?://(?:www\.)?(?:awin1\.com/cread\.php\?[^"\'\s<>\\]+|meli\.la/[^"\'\s<>\\]+|mercadolivre\.com\.br/[^"\'\s<>\\]+|kabum\.com\.br/produto/[^"\'\s<>\\]+|pichau\.com\.br/[^"\'\s<>\\]+|terabyteshop\.com\.br/produto/[^"\'\s<>\\]+|amzn\.to/[^"\'\s<>\\]+|amazon\.com\.br/[^"\'\s<>\\]+|s\.shopee\.com\.br/[^"\'\s<>\\]+|magazinevoce\.com\.br/[^"\'\s<>\\]+|divulgador\.magalu\.com/[^"\'\s<>\\]+))',
+        unescaped,
+        re.I,
+    )
+    skip_tokens = ("t.me/", "adrena.click/ofertas", "nerdofertas.com/t", "linktr.ee", "/politica", "/privacidade", "whatsapp.com")
+    scored = []
+    for raw_u in candidates:
+        u = unwrap_affiliate_url(raw_u.rstrip("\\\"',).;"))
+        u_low = u.lower()
+        if u_low == (base_url or "").lower() or any(t in u_low for t in skip_tokens):
+            continue
+        score = 0
+        if "/produto/" in u_low or "/dp/" in u_low or "/mlb" in u_low:
+            score += 50
+        if any(s in u_low for s in ("kabum.com.br", "terabyteshop.com.br", "pichau.com.br", "amazon.com.br", "mercadolivre.com.br")):
+            score += 30
+        if "awin1.com/cread.php" in raw_u.lower() or "meli.la" in u_low or "amzn.to" in u_low or "s.shopee" in u_low:
+            score += 10
+        scored.append((score, u))
+    if not scored:
+        return None
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return scored[0][1]
+
+
+def _fetch_resolved_product_page(start_url, timeout=5):
+    """
+    Follows HTTP redirects, affiliate wrappers (awin1 ued=), meta/JS redirects,
+    and aggregator pages (benchpromos, seuhardware, aoferta, etc.) up to 4 hops.
+    Returns (final_url, status_code, body, http_error_code, redirected_lost_product).
+    """
+    cur = unwrap_affiliate_url(start_url)
+    had_product_path = bool(re.search(r"/(?:produto|dp)/\w+", cur, re.I))
+    opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler)
+    visited = set()
+    final_url = cur
+    code = None
+    body = ""
+
+    for _ in range(4):
+        if not cur or cur in visited:
+            break
+        visited.add(cur)
+        had_product_path = had_product_path or bool(re.search(r"/(?:produto|dp)/\w+", cur, re.I))
+        try:
+            req = urllib.request.Request(cur, headers=CHROME_HEADERS)
+            with opener.open(req, timeout=timeout) as resp:
+                resp_url = resp.geturl()
+                final_url = unwrap_affiliate_url(resp_url)
+                code = resp.getcode()
+                body = resp.read(512000).decode("utf-8", errors="ignore")
+        except urllib.error.HTTPError as he:
+            err_url = unwrap_affiliate_url(getattr(he, "url", None) or cur)
+            had_product_path = had_product_path or bool(re.search(r"/(?:produto|dp)/\w+", err_url, re.I))
+            lost_prod = had_product_path and ("kabum.com.br" in err_url.lower() or "terabyteshop.com.br" in err_url.lower()) and not re.search(r"/produto/\d+", err_url)
+            return err_url, he.code, "", he.code, lost_prod
+        except Exception:
+            return final_url, code, body, None, False
+
+        had_product_path = had_product_path or bool(re.search(r"/(?:produto|dp)/\w+", resp_url, re.I) or re.search(r"/(?:produto|dp)/\w+", final_url, re.I))
+
+        if final_url != resp_url and final_url not in visited:
+            cur = final_url
+            continue
+
+        if _is_direct_store_product_url(final_url):
+            break
+
+        target_url = None
+        meta_refresh = re.search(r'<meta[^>]*http-equiv=[\'"]refresh[\'"][^>]*content=[\'"][^;]*;\s*url=([^\'"]+)', body, re.I)
+        js_redirect = re.search(r'(?:window\.location(?:\.replace|\.href)?|location\.href)\s*=\s*[\'"](https?://[^\'"]+)[\'"]', body, re.I)
+        if meta_refresh:
+            target_url = unwrap_affiliate_url(meta_refresh.group(1).strip())
+        elif js_redirect:
+            target_url = unwrap_affiliate_url(js_redirect.group(1).strip())
+        elif any(k in final_url.lower() for k in ("benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net", "nerdofertas", "linkmc.click", "tidd.ly")):
+            target_url = _extract_aggregator_outgoing_url(body, final_url)
+
+        if target_url and target_url.startswith("http") and target_url not in visited:
+            cur = target_url
+            continue
+        break
+
+    lost_prod = had_product_path and ("kabum.com.br" in final_url.lower() or "terabyteshop.com.br" in final_url.lower()) and not re.search(r"/produto/\d+", final_url)
+    return final_url, code, body, None, lost_prod
+
+
 def test_deal_url_and_coupon(
     buy_url,
     coupon_code=None,
@@ -632,6 +775,7 @@ def test_deal_url_and_coupon(
         "tested_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
 
+    buy_url = unwrap_affiliate_url(buy_url)
     if not buy_url or not buy_url.startswith("http"):
         res["reason"] = "Sem URL de compra válida"
         return res
@@ -642,97 +786,45 @@ def test_deal_url_and_coupon(
     http_error_code = None
 
     # --- LAYER 1: Direct Store HTTP Check ---
+    final_url, code, body, http_error_code, redirected_lost_product = _fetch_resolved_product_page(buy_url, timeout=timeout)
+    res["final_url"] = final_url
     store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
     res["store_name"] = store_label
 
-    try:
-        req = urllib.request.Request(buy_url, headers=CHROME_HEADERS)
-        opener = urllib.request.build_opener(urllib.request.HTTPRedirectHandler)
-        with opener.open(req, timeout=timeout) as resp:
-            final_url = resp.geturl()
-            res["final_url"] = final_url
-            code = resp.getcode()
-            body = resp.read(512000).decode("utf-8", errors="ignore")
-            low = body.lower()
+    if http_error_code in (404, 410) or code in (404, 410):
+        err_code = http_error_code or code
+        res["valid"] = False
+        res["status"] = "out_of_stock"
+        res["reason"] = f"Produto removido / página não encontrada na loja (HTTP {err_code})"
+        record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
+        return res
 
-            # Resolve meta refresh, JavaScript redirects, or intermediate aggregator links
-            # Only check when not already on a known direct retail product page
-            is_direct_store_page = any(
-                s in final_url.lower()
-                for s in ("kabum.com.br/produto", "pichau.com.br/", "terabyteshop.com.br/produto", "amazon.com.br/dp", "mercadolivre.com.br/p/")
-            )
-            target_url = None
-            if not is_direct_store_page:
-                meta_refresh = re.search(r'<meta[^>]*http-equiv=[\'"]refresh[\'"][^>]*content=[\'"][^;]*;\s*url=([^\'"]+)', body, re.I)
-                js_redirect = re.search(r'(?:window\.location(?:\.replace|\.href)?|location\.href)\s*=\s*[\'"](https?://[^\'"]+)[\'"]', body, re.I)
-                if meta_refresh:
-                    target_url = meta_refresh.group(1).strip()
-                elif js_redirect:
-                    target_url = js_redirect.group(1).strip()
-                elif any(k in final_url for k in ["benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net"]):
-                    outgoing = re.findall(r'href=[\'"](https?://(?:meli\.la|mercadolivre|kabum|pichau|terabyteshop|s\.shopee|amazon)[^\'"]*)[\'"]', body, re.I)
-                    if outgoing:
-                        target_url = outgoing[0].strip()
+    if redirected_lost_product:
+        res["valid"] = False
+        res["status"] = "out_of_stock"
+        res["reason"] = f"Anúncio removido/redirecionado na {store_label} (sem página ativa do produto)"
+        record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
+        return res
 
-            if target_url and target_url != final_url and target_url.startswith("http"):
-                try:
-                    req_out = urllib.request.Request(target_url, headers=CHROME_HEADERS)
-                    with opener.open(req_out, timeout=timeout) as resp_out:
-                        final_url = resp_out.geturl()
-                        res["final_url"] = final_url
-                        body = resp_out.read(512000).decode("utf-8", errors="ignore")
-                        low = body.lower()
-                except urllib.error.HTTPError as he_out:
-                    final_url = getattr(he_out, "url", target_url) or target_url
-                    res["final_url"] = final_url
-                    http_error_code = he_out.code
-                except Exception:
-                    final_url = target_url
-                    res["final_url"] = final_url
-
-            store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
-            res["store_name"] = store_label
-
-            if code in (404, 410):
+    if body:
+        low = body.lower()
+        # Check region-appropriate Out-Of-Stock patterns
+        oos_list = OOS_PATTERNS_MX if reg == "mx" else OOS_PATTERNS_BR
+        for pat, reason_text in oos_list:
+            if re.search(pat, low):
                 res["valid"] = False
                 res["status"] = "out_of_stock"
-                res["reason"] = f"Página não encontrada na loja (HTTP {code})"
+                res["reason"] = reason_text
                 record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
                 return res
 
-            # Check region-appropriate Out-Of-Stock patterns
-            oos_list = OOS_PATTERNS_MX if reg == "mx" else OOS_PATTERNS_BR
-            for pat, reason_text in oos_list:
-                if re.search(pat, low):
-                    res["valid"] = False
-                    res["status"] = "out_of_stock"
-                    res["reason"] = reason_text
-                    record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
-                    return res
-
-            direct_live_price, direct_is_available, _ = extract_store_price_and_availability(body, final_url)
-            if direct_is_available is False:
-                res["valid"] = False
-                res["status"] = "out_of_stock"
-                res["reason"] = "Produto esgotado / indisponível na loja"
-                record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
-                return res
-
-    except urllib.error.HTTPError as he:
-        http_error_code = he.code
-        if getattr(he, "url", None):
-            final_url = he.url
-            res["final_url"] = final_url
-            store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
-            res["store_name"] = store_label
-        if he.code in (404, 410):
+        direct_live_price, direct_is_available, _ = extract_store_price_and_availability(body, final_url)
+        if direct_is_available is False:
             res["valid"] = False
             res["status"] = "out_of_stock"
-            res["reason"] = f"Produto removido / página não encontrada na loja (HTTP {he.code})"
+            res["reason"] = "Produto esgotado / indisponível na loja"
             record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
             return res
-    except Exception:
-        pass
 
     # --- LAYER 2: Cross-Verify Against Hardware Barato Live In-Stock Index (Brazil) ---
     store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
@@ -765,8 +857,8 @@ def test_deal_url_and_coupon(
                     store_min_base = matching_pid_offers[0]["price"]
                     if matching_pid_offers[0].get("coupon_price"):
                         store_min_coup = matching_pid_offers[0]["coupon_price"]
-                elif store_key == "terabyte" and direct_live_price is None:
-                    # Specific Terabyte product ID is NOT in Hardware Barato's live in-stock list!
+                elif store_key in ("terabyte", "kabum") and direct_live_price is None:
+                    # Specific Terabyte or KaBuM product ID is NOT in Hardware Barato's live in-stock list!
                     res["valid"] = False
                     res["status"] = "out_of_stock"
                     res["reason"] = f"Produto esgotado na {store_label} (anúncio #{pid} sem estoque ativo)"

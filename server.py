@@ -14,6 +14,7 @@ import socket
 import argparse
 import threading
 import webbrowser
+from datetime import datetime, timezone
 import subprocess
 import smtplib
 from email.mime.text import MIMEText
@@ -495,7 +496,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     history = load_notified_history(reg_id)
     notified_count = 0
 
-    br_channels = {"ofertasadrenaline", "peperaiohardware", "iskandarsouza", "benchpromos", "kabumofertas", "nerdofertas", "ofertastechbr"}
+    br_channels = {"ofertasadrenaline", "peperaiohardware", "iskandarsouza", "benchpromos", "kabumofertas", "nerdofertas"}
 
     min_cb = int(cfg.get("notifyMinCB", 90 if reg_id == "mx" else 92))
     hb_brl = float(cfg.get("hbMinBrl", 600 if reg_id == "mx" else 150))
@@ -681,7 +682,33 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     save_notified_history(history, reg_id)
     return {"notified": notified_count, "total_matched": len(matched), "region_id": reg_id}
 
-def run_sitewise_coupon_validator(reg_id=None, max_items=50, target_deals=None):
+def _refresh_deals_age_and_prune(deals, max_age_hours=48.0):
+    """Recomputes age_hours from ISO timestamps and prunes deals without timestamp or older than max_age_hours."""
+    if not isinstance(deals, list):
+        return []
+    now_dt = datetime.now(timezone.utc)
+    fresh = []
+    for d in deals:
+        if not isinstance(d, dict):
+            continue
+        ts = d.get("timestamp")
+        age_hours = None
+        if ts:
+            try:
+                dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+                age_hours = round(max(0.1, (now_dt - dt).total_seconds() / 3600.0), 1)
+            except Exception:
+                age_hours = None
+        if age_hours is None:
+            continue
+        item = dict(d)
+        item["age_hours"] = age_hours
+        if age_hours <= max_age_hours:
+            fresh.append(item)
+    return fresh
+
+
+def run_sitewise_coupon_validator(reg_id=None, max_items=60, target_deals=None):
     """Runs a continuous sitewise validation of links and coupons in regional promos_cache and updates the regional DB."""
     try:
         reg = (reg_id or get_active_region_id()).lower()
@@ -690,10 +717,11 @@ def run_sitewise_coupon_validator(reg_id=None, max_items=50, target_deals=None):
         if os.path.exists(cache_path):
             with open(cache_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-        deals = data.get("matched_deals", [])
-        to_validate = target_deals if (isinstance(target_deals, list) and target_deals) else deals
+        deals = _refresh_deals_age_and_prune(data.get("matched_deals", []), max_age_hours=48.0)
+        to_validate = _refresh_deals_age_and_prune(target_deals, max_age_hours=48.0) if (isinstance(target_deals, list) and target_deals) else deals
         if not to_validate:
-            return {"ok": True, "tested": 0, "results": {}, "matched_deals": deals, "best_by_slug": data.get("best_by_slug", {}), "coupon_status": data.get("coupon_status", {"coupons": {}, "deals": {}})}
+            import coupon_tracker
+            return {"ok": True, "tested": 0, "results": {}, "matched_deals": deals, "best_by_slug": data.get("best_by_slug", {}), "coupon_status": coupon_tracker.load_coupon_status(reg)}
 
         import coupon_tracker
         results = coupon_tracker.test_deals_batch(to_validate, max_items=max_items, reg_id=reg)
@@ -999,15 +1027,26 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 market_cfg = config.get_market_config()
                 reg_id = qs.get("region", qs.get("market", [market_cfg.get("region_id", "br")]))[0].lower()
                 
-                reg_cache_file = os.path.join(BASE_DIR, "data", f"promos_cache_{reg_id}.json")
-                if not os.path.exists(reg_cache_file) and reg_id == "br":
-                    reg_cache_file = os.path.join(BASE_DIR, "data", "promos_cache.json")
-                
-                if not force and os.path.exists(reg_cache_file):
+                reg_cache_file = get_promos_cache_path(reg_id)
+                cache_is_fresh = False
+                if not force and not extra_q and not extra_ch and os.path.exists(reg_cache_file):
+                    try:
+                        cache_age_sec = time.time() - os.path.getmtime(reg_cache_file)
+                        cache_is_fresh = cache_age_sec <= 900.0
+                    except Exception:
+                        cache_is_fresh = False
+
+                if cache_is_fresh:
                     try:
                         with open(reg_cache_file, "r", encoding="utf-8") as f:
                             data = json.load(f)
-                            return self.send_json(data)
+                        fresh_deals = _refresh_deals_age_and_prune(data.get("matched_deals", []), max_age_hours=max_age)
+                        import coupon_tracker
+                        rewired, best_slug = coupon_tracker.rewire_deals_and_best_by_slug(fresh_deals, data.get("recent_feed", []), reg_id=reg_id)
+                        data["matched_deals"] = rewired
+                        data["best_by_slug"] = best_slug
+                        data["coupon_status"] = coupon_tracker.load_coupon_status(reg_id)
+                        return self.send_json(data)
                     except Exception:
                         pass
                 
@@ -1037,10 +1076,11 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 post_id = qs.get("post_id", [""])[0] or None
                 slug = qs.get("slug", [""])[0] or None
                 kind = qs.get("kind", [""])[0] or None
+                age_hours = float(qs["age_hours"][0]) if qs.get("age_hours") and qs["age_hours"][0] else None
                 import coupon_tracker
                 res = coupon_tracker.test_deal_url_and_coupon(
                     url, coupon_code=code, expected_price=price, post_id=post_id,
-                    matched_slug=slug, matched_kind=kind
+                    matched_slug=slug, matched_kind=kind, age_hours=age_hours
                 )
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:
@@ -1049,7 +1089,7 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
             try:
                 qs = parse_qs(parsed.query)
                 reg = (qs.get("region", [None])[0] or get_active_region_id()).lower()
-                max_items = int(qs.get("max_items", ["20"])[0])
+                max_items = int(qs.get("max_items", ["60"])[0])
                 out = run_sitewise_coupon_validator(reg_id=reg, max_items=max_items)
                 return self.send_json(out, status=200 if out.get("ok") else 500)
             except Exception as e:

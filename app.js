@@ -35,6 +35,12 @@ let STATE = {
     localAI: 3,
     aiTraining: 3
   },
+  techWeights: {
+    dlss5: 35,       // DLSS 4/5 & Multi-Frame Gen (RTX 50 exclusivity weighted by GPU muscle)
+    fsr: 25,         // AMD FSR 3.1 / FSR 4 & Frame Gen
+    rayTracing: 30,  // Ray Tracing (BVH + RT Cores + VRAM)
+    pathTracing: 15  // Path Tracing (Full RT + Ray Reconstruction + 12GB+ VRAM)
+  },
   vramHeft: 1.6, // 1.0 = Light (8B), 1.6 = Medium/Heavy (14B + AI Training + Eth), 2.3 = Extreme (14B-32B + Heavy CUDA)
   duelBaseSlug: 'rtx-5060',
   duelCandSlug: 'rtx-5070',
@@ -273,7 +279,8 @@ function getSubScoreExtremes() {
   const maxWS = Math.max(1000, ...DB.gpus.map(g => (typeof getEffectiveWorkstationScore === 'function' ? getEffectiveWorkstationScore(g) : 1000)));
   const maxAI = Math.max(...DB.gpus.map(g => getEffectiveAIScore(g)));
   const maxSoft = Math.max(...DB.gpus.map(g => getEffectiveEngineeringScore(g)));
-  const maxPrice = Math.max(...DB.gpus.map(g => (g.price_brl || 0)));
+  const validPrices = DB.gpus.map(g => (g.price_brl || 0)).filter(p => p > 0 && p <= 35000);
+  const maxPrice = validPrices.length ? Math.max(...validPrices) : Math.max(...DB.gpus.map(g => (g.price_brl || 0)));
   const max14bToks = Math.max(...DB.gpus.map(g => (g.llm_14b_tok_s || 5)));
 
   return {
@@ -719,8 +726,13 @@ window.getForcedPsuUpgradeCost = getForcedPsuUpgradeCost;
 function enrichGPUsWithContextualMetrics() {
   if (!DB.gpus || !DB.gpus.length) return;
 
-  // Step 1: Compute Composite Score and Effective Price
+  // Step 1: Compute Composite Score, Tech/CPU Eval, and Effective Price
   DB.gpus.forEach(g => {
+    if (typeof evaluateGpuTechAndCpuProfile === 'function') {
+      g._techEval = evaluateGpuTechAndCpuProfile(g);
+    } else {
+      g._techEval = null;
+    }
     const comp = getContextualCompositeScore(g);
     g._compositeScore = Math.round(comp);
     g._effectiveAI = getEffectiveAIScore(g);
@@ -1560,9 +1572,10 @@ function updateTopContextSummary() {
   if (!el) return;
   const ws = STATE.wWorkstation !== undefined ? STATE.wWorkstation : 35;
   const wi = STATE.workloadIntensity || { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
+  const tw = STATE.techWeights || { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
   const intSuffix = STATE.context === 'laptop'
     ? ` • Carga: J${wi.gaming || 3}/W${wi.workstation || 3}/IA${wi.localAI || 3}/Tr${wi.aiTraining || 3}`
-    : '';
+    : ` • DLSS5 ${tw.dlss5 || 0}% · FSR ${tw.fsr || 0}% · RT ${tw.rayTracing || 0}% · PT ${tw.pathTracing || 0}%`;
   el.textContent = `${STATE.monitorRes || '1440p'} @ ${STATE.monitorMaxFps || 144}Hz • Jogos ${STATE.wGaming}% • WS ${ws}% • IA ${STATE.wAI}%${intSuffix}`;
 }
 
@@ -1747,7 +1760,7 @@ function renderHomeTab() {
   // 3. KPI: Ofertas ativas hoje + Top 5 melhores ofertas do dia
   const promoData = (typeof PROMO_STATE !== 'undefined' && PROMO_STATE.lastData) ? PROMO_STATE.lastData : null;
   const activeDeals = (promoData && Array.isArray(promoData.matched_deals))
-    ? promoData.matched_deals.filter(d => d && d.price_brl > 0 && !d.is_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired')
+    ? promoData.matched_deals.filter(d => d && d.price_brl > 0 && !d.is_expired && !d.is_coupon_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired' && (d.age_hours || 0) <= 24)
     : [];
 
   const kpiDeals = document.getElementById('home-kpi-deals');
@@ -2147,6 +2160,133 @@ function setWorkloadIntensityPreset(g, ws, localAi, aiTrain) {
 }
 window.setWorkloadIntensityPreset = setWorkloadIntensityPreset;
 
+// Independent Graphics Technology Weights (0–100%, NOT mutually normalized)
+function _clampTechWeight(v, defVal = 0) {
+  const n = parseInt(v, 10);
+  if (isNaN(n)) return defVal;
+  return Math.max(0, Math.min(100, n));
+}
+
+function _describeTechLevel(key, pct) {
+  if (pct === 0) return 'Desativado — avaliado sem peso nesta tecnologia.';
+  if (key === 'dlss5') {
+    return pct >= 70
+      ? 'Peso alto p/ DLSS 5 + MFG (exclusivo RTX 50; RTX 5050 sofre por chip/8GB vs 5060 Ti 16GB/5070+).'
+      : 'Peso moderado p/ DLSS 4/5 (favorece Série 50 com folga de VRAM/compute; 5050 recebe ressalva).';
+  }
+  if (key === 'fsr') {
+    return pct >= 70
+      ? 'Peso alto p/ AMD FSR 3.1/4 + FG (impulsiona RDNA 4 RX 9070/XT e RX 7000).'
+      : 'Uso frequente de FSR (beneficia RDNA 4/3/2 e fallback multiplataforma).';
+  }
+  if (key === 'rayTracing') {
+    return pct >= 65
+      ? 'Ray Tracing pesado — exige núcleos RT fortes + ≥12GB VRAM em QHD/4K e mais CPU BVH.'
+      : 'Ray Tracing híbrido ativo — penaliza placas sem hardware RT ou com pouca VRAM.';
+  }
+  if (key === 'pathTracing') {
+    return pct >= 55
+      ? 'Path Tracing extremo — exige RT/Ray Reconstruction + ≥12GB–16GB (8GB e GPUs de entrada sofrem).'
+      : 'Path Tracing ocasional — demanda forte em Tensor/RT cores e VRAM ≥12GB.';
+  }
+  return '';
+}
+
+function updateTechPairedCpuStatusUI() {
+  const sel = document.getElementById('cfg-tech-paired-cpu');
+  const statusEl = document.getElementById('cfg-tech-paired-cpu-status');
+  const cpus = (window.DB && DB.cpus) || [];
+  const curCpu = (STATE.refPC && STATE.refPC.cpu) || {};
+  if (sel && cpus.length) {
+    const optionsHtml = `
+      <option value="" ${!curCpu.slug ? 'selected' : ''}>-- (Nenhum / Sem Limite de CPU) --</option>
+      ${cpus.map(c => `<option value="${c.slug}" ${curCpu.slug === c.slug ? 'selected' : ''}>${c.name} (${c.socket})</option>`).join('')}
+    `;
+    if (sel.dataset.renderedCount !== String(cpus.length)) {
+      sel.innerHTML = optionsHtml;
+      sel.dataset.renderedCount = String(cpus.length);
+    }
+    if (sel.value !== (curCpu.slug || '')) {
+      sel.value = curCpu.slug || '';
+    }
+  }
+  if (statusEl) {
+    if (!curCpu.slug && !curCpu.name) {
+      statusEl.textContent = 'Sem CPU pareado (avalia GPU pura)';
+      statusEl.className = 'ui-badge ui-mono';
+    } else {
+      const cpuObj = cpus.find(c => c.slug === curCpu.slug) || curCpu;
+      const idx = typeof getCpuGamingIndex === 'function' ? getCpuGamingIndex(cpuObj) : 70;
+      const isWeak = idx <= 52 || (typeof isLegacyArchitecture === 'function' && isLegacyArchitecture(cpuObj));
+      statusEl.textContent = `${cpuObj.name || curCpu.slug} · Índice Jogos ${idx}/100`;
+      statusEl.className = isWeak ? 'ui-badge ui-badge--warn ui-mono' : 'ui-badge ui-badge--brand ui-mono';
+    }
+  }
+}
+window.updateTechPairedCpuStatusUI = updateTechPairedCpuStatusUI;
+
+function syncTechWeightsUI() {
+  if (!STATE.techWeights) {
+    STATE.techWeights = { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
+  }
+  const defaults = { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
+  ['dlss5', 'fsr', 'rayTracing', 'pathTracing'].forEach(key => {
+    const val = _clampTechWeight(STATE.techWeights[key], defaults[key]);
+    STATE.techWeights[key] = val;
+    const sld = document.getElementById(`slider-tech-${key}`);
+    if (sld) sld.value = String(val);
+    const num = document.getElementById(`num-tech-${key}`);
+    if (num && document.activeElement !== num) num.value = String(val);
+    const desc = document.getElementById(`desc-tech-${key}`);
+    if (desc) desc.textContent = _describeTechLevel(key, val);
+  });
+  updateTechPairedCpuStatusUI();
+}
+window.syncTechWeightsUI = syncTechWeightsUI;
+
+function _commitTechWeightsUpdate() {
+  syncTechWeightsUI();
+  try {
+    localStorage.setItem('gca_tech_weights', JSON.stringify(STATE.techWeights));
+  } catch (_) {}
+  if (typeof saveUserPrefs === 'function') saveUserPrefs();
+  enrichGPUsWithContextualMetrics();
+  if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+  updateTopContextSummary();
+  renderActiveTab();
+}
+
+function onTechWeightInput(key, rawVal) {
+  if (!STATE.techWeights) {
+    STATE.techWeights = { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
+  }
+  if (!['dlss5', 'fsr', 'rayTracing', 'pathTracing'].includes(key)) return;
+  const clean = _clampTechWeight(rawVal, STATE.techWeights[key] ?? 0);
+  STATE.techWeights[key] = clean;
+  _commitTechWeightsUpdate();
+}
+window.onTechWeightInput = onTechWeightInput;
+
+function setTechWeightsPreset(dlss5, fsr, rayTracing, pathTracing) {
+  STATE.techWeights = {
+    dlss5: _clampTechWeight(dlss5, 0),
+    fsr: _clampTechWeight(fsr, 0),
+    rayTracing: _clampTechWeight(rayTracing, 0),
+    pathTracing: _clampTechWeight(pathTracing, 0)
+  };
+  _commitTechWeightsUpdate();
+}
+window.setTechWeightsPreset = setTechWeightsPreset;
+
+function onTechPairedCpuChange(slug) {
+  onCfgPartSelect('cpu', slug);
+  updateTechPairedCpuStatusUI();
+  enrichGPUsWithContextualMetrics();
+  updateTopContextSummary();
+  renderActiveTab();
+}
+window.onTechPairedCpuChange = onTechPairedCpuChange;
+
 // Workstation Sub-Profile Config Handler with Proportional Auto-Balancing to 100%
 function onWorkstationProfileInput(key, rawVal) {
   let v = parseInt(rawVal, 10);
@@ -2421,8 +2561,8 @@ function renderDuelAnalysis() {
   // ============================================================================
   // VERSUS-STYLE HEAD-TO-HEAD RATINGS & HEXAGONAL RADAR CHART
   // ============================================================================
-  const bRawGame = baseGpu.gaming_score || 1500;
-  const cRawGame = candGpu.gaming_score || 1500;
+  const bRawGame = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(baseGpu, true) : (baseGpu.gaming_score || 1500);
+  const cRawGame = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(candGpu, true) : (candGpu.gaming_score || 1500);
   const extremes = getCatalogExtremes();
   const isAbs = STATE.comparisonScaleMode === 'absolute';
   syncComparisonScaleControls();
@@ -2432,6 +2572,7 @@ function renderDuelAnalysis() {
   const cScoreGame = Math.min(100, Math.max(5, Math.round((cRawGame / extremes.maxGaming) * 100)));
 
   const getTechScore = (g) => {
+    const evalT = g._techEval || (typeof evaluateGpuTechAndCpuProfile === 'function' ? evaluateGpuTechAndCpuProfile(g) : null);
     const p = typeof getGpuTechProfile === 'function' ? getGpuTechProfile(g) : {};
     const arch = (g.arch || '').toLowerCase();
     const slug = (g.slug || '').toLowerCase();
@@ -2440,61 +2581,45 @@ function renderDuelAnalysis() {
     const isAmd = brand === 'AMD';
     const isIntel = brand === 'INTEL';
 
-    // 1. Blackwell (RTX 50 series): 4th Gen RT Cores, DLSS 4 Transformer, Multi-Frame Gen 4x, Ray Reconstruction, SER
-    if (p.isBlackwell || p.gen === 'rtx50' || arch.includes('blackwell') || slug.includes('50')) {
-      if (slug.includes('5090')) return 100;
-      if (slug.includes('5080')) return 98;
-      if (slug.includes('5070-ti') || slug.includes('5070ti')) return 97;
-      if (slug.includes('5070')) return 96;
-      if (slug.includes('5060-ti') || slug.includes('5060ti')) return 94;
-      return 93; // RTX 5060
+    let baseArchTech = 12;
+    // 1. Blackwell (RTX 50 series): 4th Gen RT Cores, DLSS 5 + MFG 4x, Ray Reconstruction, SER
+    if (p.isBlackwell || p.gen === 'rtx50' || arch.includes('blackwell') || /^rtx-50/.test(slug)) {
+      if (slug.includes('5090')) baseArchTech = 100;
+      else if (slug.includes('5080')) baseArchTech = 98;
+      else if (slug.includes('5070-ti') || slug.includes('5070ti')) baseArchTech = 97;
+      else if (slug.includes('5070')) baseArchTech = 95;
+      else if (slug.includes('5060-ti-16')) baseArchTech = 92;
+      else if (slug.includes('5060-ti') || slug.includes('5060ti')) baseArchTech = 86;
+      else if (slug.includes('5050')) baseArchTech = 72; // 5050 has DLSS 5 flag, but chip/8GB bottleneck hurts real execution
+      else baseArchTech = 84; // RTX 5060
+    } else if (p.isAda || p.gen === 'rtx40' || arch.includes('ada') || /^rtx-40/.test(slug)) {
+      if (slug.includes('4090')) baseArchTech = 94;
+      else if (slug.includes('4080')) baseArchTech = 91;
+      else if (slug.includes('4070')) baseArchTech = 87;
+      else if (slug.includes('4060-ti') || slug.includes('4060ti')) baseArchTech = 80;
+      else baseArchTech = 76;
+    } else if (isNvidia && (p.isAmpere || p.gen === 'rtx30' || arch.includes('ampere') || /^rtx-30/.test(slug))) {
+      if (slug.includes('3080') || slug.includes('3090')) baseArchTech = 78;
+      else if (slug.includes('3070')) baseArchTech = 71;
+      else baseArchTech = 62;
+    } else if (isNvidia && (/^rtx-20/.test(slug) || arch.includes('turing'))) {
+      baseArchTech = 54;
+    } else if (isAmd && (p.gen === 'rx9000' || p.gen === 'rdna4' || arch.includes('rdna 4') || /^rx-90/.test(slug))) {
+      if (slug.includes('9070')) baseArchTech = 88;
+      else if (slug.includes('9060')) baseArchTech = 79;
+      else baseArchTech = 64; // RX 9050 8GB
+    } else if (isAmd && (p.gen === 'rdna3' || arch.includes('rdna 3') || /^rx-7/.test(slug))) {
+      baseArchTech = slug.includes('7900') ? 74 : 62;
+    } else if (isAmd && (/^rx-6/.test(slug) || arch.includes('rdna 2'))) {
+      baseArchTech = (slug.includes('6500') || slug.includes('6400')) ? 24 : 42;
+    } else if (isIntel) {
+      baseArchTech = (arch.includes('battlemage') || slug.includes('b580') || slug.includes('b570')) ? 74 : 55;
     }
 
-    // 2. Ada Lovelace (RTX 40 series): 3rd Gen RT Cores, DLSS 3.5, Frame Gen 2x, Ray Reconstruction, SER
-    if (p.isAda || p.gen === 'rtx40' || arch.includes('ada') || slug.includes('40')) {
-      if (slug.includes('4090')) return 96;
-      if (slug.includes('4080')) return 93;
-      if (slug.includes('4070')) return 89;
-      if (slug.includes('4060-ti') || slug.includes('4060ti')) return 86;
-      return 84; // RTX 4060
+    if (evalT && typeof evalT.techComposite100 === 'number') {
+      return Math.min(100, Math.max(8, Math.round(baseArchTech * 0.45 + evalT.techComposite100 * 0.55)));
     }
-
-    // 3. Ampere (RTX 30 series): 2nd Gen RT Cores, DLSS 2/3.7 Super Resolution
-    if (isNvidia && (p.isAmpere || p.gen === 'rtx30' || arch.includes('ampere') || slug.includes('30'))) {
-      if (slug.includes('3080') || slug.includes('3090')) return 78;
-      if (slug.includes('3070')) return 73;
-      return 68; // RTX 3060 / 3050
-    }
-
-    // 4. Turing (RTX 20 series): 1st Gen RT Cores, DLSS 2
-    if (isNvidia && (slug.includes('rtx-20') || slug.includes('2080') || slug.includes('2070') || slug.includes('2060'))) {
-      return 56;
-    }
-
-    // 5. AMD RDNA 4: 3rd Gen AMD RT, FSR 4 AI upscaling
-    if (isAmd && (p.gen === 'rdna4' || arch.includes('rdna 4') || slug.includes('8800') || slug.includes('8600') || slug.includes('8700'))) {
-      return 82;
-    }
-
-    // 6. AMD RDNA 3: 2nd Gen AMD RT, FSR 3.1 Frame Gen
-    if (isAmd && (p.gen === 'rdna3' || arch.includes('rdna 3') || slug.includes('7900') || slug.includes('7800') || slug.includes('7700') || slug.includes('7600'))) {
-      if (slug.includes('7900')) return 72;
-      return 64; // RX 7600
-    }
-
-    // 7. AMD RDNA 2 (RX 6000 series): Basic RT
-    if (isAmd && (slug.includes('6900') || slug.includes('6800') || slug.includes('6700') || slug.includes('6600') || slug.includes('6500'))) {
-      return 42;
-    }
-
-    // 8. Intel Battlemage / Alchemist: XeSS AI upscaling, dedicated RT hardware
-    if (isIntel) {
-      if (arch.includes('battlemage') || slug.includes('b580') || slug.includes('b570')) return 76;
-      return 60; // Arc A770/A750
-    }
-
-    // 9. Legacy / No RT hardware (Polaris RX 580, GTX 1660/1060/Pascal)
-    return 12;
+    return baseArchTech;
   };
   const bScoreTech = getTechScore(baseGpu);
   const cScoreTech = getTechScore(candGpu);
@@ -2786,6 +2911,19 @@ function renderDuelAnalysis() {
         : `Não compensa: ${deltaSign}${fmtBRLShort(rel.actualDelta)} a mais por ${perfSign}${rel.perfGainPct.toFixed(0)}% de ganho está caro.`;
     }
 
+    const baseEval = baseGpu._techEval || (typeof evaluateGpuTechAndCpuProfile === 'function' ? evaluateGpuTechAndCpuProfile(baseGpu) : null);
+    const candEval = candGpu._techEval || (typeof evaluateGpuTechAndCpuProfile === 'function' ? evaluateGpuTechAndCpuProfile(candGpu) : null);
+    const duelTechNotes = [];
+    if (baseEval && baseEval.badgesHtml) {
+      duelTechNotes.push(`<div class="flex flex-wrap items-center gap-1.5"><span class="text-xs ui-mono text-slate-400">A (${baseGpu.name}):</span>${baseEval.badgesHtml}</div>`);
+    }
+    if (candEval && candEval.badgesHtml) {
+      duelTechNotes.push(`<div class="flex flex-wrap items-center gap-1.5"><span class="text-xs ui-mono text-slate-400">B (${candGpu.name}):</span>${candEval.badgesHtml}</div>`);
+    }
+    const duelTechCalloutHtml = duelTechNotes.length
+      ? `<div class="p-3 rounded-lg bg-slate-950/75 border border-slate-800 space-y-1.5">${duelTechNotes.join('')}</div>`
+      : '';
+
     vBox.className = `ui-verdict ui-verdict--${tone} space-y-4`;
     vBox.innerHTML = `
       <div class="ui-verdict-grid">
@@ -2809,6 +2947,7 @@ function renderDuelAnalysis() {
           </div>
         </div>
       </div>
+      ${duelTechCalloutHtml}
 
       <details class="ui-details">
         <summary>Ver detalhes do cálculo e perfil de uso</summary>
@@ -3949,20 +4088,16 @@ function renderCBTable() {
     thVerdict.textContent = isAbs ? 'Escala Absoluta (vs Topo)' : `Relação vs ${baseGpu.name}`;
   }
 
-  // Pre-calculate catalog-wide max relative deltas so no card caps out early in relative mode
+  // Symmetric relative bar transfer function anchored strictly at 50.0% for 1.00x (Placas Base)
   const basePrice = (baseGpu && baseGpu.price_brl) ? baseGpu.price_brl : 2000;
   const baseComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(baseGpu) : (baseGpu.gaming_score || 1000);
-  let maxRelPerf = 100;
-  let maxRelPrice = 1000;
-  DB.gpus.forEach(og => {
-    const ogComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(og) : (og.gaming_score || 1000);
-    const pGain = ((ogComp / Math.max(1, baseComp)) - 1) * 100;
-    if (pGain > maxRelPerf) maxRelPerf = pGain;
-    const pDelta = og.price_brl - basePrice;
-    if (pDelta > maxRelPrice) maxRelPrice = pDelta;
-  });
-  maxRelPerf = Math.max(120, maxRelPerf * 1.05);
-  maxRelPrice = Math.max(1500, maxRelPrice * 1.05);
+  const relRatioToBarWidth = (ratio) => {
+    const r = Math.max(0.02, ratio || 1.0);
+    if (Math.abs(r - 1.0) < 0.005) return 50.0;
+    if (r < 1.0) return Math.max(5.0, r * 50.0);
+    const over = r - 1.0;
+    return Math.min(98.0, 50.0 + 50.0 * (over / (over + 1.15)));
+  };
 
   let rows = DB.gpus.filter(g => {
     if (search && !g.name.toLowerCase().includes(search) && !g.slug.toLowerCase().includes(search)) return false;
@@ -4024,13 +4159,16 @@ function renderCBTable() {
 
     let verdictCellHTML = '';
     if (isAbs) {
-      // 1. MODO ABSOLUTO: 100% = Topo do Catálogo (RTX 5090)
+      // 1. MODO ABSOLUTO: 100% = Topo do Catálogo (RTX 5090), barras sólidas sem gradiente
       const absPerfPct = Math.min(100, Math.max(3, (gComp / extremes.maxComp) * 100));
       const absPricePct = Math.min(100, Math.max(3, (g.price_brl / extremes.maxPrice) * 100));
       const isBaseCard = g.slug === baseGpu.slug;
+      const absPriceCls = absPricePct < 25 ? 'cb-hard-fill--price-good'
+        : (absPricePct < 50 ? 'cb-hard-fill--price-fair'
+          : (absPricePct < 75 ? 'cb-hard-fill--price-warn' : 'cb-hard-fill--price-bad'));
 
       verdictCellHTML = `
-        <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
+        <div class="space-y-1.5 w-48 ml-auto font-mono text-right">
           <div class="flex items-center justify-between gap-1 text-xs">
             <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${isBaseCard ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : (badgeMap[rel.color] || 'bg-slate-800 text-slate-300')}">
               ${isBaseCard ? 'PLACA BASE' : (rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA')))}
@@ -4041,19 +4179,19 @@ function renderCBTable() {
           <!-- Bar 1: Desempenho Absoluto (vs Topo) -->
           <div class="flex items-center gap-1.5">
             <span class="text-sky-400 shrink-0" title="Desempenho Absoluto">${SPEEDOMETER_SVG}</span>
-            <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho Absoluto: ${absPerfPct.toFixed(0)}% do Topo (${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'})">
-              <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300" style="width: ${absPerfPct.toFixed(1)}%;"></div>
+            <div class="cb-hard-track" title="Desempenho Absoluto: ${absPerfPct.toFixed(0)}% do Topo (${extremes.topGpu ? extremes.topGpu.name : 'RTX 5090'})">
+              <div class="cb-hard-fill ${isBaseCard ? 'cb-hard-fill--perf-base' : 'cb-hard-fill--perf-pos'}" style="width: ${absPerfPct.toFixed(1)}%;"></div>
             </div>
-            <span class="text-xs font-mono text-slate-400 w-7 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
+            <span class="text-xs font-mono text-slate-300 w-8 text-right shrink-0">${absPerfPct.toFixed(0)}%</span>
           </div>
 
           <!-- Bar 2: Preço Absoluto (vs Teto) -->
           <div class="flex items-center gap-1.5">
             <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Preço Absoluto">${MONEY_SVG}</span>
-            <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${absPricePct.toFixed(0)}% do Teto (${fmtBRLShort(extremes.maxPrice)})">
-              <div class="h-full rounded-full ${absPricePct < 25 ? 'bg-emerald-400' : (absPricePct < 50 ? 'bg-sky-400' : (absPricePct < 75 ? 'bg-amber-400' : 'bg-rose-400'))} transition-all duration-300" style="width: ${absPricePct.toFixed(1)}%;"></div>
+            <div class="cb-hard-track" title="Preço: ${absPricePct.toFixed(0)}% do Teto (${fmtBRLShort(extremes.maxPrice)})">
+              <div class="cb-hard-fill ${absPriceCls}" style="width: ${absPricePct.toFixed(1)}%;"></div>
             </div>
-            <span class="text-xs font-mono text-slate-400 w-7 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
+            <span class="text-xs font-mono text-slate-300 w-8 text-right shrink-0">${absPricePct.toFixed(0)}%</span>
           </div>
 
           <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
@@ -4067,73 +4205,71 @@ function renderCBTable() {
         </div>
       `;
     } else {
-      // 2. MODO RELATIVO: Referência na placa base (50% no centro, nunca corta cedo)
-      if (g.slug === baseGpu.slug) {
-        verdictCellHTML = `
-          <div class="flex flex-col items-end gap-1 font-mono">
-            <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-xs font-bold">100% BASE</span>
-            <span class="text-xs text-slate-500">Referência</span>
+      // 2. MODO RELATIVO: 50.0% fixo no centro = Placa Base (ex.: RTX 5060); cartas mais caras passam de 50% proporcionalmente
+      const isBaseCard = g.slug === baseGpu.slug;
+      const perfRatio = isBaseCard ? 1.0 : (gComp / Math.max(1, baseComp));
+      const priceRatio = isBaseCard ? 1.0 : (g.price_brl / Math.max(1, basePrice));
+      const perfWidth = isBaseCard ? 50.0 : relRatioToBarWidth(perfRatio);
+      const priceWidth = isBaseCard ? 50.0 : relRatioToBarWidth(priceRatio);
+      const perfFillCls = isBaseCard
+        ? 'cb-hard-fill--perf-base'
+        : (rel.perfGainPct >= 0 ? 'cb-hard-fill--perf-pos' : 'cb-hard-fill--perf-neg');
+      const priceFillCls = isBaseCard
+        ? 'cb-hard-fill--perf-base'
+        : (rel.actualDelta <= 0
+            ? 'cb-hard-fill--price-good'
+            : (rel.actualDelta <= rel.fairMaxDelta
+                ? 'cb-hard-fill--price-fair'
+                : (rel.actualDelta <= rel.stretchMaxDelta ? 'cb-hard-fill--price-warn' : 'cb-hard-fill--price-bad')));
+      const perfPctLabel = `${Math.round(perfRatio * 100)}%`;
+      const pricePctLabel = `${Math.round(priceRatio * 100)}%`;
+
+      verdictCellHTML = `
+        <div class="space-y-1.5 w-48 ml-auto font-mono text-right">
+          <div class="flex items-center justify-between gap-1 text-xs">
+            <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${isBaseCard ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : (badgeMap[rel.color] || 'bg-slate-800 text-slate-300')}">
+              ${isBaseCard ? 'PLACA BASE' : (rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA')))}
+            </span>
+            <span class="text-xs text-slate-400 font-mono">${isBaseCard ? '50% = Base' : `(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})`}</span>
           </div>
-        `;
-      } else {
-        let perfWidth = 50;
-        if (rel.perfGainPct >= 0) {
-          perfWidth = 50 + Math.min(50, (rel.perfGainPct / maxRelPerf) * 50);
-        } else {
-          perfWidth = Math.max(5, 50 - (Math.abs(rel.perfGainPct) / 100) * 45);
-        }
 
-        let priceWidth = 50;
-        if (rel.actualDelta >= 0) {
-          priceWidth = 50 + Math.min(50, (rel.actualDelta / maxRelPrice) * 50);
-        } else {
-          priceWidth = Math.max(5, 50 - (Math.abs(rel.actualDelta) / Math.max(1, basePrice)) * 45);
-        }
-
-        verdictCellHTML = `
-          <div class="space-y-1.5 w-44 ml-auto font-mono text-right">
-            <div class="flex items-center justify-between gap-1 text-xs">
-              <span class="px-2 py-0.5 rounded font-black uppercase tracking-tight ${badgeMap[rel.color] || 'bg-slate-800 text-slate-300'}">
-                ${rel.tier === 'steal' ? 'PECHINCHA' : (rel.tier === 'fair' ? (rel.perfGainPct < 0 ? 'ECONOMIA' : 'PREÇO JUSTO') : (rel.tier === 'stretch' ? 'PREÇO ESTICADO' : 'NÃO COMPENSA'))}
-              </span>
-              <span class="text-xs text-slate-400 font-mono">(Justo ≤ +${fmtBRLShort(rel.fairMaxDelta)})</span>
+          <!-- Bar 1: Desempenho Relativo -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-sky-400 shrink-0" title="Desempenho Relativo">${SPEEDOMETER_SVG}</span>
+            <div class="cb-hard-track" title="Desempenho: ${isBaseCard ? '100% (Referência)' : `${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% vs ${baseGpu.name}`}">
+              <div class="cb-hard-midline" title="100% Base (${baseGpu.name})"></div>
+              <div class="cb-hard-fill ${perfFillCls}" style="width: ${perfWidth.toFixed(1)}%;"></div>
             </div>
-
-            <!-- Bar 1: Desempenho Relativo -->
-            <div class="flex items-center gap-1.5">
-              <span class="text-sky-400 shrink-0" title="Desempenho Relativo">${SPEEDOMETER_SVG}</span>
-              <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Desempenho: ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% vs ${baseGpu.name}">
-                <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="100% Base"></div>
-                <div class="h-full rounded-full ${rel.perfGainPct >= 0 ? 'bg-gradient-to-r from-sky-400 to-emerald-400' : 'bg-rose-400'} transition-all duration-300" style="width: ${perfWidth.toFixed(1)}%;"></div>
-              </div>
-            </div>
-
-            <!-- Bar 2: Preço Relativo -->
-            <div class="flex items-center gap-1.5">
-              <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Diferença de Preço">${MONEY_SVG}</span>
-              <div class="h-2 flex-1 bg-slate-950 rounded-full relative overflow-hidden border border-slate-800" title="Preço: ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)} vs ${baseGpu.name}">
-                <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-600/80 z-20" title="Preço Base"></div>
-                <div class="h-full rounded-full ${rel.actualDelta <= 0 ? 'bg-gradient-to-r from-emerald-500 to-emerald-300' : (rel.actualDelta <= rel.fairMaxDelta ? 'bg-sky-400' : 'bg-amber-400')} transition-all duration-300" style="width: ${priceWidth.toFixed(1)}%;"></div>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
-              <span class="font-bold ${rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400'}">
-                ${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf
-              </span>
-              <span class="font-bold ${rel.actualDelta <= rel.fairMaxDelta ? 'text-emerald-300' : 'text-amber-300'}">
-                ${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}
-              </span>
-            </div>
+            <span class="text-xs font-mono text-slate-300 w-9 text-right shrink-0">${perfPctLabel}</span>
           </div>
-        `;
-      }
+
+          <!-- Bar 2: Preço Relativo -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-emerald-400 shrink-0 font-bold font-mono text-xs" title="Comparativo de Preço vs Base">${MONEY_SVG}</span>
+            <div class="cb-hard-track" title="Preço: ${isBaseCard ? fmtBRLShort(basePrice) : `${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)} (${pricePctLabel} da ${baseGpu.name})`}">
+              <div class="cb-hard-midline" title="Preço Base (${baseGpu.name})"></div>
+              <div class="cb-hard-fill ${priceFillCls}" style="width: ${priceWidth.toFixed(1)}%;"></div>
+            </div>
+            <span class="text-xs font-mono text-slate-300 w-9 text-right shrink-0">${pricePctLabel}</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs text-slate-300 font-mono pt-0.5">
+            <span class="font-bold ${isBaseCard ? 'text-emerald-400' : (rel.perfGainPct >= 0 ? 'text-sky-300' : 'text-rose-400')}">
+              ${isBaseCard ? '100% Base' : `${rel.perfGainPct >= 0 ? '+' : ''}${rel.perfGainPct.toFixed(0)}% perf`}
+            </span>
+            <span class="font-bold ${isBaseCard ? 'text-emerald-300' : (rel.actualDelta <= rel.fairMaxDelta ? 'text-emerald-300' : 'text-amber-300')}">
+              ${isBaseCard ? fmtBRLShort(g.price_brl) : `${rel.actualDelta >= 0 ? '+' : ''}${fmtBRLShort(rel.actualDelta)}`}
+            </span>
+          </div>
+        </div>
+      `;
     }
 
     const priceStatus = getPriceTargetStatus(g.price_brl, g.price_stats?.target_price, g.price_stats?.min_90d);
     const sparklineHtml = renderPriceSparklineSVG(g, g.price_brl, g.price_stats?.target_price);
     const cbTone = g._myCBScore >= 80 ? 'ui-badge--good' : (g._myCBScore >= 65 ? 'ui-badge--brand' : 'ui-badge--warn');
     const effGaming = typeof getEffectiveGamingScore === 'function' ? getEffectiveGamingScore(g) : g.gaming_score;
+    const techEvalBadges = (g._techEval && g._techEval.badgesHtml) ? g._techEval.badgesHtml : '';
 
     return `
       <tr>
@@ -4143,7 +4279,7 @@ function renderCBTable() {
             <span>${g.name}</span>
             <span class="ui-badge ui-mono">${g.vram_gb} GB ${g.memory_type}</span>
           </div>
-          ${(flashBadge || couponBadge) ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5">${flashBadge} ${couponBadge}</div>` : ''}
+          ${(techBadge || techEvalBadges || flashBadge || couponBadge) ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5">${techBadge} ${techEvalBadges} ${flashBadge} ${couponBadge}</div>` : ''}
           <div class="text-xs text-slate-400 ui-mono mt-1">
             ${g.brand} • Jogos <strong class="text-slate-200">${effGaming}</strong> • IA 14B <strong class="text-slate-200">${g.llm_14b_tok_s} tok/s</strong>
           </div>
@@ -5661,6 +5797,7 @@ async function loadHardwareDatabase() {
     if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
     updateTopContextSummary();
     populateSelectors();
+    if (typeof syncTechWeightsUI === 'function') syncTechWeightsUI();
     updateAllCurrencyLabels();
     renderActiveTab();
     renderPCBuilder();
@@ -5873,6 +6010,7 @@ function renderConfigTab() {
   });
 
   if (typeof syncWorkloadIntensityUI === 'function') syncWorkloadIntensityUI();
+  if (typeof syncTechWeightsUI === 'function') syncTechWeightsUI();
 
   // 9. Sync Scale buttons
   syncComparisonScaleControls();
@@ -5945,6 +6083,9 @@ function onCfgPartSelect(part, slug) {
     }
   }
   saveUserRefPrefs();
+  if (part === 'cpu' && typeof enrichGPUsWithContextualMetrics === 'function') {
+    enrichGPUsWithContextualMetrics();
+  }
   renderConfigTab();
 }
 
@@ -5954,6 +6095,10 @@ function onCfgCustomInput(part, field, value) {
   saveUserRefPrefs();
   if (part === 'cpu' || part === 'mobo') {
     renderConfigRefCompatBanner();
+    if (part === 'cpu') {
+      if (typeof updateTechPairedCpuStatusUI === 'function') updateTechPairedCpuStatusUI();
+      if (typeof enrichGPUsWithContextualMetrics === 'function') enrichGPUsWithContextualMetrics();
+    }
   }
 }
 
@@ -5966,6 +6111,7 @@ function clearUserReferencePC() {
   STATE.refPC.storage = { name: '', tdp: 0, price: 0, owned: false };
   STATE.refPC.cooling = { name: '', tdp: 0, price: 0, owned: false };
   saveUserRefPrefs();
+  if (typeof enrichGPUsWithContextualMetrics === 'function') enrichGPUsWithContextualMetrics();
   renderConfigTab();
   if (typeof showToast === 'function') showToast('Meu PC de Referência limpo (todas as caixas vazias).');
 }
@@ -6002,6 +6148,19 @@ async function initApp() {
     }
   } catch (_) {}
   syncWorkloadIntensityUI();
+  try {
+    const rawTech = localStorage.getItem('gca_tech_weights');
+    if (rawTech) {
+      const parsedTech = JSON.parse(rawTech);
+      if (parsedTech && typeof parsedTech === 'object') {
+        if (!STATE.techWeights) STATE.techWeights = { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
+        ['dlss5', 'fsr', 'rayTracing', 'pathTracing'].forEach(k => {
+          if (parsedTech[k] !== undefined) STATE.techWeights[k] = _clampTechWeight(parsedTech[k], STATE.techWeights[k]);
+        });
+      }
+    }
+  } catch (_) {}
+  syncTechWeightsUI();
   initDatabaseSources();
   await initMarketConfig();
   if (typeof updateBackgroundMonitorUI === 'function') updateBackgroundMonitorUI();

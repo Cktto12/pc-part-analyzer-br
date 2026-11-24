@@ -20,13 +20,14 @@
   </script>
   <title>GCA · Preços de Hardware & Black Friday</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261119-8" />
+  <link rel="stylesheet" href="styles/ui.css?v=20261123-3" />
   <link rel="stylesheet" href="styles/themes.css?v=20261119-4" />
   <script src="styles/chart-theme.js?v=20261119-5"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/tailwind.css?v=20261119-1" />
+  <link rel="stylesheet" href="mobile.css?v=20261123-3" />
   <style>
     body {
       background-color: #070b12;
@@ -2672,10 +2673,10 @@
         </details>
 
         <!-- 2. EXIBIÇÃO, MONITOR & DISTRIBUIÇÃO DE CARGAS -->
-        <details id="cfg-section-display-workloads" class="ui-details">
+        <details id="cfg-section-display-workloads" class="ui-details" open>
           <summary class="ui-details-summary">
-            <span>2. Monitor, DLSS & Perfil de Uso</span>
-            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Resolução, Hz, pesos e intensidade</span>
+            <span>2. Monitor, DLSS 5/FSR/RT &amp; Perfil de Uso</span>
+            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Resolução, Hz, tecnologias e cargas</span>
           </summary>
           <div class="ui-details-body space-y-4">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -2899,6 +2900,88 @@
                 </div>
               </div>
             </div>
+
+            <!-- Graphics Technologies (Independent 0-100%) & Paired CPU Bottleneck Panel -->
+            <div id="cfg-tech-features-panel" class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold text-white">Tecnologias Gráficas &amp; Gargalo de CPU Pareado (Barras Independentes 0–100%)</span>
+                  <span class="ui-badge ui-badge--brand">Podem somar &gt; 100%</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <button type="button" onclick="setTechWeightsPreset(0, 0, 0, 0)" class="ui-chip">Raster Puro</button>
+                  <button type="button" onclick="setTechWeightsPreset(35, 25, 30, 15)" class="ui-chip">Equilibrado</button>
+                  <button type="button" onclick="setTechWeightsPreset(90, 0, 85, 80)" class="ui-chip">DLSS 5 + Path Tracing</button>
+                  <button type="button" onclick="setTechWeightsPreset(0, 85, 35, 0)" class="ui-chip">AMD FSR + RT</button>
+                  <button type="button" onclick="setTechWeightsPreset(100, 100, 100, 100)" class="ui-chip">Tudo Máximo</button>
+                </div>
+              </div>
+
+              <p class="text-xs text-slate-400 leading-relaxed">
+                Cada barra funciona de forma <strong class="text-slate-200">independente</strong> (você pode usar DLSS 5 + Path Tracing ao mesmo tempo).
+                O algoritmo também pondera se a GPU realmente aguenta a tecnologia (ex.: <strong class="text-amber-300">RTX 5050 sofre com DLSS 5</strong> por chip/VRAM) e desconta o gargalo quando o seu CPU pareado limita a placa.
+              </p>
+
+              <!-- Paired CPU Quick Selector -->
+              <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <label for="cfg-tech-paired-cpu" class="text-xs font-bold text-slate-200">CPU Pareado p/ Cálculo de Gargalo:</label>
+                  <span id="cfg-tech-paired-cpu-status" class="ui-badge ui-badge--brand ui-mono">Ryzen 5 5600 • Índice 56/100</span>
+                </div>
+                <select id="cfg-tech-paired-cpu" onchange="onTechPairedCpuChange(this.value)" class="w-full sm:w-auto bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400 cursor-pointer"></select>
+              </div>
+
+              <!-- 4 Independent Technology Sliders -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <span class="font-bold text-emerald-300">DLSS 5 / MFG (Série 50)</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-tech-dlss5" min="0" max="100" step="5" value="35" oninput="onTechWeightInput('dlss5', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs ui-mono font-bold text-emerald-300 text-right focus:border-emerald-400 focus:outline-none" />
+                      <span class="text-xs ui-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-tech-dlss5" min="0" max="100" step="5" value="35" oninput="onTechWeightInput('dlss5', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#10b981;" />
+                  <p id="desc-tech-dlss5" class="text-xs text-slate-400 leading-snug">Peso moderado p/ DLSS 4/5 (favorece Série 50 com folga de VRAM/compute; 5050 recebe ressalva).</p>
+                </div>
+
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <span class="font-bold text-rose-300">AMD FSR (FSR 3.1 / 4)</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-tech-fsr" min="0" max="100" step="5" value="25" oninput="onTechWeightInput('fsr', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs ui-mono font-bold text-rose-300 text-right focus:border-rose-400 focus:outline-none" />
+                      <span class="text-xs ui-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-tech-fsr" min="0" max="100" step="5" value="25" oninput="onTechWeightInput('fsr', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#f43f5e;" />
+                  <p id="desc-tech-fsr" class="text-xs text-slate-400 leading-snug">Uso frequente de FSR (beneficia RDNA 4/3/2 e fallback multiplataforma).</p>
+                </div>
+
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <span class="font-bold text-sky-300">Ray Tracing (RT)</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-tech-rayTracing" min="0" max="100" step="5" value="30" oninput="onTechWeightInput('rayTracing', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs ui-mono font-bold text-sky-300 text-right focus:border-sky-400 focus:outline-none" />
+                      <span class="text-xs ui-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-tech-rayTracing" min="0" max="100" step="5" value="30" oninput="onTechWeightInput('rayTracing', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#38bdf8;" />
+                  <p id="desc-tech-rayTracing" class="text-xs text-slate-400 leading-snug">Ray Tracing híbrido ativo — penaliza placas sem hardware RT ou com pouca VRAM.</p>
+                </div>
+
+                <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800 space-y-2">
+                  <div class="flex items-center justify-between gap-2 text-xs">
+                    <span class="font-bold text-purple-300">Path Tracing (Full RT)</span>
+                    <div class="flex items-center gap-0.5">
+                      <input type="number" id="num-tech-pathTracing" min="0" max="100" step="5" value="15" oninput="onTechWeightInput('pathTracing', this.value)" class="w-11 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs ui-mono font-bold text-purple-300 text-right focus:border-purple-400 focus:outline-none" />
+                      <span class="text-xs ui-mono text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <input type="range" id="slider-tech-pathTracing" min="0" max="100" step="5" value="15" oninput="onTechWeightInput('pathTracing', this.value)" class="w-full h-1.5 rounded-lg cursor-pointer" style="accent-color:#a855f7;" />
+                  <p id="desc-tech-pathTracing" class="text-xs text-slate-400 leading-snug">Path Tracing ocasional — demanda forte em Tensor/RT cores e VRAM ≥12GB.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </details>
 
@@ -3028,9 +3111,10 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261119-11"></script>
-  <script src="app_features.js?v=20261119-11"></script>
-  <script src="laptop_mode.js?v=20261119-8"></script>
+  <script src="app.js?v=20261123-4"></script>
+  <script src="app_features.js?v=20261123-4"></script>
+  <script src="laptop_mode.js?v=20261123-3"></script>
   <script src="styles/combo.js?v=20261119-3"></script>
+  <script src="mobile_mode.js?v=20261123-2"></script>
 </body>
 </html>

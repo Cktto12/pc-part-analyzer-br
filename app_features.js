@@ -23,6 +23,7 @@ function saveUserPrefs() {
       comparisonScaleMode: STATE.comparisonScaleMode,
       wGaming: STATE.wGaming, wWorkstation: STATE.wWorkstation, wAI: STATE.wAI, wSoft: STATE.wSoft,
       workloadIntensity: STATE.workloadIntensity,
+      techWeights: STATE.techWeights,
       games: STATE.games,
       bfRanges: STATE.bfRanges,
       upg: STATE.upg
@@ -40,6 +41,7 @@ function loadUserPrefs() {
   STATE.focusGameId = 'cyberpunk';
   STATE.showGameEditor = false;
   STATE.workloadIntensity = { gaming: 3, workstation: 3, localAI: 3, aiTraining: 3 };
+  STATE.techWeights = { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
   try {
     const p = JSON.parse(localStorage.getItem(PREFS_KEY) || 'null');
     if (p) {
@@ -59,6 +61,12 @@ function loadUserPrefs() {
           if (!isNaN(v)) STATE.workloadIntensity[k] = Math.max(1, Math.min(5, v));
         });
       }
+      if (p.techWeights && typeof p.techWeights === 'object') {
+        ['dlss5', 'fsr', 'rayTracing', 'pathTracing'].forEach(k => {
+          const v = parseInt(p.techWeights[k], 10);
+          if (!isNaN(v)) STATE.techWeights[k] = Math.max(0, Math.min(100, v));
+        });
+      }
       if (Array.isArray(p.games) && p.games.length) STATE.games = p.games;
       if (p.bfRanges) STATE.bfRanges = p.bfRanges;
       if (p.upg) {
@@ -74,6 +82,16 @@ function loadUserPrefs() {
         ['gaming', 'workstation', 'localAI', 'aiTraining'].forEach(k => {
           const v = parseInt(wi[k], 10);
           if (!isNaN(v)) STATE.workloadIntensity[k] = Math.max(1, Math.min(5, v));
+        });
+      }
+    }
+    const rawTech = localStorage.getItem('gca_tech_weights');
+    if (rawTech) {
+      const tw = JSON.parse(rawTech);
+      if (tw && typeof tw === 'object') {
+        ['dlss5', 'fsr', 'rayTracing', 'pathTracing'].forEach(k => {
+          const v = parseInt(tw[k], 10);
+          if (!isNaN(v)) STATE.techWeights[k] = Math.max(0, Math.min(100, v));
         });
       }
     }
@@ -97,6 +115,7 @@ function loadUserPrefs() {
     if (nm) nm.value = v;
   });
   if (typeof syncWorkloadIntensityUI === 'function') syncWorkloadIntensityUI();
+  if (typeof syncTechWeightsUI === 'function') syncTechWeightsUI();
 }
 
 function onGlobalDlssModeChange(val) {
@@ -556,12 +575,355 @@ function getRelevantGames() {
   return rel.length ? rel : (STATE.games || DEFAULT_GAMES);
 }
 
+function getActivePairedCpu() {
+  const ref = STATE.refPC && STATE.refPC.cpu;
+  if (!ref || (!ref.slug && !ref.name)) return null;
+  if (ref.slug && window.DB && Array.isArray(DB.cpus)) {
+    const found = DB.cpus.find(c => c.slug === ref.slug);
+    if (found) return found;
+  }
+  return ref;
+}
+window.getActivePairedCpu = getActivePairedCpu;
+
+function evaluateGpuTechAndCpuProfile(gpu, pairedCpuOverride = undefined) {
+  if (!gpu) {
+    return {
+      dlss5Eff: 0, fsrEff: 0, rtEff: 0, ptEff: 0,
+      cpuFactor: 1, cpuLossPct: 0, cpuBottleneckSeverity: 'none',
+      combinedGamingMult: 1, techComposite100: 50,
+      warnings: [], badgesHtml: ''
+    };
+  }
+
+  const slug = String(gpu.slug || '').toLowerCase();
+  const arch = String(gpu.arch || '').toLowerCase();
+  const brand = String(gpu.brand || '').toUpperCase();
+  const vram = Number(gpu.vram_gb || 8);
+  const rawGame = Number(gpu.gaming_score || 1500);
+
+  const tw = (typeof STATE !== 'undefined' && STATE.techWeights)
+    ? STATE.techWeights
+    : { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
+  const wDlss = Math.max(0, Math.min(1, (Number(tw.dlss5) || 0) / 100));
+  const wFsr = Math.max(0, Math.min(1, (Number(tw.fsr) || 0) / 100));
+  const wRt = Math.max(0, Math.min(1, (Number(tw.rayTracing) || 0) / 100));
+  const wPt = Math.max(0, Math.min(1, (Number(tw.pathTracing) || 0) / 100));
+
+  const res = (typeof STATE !== 'undefined' && STATE.monitorRes) || '1440p';
+  const is4kOrUwQhd = res === '4k' || res === 'uw1440p';
+  const is1440Plus = is4kOrUwQhd || res === '1440p';
+
+  const isNvidia = brand === 'NVIDIA';
+  const isAmd = brand === 'AMD';
+  const isIntel = brand === 'INTEL';
+  const isBlackwell = isNvidia && (/^rtx-50/.test(slug) || arch.includes('blackwell'));
+  const isAda = isNvidia && (/^rtx-40/.test(slug) || arch.includes('ada'));
+  const isAmpere = isNvidia && (/^rtx-30/.test(slug) || arch.includes('ampere'));
+  const isTuring = isNvidia && (/^rtx-20/.test(slug) || arch.includes('turing'));
+  const isRdna4 = isAmd && (/^rx-90/.test(slug) || arch.includes('rdna 4'));
+  const isRdna3 = isAmd && (/^rx-7/.test(slug) || arch.includes('rdna 3'));
+  const isRdna2 = isAmd && (/^rx-6/.test(slug) || arch.includes('rdna 2'));
+  const isBattlemage = isIntel && (/arc-b/.test(slug) || arch.includes('battlemage'));
+
+  // 1. DLSS 5 Exclusivity (Blackwell RTX 50) + hardware capability weighting
+  let dlss5Eff = 0;
+  let dlss5Status = 'unsupported'; // 'full' | 'partial' | 'struggle' | 'dlss4' | 'unsupported'
+  if (isBlackwell) {
+    if (slug === 'rtx-5050') {
+      dlss5Eff = is4kOrUwQhd ? 0.18 : 0.26;
+      dlss5Status = 'struggle';
+    } else if (slug === 'rtx-5060') {
+      dlss5Eff = is4kOrUwQhd ? 0.44 : (is1440Plus ? 0.54 : 0.64);
+      dlss5Status = (wPt >= 0.40 || is4kOrUwQhd) ? 'struggle' : 'partial';
+    } else if (slug === 'rtx-5060-ti-8gb') {
+      dlss5Eff = is4kOrUwQhd ? 0.50 : 0.64;
+      dlss5Status = (wPt >= 0.45 || is4kOrUwQhd) ? 'struggle' : 'partial';
+    } else if (slug === 'rtx-5060-ti-16gb') {
+      dlss5Eff = 0.85;
+      dlss5Status = 'full';
+    } else if (slug === 'rtx-5070') {
+      dlss5Eff = 0.93;
+      dlss5Status = 'full';
+    } else if (slug === 'rtx-5070-ti') {
+      dlss5Eff = 0.98;
+      dlss5Status = 'full';
+    } else {
+      dlss5Eff = 1.00;
+      dlss5Status = 'full';
+    }
+  } else if (isAda) {
+    dlss5Eff = vram >= 12 ? 0.24 : 0.14;
+    dlss5Status = 'dlss4';
+  } else if (isAmpere || isTuring) {
+    dlss5Eff = 0.08;
+    dlss5Status = 'unsupported';
+  }
+
+  let dlssMult = 1.0;
+  if (wDlss > 0) {
+    if (isBlackwell) {
+      if (dlss5Status === 'struggle' && slug === 'rtx-5050') {
+        // Entry 5050 suffers under DLSS 5 frame-gen overhead & 8GB saturation
+        dlssMult = 1.0 - (0.09 * wDlss);
+      } else if (dlss5Status === 'partial' || dlss5Status === 'struggle') {
+        dlssMult = 1.0 + (0.09 * wDlss * (dlss5Eff / 0.65));
+      } else {
+        dlssMult = 1.0 + (0.30 * wDlss * dlss5Eff);
+      }
+    } else if (isAda) {
+      dlssMult = 1.0 + (0.07 * wDlss * (vram >= 12 ? 1.0 : 0.55));
+    } else if (isAmpere || isTuring) {
+      dlssMult = 1.0 + (0.02 * wDlss);
+    } else {
+      // Non-NVIDIA GPU lacks proprietary DLSS 5; slight competitive gap unless user also uses FSR
+      const fsrCover = Math.min(1, wFsr / Math.max(0.15, wDlss));
+      dlssMult = 1.0 - (0.07 * wDlss * (1 - 0.6 * fsrCover));
+    }
+  }
+
+  // 2. AMD FSR (FSR 3.1 / FSR 4 & Frame Gen)
+  let fsrEff = 0.35;
+  let fsrStruggle = false;
+  if (isRdna4) {
+    if (slug === 'rx-9050-8gb') {
+      fsrEff = 0.34;
+      fsrStruggle = true;
+    } else if (slug === 'rx-9060-xt-8gb') {
+      fsrEff = 0.62;
+    } else if (slug === 'rx-9060-xt-16gb') {
+      fsrEff = 0.88;
+    } else if (slug === 'rx-9070-gre') {
+      fsrEff = 0.92;
+    } else {
+      fsrEff = 1.00;
+    }
+  } else if (isRdna3) {
+    fsrEff = slug.includes('7900') ? 0.84 : (slug.includes('7800') || slug.includes('7700') ? 0.78 : (vram >= 16 ? 0.72 : 0.55));
+  } else if (isRdna2) {
+    if (slug.includes('6500') || slug.includes('6400')) {
+      fsrEff = 0.14;
+      fsrStruggle = true;
+    } else {
+      fsrEff = vram >= 12 ? 0.68 : 0.48;
+    }
+  } else if (isAmd) {
+    fsrEff = 0.25;
+  } else if (isBattlemage) {
+    fsrEff = 0.56;
+  } else if (isNvidia) {
+    fsrEff = (isBlackwell || isAda) ? (vram >= 12 ? 0.52 : 0.40) : 0.36;
+  }
+
+  let fsrMult = 1.0;
+  if (wFsr > 0) {
+    if (fsrStruggle) {
+      fsrMult = 1.0 - (0.06 * wFsr);
+    } else if (isAmd) {
+      fsrMult = 1.0 + (0.27 * wFsr * fsrEff);
+    } else {
+      fsrMult = 1.0 + (0.11 * wFsr * fsrEff);
+    }
+  }
+
+  // 3. Ray Tracing (Hardware RT Cores + VRAM Headroom)
+  let rtEff = 0.05;
+  if (isBlackwell) {
+    if (slug.includes('5090') || slug.includes('5080') || slug.includes('5070-ti')) rtEff = 1.00;
+    else if (slug === 'rtx-5070') rtEff = 0.95;
+    else if (slug === 'rtx-5060-ti-16gb') rtEff = 0.86;
+    else if (slug === 'rtx-5060-ti-8gb') rtEff = 0.70;
+    else if (slug === 'rtx-5060') rtEff = 0.64;
+    else rtEff = 0.35; // rtx-5050
+  } else if (isAda) {
+    if (slug.includes('4090') || slug.includes('4080')) rtEff = 0.95;
+    else if (slug.includes('4070')) rtEff = 0.85;
+    else if (slug.includes('4060-ti')) rtEff = 0.64;
+    else rtEff = 0.52;
+  } else if (isRdna4) {
+    if (slug.includes('9070-xt') || slug === 'rx-9070') rtEff = 0.85;
+    else if (slug === 'rx-9070-gre') rtEff = 0.78;
+    else if (slug === 'rx-9060-xt-16gb') rtEff = 0.70;
+    else if (slug === 'rx-9060-xt-8gb') rtEff = 0.54;
+    else rtEff = 0.28; // rx-9050-8gb
+  } else if (isAmpere) {
+    if (slug.includes('3090') || slug.includes('3080')) rtEff = 0.76;
+    else if (slug.includes('3070')) rtEff = 0.60;
+    else if (slug === 'rtx-3060-ti') rtEff = 0.54;
+    else if (slug === 'rtx-3060-12gb') rtEff = 0.50;
+    else rtEff = 0.30;
+  } else if (isBattlemage) {
+    rtEff = slug.includes('b580') ? 0.64 : 0.54;
+  } else if (isRdna3) {
+    rtEff = slug.includes('7900') ? 0.60 : (vram >= 12 ? 0.46 : 0.30);
+  } else if (isTuring) {
+    rtEff = slug.includes('2080') ? 0.58 : (vram >= 8 ? 0.42 : 0.30);
+  } else if (isRdna2) {
+    rtEff = (slug.includes('6500') || slug.includes('6400')) ? 0.05 : (vram >= 12 ? 0.36 : 0.20);
+  } else if (isIntel) {
+    rtEff = 0.20;
+  }
+
+  if (rtEff > 0.15) {
+    if (res === '4k' && vram < 12) rtEff *= 0.74;
+    else if (is1440Plus && vram < 10) rtEff *= 0.84;
+  }
+  const rtAtFull = Math.max(0.28, 0.44 + 0.64 * rtEff);
+  const rtMult = (1 - wRt) + wRt * rtAtFull;
+
+  // 4. Path Tracing (Full RT + AI Ray Reconstruction + >=12GB VRAM)
+  const vramPtFactor = vram >= 16 ? (is4kOrUwQhd ? 0.96 : 1.0)
+    : (vram >= 12 ? (res === '4k' ? 0.76 : 0.90)
+      : (vram >= 10 ? 0.60
+        : (vram >= 8 ? 0.36 : 0.14)));
+  const aiDenoise = isBlackwell ? (slug === 'rtx-5050' ? 0.45 : 1.0)
+    : (isAda ? 0.94
+      : (isRdna4 ? (slug === 'rx-9050-8gb' ? 0.35 : 0.74)
+        : (isAmpere ? 0.68
+          : (isRdna3 ? 0.48 : (isBattlemage ? 0.55 : 0.25)))));
+  const perfHeadroom = Math.min(1.0, Math.pow(Math.max(400, rawGame) / 4800, 0.55));
+  const ptEff = Math.max(0.03, Math.min(1.0, (rtEff * 0.55 + aiDenoise * 0.45) * vramPtFactor * perfHeadroom * 1.15));
+  const ptAtFull = Math.max(0.22, 0.30 + 0.82 * ptEff);
+  const ptMult = (1 - wPt) + wPt * ptAtFull;
+
+  // 5. Paired CPU Bottleneck Calculus
+  const pairedCpu = pairedCpuOverride !== undefined ? pairedCpuOverride : getActivePairedCpu();
+  let cpuFactor = 1.0;
+  let cpuLossPct = 0;
+  let cpuBottleneckSeverity = 'none';
+  let pcieNote = false;
+  let pairedCpuName = '';
+
+  if (pairedCpu && (pairedCpu.slug || pairedCpu.name)) {
+    pairedCpuName = pairedCpu.name || pairedCpu.slug;
+    const cpuIndex = typeof getCpuGamingIndex === 'function' ? getCpuGamingIndex(pairedCpu) : 70;
+    const resCpuSens = res === '4k' ? 0.76 : (res === 'uw1440p' ? 0.90 : (res === '1440p' ? 1.00 : 1.18));
+    const upscPressure = 1 + (0.16 * wDlss * dlss5Eff) + (0.14 * wFsr * fsrEff);
+    const gpuDemandIdx = 40 * Math.pow(Math.max(300, rawGame) / 3138.0, 0.54) * resCpuSens * Math.min(1.22, upscPressure);
+    const rtCpuLoad = 1 - Math.min(0.26, (0.14 * wRt) + (0.16 * wPt));
+    const effCpuCap = Math.max(18, cpuIndex * rtCpuLoad);
+
+    const k = 5;
+    const combined = 1 / Math.pow(Math.pow(1 / Math.max(1, gpuDemandIdx), k) + Math.pow(1 / effCpuCap, k), 1 / k);
+    const effRatio = combined / Math.max(1, gpuDemandIdx);
+    // Natural variance floor at 0.93 so genuinely balanced pairings don't get docked
+    cpuFactor = effRatio >= 0.93 ? 1.0 : Math.max(0.45, effRatio / 0.93);
+
+    const mobo = (STATE.refPC && STATE.refPC.mobo) || null;
+    if (typeof isPlatformPCIe3 === 'function' && isPlatformPCIe3(pairedCpu, mobo)) {
+      const isX4 = typeof PCIE_X4_GPUS !== 'undefined' && PCIE_X4_GPUS.has(slug);
+      const isX8 = typeof PCIE_X8_GPUS !== 'undefined' && PCIE_X8_GPUS.has(slug);
+      if (isX4) {
+        cpuFactor *= 0.84;
+        pcieNote = true;
+      } else if (isX8) {
+        cpuFactor *= (vram <= 8 ? 0.92 : 0.96);
+        pcieNote = true;
+      }
+    }
+
+    cpuLossPct = Math.max(0, Math.round((1 - cpuFactor) * 100));
+    if (cpuLossPct >= 20) cpuBottleneckSeverity = 'severe';
+    else if (cpuLossPct >= 9) cpuBottleneckSeverity = 'moderate';
+  }
+
+  const shortCpu = pairedCpuName
+    .replace(/AMD\s+Ryzen\s+/i, 'R')
+    .replace(/Intel\s+Core\s+/i, '')
+    .replace(/\([^)]*\)/g, '')
+    .trim();
+
+  // Actionable warnings & status pills
+  const warnings = [];
+  const pills = [];
+
+  if (wDlss >= 0.30) {
+    if (isBlackwell && slug === 'rtx-5050') {
+      const msg = 'RTX 5050 sofre c/ DLSS 5 (chip fraco / 8GB)';
+      warnings.push(msg);
+      pills.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs" title="${msg}">⚠️ Sofre c/ DLSS 5</span>`);
+    } else if (isBlackwell && dlss5Status === 'struggle') {
+      const msg = `${gpu.name} limitada em DLSS 5 pelos 8GB VRAM nesta carga`;
+      warnings.push(msg);
+      pills.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs" title="${msg}">⚠️ DLSS 5 apertado (8GB)</span>`);
+    } else if (isBlackwell && dlss5Eff >= 0.85 && wDlss >= 0.55) {
+      pills.push(`<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs" title="Hardware pronto para DLSS 5 + MFG">✅ DLSS 5 Pleno</span>`);
+    } else if (!isBlackwell && wDlss >= 0.55 && !(isAmd && wFsr >= 0.45)) {
+      const msg = isAda ? 'Série 40: só DLSS 4 (sem DLSS 5)' : 'Sem suporte exclusivo DLSS 5';
+      warnings.push(msg);
+      pills.push(`<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono text-xs">${msg}</span>`);
+    }
+  }
+
+  if (wFsr >= 0.35 && fsrStruggle) {
+    const msg = 'Sofre em FSR 3/4 c/ Frame Gen (VRAM/largura de banda)';
+    warnings.push(msg);
+    pills.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs">⚠️ FSR limitado</span>`);
+  } else if (wFsr >= 0.55 && isRdna4 && fsrEff >= 0.85) {
+    pills.push(`<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs">✅ FSR 4 IA</span>`);
+  }
+
+  if (wPt >= 0.30 && ptEff < 0.38) {
+    const msg = `Sofre em Path Tracing (${vram}GB VRAM / RT limitado)`;
+    warnings.push(msg);
+    pills.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs" title="${msg}">⚠️ Path Tracing fraco</span>`);
+  } else if (wRt >= 0.45 && rtEff < 0.36) {
+    const msg = `Ray Tracing pesado p/ esta arquitetura`;
+    warnings.push(msg);
+    pills.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs" title="${msg}">⚠️ RT pesado</span>`);
+  }
+
+  if (cpuBottleneckSeverity === 'severe') {
+    const msg = `Gargalo severo de CPU c/ ${pairedCpuName} (-${cpuLossPct}% fps efetivo${pcieNote ? ' incl. PCIe 3.0' : ''})`;
+    warnings.push(msg);
+    pills.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs" title="${msg}">🔴 Gargalo CPU c/ ${shortCpu} (−${cpuLossPct}%)</span>`);
+  } else if (cpuBottleneckSeverity === 'moderate') {
+    const msg = `CPU ${pairedCpuName} limita parcialmente esta GPU (-${cpuLossPct}% fps efetivo)`;
+    warnings.push(msg);
+    pills.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs" title="${msg}">⚠️ CPU limita (−${cpuLossPct}% c/ ${shortCpu})</span>`);
+  }
+
+  // Tech composite (0–100) for radar chart
+  const activeWeightSum = wDlss + wFsr + wRt + wPt;
+  let techComposite100 = 50;
+  if (activeWeightSum > 0.05) {
+    const weightedEff = (
+      (wDlss * (isBlackwell ? dlss5Eff : Math.max(dlss5Eff, isAmd ? wFsr * fsrEff * 0.45 : dlss5Eff))) +
+      (wFsr * fsrEff) +
+      (wRt * rtEff) +
+      (wPt * ptEff)
+    ) / activeWeightSum;
+    techComposite100 = Math.round(weightedEff * 100);
+  } else {
+    techComposite100 = Math.round(Math.min(100, (rtEff * 0.4 + Math.max(dlss5Eff, fsrEff) * 0.6) * 100));
+  }
+
+  const rawCombined = dlssMult * fsrMult * rtMult * ptMult * cpuFactor;
+  const combinedGamingMult = Math.max(0.28, Math.min(1.80, rawCombined));
+
+  return {
+    dlss5Eff, fsrEff, rtEff, ptEff,
+    dlss5Status,
+    dlssMult, fsrMult, rtMult, ptMult,
+    cpuFactor, cpuLossPct, cpuBottleneckSeverity, pairedCpuName: shortCpu,
+    combinedGamingMult,
+    techComposite100,
+    warnings,
+    badgesHtml: pills.join(' ')
+  };
+}
+window.evaluateGpuTechAndCpuProfile = evaluateGpuTechAndCpuProfile;
+
 // Gaming score used in Duelo, Custo-Benefício & Upgrade Planner:
-// Respects monitor resolution, VRAM needs, Hz cap (when applicable), AND the selected DLSS 4 / MFG Perceived Mode!
-// When uncapped=true, measures the pure hardware capability without clamping to monitor Hz.
+// Respects monitor resolution, VRAM needs, Hz cap (when applicable), selected DLSS 5 / FSR / RT / PT sliders,
+// AND the active paired CPU bottleneck calculus!
+// When uncapped=true, measures hardware capability without clamping to monitor Hz.
 function getEffectiveGamingScore(gpu, uncapped = false) {
   const games = getRelevantGames();
-  if (!games.length || !STATE.monitorRes) return gpu.gaming_score || 1500;
+  const evalTech = evaluateGpuTechAndCpuProfile(gpu);
+  if (!games.length || !STATE.monitorRes) {
+    return Math.max(150, Math.round((gpu.gaming_score || 1500) * evalTech.combinedGamingMult));
+  }
   const cap = uncapped ? Infinity : (STATE.monitorMaxFps >= 999 ? Infinity : STATE.monitorMaxFps);
   const mode = STATE.dlssMode || 'perceived';
   let refSum = 0, effSum = 0;
@@ -577,7 +939,8 @@ function getEffectiveGamingScore(gpu, uncapped = false) {
     refSum += ref5060;
     effSum += eff;
   });
-  return Math.round(3138.0 * (effSum / Math.max(1, refSum)));
+  const baseSimScore = 3138.0 * (effSum / Math.max(1, refSum));
+  return Math.max(150, Math.round(baseSimScore * evalTech.combinedGamingMult));
 }
 
 // ============================================================================
@@ -2776,7 +3139,11 @@ function onBFTargetItemChange(silent) {
       const cCode = (d.coupon_code || '').trim().toUpperCase();
       const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
       const cStat = cCode ? couponsMap[cCode] : null;
-      if (d.is_expired || (dStat && (dStat.status === 'expired' || dStat.status === 'out_of_stock'))) return false;
+      const tsMs = d.timestamp ? Date.parse(d.timestamp) : NaN;
+      const ageHrs = !isNaN(tsMs) ? Math.max(0, (Date.now() - tsMs) / 3600000) : (typeof d.age_hours === 'number' ? d.age_hours : 999);
+      if (ageHrs > 48 || (!d._isStoreDirect && !d.timestamp)) return false;
+      if (d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired' || d.deal_status === 'untested') return false;
+      if (dStat && (dStat.status === 'expired' || dStat.status === 'out_of_stock' || dStat.status === 'untested')) return false;
       if (d.is_coupon_expired || (cStat && cStat.status === 'expired')) return false;
       return true;
     });
@@ -3353,8 +3720,7 @@ const CLIENT_PROMO_CHANNELS = [
   { id: 'iskandarsouza',     name: 'Iskandar Souza' },
   { id: 'benchpromos',       name: 'BenchPromos' },
   { id: 'kabumofertas',      name: 'KaBuM Ofertas' },
-  { id: 'nerdofertas',       name: 'Nerd Ofertas' },
-  { id: 'ofertastechbr',     name: 'Ofertas Tech BR' }
+  { id: 'nerdofertas',       name: 'Nerd Ofertas' }
 ];
 
 const CLIENT_PROMO_QUERIES = ['', 'RTX', '5060', '5070', '4060', '7600', 'RX ', 'Ryzen', 'DDR4', 'DDR5', 'notebook', 'macbook', 'nitro', 'loq', 'expirou', 'acabou', 'esgotou'];
@@ -3700,12 +4066,39 @@ function matchCatalogItemClient(headText) {
   return null;
 }
 
+function _unwrapAffiliateUrlClient(rawUrl) {
+  let u = String(rawUrl || '').trim();
+  if (!u) return '';
+  if (u.includes('&amp;')) u = u.replace(/&amp;/gi, '&');
+  for (let i = 0; i < 3; i++) {
+    const low = u.toLowerCase();
+    if (low.includes('awin1.com') || low.includes('cread.php')) {
+      try {
+        const parsed = new URL(u);
+        const ued = parsed.searchParams.get('ued') || parsed.searchParams.get('p');
+        if (ued && ued.startsWith('http')) {
+          u = ued.trim();
+          continue;
+        }
+      } catch (_) {}
+    }
+    break;
+  }
+  return u;
+}
+
 // Parse raw Telegram HTML directly inside the user's browser using native DOMParser
 function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(rawHtml, 'text/html');
   const nodes = doc.querySelectorAll('.tgme_widget_message');
   const results = [];
+  const footerExclusions = [
+    't.me/', 'bit.ly/canal', 'bit.ly/ofertas', 'bit.ly/ofeertas',
+    'nerdofertas.com/t', 'linkmc.click', 'adrena.click/ofertas',
+    'alertadaspromobot', 'linktr.ee', 'whatsapp.com', 'chat.whatsapp.com',
+    'instagram.com', 'youtube.com', 'tiktok.com', 'discord.gg', 'x.com/', 'twitter.com/'
+  ];
 
   nodes.forEach(node => {
     const postId = node.getAttribute('data-post');
@@ -3713,8 +4106,12 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
     if (!postId || !txtEl) return;
 
     const links = [...txtEl.querySelectorAll('a[href^="http"]')]
-      .map(a => a.getAttribute('href'))
-      .filter(h => !['t.me/', 'bit.ly/canal', 'whatsapp.com', 'instagram.com', 'youtube.com'].some(x => h.toLowerCase().includes(x)));
+      .map(a => ({ raw: a.getAttribute('href') || '', url: _unwrapAffiliateUrlClient(a.getAttribute('href')) }))
+      .filter(({ raw, url }) => {
+        const rl = raw.toLowerCase();
+        const ul = url.toLowerCase();
+        return url && !footerExclusions.some(x => rl.includes(x) || ul.includes(x));
+      });
 
     const clone = txtEl.cloneNode(true);
     clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
@@ -3742,7 +4139,22 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
     const { price, rawPrice, discountApplied, couponCode, couponInfo, isConditionalVoucher, requiresCoupon } = extractPriceAndCouponClient(lines);
     if (!price) return;
 
-    const buyUrl = links.length ? links[links.length - 1] : `https://t.me/${postId}`;
+    const scoreLink = (url, idx) => {
+      const ul = url.toLowerCase();
+      let s = 0;
+      if (['kabum.com.br', 'terabyteshop.com.br', 'pichau.com.br', 'amazon.com.br', 'amzn.to', 'mercadolivre.com.br', 'meli.la', 's.shopee.com.br', 'shopee.com.br', 'magazineluiza.com.br', 'magazinevoce.com.br', 'divulgador.magalu.com', 'gigantec.com.br', 'patoloco.com.br'].some(st => ul.includes(st))) {
+        s += 50;
+      }
+      if (['/produto/', '/dp/', '/mlb', 'benchpromos.com.br', 'seuhardware', 'aoferta.net', 'tidd.ly'].some(pt => ul.includes(pt))) {
+        s += 25;
+      }
+      return s * 100 + idx;
+    };
+    const rankedUrls = links
+      .map(({ url }, idx) => ({ url, score: scoreLink(url, idx) }))
+      .sort((a, b) => b.score - a.score)
+      .map(x => x.url);
+    const buyUrl = rankedUrls.length ? rankedUrls[0] : `https://t.me/${postId}`;
     const uLow = buyUrl.toLowerCase();
     let storeName = 'E-commerce';
     if (uLow.includes('kabum')) storeName = 'KaBuM!';
@@ -3752,6 +4164,8 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
     else if (uLow.includes('amazon') || uLow.includes('amzn.to')) storeName = 'Amazon BR';
     else if (uLow.includes('shopee')) storeName = 'Shopee';
     else if (uLow.includes('magalu') || uLow.includes('magazine')) storeName = 'Magalu';
+    else if (uLow.includes('gigantec')) storeName = 'Gigantec';
+    else if (uLow.includes('patoloco')) storeName = 'Pato Loco';
     else if (uLow.includes('aliexpress') || uLow.includes('s.click.ali')) storeName = 'AliExpress';
 
     results.push({
@@ -3773,10 +4187,101 @@ function parseTelegramHTMLInBrowser(rawHtml, chId, chName) {
       image_url: imageUrl,
       store_name: storeName,
       buy_url: buyUrl,
-      coupon_url: links.length > 1 ? links[0] : null
+      coupon_url: rankedUrls.find(u => u !== buyUrl) || null
     });
   });
   return results;
+}
+
+function _applyCouponAndExpiryOverlay(item) {
+  if (!item) return item;
+  const hbPrice = Number(item.hb_price_brl || 0);
+  const couponCode = (item.coupon_code || '').trim().toUpperCase();
+  const isCondVoucher = Boolean(item.is_conditional_voucher || /\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b/i.test((item.head_text || '') + ' ' + (item.raw_text || '')));
+  item.is_conditional_voucher = isCondVoucher;
+  const reqCoupon = Boolean(item.requires_coupon || couponCode || item.coupon_info || item.discount_applied > 0 || isCondVoucher);
+  item.requires_coupon = reqCoupon;
+  item.promo_price_brl = item.promo_price_brl || item.price_brl;
+
+  const pId = item.post_id || '';
+  const pIdLower = pId.toLowerCase();
+  const buyUrl = item.buy_url || '';
+  const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
+  const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
+  const cStatus = couponCode ? couponsMap[couponCode] : null;
+  const dStatus = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
+
+  if (dStatus) {
+    if (dStatus.store_name && dStatus.store_name !== 'E-commerce' && dStatus.store_name !== 'Loja') {
+      item.store_name = dStatus.store_name;
+    }
+    if (dStatus.live_price) {
+      item.live_store_price_brl = dStatus.live_price;
+    }
+    item.stock_verified = Boolean(dStatus.stock_verified);
+    item.deal_status_reason = dStatus.reason || item.deal_status_reason || '';
+
+    if (dStatus.status === 'expired' || dStatus.status === 'out_of_stock') {
+      item.is_expired = true;
+      item.deal_status = dStatus.status;
+    } else if (dStatus.status === 'unverified_coupon') {
+      item.is_expired = false;
+      item.deal_status = 'unverified_coupon';
+    } else if (dStatus.status === 'active') {
+      item.is_expired = false;
+      item.deal_status = 'active';
+    } else {
+      item.is_expired = Boolean(!item._isStoreDirect && (item.age_hours || 0) > 8);
+      item.deal_status = item.is_expired ? 'expired' : 'untested';
+    }
+  } else if (!item._isStoreDirect && (item.age_hours || 0) > 8) {
+    item.is_expired = true;
+    item.deal_status = 'expired';
+    item.stock_verified = false;
+    item.deal_status_reason = `Oferta antiga (${item.age_hours}h atrás) sem confirmação de estoque ativo`;
+  } else if (!item.deal_status) {
+    item.is_expired = Boolean(item.is_expired);
+    item.deal_status = item._isStoreDirect ? 'active' : (reqCoupon ? 'unverified_coupon' : 'untested');
+    item.stock_verified = Boolean(item._isStoreDirect);
+  }
+
+  if (cStatus && cStatus.status === 'expired') {
+    item.is_coupon_expired = true;
+    item.is_expired = true;
+    if (item.deal_status !== 'out_of_stock') item.deal_status = 'expired';
+    item.coupon_status = 'expired';
+    item.coupon_status_reason = cStatus.reason;
+    if (!item.coupon_discount_revoked) {
+      if (item.live_store_price_brl && item.live_store_price_brl > item.price_brl) {
+        item.price_brl = item.live_store_price_brl;
+        item.coupon_discount_revoked = true;
+      } else if (item.raw_price_brl && item.raw_price_brl > item.price_brl) {
+        item.price_brl = item.raw_price_brl;
+        item.coupon_discount_revoked = true;
+      } else if (item.discount_applied > 0) {
+        item.price_brl = Math.round((item.price_brl + item.discount_applied) * 100) / 100;
+        item.coupon_discount_revoked = true;
+      }
+    }
+    if (hbPrice > 0) {
+      item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
+    }
+  } else if (cStatus && cStatus.status === 'verified') {
+    item.is_coupon_expired = false;
+    item.coupon_status = 'verified';
+    item.coupon_status_reason = cStatus.reason || '';
+  } else if (dStatus && dStatus.coupon_status) {
+    item.coupon_status = dStatus.coupon_status;
+    item.is_coupon_expired = dStatus.coupon_status === 'expired';
+    if (item.is_coupon_expired) {
+      item.is_expired = true;
+      if (item.deal_status !== 'out_of_stock') item.deal_status = 'expired';
+    }
+  } else if (!item.coupon_status) {
+    item.is_coupon_expired = false;
+    item.coupon_status = reqCoupon ? 'unverified' : 'none';
+  }
+  return item;
 }
 
 function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
@@ -3882,86 +4387,7 @@ function buildPromoPayloadClient(rawPosts, channelsScanned, maxAgeHours) {
       item.hb_price_brl = hbPrice;
       item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
 
-      const isCondVoucher = Boolean(item.is_conditional_voucher || /\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b/i.test((item.head_text || '') + ' ' + (item.raw_text || '')));
-      item.is_conditional_voucher = isCondVoucher;
-      const couponCode = (item.coupon_code || '').toUpperCase();
-      const reqCoupon = Boolean(item.requires_coupon || couponCode || item.coupon_info || item.discount_applied > 0 || isCondVoucher);
-      item.requires_coupon = reqCoupon;
-      item.promo_price_brl = item.promo_price_brl || item.price_brl;
-      const pId = item.post_id || '';
-      const pIdLower = pId.toLowerCase();
-      const buyUrl = item.buy_url || '';
-      const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
-      const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
-
-      const cStatus = couponCode ? couponsMap[couponCode] : null;
-      const dStatus = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
-
-      if (dStatus) {
-        if (dStatus.store_name && dStatus.store_name !== 'E-commerce' && dStatus.store_name !== 'Loja') {
-          item.store_name = dStatus.store_name;
-        }
-        if (dStatus.live_price) {
-          item.live_store_price_brl = dStatus.live_price;
-        }
-        item.stock_verified = Boolean(dStatus.stock_verified);
-        item.deal_status_reason = dStatus.reason || '';
-
-        if (dStatus.status === 'expired' || dStatus.status === 'out_of_stock') {
-          item.is_expired = true;
-          item.deal_status = dStatus.status;
-        } else if (dStatus.status === 'unverified_coupon') {
-          item.is_expired = false;
-          item.deal_status = 'unverified_coupon';
-        } else if (dStatus.status === 'active') {
-          item.is_expired = false;
-          item.deal_status = 'active';
-        } else {
-          item.is_expired = Boolean(item.age_hours > 8);
-          item.deal_status = item.is_expired ? 'expired' : 'untested';
-        }
-      } else if (item.age_hours > 8) {
-        item.is_expired = true;
-        item.deal_status = 'expired';
-        item.stock_verified = false;
-        item.deal_status_reason = `Oferta antiga (${item.age_hours}h atrás) sem confirmação de estoque ativo`;
-      } else {
-        item.is_expired = false;
-        item.deal_status = reqCoupon ? 'unverified_coupon' : 'untested';
-        item.stock_verified = false;
-      }
-
-      if (cStatus && cStatus.status === 'expired') {
-        item.is_coupon_expired = true;
-        item.is_expired = true;
-        item.coupon_status = 'expired';
-        item.coupon_status_reason = cStatus.reason;
-        // REWIRE PRICING: Revoke expired coupon discount!
-        if (item.live_store_price_brl && item.live_store_price_brl > item.price_brl) {
-          item.price_brl = item.live_store_price_brl;
-          item.coupon_discount_revoked = true;
-        } else if (item.raw_price_brl && item.raw_price_brl > item.price_brl) {
-          item.price_brl = item.raw_price_brl;
-          item.coupon_discount_revoked = true;
-        } else if (item.discount_applied > 0) {
-          item.price_brl = Math.round((item.price_brl + item.discount_applied) * 100) / 100;
-          item.coupon_discount_revoked = true;
-        }
-        if (hbPrice > 0) {
-          item.savings_vs_hb_brl = Math.round((hbPrice - item.price_brl) * 100) / 100;
-        }
-      } else if (cStatus && cStatus.status === 'verified') {
-        item.is_coupon_expired = false;
-        item.coupon_status = 'verified';
-        item.coupon_status_reason = cStatus.reason || '';
-      } else if (dStatus && dStatus.coupon_status) {
-        item.coupon_status = dStatus.coupon_status;
-        item.is_coupon_expired = dStatus.coupon_status === 'expired';
-        if (item.is_coupon_expired) item.is_expired = true;
-      } else {
-        item.is_coupon_expired = false;
-        item.coupon_status = reqCoupon ? 'unverified' : 'none';
-      }
+      _applyCouponAndExpiryOverlay(item);
 
       matchedDeals.push(item);
 
@@ -5752,12 +6178,26 @@ function renderPromoRadarPanel() {
   const sumEl = document.getElementById('promo-matched-summary');
   const sitewiseEl = document.getElementById('sitewise-validator-text');
 
-  const rawDeals = data.matched_deals || [];
+  const maxAge = parseFloat(document.getElementById('promo-max-age')?.value) || 48;
+  const nowMs = Date.now();
+  const rawDeals = (data.matched_deals || []).map(d => {
+    const copy = { ...d };
+    if (copy.timestamp) {
+      const t = Date.parse(copy.timestamp);
+      if (!isNaN(t)) copy.age_hours = Math.round(Math.max(0, (nowMs - t) / 3600000) * 10) / 10;
+    }
+    return _applyCouponAndExpiryOverlay(copy);
+  }).filter(d => {
+    if (!d._isStoreDirect && !d.timestamp) return false;
+    if ((d.age_hours != null ? Number(d.age_hours) : 999) > maxAge) return false;
+    if (d.is_expired || d.is_coupon_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired') return false;
+    return true;
+  });
   // Weigh direct retailer default pricing (before coupons) alongside group promotions:
   // If a retailer's default price is cheaper than any active group deal for that slug (or no group deal exists) and it's a BF/near-BF/30d-drop, include it!
   const bestActiveGroupBySlug = new Map();
   rawDeals.forEach(d => {
-    if (!d.is_expired && d.deal_status !== 'out_of_stock' && d.deal_status !== 'expired' && d.matched_slug) {
+    if (d.matched_slug) {
       const prev = bestActiveGroupBySlug.get(d.matched_slug);
       if (!prev || d.price_brl < prev) bestActiveGroupBySlug.set(d.matched_slug, d.price_brl);
     }
@@ -5937,6 +6377,33 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 6000) {
   }
 }
 
+function _extractNextJsonArray(txt, key) {
+  const idx = txt.indexOf(`"${key}":[`);
+  if (idx === -1) return [];
+  const start = txt.indexOf('[', idx);
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < txt.length; i++) {
+    const ch = txt[i];
+    if (inStr) {
+      if (esc) { esc = false; }
+      else if (ch === '\\') { esc = true; }
+      else if (ch === '"') { inStr = false; }
+    } else {
+      if (ch === '"') { inStr = true; }
+      else if (ch === '[') { depth++; }
+      else if (ch === ']') {
+        depth--;
+        if (depth === 0) {
+          try { return JSON.parse(txt.slice(start, i + 1)); } catch (_) { return []; }
+        }
+      }
+    }
+  }
+  return [];
+}
+
 async function _fetchHBLiveTextCached(kind, slug) {
   const catMap = { gpu: 'placas-de-video', cpu: 'processadores', ram: 'memorias-ram', mobo: 'placas-mae', psu: 'fontes' };
   const cat = catMap[kind || 'gpu'] || 'placas-de-video';
@@ -5961,7 +6428,7 @@ async function _fetchHBLiveTextCached(kind, slug) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const rawHtml = await r.text();
         const unescaped = rawHtml.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-        if (!unescaped.includes('"data":[') || !unescaped.includes('"store":')) {
+        if (!unescaped.includes('"data":[') || (!unescaped.includes('"storeName":') && !unescaped.includes('"store":'))) {
           throw new Error('Invalid HB payload');
         }
         return unescaped;
@@ -5986,45 +6453,51 @@ async function verifyDealOnStaticClient(postId, buyUrl, couponCode, expectedPric
   const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
   const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
   const cleanCoup = (couponCode || '').trim().toUpperCase();
+  const normBuyUrl = _unwrapAffiliateUrlClient(buyUrl);
 
   // Check if Hardware Barato live product page can be fetched via CORS proxy (cached + 4.5s timeout race)
   if (slug && getActiveRegionId() === 'br') {
     const txt = await _fetchHBLiveTextCached(kind, slug);
     if (txt) {
-      const uLow = (buyUrl || '').toLowerCase();
+      const uLow = (normBuyUrl || '').toLowerCase();
       let storeKey = '';
       let storeLabel = 'Loja';
       if (uLow.includes('kabum')) { storeKey = 'kabum'; storeLabel = 'KaBuM!'; }
       else if (uLow.includes('terabyte')) { storeKey = 'terabyte'; storeLabel = 'Terabyte'; }
       else if (uLow.includes('pichau')) { storeKey = 'pichau'; storeLabel = 'Pichau'; }
-      else if (uLow.includes('mercadolivre') || uLow.includes('meli.la')) { storeKey = 'mercadolivre'; storeLabel = 'Mercado Livre'; }
+      else if (uLow.includes('mercadolivre') || uLow.includes('meli.la')) { storeKey = 'mercado-livre'; storeLabel = 'Mercado Livre'; }
       else if (uLow.includes('shopee')) { storeKey = 'shopee'; storeLabel = 'Shopee'; }
-      else if (uLow.includes('amazon') || uLow.includes('amzn.to')) { storeKey = 'amazon'; storeLabel = 'Amazon BR'; }
-      else if (uLow.includes('magalu')) { storeKey = 'magalu'; storeLabel = 'Magalu'; }
+      else if (uLow.includes('amazon') || uLow.includes('amzn.to') || uLow.includes('a.co/')) { storeKey = 'amazon'; storeLabel = 'Amazon BR'; }
+      else if (uLow.includes('magalu') || uLow.includes('magazine')) { storeKey = 'magazine-luiza'; storeLabel = 'Magalu'; }
+      else if (uLow.includes('gigantec')) { storeKey = 'gigantec'; storeLabel = 'Gigantec'; }
+      else if (uLow.includes('patoloco')) { storeKey = 'pato-loco'; storeLabel = 'Pato Loco'; }
+      else if (uLow.includes('guerradigital')) { storeKey = 'guerra-digital'; storeLabel = 'Guerra Digital'; }
+      else if (uLow.includes('fgtec')) { storeKey = 'fgtec'; storeLabel = 'FGTEC'; }
 
       const activeCoupons = new Set();
-      const cIdx = txt.indexOf('"coupons":[');
-      if (cIdx !== -1) {
-        const cBlock = txt.slice(cIdx, cIdx + 12000);
-        const reCoup = /"coupon":"([^"]+)"/g;
-        let mc;
-        while ((mc = reCoup.exec(cBlock)) !== null) {
-          activeCoupons.add(mc[1].trim().toUpperCase());
-        }
-      }
+      const couponsArr = _extractNextJsonArray(txt, 'coupons');
+      couponsArr.forEach(c => {
+        if (!c || (c.archivedAt !== null && c.archivedAt !== undefined)) return;
+        const code = (c.code || c.coupon || '').trim().toUpperCase();
+        if (code) activeCoupons.add(code);
+      });
 
-      const dIdx = txt.indexOf('"data":[');
-      const eIdx = txt.indexOf('"priceHistory":', dIdx);
-      if (dIdx !== -1 && eIdx !== -1 && storeKey) {
-        const dBlock = txt.slice(dIdx, eIdx);
+      const offersArr = _extractNextJsonArray(txt, 'data');
+      if (offersArr.length && storeKey) {
         const storePrices = [];
-        const reOffer = /"price":([0-9.]+)[^{}]*?"store":"([^"]+)"/g;
-        let mo;
-        while ((mo = reOffer.exec(dBlock)) !== null) {
-          if (mo[2].toLowerCase().includes(storeKey)) {
-            storePrices.push(parseFloat(mo[1]));
+        offersArr.forEach(o => {
+          if (!o) return;
+          const stName = String(o.storeName || o.store || '').toLowerCase();
+          if (!stName.includes(storeKey)) return;
+          const pRaw = Number(o.price);
+          if (pRaw > 0) {
+            const pBrl = Number.isInteger(pRaw) ? Math.round(pRaw) / 100 : pRaw;
+            storePrices.push(pBrl);
           }
-        }
+          if (o.coupon && o.coupon.code) {
+            activeCoupons.add(String(o.coupon.code).trim().toUpperCase());
+          }
+        });
         if (storePrices.length === 0) {
           return {
             status: 'out_of_stock',
@@ -6228,6 +6701,10 @@ async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice, slug
 
     if (!isStatic) {
       try {
+        const matchObj = (PROMO_STATE.lastData && Array.isArray(PROMO_STATE.lastData.matched_deals))
+          ? PROMO_STATE.lastData.matched_deals.find(d => d && d.post_id === postId)
+          : null;
+        const resolvedAge = options.age_hours != null ? options.age_hours : (matchObj ? matchObj.age_hours : null);
         const q = new URLSearchParams({
           url: buyUrl || '',
           code: couponCode || '',
@@ -6236,6 +6713,9 @@ async function testDealCouponNow(postId, buyUrl, couponCode, expectedPrice, slug
           slug: slug || '',
           kind: kind || 'gpu'
         });
+        if (resolvedAge != null && !isNaN(Number(resolvedAge))) {
+          q.set('age_hours', String(resolvedAge));
+        }
         const resp = await fetchWithTimeout(`/api/test-coupon?${q.toString()}`, { cache: 'no-store' }, 9000);
         if (resp.ok) {
           const data = await resp.json();
@@ -6400,6 +6880,7 @@ let BF_CARDS_FILTER = 'all';
 let _bfLiveTimer = null;
 let _bfLiveEnabled = true;
 let _bfLiveBusy = false;
+const _bfAutoTestedIds = new Set();
 
 function setBFCardsFilter(filterKey) {
   BF_CARDS_FILTER = filterKey || 'all';
@@ -6420,6 +6901,8 @@ async function pollBFLiveCardsFeed(manual) {
 
   try {
     const channels = CLIENT_PROMO_CHANNELS || [];
+    const maxAge = parseFloat(document.getElementById('promo-max-age')?.value) || 48;
+    const nowMs = Date.now();
     const htmlList = await Promise.all(channels.map(ch => fetchTelegramChannelHTML(ch.id, '').then(raw => ({ ch, raw })).catch(() => ({ ch, raw: '' }))));
 
     const freshPosts = [];
@@ -6429,29 +6912,38 @@ async function pollBFLiveCardsFeed(manual) {
       if (parsed && parsed.length) freshPosts.push(...parsed);
     });
 
-    if (freshPosts.length) {
-      if (!PROMO_STATE.lastData) {
-        PROMO_STATE.lastData = { ok: true, region_id: getActiveRegionId(), matched_deals: [], recent_feed: [], best_by_slug: {} };
+    if (!PROMO_STATE.lastData) {
+      PROMO_STATE.lastData = { ok: true, region_id: getActiveRegionId(), matched_deals: [], recent_feed: [], best_by_slug: {} };
+    }
+    const existingById = new Map();
+    (PROMO_STATE.lastData.matched_deals || []).forEach(d => {
+      if (!d || !d.post_id) return;
+      const ts = d.timestamp ? Date.parse(d.timestamp) : NaN;
+      const ageHrs = !isNaN(ts) ? Math.max(0.01, (nowMs - ts) / 3600000) : (typeof d.age_hours === 'number' ? d.age_hours : 999);
+      if (!d._isStoreDirect && (isNaN(ts) || ageHrs > maxAge)) return;
+      const updated = _applyCouponAndExpiryOverlay({ ...d, age_hours: Math.round(ageHrs * 100) / 100 });
+      if (!updated.is_expired && updated.deal_status !== 'out_of_stock' && updated.deal_status !== 'expired') {
+        existingById.set(d.post_id, updated);
       }
-      const existingById = new Map();
-      (PROMO_STATE.lastData.matched_deals || []).forEach(d => {
-        if (d.post_id) existingById.set(d.post_id, d);
-      });
+    });
 
-      const nowMs = Date.now();
+    const newlyQueued = [];
+    const dealsStatusMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
+    if (freshPosts.length) {
       freshPosts.forEach(p => {
+        if (!p.timestamp) return;
+        const ts = Date.parse(p.timestamp);
+        if (isNaN(ts)) return;
+        const ageHours = Math.max(0.01, (nowMs - ts) / 3600000);
+        if (ageHours > maxAge) return;
+
         const m = matchCatalogItemClient(p.head_text);
         if (!m || !m.item) return;
         const hbPrice = m.item._hbPrice || m.item.price_brl || 0;
         if (hbPrice > 0 && (p.price_brl < hbPrice * 0.45 || p.price_brl > hbPrice * 1.35)) return;
 
-        let ageHours = 0.05;
-        if (p.timestamp) {
-          const ts = Date.parse(p.timestamp);
-          if (!isNaN(ts)) ageHours = Math.max(0.01, (nowMs - ts) / 3600000);
-        }
         const prev = existingById.get(p.post_id) || {};
-        existingById.set(p.post_id, {
+        const merged = _applyCouponAndExpiryOverlay({
           ...prev,
           ...p,
           matched_kind: m.kind,
@@ -6462,12 +6954,45 @@ async function pollBFLiveCardsFeed(manual) {
           age_hours: Math.round(ageHours * 100) / 100,
           region_id: getActiveRegionId()
         });
-      });
+        existingById.set(p.post_id, merged);
 
-      PROMO_STATE.lastData.matched_deals = [...existingById.values()];
-      if (typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') {
-        renderBFPromosCardsTab();
-      }
+        const alreadyRecorded = Boolean(dealsStatusMap[merged.post_id] || dealsStatusMap[String(merged.post_id).toLowerCase()] || (merged.buy_url && dealsStatusMap[merged.buy_url]));
+        if (
+          !merged.is_expired &&
+          !alreadyRecorded &&
+          (merged.deal_status === 'untested' || merged.deal_status === 'unverified_coupon') &&
+          !_bfAutoTestedIds.has(merged.post_id)
+        ) {
+          newlyQueued.push(merged);
+        }
+      });
+    }
+
+    PROMO_STATE.lastData.matched_deals = [...existingById.values()];
+    if (typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') {
+      renderBFPromosCardsTab();
+    }
+
+    if (newlyQueued.length && typeof testDealCouponNow === 'function') {
+      const batch = newlyQueued.slice(0, 4);
+      batch.forEach(d => _bfAutoTestedIds.add(d.post_id));
+      Promise.all(
+        batch.map(d =>
+          testDealCouponNow(
+            d.post_id,
+            d.buy_url,
+            d.coupon_code || '',
+            d.price_brl || 0,
+            d.matched_slug || '',
+            d.matched_kind || 'gpu',
+            { skipRender: true, skipSync: true, age_hours: d.age_hours }
+          ).catch(() => null)
+        )
+      ).then(() => {
+        applyFlashPromosToCatalog();
+        if (typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') renderBFPromosCardsTab();
+        if (typeof onBFTargetItemChange === 'function') onBFTargetItemChange(true);
+      });
     }
     if (statusEl) {
       const nowStr = new Date().toLocaleTimeString('pt-BR');
@@ -6563,7 +7088,10 @@ function renderBFPromosCardsTab() {
   const sortMode = (document.getElementById('bf-cards-sort')?.value || 'recent');
   const nowMs = Date.now();
 
-  const _enrichCard = (d) => {
+  const maxAge = parseFloat(document.getElementById('promo-max-age')?.value) || 48;
+
+  const _enrichCard = (origDeal) => {
+    const d = _applyCouponAndExpiryOverlay({ ...origDeal });
     const imgUrl = d.image_url || imgByPost.get(d.post_id) || d.image || null;
     const catGroup = d.matched_kind === 'laptop'
       ? (DB.laptops || [])
@@ -6589,20 +7117,26 @@ function renderBFPromosCardsTab() {
     let tsMs = 0;
     if (d.timestamp) {
       const t = Date.parse(d.timestamp);
-      if (!isNaN(tsMs) && !isNaN(t)) {
+      if (!isNaN(t)) {
         tsMs = t;
         ageHrs = Math.max(0, (nowMs - t) / 3600000);
       }
     }
 
-    const isOutOfStock = Boolean(d.is_expired || d.deal_status === 'out_of_stock' || d.deal_status === 'expired');
-    const isHistoricalMin = Boolean(allMin && d.price_brl <= allMin * 1.015);
-    const isBFLow = Boolean(targetLow && d.price_brl <= targetLow);
-    const isBFRange = Boolean(targetHigh && d.price_brl <= targetHigh);
-    const isNearBF = Boolean(!isBFRange && targetHigh && d.price_brl <= targetHigh * 1.05);
+    const isOutOfStock = Boolean(
+      d.is_expired ||
+      d.is_coupon_expired ||
+      d.deal_status === 'out_of_stock' ||
+      d.deal_status === 'expired' ||
+      (!d._isStoreDirect && (!d.timestamp || ageHrs > maxAge))
+    );
+    const isHistoricalMin = !isOutOfStock && Boolean(allMin && d.price_brl <= allMin * 1.015);
+    const isBFLow = !isOutOfStock && Boolean(targetLow && d.price_brl <= targetLow);
+    const isBFRange = !isOutOfStock && Boolean(targetHigh && d.price_brl <= targetHigh);
+    const isNearBF = !isOutOfStock && Boolean(!isBFRange && targetHigh && d.price_brl <= targetHigh * 1.05);
     const avg30 = catItem && catItem.price_stats ? catItem.price_stats.avg_30d : null;
     const drop30Pct = (avg30 && avg30 > 0) ? ((avg30 - d.price_brl) / avg30) * 100 : 0;
-    const isInBFPrice = isHistoricalMin || isBFLow || isBFRange || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5);
+    const isInBFPrice = !isOutOfStock && (isHistoricalMin || isBFLow || isBFRange || drop30Pct >= (PROMO_STATE.avg30dMinPct || 5));
 
     // Best reference price to compute prominent discount %
     const refCandidates = [
@@ -6688,6 +7222,7 @@ function renderBFPromosCardsTab() {
   syncOfferCounters();
 
   const items = allCards.filter(d => {
+    if (d.isOutOfStock) return false;
     if (isLapCtx && d.matched_kind !== 'laptop') return false;
     if (!isLapCtx && d.matched_kind === 'laptop') return false;
     if (BF_CARDS_FILTER === 'hist_min' && !d.isHistoricalMin) return false;

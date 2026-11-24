@@ -31,7 +31,6 @@ DEFAULT_BR_CHANNELS = [
     {"id": "benchpromos",       "name": "BenchPromos"},
     {"id": "kabumofertas",      "name": "KaBuM Ofertas"},
     {"id": "nerdofertas",       "name": "Nerd Ofertas"},
-    {"id": "ofertastechbr",     "name": "Ofertas Tech BR"},
 ]
 
 DEFAULT_SEARCH_QUERIES = [
@@ -407,11 +406,24 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             continue
         raw_html = txt_m.group(1)
 
-        hrefs = re.findall(r'href="(https?://[^"]+)"', raw_html)
-        product_links = [
-            h for h in hrefs
-            if not any(x in h.lower() for x in ["t.me/", "bit.ly/canal", "whatsapp.com", "instagram.com", "youtube.com"])
-        ]
+        raw_hrefs = re.findall(r'href="(https?://[^"]+)"', raw_html)
+        footer_exclusions = (
+            "t.me/", "bit.ly/canal", "bit.ly/ofertas", "bit.ly/ofeertas",
+            "nerdofertas.com/t", "linkmc.click", "adrena.click/ofertas",
+            "alertadaspromobot", "linktr.ee", "whatsapp.com", "chat.whatsapp.com",
+            "instagram.com", "youtube.com", "tiktok.com", "discord.gg", "x.com/", "twitter.com/"
+        )
+        try:
+            from coupon_tracker import unwrap_affiliate_url as _unwrap_aff
+        except Exception:
+            _unwrap_aff = lambda u: html.unescape((u or "").strip())
+
+        product_links = []
+        for h in raw_hrefs:
+            decoded_h = _unwrap_aff(h)
+            if any(x in decoded_h.lower() or x in h.lower() for x in footer_exclusions):
+                continue
+            product_links.append(decoded_h)
 
         text_with_lines = re.sub(r"<br\s*/?>", "\n", raw_html, flags=re.IGNORECASE)
         clean_text = html.unescape(re.sub(r"<[^>]+>", "", text_with_lines))
@@ -436,7 +448,19 @@ def fetch_channel_query(ch_id, ch_name, query=""):
         if not price:
             continue
 
-        buy_url = product_links[-1] if product_links else f"https://t.me/{post_id}"
+        def _score_link(idx_u):
+            idx, u = idx_u
+            ul = u.lower()
+            s = 0
+            if any(st in ul for st in ("kabum.com.br", "terabyteshop.com.br", "pichau.com.br", "amazon.com.br", "amzn.to", "mercadolivre.com.br", "meli.la", "s.shopee.com.br", "shopee.com.br", "magazineluiza.com.br", "magazinevoce.com.br", "divulgador.magalu.com", "gigantec.com.br", "patoloco.com.br")):
+                s += 50
+            if any(pt in ul for pt in ("/produto/", "/dp/", "/mlb", "benchpromos.com.br", "seuhardware", "aoferta.net", "tidd.ly")):
+                s += 25
+            return (s, idx)
+
+        ranked_links = sorted(enumerate(product_links), key=_score_link, reverse=True)
+        buy_url = ranked_links[0][1] if ranked_links else f"https://t.me/{post_id}"
+        alt_coupon_url = next((u for _, u in ranked_links if u != buy_url), None) if len(ranked_links) > 1 else None
         results.append({
             "post_id": post_id,
             "channel_id": ch_id,
@@ -455,7 +479,7 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             "is_conditional_voucher": is_conditional_voucher,
             "image_url": image_url,
             "buy_url": buy_url,
-            "coupon_url": product_links[0] if len(product_links) > 1 else None,
+            "coupon_url": alt_coupon_url,
             "region_id": "br"
         })
     return results
@@ -643,13 +667,13 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     for post_id, orig in by_post.items():
         item = dict(orig)
         item["region_id"] = reg
-        age_hours = 1.0
-        if item.get("timestamp"):
-            try:
-                dt = datetime.fromisoformat(item["timestamp"].replace("Z", "+00:00"))
-                age_hours = max(0.1, (now_dt - dt).total_seconds() / 3600.0)
-            except Exception:
-                age_hours = 12.0
+        if not item.get("timestamp"):
+            continue
+        try:
+            dt = datetime.fromisoformat(item["timestamp"].replace("Z", "+00:00"))
+            age_hours = max(0.1, (now_dt - dt).total_seconds() / 3600.0)
+        except Exception:
+            continue
         item["age_hours"] = round(age_hours, 1)
         if item["age_hours"] > max_age_hours:
             continue

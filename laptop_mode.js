@@ -223,6 +223,87 @@ function getLaptopCatalogExtremes() {
   };
 }
 
+function _evaluateLaptopTechAndCpu(lap) {
+  const st = (typeof STATE !== 'undefined') ? STATE : {};
+  const tw = st.techWeights || { dlss5: 35, fsr: 25, rayTracing: 30, pathTracing: 15 };
+  const wDlss = Math.max(0, Math.min(1, (Number(tw.dlss5) || 0) / 100));
+  const wFsr = Math.max(0, Math.min(1, (Number(tw.fsr) || 0) / 100));
+  const wRt = Math.max(0, Math.min(1, (Number(tw.rayTracing) || 0) / 100));
+  const wPt = Math.max(0, Math.min(1, (Number(tw.pathTracing) || 0) / 100));
+
+  const gName = String(lap.gpu_name || '').toLowerCase();
+  const vram = Number(lap.gpu_vram_gb || 0);
+  const tgp = Number(lap.gpu_tgp_w || 0);
+  const gScore = Number(lap.gaming_score || 500);
+  const isRtx50 = /rtx\s*50/.test(gName);
+  const isRtx40 = /rtx\s*40/.test(gName);
+  const isRtx30 = /rtx\s*30/.test(gName);
+  const isApple = !!lap.is_apple_unified;
+
+  let dlssMult = 1.0;
+  let fsrMult = 1.0;
+  let rtEff = 0.05;
+  let ptEff = 0.04;
+  let note = '';
+
+  if (isRtx50) {
+    const is5050 = /5050/.test(gName);
+    const is5060 = /5060/.test(gName);
+    const eff50 = is5050 ? 0.28 : (is5060 ? (tgp < 85 ? 0.54 : 0.65) : 0.86);
+    if (wDlss > 0) {
+      dlssMult = is5050 ? (1 - 0.08 * wDlss) : (1 + (is5060 ? 0.14 : 0.28) * wDlss * eff50);
+    }
+    if (is5050 && wDlss >= 0.35) note = '⚠️ RTX 5050 sofre c/ DLSS 5 (8GB/chip)';
+    rtEff = is5050 ? 0.34 : (is5060 ? 0.62 : 0.80);
+  } else if (isRtx40) {
+    if (wDlss > 0) dlssMult = 1 + 0.06 * wDlss;
+    rtEff = /4070|4080|4090/.test(gName) ? 0.72 : (/4060/.test(gName) ? 0.56 : 0.34);
+  } else if (isRtx30) {
+    if (wDlss > 0) dlssMult = 1 + 0.01 * wDlss;
+    rtEff = 0.28;
+  } else if (isApple) {
+    if (wDlss > 0 && wFsr < 0.25) dlssMult = 1 - 0.06 * wDlss;
+    rtEff = /m3|m4|m5/.test(String(lap.cpu_name || '').toLowerCase()) ? 0.38 : 0.12;
+  } else {
+    if (wDlss > 0.35) dlssMult = 1 - 0.08 * wDlss;
+    rtEff = 0.05;
+  }
+
+  if (wFsr > 0) {
+    if (lap.gpu_brand === 'AMD' || /radeon|780m/i.test(gName)) {
+      fsrMult = 1 + 0.16 * wFsr;
+    } else if (lap.gpu_is_dedicated) {
+      fsrMult = 1 + 0.09 * wFsr;
+    } else if (!isApple) {
+      fsrMult = 1 + 0.07 * wFsr;
+    }
+  }
+
+  const vramPtGate = vram >= 12 ? 0.90 : (vram >= 8 ? 0.42 : 0.14);
+  const tgpGate = tgp >= 100 ? 1.0 : (tgp >= 70 ? 0.82 : 0.55);
+  ptEff = Math.max(0.03, Math.min(0.95, rtEff * vramPtGate * tgpGate * 1.15));
+  if (!note && wPt >= 0.35 && ptEff < 0.36) {
+    note = '⚠️ Fraco p/ Path Tracing (8GB/TGP mobile)';
+  }
+
+  const rtMult = (1 - wRt) + wRt * Math.max(0.32, 0.45 + 0.62 * rtEff);
+  const ptMult = (1 - wPt) + wPt * Math.max(0.24, 0.30 + 0.78 * ptEff);
+
+  // Internal Laptop CPU vs Dedicated GPU bottleneck check
+  const cpuScore = Number(lap.cpu_score || 5000);
+  const cpuDemand = 3200 + gScore * 1.45 * (1 + 0.14 * wRt + 0.16 * wPt);
+  let cpuFactor = 1.0;
+  if (lap.gpu_is_dedicated && cpuScore < cpuDemand * 0.88) {
+    cpuFactor = Math.max(0.75, cpuScore / (cpuDemand * 0.88));
+    if (!note && cpuFactor <= 0.90) {
+      note = `⚠️ CPU limita GPU mobile (−${Math.round((1 - cpuFactor) * 100)}%)`;
+    }
+  }
+
+  const mult = Math.max(0.35, Math.min(1.55, dlssMult * fsrMult * rtMult * ptMult * cpuFactor));
+  return { mult, note };
+}
+
 function _computeLaptopIntensityEvaluation(lap, customWeights = null) {
   const st = (typeof STATE !== 'undefined') ? STATE : {};
   const wG = customWeights ? Number(customWeights.wGaming || 0) : (st.wGaming !== undefined ? Number(st.wGaming) : 30);
@@ -241,11 +322,13 @@ function _computeLaptopIntensityEvaluation(lap, customWeights = null) {
   const baseRamSanity = ramGb < 8 ? 0.52 : 1.0;
   const em = getLaptopEffectiveGpuMem(lap);
   const heft = parseFloat(st.vramHeft) || 1.6;
+  const techEval = _evaluateLaptopTechAndCpu(lap);
 
-  // 1. Gaming Utility
+  // 1. Gaming Utility (modulated by DLSS 5 / FSR / RT / PT / internal CPU balance)
   const gTgt = [550, 1400, 2400, 3150, 4050][ig - 1];
   const gFlr = [300, 850, 1550, 2350, 2950][ig - 1];
-  const uG = _intensityUtilityCurve(lap.gaming_score, gTgt, gFlr, ig);
+  const effLapGaming = Number(lap.gaming_score || 0) * techEval.mult;
+  const uG = _intensityUtilityCurve(effLapGaming, gTgt, gFlr, ig);
 
   // 2. Workstation Utility (Render / Editing / Dev profile + RAM floor)
   const wsEff = getLaptopWorkstationScore(lap);
@@ -309,6 +392,7 @@ function _computeLaptopIntensityEvaluation(lap, customWeights = null) {
     readinessGate: gate,
     avgIntensity,
     intens,
+    techNote: techEval.note,
     pillarUtils: { gaming: uG, workstation: uWS, localAI: uLAI, aiTraining: uTrn }
   };
 }
@@ -333,6 +417,7 @@ function enrichLaptopsWithContextualMetrics() {
     lap._compositeScore = ev.compositeScore;
     lap._readinessGate = ev.readinessGate;
     lap._avgIntensity = ev.avgIntensity;
+    lap._techNote = ev.techNote || '';
     lap._pillarUtils = ev.pillarUtils;
     if (ev.compositeScore > maxComposite) maxComposite = ev.compositeScore;
 
@@ -1558,6 +1643,7 @@ function renderLaptopCBTable() {
               <div class="font-bold text-white text-sm truncate max-w-[260px]" title="${_escLapHtml(l.name)}">${_escLapHtml(l.name)}</div>
               <div class="text-xs ui-mono text-slate-400 truncate max-w-[260px]">${_escLapHtml(l.cpu_name)} • ${_escLapHtml(l.gpu_name)}</div>
               ${l._readinessGate < 0.70 ? `<div class="text-xs text-rose-400 ui-mono font-semibold mt-0.5">Abaixo da carga exigida</div>` : ''}
+              ${l._techNote ? `<div class="text-xs text-amber-300 ui-mono font-semibold mt-0.5">${_escLapHtml(l._techNote)}</div>` : ''}
             </div>
           </div>
         </td>
