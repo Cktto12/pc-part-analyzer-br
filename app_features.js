@@ -7419,8 +7419,8 @@ function fireWindowsNativeNotification(deal) {
   const line2 = `Canal @${deal.channel_id} — Clique para abrir oferta`;
   const url = deal.buy_url && deal.buy_url.startsWith('http') ? deal.buy_url : (deal.post_url || '');
 
-  // 1. Trigger real Windows 10/11 OS Toast / Popup via server.py
-  if (PROMO_STATE.notifyWinToast || PROMO_STATE.notifyWinPopup) {
+  // 1. Trigger real Windows 10/11 OS Toast / Popup via server.py (local server only)
+  if ((PROMO_STATE.notifyWinToast || PROMO_STATE.notifyWinPopup) && isLocalServerHost()) {
     fetch('/api/win-notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
