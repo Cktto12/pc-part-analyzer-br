@@ -54,6 +54,26 @@
       sortOptions: []
     },
     {
+      tbodyId: 'peripherals-cb-table-body',
+      sortFnName: 'setPeriphCBCtxSort',
+      sortOptions: [
+        { key: 'cb', label: 'Melhor C/B' },
+        { key: 'score', label: 'Maior Nota' },
+        { key: 'price_asc', label: 'Menor Preço' },
+        { key: 'price_desc', label: 'Maior Preço' }
+      ]
+    },
+    {
+      tbodyId: 'misc-cb-table-body',
+      sortFnName: 'setMiscCBCtxSort',
+      sortOptions: [
+        { key: 'cb', label: 'Melhor C/B' },
+        { key: 'unit_asc', label: 'Menor R$/Unid. ou R$/L' },
+        { key: 'price_asc', label: 'Menor Preço' },
+        { key: 'price_desc', label: 'Maior Preço' }
+      ]
+    },
+    {
       tbodyId: 'bf-table-body',
       sortFnName: null,
       sortOptions: []
@@ -105,7 +125,7 @@
     if (low === '#' || (colIdx === 0 && low === '')) return 'rank';
     if (
       colIdx <= 1 &&
-      (low.includes('placa') || low.includes('processador') || low.includes('notebook') || low.includes('smartphone') || low.includes('celular') || low.includes('periférico') || low.includes('produto') || low.includes('modelo'))
+      (low.includes('placa') || low.includes('processador') || low.includes('notebook') || low.includes('smartphone') || low.includes('celular') || low.includes('periférico') || low.includes('produto') || low.includes('item') || low.includes('modelo'))
     ) {
       return 'name';
     }

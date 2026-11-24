@@ -256,6 +256,10 @@ DEFAULT_NOTIFY_CATEGORIES = {
     "psu": True,
     "laptop": False,
     "smartphone": False,
+    "peripheral": False,
+    "air_fryer": False,
+    "diapers": False,
+    "misc_custom": False,
 }
 
 DEFAULT_SPEC_FILTERS = {
@@ -266,6 +270,10 @@ DEFAULT_SPEC_FILTERS = {
     "psu": {},
     "laptop": {},
     "smartphone": {},
+    "peripheral": {},
+    "air_fryer": {},
+    "diapers": {},
+    "misc_custom": {},
 }
 
 _PHONE_NOISE_TOKENS = {
@@ -307,9 +315,66 @@ def _infer_phone_brand_server(deal, cat_item, specs, txt):
         return "Xiaomi"
     if re.search(r"\b(motorola|moto\s*[ge]\d+|edge\s*[56]0)\b", low):
         return "Motorola"
+    if re.search(r"\b(google\s*pixel|pixel\s*(?:8|9|10))\b", low):
+        return "Google"
     if re.search(r"\brealme\b", low):
         return "Realme"
     return ""
+
+
+_PERIPH_NOISE_TOKENS = {
+    "mouse", "teclado", "headset", "fone", "ouvido", "gamer", "gaming", "sem",
+    "fio", "wireless", "bluetooth", "usb", "rgb", "preto", "branco", "rosa",
+    "azul", "vermelho", "cinza", "mecanico", "optico", "magnetico", "para", "pc",
+    "com", "de", "e",
+}
+
+
+def _infer_peripheral_brand_server(deal, cat_item, specs, txt):
+    b = str(specs.get("brand") or deal.get("brand") or (cat_item or {}).get("brand") or "").strip()
+    if b:
+        return b
+    low = _strip_accents_lower(txt)
+    for cand in ("Logitech", "Razer", "HyperX", "Redragon", "Corsair", "SteelSeries", "JBL", "Havit", "Fifine", "Attack Shark", "Fallen", "Keychron", "Akko", "Aula", "Darmoshark", "Dell", "Sony", "Sennheiser", "Edifier", "QCY"):
+        if cand.lower() in low:
+            return cand
+    return ""
+
+
+def _peripheral_deal_matches_model(deal, cat_item, model_entry):
+    if isinstance(model_entry, dict):
+        m_slug = str(model_entry.get("slug") or "").strip().lower()
+        m_name = str(model_entry.get("name") or "").strip()
+    else:
+        m_slug = ""
+        m_name = str(model_entry or "").strip()
+
+    if m_slug and str(deal.get("matched_slug") or "").strip().lower() == m_slug:
+        return True
+
+    raw_tokens = re.findall(r"[a-z0-9]+", _strip_accents_lower(m_name or m_slug.replace("-", " ")))
+    core_tokens = [t for t in raw_tokens if t not in _PERIPH_NOISE_TOKENS and (len(t) >= 2 or t.isdigit())] or raw_tokens
+    if not core_tokens:
+        return False
+
+    combined_raw = f"{deal.get('title') or ''} {deal.get('head_text') or ''} {deal.get('matched_name') or ''} {(cat_item or {}).get('name') or ''}"
+    deal_tokens = set(re.findall(r"[a-z0-9]+", _strip_accents_lower(combined_raw)))
+    return all(t in deal_tokens for t in core_tokens)
+
+
+def _matches_any_keyword_phrase(hay_text, kw_val):
+    if isinstance(kw_val, (list, tuple)):
+        phrases = [str(x).strip() for x in kw_val if str(x).strip()]
+    else:
+        phrases = [p.strip() for p in re.split(r"[,;\n]+", str(kw_val or "")) if p.strip()]
+    if not phrases:
+        return True
+    hay_norm = _strip_accents_lower(hay_text)
+    for phr in phrases:
+        words = [w for w in re.findall(r"[a-z0-9]+", _strip_accents_lower(phr)) if w]
+        if words and all(w in hay_norm for w in words):
+            return True
+    return False
 
 
 def _smartphone_deal_matches_model(deal, cat_item, model_entry):
@@ -334,7 +399,7 @@ def _smartphone_deal_matches_model(deal, cat_item, model_entry):
 
     # Strip brand token when checking model core match? Keep brand + model, e.g. ['samsung', 'galaxy', 's25', 'ultra']
     # Wait: Telegram titles often say "Galaxy S25 Ultra" omitting "Samsung", so allow optional leading brand omit.
-    brand_words = {"samsung", "apple", "xiaomi", "motorola", "realme"}
+    brand_words = {"samsung", "apple", "xiaomi", "motorola", "realme", "google"}
     core_target = [t for t in target_tokens if t not in brand_words] or target_tokens
     if not all(t in deal_tokens for t in core_target):
         return False
@@ -606,8 +671,10 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
     deal["unverified_memory_type"] = False
     cfg = _with_alert_pref_defaults(cfg)
     kind = (deal.get("matched_kind") or "gpu").lower().strip()
+    if kind not in ("gpu", "cpu", "ram", "mobo", "psu", "laptop", "smartphone", "peripheral", "air_fryer", "diapers"):
+        kind = "misc_custom"
     cats = cfg.get("notifyCategories") or DEFAULT_NOTIFY_CATEGORIES
-    if not cats.get(kind, kind not in ("laptop", "smartphone")):
+    if not cats.get(kind, kind not in ("laptop", "smartphone", "peripheral", "air_fryer", "diapers", "misc_custom")):
         return False
 
     sf = (cfg.get("specFilters") or {}).get(kind) or {}
@@ -791,6 +858,114 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
             if not deal_brand or deal_brand not in req_brands:
                 return False
 
+    elif kind == "peripheral":
+        req_sub = [str(s).strip().lower() for s in (sf.get("sub_kinds") or []) if str(s).strip()]
+        sub_k = str(specs.get("sub_kind") or deal.get("peripheral_kind") or cat_item.get("kind") or "").strip().lower()
+        if not sub_k:
+            low_t = _strip_accents_lower(txt)
+            if re.search(r"\b(mouse|superlight|viper|deathadder)\b", low_t):
+                sub_k = "mouse"
+            elif re.search(r"\b(teclado|keyboard|keychron|kumara|fizz)\b", low_t):
+                sub_k = "keyboard"
+            elif re.search(r"\b(headset|fone|cloud\s*(?:ii|iii|stinger|alpha)|blackshark)\b", low_t):
+                sub_k = "headset"
+        if req_sub and (not sub_k or sub_k not in req_sub):
+            return False
+        if sf.get("wireless_only"):
+            is_wl = bool(specs.get("wireless") or deal.get("is_wireless") or cat_item.get("is_wireless") or re.search(r"\b(sem\s*fio|wireless|lightspeed|2\.4\s*g|bluetooth|tri-?mode|superlight)\b", txt, re.I))
+            if not is_wl:
+                return False
+        if sf.get("gamer_only"):
+            is_gm = bool(specs.get("gamer") or deal.get("is_gamer") or re.search(r"\b(gamer|gaming|hero\s*25k|paw\s*3\d{3}|hall\s*effect|magn[ée]tic|mec[âa]nic|rgb|superlight|cloud|blackshark|zeus|kumara)\b", txt, re.I))
+            if not is_gm:
+                return False
+        req_brands = [str(b).strip().lower() for b in (sf.get("brands") or []) if str(b).strip()]
+        req_models = [m for m in (sf.get("models") or []) if (isinstance(m, dict) and (m.get("slug") or m.get("name"))) or (isinstance(m, str) and m.strip())]
+        deal_brand = _infer_peripheral_brand_server(deal, cat_item, specs, txt).lower()
+        if req_models:
+            model_brands = set()
+            for m in req_models:
+                mb = _infer_peripheral_brand_server({"brand": m.get("brand", "")} if isinstance(m, dict) else {}, None, {}, m.get("name", "") if isinstance(m, dict) else str(m)).lower()
+                if mb:
+                    model_brands.add(mb)
+            open_brands = [b for b in req_brands if b not in model_brands]
+            if not ((deal_brand and deal_brand in open_brands) or any(_peripheral_deal_matches_model(deal, cat_item, m) for m in req_models)):
+                return False
+        elif req_brands:
+            if not deal_brand or deal_brand not in req_brands:
+                return False
+
+    elif kind == "air_fryer":
+        af_specs = dict(deal.get("misc_specs") or (cat_item.get("specs") if isinstance(cat_item, dict) else {}) or specs)
+        if not af_specs or ("liters" not in af_specs and "is_oven" not in af_specs):
+            try:
+                import misc_scraper
+                af_specs = misc_scraper.parse_air_fryer_specs(txt, float(deal.get("price_brl") or 0))
+            except Exception:
+                af_specs = {}
+        req_brands = [_strip_accents_lower(b) for b in (sf.get("brands") or []) if str(b).strip()]
+        if req_brands:
+            b_val = _strip_accents_lower(af_specs.get("brand") or deal.get("brand") or cat_item.get("brand") or "")
+            if not any(rb in b_val or rb in _strip_accents_lower(txt) for rb in req_brands):
+                return False
+        fmt = str(sf.get("format") or "").strip().lower()
+        if fmt == "oven" and not af_specs.get("is_oven"):
+            return False
+        if fmt == "cesto" and af_specs.get("is_oven"):
+            return False
+        if sf.get("digital_only") and not af_specs.get("is_digital"):
+            return False
+        min_l = float(sf.get("min_liters") or 0)
+        liters = float(af_specs.get("liters") or 0)
+        if min_l > 0 and liters < min_l:
+            return False
+        max_ppl = float(sf.get("max_price_per_liter") or 0)
+        ppl = float(af_specs.get("price_per_liter") or (float(deal.get("price_brl") or 0) / liters if liters > 0 else 0))
+        if max_ppl > 0 and (ppl <= 0 or ppl > max_ppl):
+            return False
+        kw = str(sf.get("keyword") or "").strip()
+        if kw and not _matches_any_keyword_phrase(txt, kw):
+            return False
+
+    elif kind == "diapers":
+        dp_specs = dict(deal.get("misc_specs") or (cat_item.get("specs") if isinstance(cat_item, dict) else {}) or specs)
+        if not dp_specs or ("price_per_unit" not in dp_specs and "units" not in dp_specs):
+            try:
+                import misc_scraper
+                dp_specs = misc_scraper.parse_diaper_specs(txt, float(deal.get("price_brl") or 0))
+            except Exception:
+                dp_specs = {}
+        req_brands = [_strip_accents_lower(b) for b in (sf.get("brands") or []) if str(b).strip()]
+        if req_brands:
+            b_val = _strip_accents_lower(dp_specs.get("brand") or deal.get("brand") or cat_item.get("brand") or "")
+            if not any(rb in b_val or rb in _strip_accents_lower(txt) for rb in req_brands):
+                return False
+        req_sizes = [str(sz).strip().upper() for sz in (sf.get("sizes") or []) if str(sz).strip()]
+        if req_sizes:
+            d_sz = str(dp_specs.get("size") or "").strip().upper()
+            if not d_sz or d_sz not in req_sizes:
+                return False
+        style_pref = str(sf.get("style") or "").strip().lower()
+        if style_pref == "pants" and not dp_specs.get("is_pants"):
+            return False
+        if style_pref == "fita" and dp_specs.get("is_pants"):
+            return False
+        max_ppu = float(sf.get("max_price_per_unit") or 0)
+        ppu = float(dp_specs.get("price_per_unit") or 0)
+        if max_ppu > 0 and (ppu <= 0 or ppu > max_ppu):
+            return False
+        kw = str(sf.get("keyword") or "").strip()
+        if kw and not _matches_any_keyword_phrase(txt, kw):
+            return False
+
+    elif kind == "misc_custom":
+        kws = sf.get("keywords")
+        has_kws = bool(kws) if isinstance(kws, (list, tuple)) else bool(str(kws or "").strip())
+        if not has_kws:
+            return False
+        if not _matches_any_keyword_phrase(txt, kws):
+            return False
+
     return True
 
 
@@ -816,16 +991,22 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     pass
 
     catalog_by_slug = {}
-    for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu"), ("laptops", "laptop"), ("smartphones", "smartphone")):
+    for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu"), ("laptops", "laptop"), ("smartphones", "smartphone"), ("peripherals", "peripheral")):
         for it in db.get(grp, []):
             if it.get("slug"):
                 catalog_by_slug[it["slug"]] = (kind_name, it)
+    for mcid, mitems in (db.get("misc_catalog") or {}).items():
+        mkind = mcid if mcid in ("air_fryer", "diapers") else "misc_custom"
+        for it in (mitems or []):
+            if it.get("slug"):
+                catalog_by_slug[it["slug"]] = (mkind, it)
 
     from promo_radar import scan_live_promotions
     res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id, force=fast_poll, fast_poll=fast_poll)
     matched = list(res.get("matched_deals", []))
-    if cfg.get("notifyCategories", {}).get("smartphone"):
-        seen_pids = {d.get("post_id") for d in matched if d.get("post_id")}
+    seen_pids = {d.get("post_id") for d in matched if d.get("post_id")}
+    notify_cats = cfg.get("notifyCategories") or {}
+    if notify_cats.get("smartphone"):
         for sd in (res.get("smartphone_deals") or []):
             sd_copy = dict(sd)
             sd_copy.setdefault("matched_kind", "smartphone")
@@ -834,6 +1015,46 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 sd_copy.setdefault("deal_status", "ok")
             if sd_copy.get("post_id") not in seen_pids:
                 matched.append(sd_copy)
+                if sd_copy.get("post_id"):
+                    seen_pids.add(sd_copy.get("post_id"))
+    if notify_cats.get("peripheral"):
+        for pd in (res.get("peripheral_deals") or []):
+            pd_copy = dict(pd)
+            pd_copy.setdefault("matched_kind", "peripheral")
+            if not pd_copy.get("is_expired") and pd_copy.get("deal_status") not in ("expired", "out_of_stock"):
+                pd_copy.setdefault("stock_verified", True)
+                pd_copy.setdefault("deal_status", "ok")
+            if pd_copy.get("post_id") not in seen_pids:
+                matched.append(pd_copy)
+                if pd_copy.get("post_id"):
+                    seen_pids.add(pd_copy.get("post_id"))
+    if notify_cats.get("air_fryer") or notify_cats.get("diapers") or notify_cats.get("misc_custom"):
+        for md in (res.get("misc_deals") or []):
+            md_copy = dict(md)
+            mc = md_copy.get("misc_category") or md_copy.get("matched_kind") or "misc_custom"
+            md_copy["matched_kind"] = mc if mc in ("air_fryer", "diapers") else "misc_custom"
+            if md_copy.get("misc_specs") and not md_copy.get("item_specs"):
+                md_copy["item_specs"] = md_copy["misc_specs"]
+            if not md_copy.get("is_expired") and md_copy.get("deal_status") not in ("expired", "out_of_stock"):
+                md_copy.setdefault("stock_verified", True)
+                md_copy.setdefault("deal_status", "ok")
+            if md_copy.get("post_id") not in seen_pids:
+                matched.append(md_copy)
+                if md_copy.get("post_id"):
+                    seen_pids.add(md_copy.get("post_id"))
+    if notify_cats.get("misc_custom"):
+        mc_sf = (cfg.get("specFilters") or {}).get("misc_custom") or {}
+        if mc_sf.get("keywords"):
+            for fd in (res.get("recent_feed") or []):
+                if fd.get("post_id") in seen_pids:
+                    continue
+                fd_copy = dict(fd)
+                fd_copy["matched_kind"] = "misc_custom"
+                fd_copy.setdefault("stock_verified", True)
+                fd_copy.setdefault("deal_status", "ok")
+                matched.append(fd_copy)
+                if fd_copy.get("post_id"):
+                    seen_pids.add(fd_copy.get("post_id"))
     history = load_notified_history(reg_id)
     notified_count = 0
 
@@ -941,11 +1162,32 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     reasons.append(bf_reason)
 
         # 5B. Explicit Smartphone alert watch (picked device(s) or explicit max_price)
-        if (d.get("matched_kind") or "").lower() == "smartphone":
+        d_kind = (d.get("matched_kind") or "").lower()
+        if d_kind == "smartphone":
             sp_sf = (cfg.get("specFilters") or {}).get("smartphone") or {}
             if sp_sf.get("models") or float(sp_sf.get("max_price") or 0) > 0:
                 qualifies = True
                 reasons.append("📱 Smartphone monitorado")
+        elif d_kind == "peripheral":
+            per_sf = (cfg.get("specFilters") or {}).get("peripheral") or {}
+            if per_sf.get("models") or per_sf.get("brands") or per_sf.get("sub_kinds") or float(per_sf.get("max_price") or 0) > 0:
+                qualifies = True
+                reasons.append("🖱️ Periférico monitorado")
+        elif d_kind == "air_fryer":
+            af_sf = (cfg.get("specFilters") or {}).get("air_fryer") or {}
+            if af_sf.get("brands") or af_sf.get("format") or float(af_sf.get("min_liters") or 0) > 0 or float(af_sf.get("max_price_per_liter") or 0) > 0 or float(af_sf.get("max_price") or 0) > 0 or af_sf.get("keyword"):
+                qualifies = True
+                reasons.append("🍟 Air Fryer no critério")
+        elif d_kind == "diapers":
+            dp_sf = (cfg.get("specFilters") or {}).get("diapers") or {}
+            if dp_sf.get("brands") or dp_sf.get("sizes") or dp_sf.get("style") or float(dp_sf.get("max_price_per_unit") or 0) > 0 or float(dp_sf.get("max_price") or 0) > 0 or dp_sf.get("keyword"):
+                qualifies = True
+                reasons.append("👶 Fralda no critério")
+        elif d_kind == "misc_custom":
+            mc_sf = (cfg.get("specFilters") or {}).get("misc_custom") or {}
+            if mc_sf.get("keywords"):
+                qualifies = True
+                reasons.append("📦 Item personalizado encontrado")
 
         if qualifies:
             if d.get("unverified_memory_type") and not any("DDR4/DDR5" in str(r) for r in reasons):
@@ -962,8 +1204,13 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         import coupon_tracker
         target_map = {t.get("slug"): float(t.get("max_price") or 0) for t in targets if t.get("slug")}
         cat_candidates = []
-        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu"), ("smartphones", "smartphone")):
-            for it in db.get(grp, []):
+        cat_iter = []
+        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu"), ("smartphones", "smartphone"), ("peripherals", "peripheral")):
+            cat_iter.append((kind_name, db.get(grp, [])))
+        for mcid, mitems in (db.get("misc_catalog") or {}).items():
+            cat_iter.append((mcid if mcid in ("air_fryer", "diapers") else "misc_custom", mitems or []))
+        for kind_name, grp_items in cat_iter:
+            for it in grp_items:
                 if it.get("slug") == "x99-p4-lga2011" or it.get("is_xeon") or it.get("store_name") == "referencia":
                     continue
                 slug = it.get("slug")

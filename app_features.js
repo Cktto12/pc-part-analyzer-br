@@ -3320,6 +3320,40 @@ const BF_FAMILIES = {
     filterFn: s => s.category === 'midrange' || s.category === 'entry'
   },
 
+  // --- PERIPHERALS FAMILIES ---
+  periph_mouse: {
+    kind: 'peripherals',
+    label: '🖱️ Mouses Gamer & Sem Fio (Zoom BR)',
+    filterFn: p => p.kind === 'mouse'
+  },
+  periph_keyboard: {
+    kind: 'peripherals',
+    label: '⌨️ Teclados Mecânicos, Magnéticos & Hall Effect',
+    filterFn: p => p.kind === 'keyboard'
+  },
+  periph_headset: {
+    kind: 'peripherals',
+    label: '🎧 Headsets Gamer & Estúdio (2.4GHz / P2 / USB)',
+    filterFn: p => p.kind === 'headset'
+  },
+
+  // --- MISC FAMILIES (AIR FRYER & FRALDAS) ---
+  misc_air_fryer: {
+    kind: 'misc',
+    label: '🍟 Air Fryers — Cesto & Oven (Preços Históricos Zoom BR)',
+    filterFn: m => m.category_id === 'air_fryer'
+  },
+  misc_diapers: {
+    kind: 'misc',
+    label: '👶 Fraldas Infantis (Pampers, Huggies, Pom Pom, Babysec)',
+    filterFn: m => m.category_id === 'diapers'
+  },
+  misc_all: {
+    kind: 'misc',
+    label: '📦 Todos os Produtos Diversos Monitorados',
+    filterFn: () => true
+  },
+
   // --- CUSTOM MODEL SELECTION ---
   custom: {
     kind: 'custom',
@@ -3343,6 +3377,30 @@ function getExactBlackFridayDate(year) {
 }
 window.getExactBlackFridayDate = getExactBlackFridayDate;
 
+function _getBFPoolForContext(ctx) {
+  if (ctx === 'laptop') return DB.laptops || [];
+  if (ctx === 'smartphone') return DB.smartphones || [];
+  if (ctx === 'peripherals' || ctx === 'peripheral') return DB.peripherals || [];
+  if (ctx === 'misc' || ctx === 'air_fryer' || ctx === 'diapers') {
+    if (typeof getMiscCatalogPool === 'function') {
+      return getMiscCatalogPool((ctx === 'air_fryer' || ctx === 'diapers') ? ctx : null);
+    }
+    const mc = (DB && DB.misc_catalog && typeof DB.misc_catalog === 'object') ? DB.misc_catalog : {};
+    return Object.entries(mc).flatMap(([cid, arr]) => (arr || []).map(x => ({ ...x, category_id: x.category_id || cid })));
+  }
+  if (ctx === 'cpu') return DB.cpus || [];
+  return DB.gpus || [];
+}
+
+function _getBFDefaultFamKey(ctx) {
+  if (ctx === 'laptop') return 'laptop_gaming_pro';
+  if (ctx === 'smartphone') return 'phone_flagship';
+  if (ctx === 'peripherals') return 'periph_mouse';
+  if (ctx === 'misc') return 'misc_air_fryer';
+  if (ctx === 'cpu') return 'cpu_mid_am4';
+  return 'gpu_cross_tiers';
+}
+
 // Dynamically populate #bf-select-family strictly according to active context
 function updateBFFamilySelectorOptions() {
   const sel = document.getElementById('bf-select-family');
@@ -3352,6 +3410,8 @@ function updateBFFamilySelectorOptions() {
     if (k === 'custom') return true;
     if (ctx === 'laptop') return k.startsWith('laptop_');
     if (ctx === 'smartphone') return k.startsWith('phone_');
+    if (ctx === 'peripherals') return k.startsWith('periph_');
+    if (ctx === 'misc') return k.startsWith('misc_');
     if (ctx === 'cpu') return k.startsWith('cpu_');
     return k.startsWith('gpu_');
   });
@@ -3365,7 +3425,7 @@ function updateBFFamilySelectorOptions() {
   if (allowedKeys.includes(curVal)) {
     sel.value = curVal;
   } else {
-    sel.value = ctx === 'laptop' ? 'laptop_gaming_pro' : (ctx === 'smartphone' ? 'phone_flagship' : (ctx === 'cpu' ? 'cpu_mid_am4' : 'gpu_cross_tiers'));
+    sel.value = _getBFDefaultFamKey(ctx);
   }
 }
 window.updateBFFamilySelectorOptions = updateBFFamilySelectorOptions;
@@ -3386,11 +3446,11 @@ function renderBFCustomModelsCheckboxes() {
   const container = document.getElementById('bf-custom-models-checkboxes');
   if (!container) return;
   const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
-  const pool = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'smartphone' ? (DB.smartphones || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || [])));
+  const pool = _getBFPoolForContext(ctx);
 
   if (!STATE.bfCustomSlugs || STATE.bfCustomSlugs.size === 0 || !pool.some(x => STATE.bfCustomSlugs.has(x.slug))) {
     const famKey = document.getElementById('bf-select-family').value;
-    const defKey = ctx === 'laptop' ? 'laptop_gaming_pro' : (ctx === 'smartphone' ? 'phone_flagship' : (ctx === 'cpu' ? 'cpu_mid_am4' : 'gpu_cross_tiers'));
+    const defKey = _getBFDefaultFamKey(ctx);
     const fam = BF_FAMILIES[famKey] || BF_FAMILIES[defKey];
     const seed = fam.filterFn
       ? pool.filter(fam.filterFn).slice(0, 8).map(x => x.slug)
@@ -3400,7 +3460,15 @@ function renderBFCustomModelsCheckboxes() {
 
   container.innerHTML = pool.map(item => {
     const checked = STATE.bfCustomSlugs.has(item.slug);
-    const sub = ctx === 'laptop' ? `${item.ram_gb}G / ${item.gpu_vram_gb}G` : (ctx === 'smartphone' ? `${item.ram_gb}G / ${item.storage_gb}G` : (ctx === 'cpu' ? (item.socket || 'CPU') : `${item.vram_gb || 8}GB`));
+    const sub = ctx === 'laptop'
+      ? `${item.ram_gb}G / ${item.gpu_vram_gb}G`
+      : (ctx === 'smartphone'
+        ? `${item.ram_gb}G / ${item.storage_gb}G`
+        : (ctx === 'peripherals'
+          ? (item.kind || item.brand || 'Perif.')
+          : (ctx === 'misc'
+            ? ((item.specs && (item.specs.price_per_unit ? `R$${Number(item.specs.price_per_unit).toFixed(2)}/u` : (item.specs.price_per_liter ? `R$${Math.round(item.specs.price_per_liter)}/L` : item.category_id))) || 'Misc')
+            : (ctx === 'cpu' ? (item.socket || 'CPU') : `${item.vram_gb || 8}GB`))));
     return `
       <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/70 border ${checked ? 'border-sky-500/50 text-sky-200' : 'border-slate-800 text-slate-400'} text-xs font-mono cursor-pointer hover:border-slate-700 transition">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="onBFCustomModelToggle('${item.slug}', this.checked)" class="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0">
@@ -3425,14 +3493,14 @@ function onBFCustomModelToggle(slug, checked) {
   const famSel = document.getElementById('bf-select-family');
   if (famSel) famSel.value = 'custom';
   BF_FAMILIES.custom.slugs = [...STATE.bfCustomSlugs];
-  BF_FAMILIES.custom.kind = ctx === 'laptop' ? 'laptop' : (ctx === 'smartphone' ? 'smartphone' : (ctx === 'cpu' ? 'cpu' : 'gpu'));
+  BF_FAMILIES.custom.kind = ctx;
   renderBlackFridayTab();
 }
 window.onBFCustomModelToggle = onBFCustomModelToggle;
 
 function selectAllBFModels(enable) {
   const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
-  const pool = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'smartphone' ? (DB.smartphones || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || [])));
+  const pool = _getBFPoolForContext(ctx);
   if (enable) {
     STATE.bfCustomSlugs = new Set(pool.slice(0, 15).map(x => x.slug));
   } else {
@@ -3441,7 +3509,7 @@ function selectAllBFModels(enable) {
   const famSel = document.getElementById('bf-select-family');
   if (famSel) famSel.value = 'custom';
   BF_FAMILIES.custom.slugs = [...STATE.bfCustomSlugs];
-  BF_FAMILIES.custom.kind = ctx === 'laptop' ? 'laptop' : (ctx === 'smartphone' ? 'smartphone' : (ctx === 'cpu' ? 'cpu' : 'gpu'));
+  BF_FAMILIES.custom.kind = ctx;
   renderBFCustomModelsCheckboxes();
   renderBlackFridayTab();
 }
@@ -3508,12 +3576,14 @@ function bfAnalyzeItem(item, kind) {
     if (mOff) effectiveCurrent = Math.max(10, item.price_brl - parseFloat(mOff[1]));
   }
 
-  // Use contextual composite score if GPU or Laptop, else gaming index
+  // Use contextual composite score if GPU or Laptop, normalized domain score for Smartphone/Peripherals/Misc, else CPU gaming index
   const perf = kind === 'laptop'
     ? (typeof getLaptopContextualCompositeScore === 'function' ? getLaptopContextualCompositeScore(item) : ((item.gaming_score || 1000) * 2))
     : (kind === 'gpu'
         ? (typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(item) : (item.gaming_score || 1))
-        : getCpuGamingIndex(item) * 100);
+        : (['smartphone', 'peripherals', 'peripheral', 'misc', 'air_fryer', 'diapers'].includes(kind)
+            ? Math.max(500, Number(item.overall_score || item.cb_score || item.perf_score || 65) * 100)
+            : getCpuGamingIndex(item) * 100));
 
   return {
     item, kind, hist, years, allMin,
@@ -3599,16 +3669,13 @@ function toggleBFModel(slug) {
 }
 
 function renderBlackFridayTab() {
-  if (!DB.gpus.length && !DB.cpus.length && !(DB.laptops || []).length && !(DB.smartphones || []).length) return;
+  if (!DB.gpus.length && !DB.cpus.length && !(DB.laptops || []).length && !(DB.smartphones || []).length && !(DB.peripherals || []).length) return;
   const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
-  const isCpu = ctx === 'cpu';
-  const isLaptop = ctx === 'laptop';
-  const isPhone = ctx === 'smartphone';
   const famKey = document.getElementById('bf-select-family').value;
-  const defKey = isLaptop ? 'laptop_gaming_pro' : (isPhone ? 'phone_flagship' : (isCpu ? 'cpu_mid_am4' : 'gpu_cross_tiers'));
+  const defKey = _getBFDefaultFamKey(ctx);
   const fam = BF_FAMILIES[famKey] || BF_FAMILIES[defKey];
-  const activeKind = (fam.kind === 'custom') ? (isLaptop ? 'laptop' : (isPhone ? 'smartphone' : (isCpu ? 'cpu' : 'gpu'))) : fam.kind;
-  const pool = activeKind === 'laptop' ? (DB.laptops || []) : (activeKind === 'smartphone' ? (DB.smartphones || []) : (activeKind === 'cpu' ? (DB.cpus || []) : (DB.gpus || [])));
+  const activeKind = (fam.kind === 'custom') ? ctx : fam.kind;
+  const pool = _getBFPoolForContext(activeKind);
 
   let items = [];
   if (famKey === 'custom' && STATE.bfCustomSlugs && STATE.bfCustomSlugs.size > 0) {
@@ -3755,7 +3822,17 @@ function renderBlackFridayTab() {
               : (s.item.vram_gb ? `<span class="ui-badge ui-mono">${s.item.vram_gb} GB</span>` : '')}
             ${s.item.coupon ? `<button type="button" onclick="event.stopPropagation(); typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${s.item.coupon}', '${s.item.offer_url}') : navigator.clipboard.writeText('${s.item.coupon}')" class="ui-badge ui-badge--warn ui-mono cursor-pointer" title="Copiar cupom">🎟️ ${s.item.coupon}</button>` : ''}
           </div>
-          <div class="text-xs text-slate-400 ui-mono mt-0.5">${s.kind === 'laptop' ? `${s.item.cpu_name} • ${s.item.gpu_name}` : (s.kind === 'gpu' ? `Score ${Math.round(s.perf)}` : `Índice ${getCpuGamingIndex(s.item)}`)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts</div>
+          <div class="text-xs text-slate-400 ui-mono mt-0.5">${
+            s.kind === 'laptop'
+              ? `${s.item.cpu_name} • ${s.item.gpu_name} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts`
+              : (s.kind === 'gpu'
+                ? `Score ${Math.round(s.perf)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts`
+                : (s.kind === 'smartphone'
+                  ? `${s.item.soc_name || 'SoC'} • ${s.item.ram_gb || 8}G/${s.item.storage_gb || 128}G`
+                  : ((s.kind === 'peripherals' || s.kind === 'misc' || s.kind === 'air_fryer' || s.kind === 'diapers')
+                    ? `${(s.item.specs && s.item.specs.summary) || s.item.brand || '--'} • C/B ${Math.round(s.item.cb_score || 60)}/100`
+                    : `Índice ${getCpuGamingIndex(s.item)} • ${fmtBRLShort(s.brlPerContextualPerf || s.brlPerPerf)}/1000 pts`)))
+          }</div>
         </td>
         <td class="text-right ui-mono font-bold text-white whitespace-nowrap">${fmtBRLShort(s.current)}</td>
         <td>
@@ -5774,7 +5851,11 @@ let PROMO_STATE = {
     mobo: true,
     ram: true,
     laptop: false,
-    smartphone: false
+    smartphone: false,
+    peripheral: false,
+    air_fryer: false,
+    diapers: false,
+    misc_custom: false
   },
   specFilters: {
     mobo: {},
@@ -5783,7 +5864,11 @@ let PROMO_STATE = {
     gpu: {},
     psu: {},
     laptop: {},
-    smartphone: {}
+    smartphone: {},
+    peripheral: {},
+    air_fryer: {},
+    diapers: {},
+    misc_custom: {}
   },
   notifyWinToast: true,
   notifyWinPopup: false,
@@ -5916,12 +6001,15 @@ try {
     });
     if (savedCfg.notifyCategories && typeof savedCfg.notifyCategories === 'object') {
       PROMO_STATE.notifyCategories = Object.assign(
-        { gpu: true, cpu: true, psu: true, mobo: true, ram: true, laptop: false, smartphone: false },
+        {
+          gpu: true, cpu: true, psu: true, mobo: true, ram: true,
+          laptop: false, smartphone: false, peripheral: false, air_fryer: false, diapers: false, misc_custom: false
+        },
         savedCfg.notifyCategories
       );
     }
     if (savedCfg.specFilters && typeof savedCfg.specFilters === 'object') {
-      ['mobo', 'ram', 'cpu', 'gpu', 'psu', 'laptop', 'smartphone'].forEach(cat => {
+      ['mobo', 'ram', 'cpu', 'gpu', 'psu', 'laptop', 'smartphone', 'peripheral', 'air_fryer', 'diapers', 'misc_custom'].forEach(cat => {
         if (savedCfg.specFilters[cat] && typeof savedCfg.specFilters[cat] === 'object') {
           PROMO_STATE.specFilters[cat] = { ...savedCfg.specFilters[cat] };
         }
@@ -5950,6 +6038,7 @@ function _psuCertTierClient(certStr) {
 
 function _findCatalogItemForDeal(deal) {
   if (!deal || !deal.matched_slug || typeof DB === 'undefined') return null;
+  const mc = (DB.misc_catalog && typeof DB.misc_catalog === 'object') ? DB.misc_catalog : {};
   const grpMap = {
     gpu: DB.gpus,
     cpu: DB.cpus,
@@ -5957,19 +6046,123 @@ function _findCatalogItemForDeal(deal) {
     mobo: DB.motherboards,
     psu: DB.psus,
     laptop: DB.laptops,
-    smartphone: DB.smartphones
+    smartphone: DB.smartphones,
+    peripheral: DB.peripherals,
+    air_fryer: mc.air_fryer,
+    diapers: mc.diapers
   };
-  const arr = grpMap[(deal.matched_kind || 'gpu').toLowerCase()];
-  return Array.isArray(arr) ? arr.find(x => x && x.slug === deal.matched_slug) || null : null;
+  const k = (deal.matched_kind || 'gpu').toLowerCase();
+  const arr = grpMap[k] || mc[k];
+  if (Array.isArray(arr)) {
+    return arr.find(x => x && x.slug === deal.matched_slug) || null;
+  }
+  const allMisc = Object.values(mc).flat();
+  return allMisc.find(x => x && x.slug === deal.matched_slug) || null;
+}
+
+function _matchesAnyKeywordPhraseClient(hayText, kwVal) {
+  const phrases = Array.isArray(kwVal)
+    ? kwVal.map(x => String(x || '').trim()).filter(Boolean)
+    : String(kwVal || '').split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+  if (!phrases.length) return true;
+  const hayNorm = _normalizePhoneStrClient(hayText || '');
+  return phrases.some(phr => {
+    const words = _normalizePhoneStrClient(phr).match(/[a-z0-9]+/g) || [];
+    return words.length > 0 && words.every(w => hayNorm.includes(w));
+  });
+}
+
+function _parseAirFryerClient(txt, priceBrl, rawSpecs = null) {
+  if (rawSpecs && (rawSpecs.liters || rawSpecs.is_oven !== undefined)) return rawSpecs;
+  const low = _normalizePhoneStrClient(txt || '');
+  const brands = ['Philips Walita', 'Walita', 'Electrolux', 'Mondial', 'Oster', 'Britania', 'Arno', 'Midea', 'Philco', 'Cadence', 'Ninja', 'Gaabor', 'Xiaomi'];
+  let brand = '';
+  for (const b of brands) {
+    if (low.includes(b.toLowerCase())) {
+      brand = b === 'Walita' ? 'Philips Walita' : (b === 'Britania' ? 'Britânia' : b);
+      break;
+    }
+  }
+  let liters = 0;
+  const mL = low.match(/(\d+(?:[.,]\d)?)\s*(?:l\b|litros?)/);
+  if (mL) {
+    const v = parseFloat(mL[1].replace(',', '.'));
+    if (v >= 1.5 && v <= 30) liters = v;
+  }
+  const isOven = /\boven\b|forno|12\s*l|11\s*l|10\s*l|duplo\s*cesto|dual/.test(low);
+  const isDigital = /digital|touch|led|display|wi-?fi/.test(low);
+  const ppl = (liters > 0 && priceBrl > 0) ? Math.round((priceBrl / liters) * 100) / 100 : 0;
+  return { brand, liters, is_oven: isOven, is_digital: isDigital, price_per_liter: ppl };
+}
+
+function _parseDiaperClient(txt, priceBrl, rawSpecs = null) {
+  if (rawSpecs && (rawSpecs.price_per_unit || rawSpecs.units)) return rawSpecs;
+  const low = _normalizePhoneStrClient(txt || '');
+  const brands = ['Pampers', 'Huggies', 'Babysec', 'Pom Pom', 'MamyPoko', 'Cremer', 'loop', 'Personal'];
+  let brand = '';
+  for (const b of brands) {
+    if (low.includes(b.toLowerCase())) {
+      brand = b;
+      break;
+    }
+  }
+  let size = '';
+  const mSz = low.match(/\b(xxxg|xxg|xg|rn|p|m|g)\b/i);
+  if (mSz) size = mSz[1].toUpperCase();
+  const isPants = /pants|vestir|cal[cç]a|shortinho/.test(low);
+  let units = 0;
+  const mU = low.match(/(?:com\s*|c\/\s*)?(\d{2,3})\s*(?:unid(?:ades?)?|un\.?|tiras?|fraldas?)\b/);
+  if (mU) {
+    const u = parseInt(mU[1], 10);
+    if (u >= 10 && u <= 600) units = u;
+  }
+  const ppu = (units > 0 && priceBrl > 0) ? Math.round((priceBrl / units) * 100) / 100 : 0;
+  return { brand, size, is_pants: isPants, units, price_per_unit: ppu };
+}
+
+const _PERIPH_NOISE_CLIENT = new Set([
+  'mouse', 'teclado', 'headset', 'fone', 'ouvido', 'gamer', 'gaming', 'sem',
+  'fio', 'wireless', 'bluetooth', 'usb', 'rgb', 'preto', 'branco', 'rosa',
+  'azul', 'vermelho', 'cinza', 'mecanico', 'optico', 'magnetico', 'para', 'pc', 'com', 'de', 'e'
+]);
+
+function _inferPeriphBrandClient(obj, txtStr) {
+  const b = String(obj?.brand || '').trim();
+  if (b) return b;
+  const low = _normalizePhoneStrClient(txtStr || '');
+  for (const cand of ['Logitech', 'Razer', 'HyperX', 'Redragon', 'Corsair', 'SteelSeries', 'JBL', 'Havit', 'Fifine', 'Attack Shark', 'Fallen', 'Keychron', 'Akko', 'Aula', 'Darmoshark', 'Dell', 'Sony', 'Sennheiser']) {
+    if (low.includes(cand.toLowerCase())) return cand;
+  }
+  return '';
+}
+
+function _periphDealMatchesModelClient(deal, catItem, modelEntry) {
+  const mSlug = String((typeof modelEntry === 'object' ? modelEntry.slug : '') || '').trim().toLowerCase();
+  const mName = String((typeof modelEntry === 'object' ? modelEntry.name : modelEntry) || '').trim();
+  if (mSlug && String(deal?.matched_slug || '').trim().toLowerCase() === mSlug) return true;
+  const rawTokens = _normalizePhoneStrClient(mName || mSlug.replace(/-/g, ' ')).match(/[a-z0-9]+/g) || [];
+  const core = rawTokens.filter(t => !_PERIPH_NOISE_CLIENT.has(t) && (t.length >= 2 || /^\d+$/.test(t)));
+  const reqTokens = core.length ? core : rawTokens;
+  if (!reqTokens.length) return false;
+  const combined = `${deal?.title || ''} ${deal?.head_text || ''} ${deal?.matched_name || ''} ${catItem?.name || ''}`;
+  const dealSet = new Set(_normalizePhoneStrClient(combined).match(/[a-z0-9]+/g) || []);
+  return reqTokens.every(t => dealSet.has(t));
 }
 
 function dealMatchesPromoPreferences(deal, catItem = null, opts = {}) {
   if (!deal) return false;
-  const kind = (deal.matched_kind || 'gpu').toLowerCase().trim();
+  const rawKind = (deal.matched_kind || deal.misc_category || 'gpu').toLowerCase().trim();
+  const knownKinds = new Set(['gpu', 'cpu', 'ram', 'mobo', 'psu', 'laptop', 'smartphone', 'peripheral', 'air_fryer', 'diapers', 'misc_custom']);
+  const kind = knownKinds.has(rawKind) ? rawKind : 'misc_custom';
   const cats = PROMO_STATE.notifyCategories || {};
   const catEnabled = cats[kind] !== false;
   if (!opts.ignoreCategoryToggle && !catEnabled) {
-    if (!(opts.allowLaptopInLaptopCtx && kind === 'laptop') && !(opts.allowSmartphoneInSmartphoneCtx && kind === 'smartphone')) {
+    if (
+      !(opts.allowLaptopInLaptopCtx && kind === 'laptop') &&
+      !(opts.allowSmartphoneInSmartphoneCtx && kind === 'smartphone') &&
+      !(opts.allowPeripheralInPeriphCtx && kind === 'peripheral') &&
+      !(opts.allowMiscInMiscCtx && (kind === 'air_fryer' || kind === 'diapers' || kind === 'misc_custom'))
+    ) {
       return false;
     }
   }
@@ -6064,6 +6257,7 @@ function dealMatchesPromoPreferences(deal, catItem = null, opts = {}) {
       if (/\b(samsung|galaxy)\b/.test(low)) return 'Samsung';
       if (/\b(xiaomi|poco|redmi)\b/.test(low)) return 'Xiaomi';
       if (/\b(motorola|moto\s*[ge]\d+|edge\s*[56]0)\b/.test(low)) return 'Motorola';
+      if (/\b(google\s*pixel|pixel\s*(?:8|9|10))\b/.test(low)) return 'Google';
       if (/\brealme\b/.test(low)) return 'Realme';
       return '';
     };
@@ -6084,6 +6278,82 @@ function dealMatchesPromoPreferences(deal, catItem = null, opts = {}) {
     } else if (reqBrands.length) {
       if (!dealBrand || !reqBrands.includes(dealBrand)) return false;
     }
+  } else if (kind === 'peripheral') {
+    const reqSubs = Array.isArray(sf.sub_kinds) ? sf.sub_kinds.map(s => String(s).trim().toLowerCase()).filter(Boolean) : [];
+    let subK = String(specs.sub_kind || deal.peripheral_kind || resolvedCat?.kind || '').trim().toLowerCase();
+    if (!subK) {
+      const lt = _normalizePhoneStrClient(txt);
+      if (/\b(mouse|superlight|viper|deathadder)\b/.test(lt)) subK = 'mouse';
+      else if (/\b(teclado|keyboard|keychron|kumara|fizz)\b/.test(lt)) subK = 'keyboard';
+      else if (/\b(headset|fone|cloud\s*(?:ii|iii|stinger|alpha)|blackshark)\b/.test(lt)) subK = 'headset';
+    }
+    if (reqSubs.length && (!subK || !reqSubs.includes(subK))) return false;
+    if (sf.wireless_only) {
+      const isWl = Boolean(specs.wireless || deal.is_wireless || resolvedCat?.is_wireless || /\b(sem\s*fio|wireless|lightspeed|2\.4\s*g|bluetooth|tri-?mode|superlight)\b/i.test(txt));
+      if (!isWl) return false;
+    }
+    if (sf.gamer_only) {
+      const isGm = Boolean(specs.gamer || deal.is_gamer || /\b(gamer|gaming|hero\s*25k|paw\s*3\d{3}|hall\s*effect|magn[eé]tic|mec[aâ]nic|rgb|superlight|cloud|blackshark|zeus|kumara)\b/i.test(txt));
+      if (!isGm) return false;
+    }
+    const dealBrand = _inferPeriphBrandClient(deal, txt).toLowerCase();
+    const reqBrands = Array.isArray(sf.brands) ? sf.brands.map(b => String(b).trim().toLowerCase()).filter(Boolean) : [];
+    const reqModels = Array.isArray(sf.models) ? sf.models.filter(m => (m && typeof m === 'object' ? (m.slug || m.name) : String(m || '').trim())) : [];
+    if (reqModels.length) {
+      const modelBrands = new Set();
+      reqModels.forEach(m => {
+        const mb = _inferPeriphBrandClient(typeof m === 'object' ? m : null, typeof m === 'object' ? m.name : String(m)).toLowerCase();
+        if (mb) modelBrands.add(mb);
+      });
+      const openBrands = reqBrands.filter(b => !modelBrands.has(b));
+      const brandOpenHit = Boolean(dealBrand && openBrands.includes(dealBrand));
+      const modelHit = reqModels.some(m => _periphDealMatchesModelClient(deal, resolvedCat, m));
+      if (!brandOpenHit && !modelHit) return false;
+    } else if (reqBrands.length) {
+      if (!dealBrand || !reqBrands.includes(dealBrand)) return false;
+    }
+  } else if (kind === 'air_fryer') {
+    const afSp = _parseAirFryerClient(txt, Number(deal.price_brl || 0), deal.misc_specs || resolvedCat?.specs || specs);
+    const reqBrands = Array.isArray(sf.brands) ? sf.brands.map(b => _normalizePhoneStrClient(b)).filter(Boolean) : [];
+    if (reqBrands.length) {
+      const bVal = _normalizePhoneStrClient(afSp.brand || deal.brand || resolvedCat?.brand || '');
+      const tNorm = _normalizePhoneStrClient(txt);
+      if (!reqBrands.some(rb => (bVal && bVal.includes(rb)) || tNorm.includes(rb))) return false;
+    }
+    const fmt = String(sf.format || '').trim().toLowerCase();
+    if (fmt === 'oven' && !afSp.is_oven) return false;
+    if (fmt === 'cesto' && afSp.is_oven) return false;
+    if (sf.digital_only && !afSp.is_digital) return false;
+    const minL = Number(sf.min_liters || 0);
+    if (minL > 0 && Number(afSp.liters || 0) < minL) return false;
+    const maxPpl = Number(sf.max_price_per_liter || 0);
+    const ppl = Number(afSp.price_per_liter || (afSp.liters > 0 ? Number(deal.price_brl || 0) / afSp.liters : 0));
+    if (maxPpl > 0 && (ppl <= 0 || ppl > maxPpl)) return false;
+    if (sf.keyword && !_matchesAnyKeywordPhraseClient(txt, sf.keyword)) return false;
+  } else if (kind === 'diapers') {
+    const dpSp = _parseDiaperClient(txt, Number(deal.price_brl || 0), deal.misc_specs || resolvedCat?.specs || specs);
+    const reqBrands = Array.isArray(sf.brands) ? sf.brands.map(b => _normalizePhoneStrClient(b)).filter(Boolean) : [];
+    if (reqBrands.length) {
+      const bVal = _normalizePhoneStrClient(dpSp.brand || deal.brand || resolvedCat?.brand || '');
+      const tNorm = _normalizePhoneStrClient(txt);
+      if (!reqBrands.some(rb => (bVal && bVal.includes(rb)) || tNorm.includes(rb))) return false;
+    }
+    const reqSizes = Array.isArray(sf.sizes) ? sf.sizes.map(s => String(s).trim().toUpperCase()).filter(Boolean) : [];
+    if (reqSizes.length) {
+      const sz = String(dpSp.size || '').trim().toUpperCase();
+      if (!sz || !reqSizes.includes(sz)) return false;
+    }
+    const sty = String(sf.style || '').trim().toLowerCase();
+    if (sty === 'pants' && !dpSp.is_pants) return false;
+    if (sty === 'fita' && dpSp.is_pants) return false;
+    const maxPpu = Number(sf.max_price_per_unit || 0);
+    const ppu = Number(dpSp.price_per_unit || 0);
+    if (maxPpu > 0 && (ppu <= 0 || ppu > maxPpu)) return false;
+    if (sf.keyword && !_matchesAnyKeywordPhraseClient(txt, sf.keyword)) return false;
+  } else if (kind === 'misc_custom') {
+    const kw = String(sf.keywords || '').trim();
+    if (!kw) return false;
+    if (!_matchesAnyKeywordPhraseClient(txt, kw)) return false;
   }
 
   return true;
@@ -6101,7 +6371,11 @@ function renderPromoActivePrefsBar() {
   const bar = document.getElementById('promo-active-prefs-bar');
   const sumBadge = document.getElementById('promo-prefs-summary-badge');
   const cats = PROMO_STATE.notifyCategories || {};
-  const catNames = { gpu: 'GPUs', cpu: 'CPUs', ram: 'RAM', mobo: 'Placas-Mãe', psu: 'Fontes', laptop: 'Notebooks', smartphone: 'Smartphones' };
+  const catNames = {
+    gpu: 'GPUs', cpu: 'CPUs', ram: 'RAM', mobo: 'Placas-Mãe', psu: 'Fontes',
+    laptop: 'Notebooks', smartphone: 'Smartphones',
+    peripheral: 'Periféricos', air_fryer: 'Air Fryer', diapers: 'Fraldas', misc_custom: 'Monitor Livre'
+  };
   const enabledCats = Object.keys(catNames).filter(c => cats[c] !== false);
   const specCount = Object.keys(catNames).filter(c => _hasActiveSpecFilterForCat(c)).length;
 
@@ -6110,6 +6384,7 @@ function renderPromoActivePrefsBar() {
   }
   if (!bar) return;
 
+  const optOutDefaultOff = new Set(['laptop', 'smartphone', 'peripheral', 'air_fryer', 'diapers', 'misc_custom']);
   const chips = [];
   if (cats.laptop === false) {
     chips.push(`
@@ -6120,7 +6395,7 @@ function renderPromoActivePrefsBar() {
   }
   Object.keys(catNames).forEach(cat => {
     if (cats[cat] === false) {
-      if (cat !== 'laptop' && cat !== 'smartphone') {
+      if (!optOutDefaultOff.has(cat)) {
         chips.push(`
           <span class="ui-badge ui-badge--bad">
             <span>Sem ${catNames[cat]}</span>
@@ -6131,6 +6406,7 @@ function renderPromoActivePrefsBar() {
     }
     const sf = (PROMO_STATE.specFilters && PROMO_STATE.specFilters[cat]) || {};
     const desc = [];
+    if (Array.isArray(sf.sub_kinds) && sf.sub_kinds.length) desc.push(sf.sub_kinds.join('/'));
     if (Array.isArray(sf.sockets) && sf.sockets.length) desc.push(sf.sockets.join('/'));
     if (Array.isArray(sf.memory_types) && sf.memory_types.length) {
       desc.push(cat === 'mobo' && sf.allow_ambiguous_mem !== false
@@ -6138,6 +6414,7 @@ function renderPromoActivePrefsBar() {
         : sf.memory_types.join('/'));
     }
     if (Array.isArray(sf.brands) && sf.brands.length) desc.push(sf.brands.join('/'));
+    if (Array.isArray(sf.sizes) && sf.sizes.length) desc.push(`Tam. ${sf.sizes.join('/')}`);
     if (Array.isArray(sf.models) && sf.models.length) desc.push(sf.models.map(m => (typeof m === 'object' ? m.name : m)).join(', '));
     if (Array.isArray(sf.modularity) && sf.modularity.length) desc.push(sf.modularity.join('/'));
     if (sf.chipset_query) desc.push(sf.chipset_query.toUpperCase());
@@ -6148,6 +6425,16 @@ function renderPromoActivePrefsBar() {
     if (sf.min_cert) desc.push(`80+ ${sf.min_cert.charAt(0).toUpperCase() + sf.min_cert.slice(1)}+`);
     if (sf.min_ram_gb > 0) desc.push(`${sf.min_ram_gb}GB+ RAM`);
     if (sf.dedicated_gpu_only) desc.push('GPU Dedicada');
+    if (sf.wireless_only) desc.push('Sem fio');
+    if (sf.gamer_only) desc.push('Gamer');
+    if (sf.format) desc.push(sf.format === 'oven' ? 'Oven' : 'Cesto');
+    if (sf.digital_only) desc.push('Digital');
+    if (sf.min_liters > 0) desc.push(`${sf.min_liters}L+`);
+    if (sf.max_price_per_liter > 0) desc.push(`≤ R$${sf.max_price_per_liter}/L`);
+    if (sf.style) desc.push(sf.style === 'pants' ? 'Pants' : 'Fita');
+    if (sf.max_price_per_unit > 0) desc.push(`≤ R$${Number(sf.max_price_per_unit).toFixed(2)}/un`);
+    if (sf.keyword) desc.push(`"${sf.keyword}"`);
+    if (sf.keywords) desc.push(sf.keywords);
     if (sf.max_price > 0) desc.push(`≤ ${typeof fmtBRLShort === 'function' ? fmtBRLShort(sf.max_price) : sf.max_price}`);
     if (desc.length) {
       chips.push(`
@@ -6169,7 +6456,8 @@ function renderPromoActivePrefsBar() {
 
 function syncPromoCategoryCheckboxesFromState() {
   if (!PROMO_STATE.notifyCategories) return;
-  ['gpu', 'cpu', 'psu', 'mobo', 'ram', 'laptop', 'smartphone'].forEach(cat => {
+  const allCats = ['gpu', 'cpu', 'psu', 'mobo', 'ram', 'laptop', 'smartphone', 'peripheral', 'air_fryer', 'diapers', 'misc_custom'];
+  allCats.forEach(cat => {
     const enabled = PROMO_STATE.notifyCategories[cat] !== false;
     const legacyChk = document.getElementById(`chk-notify-prod-${cat}`);
     if (legacyChk) legacyChk.checked = enabled;
@@ -6179,30 +6467,28 @@ function syncPromoCategoryCheckboxesFromState() {
     if (specCard) specCard.classList.toggle('is-disabled', !enabled);
     const pillBtn = document.querySelector(`#bf-cards-filter-pills button[data-bf-filter="${cat}"]`);
     if (pillBtn) {
-      const isLapCtx = (typeof STATE !== 'undefined' && STATE.context === 'laptop');
-      const isPhoneCtx = (typeof STATE !== 'undefined' && STATE.context === 'smartphone');
-      const hidePill = !enabled && !(isLapCtx && cat === 'laptop') && !(isPhoneCtx && cat === 'smartphone');
+      const ctx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+      const allowCtxPill = (ctx === 'laptop' && cat === 'laptop')
+        || (ctx === 'smartphone' && cat === 'smartphone')
+        || (ctx === 'peripherals' && cat === 'peripheral')
+        || (ctx === 'misc' && (cat === 'air_fryer' || cat === 'diapers' || cat === 'misc_custom'));
+      const hidePill = !enabled && !allowCtxPill;
       pillBtn.classList.toggle('hidden', hidePill);
     }
   });
   const lapEnabled = PROMO_STATE.notifyCategories.laptop === true;
-  const lapNote = document.getElementById('spec-laptop-off-note');
   const lapFields = document.getElementById('spec-laptop-fields');
-  const lapTag = document.getElementById('spec-laptop-status-tag');
-  if (lapNote) lapNote.classList.toggle('hidden', lapEnabled);
   if (lapFields) lapFields.classList.toggle('hidden', !lapEnabled);
-  if (lapTag) {
-    lapTag.textContent = lapEnabled ? 'Ativo' : 'Desativado';
-    lapTag.className = `ui-mono text-[11px] ${lapEnabled ? 'text-emerald-400' : 'text-slate-500'}`;
-  }
-  const spEnabled = PROMO_STATE.notifyCategories.smartphone === true;
-  const spTag = document.getElementById('spec-smartphone-status-tag');
-  const spNote = document.getElementById('spec-smartphone-off-note');
-  if (spTag) {
-    spTag.textContent = spEnabled ? 'Ativo' : 'Desativado';
-    spTag.className = `ui-mono text-[11px] ${spEnabled ? 'text-emerald-400' : 'text-slate-500'}`;
-  }
-  if (spNote) spNote.classList.toggle('hidden', spEnabled);
+  ['laptop', 'smartphone', 'peripheral', 'air_fryer', 'diapers', 'misc_custom'].forEach(cat => {
+    const en = PROMO_STATE.notifyCategories[cat] === true;
+    const tag = document.getElementById(`spec-${cat}-status-tag`);
+    const note = document.getElementById(`spec-${cat}-off-note`);
+    if (tag) {
+      tag.textContent = en ? 'Ativo' : 'Desativado';
+      tag.className = `ui-mono text-[11px] ${en ? 'text-emerald-400' : 'text-slate-500'}`;
+    }
+    if (note) note.classList.toggle('hidden', en);
+  });
   renderPromoActivePrefsBar();
 }
 
@@ -6246,6 +6532,33 @@ function syncPromoSpecInputsFromState() {
   const sp = sf.smartphone || {};
   setVal('spec-smartphone-max-price', sp.max_price || '');
   renderSmartphoneSelectedModelsChips();
+
+  const per = sf.peripheral || {};
+  setVal('spec-peripheral-max-price', per.max_price || '');
+  const perWl = document.getElementById('spec-peripheral-wireless');
+  if (perWl) perWl.checked = Boolean(per.wireless_only);
+  const perGm = document.getElementById('spec-peripheral-gamer');
+  if (perGm) perGm.checked = Boolean(per.gamer_only);
+  renderPeripheralSelectedModelsChips();
+
+  const af = sf.air_fryer || {};
+  setVal('spec-air_fryer-format', af.format || '');
+  setVal('spec-air_fryer-min-liters', af.min_liters || '');
+  setVal('spec-air_fryer-max-ppl', af.max_price_per_liter || '');
+  setVal('spec-air_fryer-max-price', af.max_price || '');
+  setVal('spec-air_fryer-keyword', af.keyword || '');
+  const afDig = document.getElementById('spec-air_fryer-digital');
+  if (afDig) afDig.checked = Boolean(af.digital_only);
+
+  const dp = sf.diapers || {};
+  setVal('spec-diapers-style', dp.style || '');
+  setVal('spec-diapers-max-ppu', dp.max_price_per_unit || '');
+  setVal('spec-diapers-max-price', dp.max_price || '');
+  setVal('spec-diapers-keyword', dp.keyword || '');
+
+  const mc = sf.misc_custom || {};
+  setVal('spec-misc_custom-keywords', mc.keywords || '');
+  setVal('spec-misc_custom-max-price', mc.max_price || '');
 
   renderPromoActivePrefsBar();
 }
@@ -6469,7 +6782,205 @@ if (typeof document !== 'undefined' && !window._spSuggestDocClickBound) {
     if (wrap && !wrap.contains(ev.target)) {
       _closeSmartphoneSuggestMenu();
     }
+    const perWrap = document.getElementById('spec-peripheral-model-input')?.closest('.ui-autocomplete-wrap');
+    if (perWrap && !perWrap.contains(ev.target)) {
+      _closePeripheralSuggestMenu();
+    }
   });
+}
+
+let _perSuggestHighlightIdx = -1;
+let _perCurrentSuggestions = [];
+
+function getPeripheralNotifySuggestions(query) {
+  const pool = (typeof DB !== 'undefined' && Array.isArray(DB.peripherals)) ? DB.peripherals : [];
+  const qNorm = _normalizePhoneStrClient(query || '').trim();
+  const qTokens = (qNorm.match(/[a-z0-9]+/g) || []).filter(t => !_PERIPH_NOISE_CLIENT.has(t) || t.length >= 3);
+  const sf = (PROMO_STATE.specFilters && PROMO_STATE.specFilters.peripheral) || {};
+  const picked = Array.isArray(sf.models) ? sf.models : [];
+  const pickedSlugs = new Set(picked.map(m => String((typeof m === 'object' ? m.slug : m) || '').toLowerCase()).filter(Boolean));
+  const activeBrands = new Set((sf.brands || []).map(b => String(b).toLowerCase()));
+  const activeKinds = new Set((sf.sub_kinds || []).map(k => String(k).toLowerCase()));
+
+  const scored = [];
+  pool.forEach(pr => {
+    if (!pr || !pr.slug || pickedSlugs.has(String(pr.slug).toLowerCase())) return;
+    if (activeKinds.size && !activeKinds.has(String(pr.kind || '').toLowerCase())) return;
+    const rawName = (typeof shortPeripherName === 'function') ? shortPeripherName(pr) : (pr.name || '');
+    const hay = _normalizePhoneStrClient(`${pr.name || ''} ${pr.brand || ''} ${pr.kind || ''} ${(pr.specs && pr.specs.summary) || ''}`);
+    let score = 0;
+
+    if (!qNorm) {
+      score = Number(pr.cb_score || 50);
+    } else {
+      if (hay.includes(qNorm)) score += 60;
+      const hayTokens = new Set(hay.match(/[a-z0-9]+/g) || []);
+      const matchedCount = qTokens.filter(t => hayTokens.has(t) || hay.includes(t)).length;
+      if (qTokens.length > 0) {
+        if (matchedCount === qTokens.length) score += 80;
+        else if (matchedCount > 0) score += matchedCount * 22;
+      } else if (hay.includes(qNorm)) {
+        score += 45;
+      }
+      if (score === 0) return;
+    }
+
+    if (activeBrands.size && activeBrands.has(String(pr.brand || '').toLowerCase())) {
+      score += 18;
+    }
+    scored.push({ pr, displayName: rawName, score });
+  });
+
+  scored.sort((a, b) => (b.score - a.score) || (Number(b.pr.cb_score || 0) - Number(a.pr.cb_score || 0)));
+  return scored.slice(0, 8);
+}
+
+function _closePeripheralSuggestMenu() {
+  const menu = document.getElementById('spec-peripheral-suggestions');
+  const inp = document.getElementById('spec-peripheral-model-input');
+  if (menu) menu.classList.add('hidden');
+  if (inp) inp.setAttribute('aria-expanded', 'false');
+  _perSuggestHighlightIdx = -1;
+}
+
+function onPeripheralNotifyInput(rawVal) {
+  const menu = document.getElementById('spec-peripheral-suggestions');
+  const inp = document.getElementById('spec-peripheral-model-input');
+  if (!menu) return;
+  const q = String(rawVal || '').trim();
+  const matches = getPeripheralNotifySuggestions(q);
+  _perCurrentSuggestions = matches.map(m => ({
+    slug: m.pr.slug,
+    name: m.displayName,
+    brand: m.pr.brand || '',
+    kind: m.pr.kind || '',
+    price: m.pr.price_brl || 0,
+    img: m.pr.image_url || '',
+    isCustom: false
+  }));
+
+  const exactMatch = matches.some(m => _normalizePhoneStrClient(m.displayName) === _normalizePhoneStrClient(q));
+  if (q.length >= 3 && !exactMatch) {
+    _perCurrentSuggestions.push({ slug: '', name: q, brand: '', kind: '', price: 0, isCustom: true });
+  }
+
+  if (!_perCurrentSuggestions.length) {
+    menu.innerHTML = `<div class="px-3 py-2 text-xs text-slate-400">Nenhum periférico encontrado. Digite 3+ letras para monitorar termo livre.</div>`;
+  } else {
+    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    menu.innerHTML = _perCurrentSuggestions.map((opt, idx) => {
+      const priceStr = opt.price > 0 && typeof fmtBRLShort === 'function' ? fmtBRLShort(opt.price) : '';
+      const subStr = opt.isCustom ? 'Termo livre em canais de promoção' : `${opt.brand || 'Marca'} • ${opt.kind || 'Periférico'}`;
+      const ico = opt.kind === 'keyboard' ? '⌨️' : (opt.kind === 'headset' ? '🎧' : (opt.isCustom ? '🔎' : '🖱️'));
+      return `
+        <button type="button" role="option" data-per-idx="${idx}" onclick="pickPeripheralNotifyOption(${idx})" class="ui-autocomplete-item ${_perSuggestHighlightIdx === idx ? 'is-highlighted' : ''}">
+          <div class="flex items-center gap-2 min-w-0">
+            ${opt.img ? `<img src="${esc(opt.img)}" alt="" class="w-7 h-7 rounded object-contain bg-slate-950 p-0.5 shrink-0" onerror="this.style.display='none'">` : `<span class="w-7 h-7 rounded bg-slate-900 flex items-center justify-center text-xs shrink-0">${ico}</span>`}
+            <div class="min-w-0">
+              <div class="text-xs font-bold truncate">${opt.isCustom ? `Monitorar "${esc(opt.name)}"` : esc(opt.name)}</div>
+              <div class="text-[11px] text-slate-400 truncate">${esc(subStr)}</div>
+            </div>
+          </div>
+          ${priceStr ? `<span class="ui-mono text-xs font-bold text-emerald-400 shrink-0">${esc(priceStr)}</span>` : ''}
+        </button>`;
+    }).join('');
+  }
+
+  menu.classList.remove('hidden');
+  if (inp) inp.setAttribute('aria-expanded', 'true');
+  _perSuggestHighlightIdx = _perCurrentSuggestions.length ? 0 : -1;
+}
+window.onPeripheralNotifyInput = onPeripheralNotifyInput;
+
+function pickPeripheralNotifyOption(idx) {
+  const opt = _perCurrentSuggestions[idx];
+  if (!opt) return;
+  pickPeripheralNotifyModel(opt.slug, opt.name, opt.brand);
+}
+window.pickPeripheralNotifyOption = pickPeripheralNotifyOption;
+
+function onPeripheralNotifyKeydown(ev) {
+  const menu = document.getElementById('spec-peripheral-suggestions');
+  const isOpen = menu && !menu.classList.contains('hidden');
+  if (ev.key === 'Escape') { _closePeripheralSuggestMenu(); return; }
+  if (!isOpen && (ev.key === 'ArrowDown' || ev.key === 'ArrowUp')) {
+    onPeripheralNotifyInput(ev.target?.value || '');
+    return;
+  }
+  if (!isOpen || !_perCurrentSuggestions.length) return;
+  if (ev.key === 'ArrowDown') {
+    ev.preventDefault();
+    _perSuggestHighlightIdx = (_perSuggestHighlightIdx + 1) % _perCurrentSuggestions.length;
+    menu.querySelectorAll('.ui-autocomplete-item').forEach((el, i) => el.classList.toggle('is-highlighted', i === _perSuggestHighlightIdx));
+  } else if (ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    _perSuggestHighlightIdx = (_perSuggestHighlightIdx - 1 + _perCurrentSuggestions.length) % _perCurrentSuggestions.length;
+    menu.querySelectorAll('.ui-autocomplete-item').forEach((el, i) => el.classList.toggle('is-highlighted', i === _perSuggestHighlightIdx));
+  } else if (ev.key === 'Enter') {
+    ev.preventDefault();
+    pickPeripheralNotifyOption(_perSuggestHighlightIdx >= 0 ? _perSuggestHighlightIdx : 0);
+  }
+}
+window.onPeripheralNotifyKeydown = onPeripheralNotifyKeydown;
+
+function pickPeripheralNotifyModel(slug, name, brand = '') {
+  if (!PROMO_STATE.specFilters) PROMO_STATE.specFilters = {};
+  if (!PROMO_STATE.specFilters.peripheral) PROMO_STATE.specFilters.peripheral = {};
+  const list = Array.isArray(PROMO_STATE.specFilters.peripheral.models) ? [...PROMO_STATE.specFilters.peripheral.models] : [];
+  const normSlug = String(slug || '').trim().toLowerCase();
+  const normName = String(name || '').trim();
+  if (!normSlug && !normName) return;
+
+  const already = list.some(m => {
+    const ms = String((typeof m === 'object' ? m.slug : '') || '').toLowerCase();
+    const mn = String((typeof m === 'object' ? m.name : m) || '').toLowerCase();
+    return (normSlug && ms === normSlug) || (normName && mn === normName.toLowerCase());
+  });
+  if (!already) {
+    list.push({ slug: normSlug, name: normName || normSlug, brand: String(brand || '').trim() });
+    PROMO_STATE.specFilters.peripheral.models = list;
+  }
+  if (!PROMO_STATE.notifyCategories) PROMO_STATE.notifyCategories = {};
+  PROMO_STATE.notifyCategories.peripheral = true;
+  const inp = document.getElementById('spec-peripheral-model-input');
+  if (inp) inp.value = '';
+  _closePeripheralSuggestMenu();
+  syncPromoCategoryCheckboxesFromState();
+  syncPromoSpecInputsFromState();
+  savePromoSettingsToStorage();
+  _refreshAllPromoPreferenceViews();
+}
+window.pickPeripheralNotifyModel = pickPeripheralNotifyModel;
+
+function removePeripheralNotifyModel(idx) {
+  const pf = PROMO_STATE.specFilters && PROMO_STATE.specFilters.peripheral;
+  if (!pf || !Array.isArray(pf.models)) return;
+  pf.models.splice(idx, 1);
+  renderPeripheralSelectedModelsChips();
+  renderPromoActivePrefsBar();
+  savePromoSettingsToStorage();
+  _refreshAllPromoPreferenceViews();
+}
+window.removePeripheralNotifyModel = removePeripheralNotifyModel;
+
+function renderPeripheralSelectedModelsChips() {
+  const host = document.getElementById('spec-peripheral-selected-models');
+  if (!host) return;
+  const models = (PROMO_STATE.specFilters && PROMO_STATE.specFilters.peripheral && Array.isArray(PROMO_STATE.specFilters.peripheral.models))
+    ? PROMO_STATE.specFilters.peripheral.models
+    : [];
+  if (!models.length) { host.innerHTML = ''; return; }
+  const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  host.innerHTML = models.map((m, i) => {
+    const label = typeof m === 'object' ? (m.name || m.slug) : String(m);
+    const brandTag = (typeof m === 'object' && m.brand) ? `<span class="text-slate-400 text-[10px]">${esc(m.brand)}</span>` : '';
+    return `
+      <span class="ui-model-pill">
+        <span>🖱️ ${esc(label)}</span>
+        ${brandTag}
+        <button type="button" onclick="removePeripheralNotifyModel(${i})" aria-label="Remover ${esc(label)}" title="Remover ${esc(label)}">✕</button>
+      </span>`;
+  }).join('');
 }
 
 function togglePromoPreferencesPanel(forceOpen) {
@@ -6505,7 +7016,10 @@ window.openPromoAlertTriggersSection = openPromoAlertTriggersSection;
 
 function onPromoCategoryToggle(cat, checked) {
   if (!PROMO_STATE.notifyCategories) {
-    PROMO_STATE.notifyCategories = { gpu: true, cpu: true, ram: true, mobo: true, psu: true, laptop: false, smartphone: false };
+    PROMO_STATE.notifyCategories = {
+      gpu: true, cpu: true, ram: true, mobo: true, psu: true,
+      laptop: false, smartphone: false, peripheral: false, air_fryer: false, diapers: false, misc_custom: false
+    };
   }
   PROMO_STATE.notifyCategories[cat] = Boolean(checked);
   if (!checked && typeof BF_CARDS_FILTER !== 'undefined' && BF_CARDS_FILTER === cat) {
@@ -6556,11 +7070,53 @@ function onPromoSpecInputChange() {
   PROMO_STATE.specFilters.psu = { ...(PROMO_STATE.specFilters.psu || {}), min_watts: intVal('spec-psu-min-watts'), min_cert: strVal('spec-psu-min-cert'), max_price: numVal('spec-psu-max-price') };
   PROMO_STATE.specFilters.laptop = { ...(PROMO_STATE.specFilters.laptop || {}), min_ram_gb: intVal('spec-laptop-min-ram'), max_price: numVal('spec-laptop-max-price'), dedicated_gpu_only: Boolean(document.getElementById('spec-laptop-dgpu')?.checked) };
   PROMO_STATE.specFilters.smartphone = { ...(PROMO_STATE.specFilters.smartphone || {}), max_price: numVal('spec-smartphone-max-price') };
+  PROMO_STATE.specFilters.peripheral = {
+    ...(PROMO_STATE.specFilters.peripheral || {}),
+    wireless_only: Boolean(document.getElementById('spec-peripheral-wireless')?.checked),
+    gamer_only: Boolean(document.getElementById('spec-peripheral-gamer')?.checked),
+    max_price: numVal('spec-peripheral-max-price')
+  };
+  PROMO_STATE.specFilters.air_fryer = {
+    ...(PROMO_STATE.specFilters.air_fryer || {}),
+    format: strVal('spec-air_fryer-format'),
+    digital_only: Boolean(document.getElementById('spec-air_fryer-digital')?.checked),
+    min_liters: numVal('spec-air_fryer-min-liters'),
+    max_price_per_liter: numVal('spec-air_fryer-max-ppl'),
+    max_price: numVal('spec-air_fryer-max-price'),
+    keyword: strVal('spec-air_fryer-keyword')
+  };
+  PROMO_STATE.specFilters.diapers = {
+    ...(PROMO_STATE.specFilters.diapers || {}),
+    style: strVal('spec-diapers-style'),
+    max_price_per_unit: numVal('spec-diapers-max-ppu'),
+    max_price: numVal('spec-diapers-max-price'),
+    keyword: strVal('spec-diapers-keyword')
+  };
+  PROMO_STATE.specFilters.misc_custom = {
+    ...(PROMO_STATE.specFilters.misc_custom || {}),
+    keywords: strVal('spec-misc_custom-keywords'),
+    max_price: numVal('spec-misc_custom-max-price')
+  };
 
-  if (PROMO_STATE.specFilters.smartphone.max_price > 0 && PROMO_STATE.notifyCategories && PROMO_STATE.notifyCategories.smartphone === false) {
-    PROMO_STATE.notifyCategories.smartphone = true;
-    syncPromoCategoryCheckboxesFromState();
+  let catAutoEnabled = false;
+  if (PROMO_STATE.notifyCategories) {
+    if (PROMO_STATE.specFilters.smartphone.max_price > 0 && !PROMO_STATE.notifyCategories.smartphone) {
+      PROMO_STATE.notifyCategories.smartphone = true; catAutoEnabled = true;
+    }
+    if ((PROMO_STATE.specFilters.peripheral.max_price > 0 || PROMO_STATE.specFilters.peripheral.wireless_only || PROMO_STATE.specFilters.peripheral.gamer_only) && !PROMO_STATE.notifyCategories.peripheral) {
+      PROMO_STATE.notifyCategories.peripheral = true; catAutoEnabled = true;
+    }
+    if ((PROMO_STATE.specFilters.air_fryer.min_liters > 0 || PROMO_STATE.specFilters.air_fryer.max_price_per_liter > 0 || PROMO_STATE.specFilters.air_fryer.max_price > 0 || PROMO_STATE.specFilters.air_fryer.keyword || PROMO_STATE.specFilters.air_fryer.format || PROMO_STATE.specFilters.air_fryer.digital_only) && !PROMO_STATE.notifyCategories.air_fryer) {
+      PROMO_STATE.notifyCategories.air_fryer = true; catAutoEnabled = true;
+    }
+    if ((PROMO_STATE.specFilters.diapers.max_price_per_unit > 0 || PROMO_STATE.specFilters.diapers.max_price > 0 || PROMO_STATE.specFilters.diapers.keyword || PROMO_STATE.specFilters.diapers.style) && !PROMO_STATE.notifyCategories.diapers) {
+      PROMO_STATE.notifyCategories.diapers = true; catAutoEnabled = true;
+    }
+    if (PROMO_STATE.specFilters.misc_custom.keywords && !PROMO_STATE.notifyCategories.misc_custom) {
+      PROMO_STATE.notifyCategories.misc_custom = true; catAutoEnabled = true;
+    }
   }
+  if (catAutoEnabled) syncPromoCategoryCheckboxesFromState();
 
   renderPromoActivePrefsBar();
   savePromoSettingsToStorage();
@@ -6569,7 +7125,10 @@ function onPromoSpecInputChange() {
 window.onPromoSpecInputChange = onPromoSpecInputChange;
 
 function clearPromoSpecFilters() {
-  PROMO_STATE.specFilters = { mobo: {}, ram: {}, cpu: {}, gpu: {}, psu: {}, laptop: {}, smartphone: {} };
+  PROMO_STATE.specFilters = {
+    mobo: {}, ram: {}, cpu: {}, gpu: {}, psu: {}, laptop: {},
+    smartphone: {}, peripheral: {}, air_fryer: {}, diapers: {}, misc_custom: {}
+  };
   syncPromoSpecInputsFromState();
   savePromoSettingsToStorage();
   _refreshAllPromoPreferenceViews();
@@ -7044,7 +7603,11 @@ function onUpdatePromoNotificationSettings() {
     mobo: getChk('chk-notify-prod-mobo', true),
     ram: getChk('chk-notify-prod-ram', true),
     laptop: getChk('chk-notify-prod-laptop', false),
-    smartphone: getChk('chk-notify-prod-smartphone', false)
+    smartphone: getChk('chk-notify-prod-smartphone', false),
+    peripheral: getChk('chk-notify-prod-peripheral', false),
+    air_fryer: getChk('chk-notify-prod-air_fryer', false),
+    diapers: getChk('chk-notify-prod-diapers', false),
+    misc_custom: getChk('chk-notify-prod-misc_custom', false)
   };
   syncPromoCategoryCheckboxesFromState();
   PROMO_STATE.notifyWinToast = getChk('chk-notify-win-toast', true);
@@ -7171,14 +7734,44 @@ function evaluateDealsForAlerts() {
 
   const qualifying = [];
   const allEvalDeals = [...PROMO_STATE.lastData.matched_deals];
-  if (PROMO_STATE.notifyCategories && PROMO_STATE.notifyCategories.smartphone === true && Array.isArray(PROMO_STATE.lastData.smartphone_deals)) {
-    const seenAlertPids = new Set(allEvalDeals.map(x => x && x.post_id).filter(Boolean));
+  const seenAlertPids = new Set(allEvalDeals.map(x => x && x.post_id).filter(Boolean));
+  const nc = PROMO_STATE.notifyCategories || {};
+  if (nc.smartphone === true && Array.isArray(PROMO_STATE.lastData.smartphone_deals)) {
     PROMO_STATE.lastData.smartphone_deals.forEach(sd => {
       if (!sd) return;
       const sdCopy = { ...sd, matched_kind: 'smartphone', stock_verified: sd.is_expired ? false : (sd.stock_verified !== false) };
       if (!sdCopy.post_id || !seenAlertPids.has(sdCopy.post_id)) {
         allEvalDeals.push(sdCopy);
+        if (sdCopy.post_id) seenAlertPids.add(sdCopy.post_id);
       }
+    });
+  }
+  if (nc.peripheral === true && Array.isArray(PROMO_STATE.lastData.peripheral_deals)) {
+    PROMO_STATE.lastData.peripheral_deals.forEach(pd => {
+      if (!pd) return;
+      const pdCopy = { ...pd, matched_kind: 'peripheral', stock_verified: pd.is_expired ? false : (pd.stock_verified !== false) };
+      if (!pdCopy.post_id || !seenAlertPids.has(pdCopy.post_id)) {
+        allEvalDeals.push(pdCopy);
+        if (pdCopy.post_id) seenAlertPids.add(pdCopy.post_id);
+      }
+    });
+  }
+  if ((nc.air_fryer === true || nc.diapers === true || nc.misc_custom === true) && Array.isArray(PROMO_STATE.lastData.misc_deals)) {
+    PROMO_STATE.lastData.misc_deals.forEach(md => {
+      if (!md) return;
+      const mk = md.misc_category || md.matched_kind || 'misc_custom';
+      const mdCopy = { ...md, matched_kind: (mk === 'air_fryer' || mk === 'diapers') ? mk : 'misc_custom', stock_verified: md.is_expired ? false : (md.stock_verified !== false) };
+      if (!mdCopy.post_id || !seenAlertPids.has(mdCopy.post_id)) {
+        allEvalDeals.push(mdCopy);
+        if (mdCopy.post_id) seenAlertPids.add(mdCopy.post_id);
+      }
+    });
+  }
+  if (nc.misc_custom === true && (PROMO_STATE.specFilters?.misc_custom?.keywords || '').trim() && Array.isArray(PROMO_STATE.lastData.recent_feed)) {
+    PROMO_STATE.lastData.recent_feed.forEach(fd => {
+      if (!fd || (fd.post_id && seenAlertPids.has(fd.post_id))) return;
+      allEvalDeals.push({ ...fd, matched_kind: 'misc_custom', stock_verified: true });
+      if (fd.post_id) seenAlertPids.add(fd.post_id);
     });
   }
   allEvalDeals.forEach(d => {
@@ -7198,16 +7791,8 @@ function evaluateDealsForAlerts() {
     let hitHB = false;
     const reasons = [];
 
-    // 1. Evaluate CB & BF for GPUs / CPUs / Laptops / Smartphones
-    const catalogItem = d.matched_kind === 'gpu'
-      ? (DB.gpus || []).find(g => g.slug === d.matched_slug)
-      : d.matched_kind === 'cpu'
-        ? (DB.cpus || []).find(c => c.slug === d.matched_slug)
-        : d.matched_kind === 'laptop'
-          ? (DB.laptops || []).find(l => l.slug === d.matched_slug)
-          : d.matched_kind === 'smartphone'
-            ? (DB.smartphones || []).find(s => s.slug === d.matched_slug)
-            : null;
+    // 1. Evaluate CB & BF across all tracked catalogs
+    const catalogItem = _findCatalogItemForDeal(d);
 
     if (d.matched_kind === 'gpu' && catalogItem) {
       const comp = getContextualCompositeScore(catalogItem);
@@ -7224,7 +7809,7 @@ function evaluateDealsForAlerts() {
     }
 
     // 2. Evaluate Black Friday Expected Price & Historical Low
-    if (catalogItem && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu' || d.matched_kind === 'laptop')) {
+    if (catalogItem && ['gpu', 'cpu', 'laptop', 'smartphone', 'peripheral', 'air_fryer', 'diapers'].includes(d.matched_kind)) {
       const st = bfAnalyzeItem(catalogItem, d.matched_kind);
       const exp = bfExpectedRange(st, 0.10);
       const userSaved = (STATE.bfRanges && STATE.bfRanges[d.matched_slug]) || null;
@@ -7279,8 +7864,7 @@ function evaluateDealsForAlerts() {
     // 4. Evaluate 30-day rolling average flash drop (default >= 5%)
     let hitAvg30d = false;
     if (PROMO_STATE.trigAvg30d && d.matched_slug && d.price_brl > 0) {
-      const catPool = (d.matched_kind === 'laptop' ? DB.laptops : (d.matched_kind === 'smartphone' ? DB.smartphones : (d.matched_kind === 'cpu' ? DB.cpus : (d.matched_kind === 'ram' ? DB.rams : DB.gpus)))) || [];
-      const catIt = catPool.find(x => x.slug === d.matched_slug);
+      const catIt = catalogItem || _findCatalogItemForDeal(d);
       const avg30 = (catIt && catIt.price_stats && catIt.price_stats.avg_30d) ? catIt.price_stats.avg_30d : 0;
       if (avg30 > 0) {
         const drop30Pct = ((avg30 - d.price_brl) / avg30) * 100;
@@ -7291,13 +7875,24 @@ function evaluateDealsForAlerts() {
       }
     }
 
-    let hitSmartphoneWatch = false;
-    if ((d.matched_kind || '').toLowerCase() === 'smartphone') {
-      const spSf = (PROMO_STATE.specFilters && PROMO_STATE.specFilters.smartphone) || {};
-      if ((Array.isArray(spSf.models) && spSf.models.length > 0) || Number(spSf.max_price || 0) > 0) {
-        hitSmartphoneWatch = true;
-        reasons.push('📱 Smartphone monitorado');
-      }
+    let hitDomainWatch = false;
+    const dk = (d.matched_kind || '').toLowerCase();
+    const dSf = (PROMO_STATE.specFilters && PROMO_STATE.specFilters[dk]) || {};
+    if (dk === 'smartphone' && ((Array.isArray(dSf.models) && dSf.models.length > 0) || Number(dSf.max_price || 0) > 0)) {
+      hitDomainWatch = true;
+      reasons.push('📱 Smartphone monitorado');
+    } else if (dk === 'peripheral' && ((Array.isArray(dSf.models) && dSf.models.length > 0) || (Array.isArray(dSf.brands) && dSf.brands.length > 0) || (Array.isArray(dSf.sub_kinds) && dSf.sub_kinds.length > 0) || Number(dSf.max_price || 0) > 0)) {
+      hitDomainWatch = true;
+      reasons.push('🖱️ Periférico monitorado');
+    } else if (dk === 'air_fryer' && ((Array.isArray(dSf.brands) && dSf.brands.length > 0) || dSf.format || Number(dSf.min_liters || 0) > 0 || Number(dSf.max_price_per_liter || 0) > 0 || Number(dSf.max_price || 0) > 0 || dSf.keyword)) {
+      hitDomainWatch = true;
+      reasons.push('🍟 Air Fryer no critério');
+    } else if (dk === 'diapers' && ((Array.isArray(dSf.brands) && dSf.brands.length > 0) || (Array.isArray(dSf.sizes) && dSf.sizes.length > 0) || dSf.style || Number(dSf.max_price_per_unit || 0) > 0 || Number(dSf.max_price || 0) > 0 || dSf.keyword)) {
+      hitDomainWatch = true;
+      reasons.push('👶 Fralda no critério');
+    } else if (dk === 'misc_custom' && (dSf.keywords || '').trim()) {
+      hitDomainWatch = true;
+      reasons.push('📦 Item personalizado encontrado');
     }
 
     if (d._unverifiedMemType || d.unverified_memory_type) {
@@ -7307,7 +7902,7 @@ function evaluateDealsForAlerts() {
     }
     d.cb_score = cbScore;
     d.is_high_cb = hitCB;
-    d.is_pechincha = hitBF || hitHB || hitAvg30d || hitSmartphoneWatch;
+    d.is_pechincha = hitBF || hitHB || hitAvg30d || hitDomainWatch;
     d.alert_reasons = reasons;
 
     // Filter by item category
@@ -7326,8 +7921,8 @@ function evaluateDealsForAlerts() {
     if (PROMO_STATE.trigHB) activeResults.push(hitHB);
     if (PROMO_STATE.trigAvg30d) activeResults.push(hitAvg30d);
 
-    if (!activeResults.length && !hitSmartphoneWatch) return;
-    const qualifies = hitSmartphoneWatch || (PROMO_STATE.notifyLogic === 'AND'
+    if (!activeResults.length && !hitDomainWatch) return;
+    const qualifies = hitDomainWatch || (PROMO_STATE.notifyLogic === 'AND'
       ? activeResults.every(Boolean)
       : activeResults.some(Boolean));
 
@@ -7984,6 +8579,18 @@ function sendPromoToDuelOrBF(kind, slug, price) {
     switchTab('versus');
   } else if (kind === 'mobo' || kind === 'ram' || kind === 'psu') {
     switchTab('builder');
+  } else if (kind === 'smartphone') {
+    if (typeof setMainContext === 'function') setMainContext('smartphone', false);
+    if (typeof setSmartphoneDuelItem === 'function' && slug) setSmartphoneDuelItem(slug, 'cand');
+    else switchTab('versus');
+  } else if (kind === 'peripheral' || kind === 'peripherals') {
+    if (typeof setMainContext === 'function') setMainContext('peripherals', false);
+    if (typeof setPeriphMainDuelItem === 'function' && slug) setPeriphMainDuelItem(slug, 'a');
+    else switchTab('versus');
+  } else if (kind === 'air_fryer' || kind === 'diapers' || kind === 'misc') {
+    if (typeof setMainContext === 'function') setMainContext('misc', false);
+    if (typeof setMiscMainDuelItem === 'function' && slug) setMiscMainDuelItem(slug, 'a', kind === 'misc' ? null : kind);
+    else switchTab('versus');
   } else {
     switchTab('bf');
     const sel = document.getElementById('bf-target-item');
@@ -9196,16 +9803,21 @@ function renderBFPromosCardsTab() {
   const _enrichCard = (origDeal) => {
     const d = _applyCouponAndExpiryOverlay({ ...origDeal });
     const imgUrl = d.image_url || imgByPost.get(d.post_id) || d.image || null;
+    const mc = (DB.misc_catalog && typeof DB.misc_catalog === 'object') ? DB.misc_catalog : {};
     const grpByKind = {
       laptop: DB.laptops || [],
       smartphone: DB.smartphones || [],
+      peripheral: DB.peripherals || [],
+      air_fryer: mc.air_fryer || [],
+      diapers: mc.diapers || [],
       cpu: DB.cpus || [],
       ram: DB.rams || [],
       mobo: DB.motherboards || [],
       psu: DB.psus || [],
       gpu: DB.gpus || []
     };
-    const catGroup = grpByKind[(d.matched_kind || 'gpu').toLowerCase()] || (DB.gpus || []);
+    const rawK = (d.matched_kind || 'gpu').toLowerCase();
+    const catGroup = grpByKind[rawK] || mc[rawK] || (DB.gpus || []);
     const catItem = catGroup.find(x => x.slug === d.matched_slug) || null;
     const itemSpecs = extractDealSpecsClient(d, catItem);
     d.item_specs = itemSpecs;
@@ -9280,16 +9892,52 @@ function renderBFPromosCardsTab() {
     };
   };
 
-  // 1. Live Telegram group posts
-  const isPhoneCtx = (typeof STATE !== 'undefined' && STATE.context === 'smartphone');
-  const phoneAlertsActive = Boolean(PROMO_STATE.notifyCategories && PROMO_STATE.notifyCategories.smartphone === true);
-  const rawPhoneDeals = (lastData && Array.isArray(lastData.smartphone_deals))
-    ? lastData.smartphone_deals
-    : ((typeof DB !== 'undefined' && DB.live_promos && Array.isArray(DB.live_promos.smartphone_deals)) ? DB.live_promos.smartphone_deals : []);
+  // 1. Live Telegram group posts across all contexts & user-enabled categories
+  const curCtx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  const isPhoneCtx = curCtx === 'smartphone';
+  const isPerCtx = curCtx === 'peripherals';
+  const isMiscCtx = curCtx === 'misc';
+  const isLapCtx = curCtx === 'laptop';
+  const nc = PROMO_STATE.notifyCategories || {};
+
+  const phoneAlertsActive = nc.smartphone === true;
+  const periphAlertsActive = nc.peripheral === true;
+  const miscAlertsActive = (nc.air_fryer === true || nc.diapers === true || nc.misc_custom === true);
+
+  const fallbackPromos = (typeof DB !== 'undefined' && DB.live_promos) ? DB.live_promos : {};
+  const rawPhoneDeals = (lastData && Array.isArray(lastData.smartphone_deals)) ? lastData.smartphone_deals : (fallbackPromos.smartphone_deals || []);
+  const rawPeriphDeals = (lastData && Array.isArray(lastData.peripheral_deals)) ? lastData.peripheral_deals : (fallbackPromos.peripheral_deals || []);
+  const rawMiscDeals = (lastData && Array.isArray(lastData.misc_deals)) ? lastData.misc_deals : (fallbackPromos.misc_deals || []);
+
   const phoneGroupCards = (isPhoneCtx || phoneAlertsActive || BF_CARDS_FILTER === 'smartphone')
     ? rawPhoneDeals.map(sd => _enrichCard({ ...sd, matched_kind: 'smartphone', matched_slug: sd.matched_slug || '', matched_name: sd.matched_name || sd.title }))
     : [];
-  const groupCards = isPhoneCtx ? phoneGroupCards : [...matchedDeals.map(_enrichCard), ...phoneGroupCards];
+  const periphGroupCards = (isPerCtx || periphAlertsActive || BF_CARDS_FILTER === 'peripheral')
+    ? rawPeriphDeals.map(pd => _enrichCard({ ...pd, matched_kind: 'peripheral', matched_slug: pd.matched_slug || '', matched_name: pd.matched_name || pd.title }))
+    : [];
+  const miscGroupCards = (isMiscCtx || miscAlertsActive || ['air_fryer', 'diapers', 'misc_custom'].includes(BF_CARDS_FILTER))
+    ? rawMiscDeals.map(md => {
+        const mcId = md.misc_category || md.matched_kind || 'misc_custom';
+        const mk = (mcId === 'air_fryer' || mcId === 'diapers') ? mcId : 'misc_custom';
+        return _enrichCard({ ...md, matched_kind: mk, matched_slug: md.matched_slug || '', matched_name: md.matched_name || md.title, item_specs: md.item_specs || md.misc_specs || {} });
+      })
+    : [];
+
+  const miscFeedExtra = [];
+  if ((isMiscCtx || nc.misc_custom === true || BF_CARDS_FILTER === 'misc_custom') && (PROMO_STATE.specFilters?.misc_custom?.keywords || '').trim()) {
+    const knownIds = new Set([...matchedDeals, ...rawMiscDeals].map(x => x && x.post_id).filter(Boolean));
+    generalFeed.forEach(fd => {
+      if (fd && !knownIds.has(fd.post_id)) {
+        miscFeedExtra.push(_enrichCard({ ...fd, matched_kind: 'misc_custom', matched_name: fd.title }));
+      }
+    });
+  }
+
+  let groupCards = [];
+  if (isPhoneCtx) groupCards = phoneGroupCards;
+  else if (isPerCtx) groupCards = periphGroupCards;
+  else if (isMiscCtx) groupCards = [...miscGroupCards, ...miscFeedExtra];
+  else groupCards = [...matchedDeals.map(_enrichCard), ...phoneGroupCards, ...periphGroupCards, ...miscGroupCards, ...miscFeedExtra];
 
   // Deduplication signature set from Telegram groups so identical store/price isn't duplicated
   const seenKeys = new Set();
@@ -9301,12 +9949,27 @@ function renderBFPromosCardsTab() {
   const storeCatalogCards = [];
   const dbTs = (typeof DB !== 'undefined' && DB.updated_at) ? Date.parse(DB.updated_at.replace(' ', 'T')) : nowMs;
   const storeAgeHrs = !isNaN(dbTs) ? Math.max(0.05, (nowMs - dbTs) / 3600000) : 0.5;
-  const isLapCtx = (typeof STATE !== 'undefined' && STATE.context === 'laptop');
+  const mcObj = (typeof DB !== 'undefined' && DB.misc_catalog && typeof DB.misc_catalog === 'object') ? DB.misc_catalog : {};
 
-  [['gpus', 'gpu'], ['cpus', 'cpu'], ['laptops', 'laptop'], ['smartphones', 'smartphone']].forEach(([grp, kindName]) => {
+  const directSources = [
+    ['gpu', DB.gpus || []],
+    ['cpu', DB.cpus || []],
+    ['laptop', DB.laptops || []],
+    ['smartphone', DB.smartphones || []],
+    ['peripheral', DB.peripherals || []],
+    ['air_fryer', mcObj.air_fryer || []],
+    ['diapers', mcObj.diapers || []]
+  ];
+
+  directSources.forEach(([kindName, arr]) => {
     if (isPhoneCtx && kindName !== 'smartphone') return;
+    if (isPerCtx && kindName !== 'peripheral') return;
+    if (isMiscCtx && kindName !== 'air_fryer' && kindName !== 'diapers') return;
     if (!isPhoneCtx && kindName === 'smartphone' && !phoneAlertsActive && BF_CARDS_FILTER !== 'smartphone') return;
-    (DB[grp] || []).forEach(it => {
+    if (!isPerCtx && kindName === 'peripheral' && !periphAlertsActive && BF_CARDS_FILTER !== 'peripheral') return;
+    if (!isMiscCtx && (kindName === 'air_fryer' || kindName === 'diapers') && nc[kindName] !== true && BF_CARDS_FILTER !== kindName) return;
+
+    arr.forEach(it => {
       if (!it || !it.slug || !it.price_brl || it.store_name === 'referencia' || it.is_xeon) return;
       const baseCard = _enrichCard({
         post_id: `store_${it.slug}`,
@@ -9322,13 +9985,17 @@ function renderBFPromosCardsTab() {
         buy_url: it.offer_url || it.href || '#',
         post_url: it.href || it.offer_url || '#',
         image_url: it.image || it.image_url || null,
+        item_specs: it.specs || undefined,
         age_hours: storeAgeHrs,
         timestamp: !isNaN(dbTs) ? new Date(dbTs).toISOString() : '',
         _isStoreDirect: true
       });
-      const passes = isPhoneCtx
-        ? ((baseCard.isInBFPrice || baseCard.isNearBF || baseCard.drop30Pct >= 3) && dealMatchesPromoPreferences(baseCard, it, { allowSmartphoneInSmartphoneCtx: true }))
-        : ((baseCard.isInBFPrice || baseCard.isNearBF || baseCard.drop30Pct >= 3) && dealMatchesPromoPreferences(baseCard, it, { allowLaptopInLaptopCtx: isLapCtx }));
+      const passes = (baseCard.isInBFPrice || baseCard.isNearBF || baseCard.drop30Pct >= 3) && dealMatchesPromoPreferences(baseCard, it, {
+        allowSmartphoneInSmartphoneCtx: isPhoneCtx,
+        allowLaptopInLaptopCtx: isLapCtx,
+        allowPeripheralInPeriphCtx: isPerCtx,
+        allowMiscInMiscCtx: isMiscCtx
+      });
       if (passes) {
         const sig = `${baseCard.matched_slug}_${(baseCard.store_name || '').toLowerCase()}_${Math.round(baseCard.price_brl || 0)}`;
         if (!seenKeys.has(sig)) {
@@ -9381,28 +10048,29 @@ function renderBFPromosCardsTab() {
   const allCards = [...groupCards, ...storeCatalogCards];
 
   // Fonte única da contagem de ofertas ativas respeitando preferências e contexto
-  const activeInCtx = allCards.filter(d => {
-    if (d.isOutOfStock) return false;
-    if (isPhoneCtx) {
-      return d.matched_kind === 'smartphone' && dealMatchesPromoPreferences(d, d._catItem, { allowSmartphoneInSmartphoneCtx: true });
-    }
-    if (isLapCtx ? d.matched_kind !== 'laptop' : d.matched_kind === 'laptop') return false;
-    return dealMatchesPromoPreferences(d, d._catItem, { allowLaptopInLaptopCtx: isLapCtx });
-  });
+  const ctxMatchOpts = {
+    allowSmartphoneInSmartphoneCtx: isPhoneCtx,
+    allowLaptopInLaptopCtx: isLapCtx,
+    allowPeripheralInPeriphCtx: isPerCtx,
+    allowMiscInMiscCtx: isMiscCtx
+  };
+  const _inActiveContext = (d) => {
+    if (isPhoneCtx) return d.matched_kind === 'smartphone';
+    if (isPerCtx) return d.matched_kind === 'peripheral';
+    if (isMiscCtx) return ['air_fryer', 'diapers', 'misc_custom'].includes(d.matched_kind);
+    if (isLapCtx) return d.matched_kind === 'laptop';
+    return d.matched_kind !== 'laptop';
+  };
+
+  const activeInCtx = allCards.filter(d => !d.isOutOfStock && _inActiveContext(d) && dealMatchesPromoPreferences(d, d._catItem, ctxMatchOpts));
   PROMO_STATE.activeOfferCount = activeInCtx.length;
-  PROMO_STATE.activeOfferCtx = (typeof STATE !== 'undefined' && STATE.context) || 'gpu';
+  PROMO_STATE.activeOfferCtx = curCtx;
   syncOfferCounters();
 
   const items = allCards.filter(d => {
     if (d.isOutOfStock) return false;
-    if (isPhoneCtx) {
-      if (d.matched_kind !== 'smartphone') return false;
-      if (!dealMatchesPromoPreferences(d, d._catItem, { allowSmartphoneInSmartphoneCtx: true })) return false;
-    } else {
-      if (isLapCtx && d.matched_kind !== 'laptop') return false;
-      if (!isLapCtx && d.matched_kind === 'laptop') return false;
-      if (!dealMatchesPromoPreferences(d, d._catItem, { allowLaptopInLaptopCtx: isLapCtx })) return false;
-    }
+    if (!_inActiveContext(d)) return false;
+    if (!dealMatchesPromoPreferences(d, d._catItem, ctxMatchOpts)) return false;
     if (BF_CARDS_FILTER === 'hist_min' && !d.isHistoricalMin) return false;
     if (BF_CARDS_FILTER === 'gpu' && d.matched_kind !== 'gpu') return false;
     if (BF_CARDS_FILTER === 'cpu' && d.matched_kind !== 'cpu') return false;
@@ -9411,6 +10079,10 @@ function renderBFPromosCardsTab() {
     if (BF_CARDS_FILTER === 'psu' && d.matched_kind !== 'psu') return false;
     if (BF_CARDS_FILTER === 'laptop' && d.matched_kind !== 'laptop') return false;
     if (BF_CARDS_FILTER === 'smartphone' && d.matched_kind !== 'smartphone') return false;
+    if (BF_CARDS_FILTER === 'peripheral' && d.matched_kind !== 'peripheral') return false;
+    if (BF_CARDS_FILTER === 'air_fryer' && d.matched_kind !== 'air_fryer') return false;
+    if (BF_CARDS_FILTER === 'diapers' && d.matched_kind !== 'diapers') return false;
+    if (BF_CARDS_FILTER === 'misc_custom' && d.matched_kind !== 'misc_custom') return false;
     if (BF_CARDS_FILTER === 'store_direct' && !d._isStoreDirect) return false;
     if (BF_CARDS_FILTER === 'in_stock' && d.isOutOfStock) return false;
     if (BF_CARDS_FILTER === 'bf_deal' && !d.isInBFPrice && !d.isNearBF) return false;
@@ -9534,6 +10206,24 @@ function renderBFPromosCardsTab() {
     } else if (d.matched_kind === 'laptop') {
       if (sp.ram_gb > 0) specTagVals.push(`${sp.ram_gb}GB RAM`);
       if (sp.gpu_is_dedicated) specTagVals.push('GPU Dedicada');
+    } else if (d.matched_kind === 'smartphone') {
+      if (sp.brand) specTagVals.push(sp.brand);
+      if (sp.ram_gb > 0 && sp.storage_gb > 0) specTagVals.push(`${sp.ram_gb}GB/${sp.storage_gb}GB`);
+    } else if (d.matched_kind === 'peripheral') {
+      const kLbl = (d.peripheral_kind || sp.sub_kind || '') === 'mouse' ? 'Mouse' : ((d.peripheral_kind || sp.sub_kind || '') === 'keyboard' ? 'Teclado' : 'Headset');
+      specTagVals.push(kLbl);
+      if (sp.brand || d.brand) specTagVals.push(sp.brand || d.brand);
+      if (sp.wireless || d.is_wireless) specTagVals.push('Sem fio');
+    } else if (d.matched_kind === 'air_fryer') {
+      const af = _parseAirFryerClient(`${d.title || ''} ${d.matched_name || ''}`, d.price_brl, d.misc_specs || sp);
+      if (af.brand) specTagVals.push(af.brand);
+      if (af.liters > 0) specTagVals.push(`${af.liters}L`);
+      if (af.price_per_liter > 0) specTagVals.push(`R$${Math.round(af.price_per_liter)}/L`);
+    } else if (d.matched_kind === 'diapers') {
+      const dp = _parseDiaperClient(`${d.title || ''} ${d.matched_name || ''}`, d.price_brl, d.misc_specs || sp);
+      if (dp.brand) specTagVals.push(dp.brand);
+      if (dp.size) specTagVals.push(`Tam. ${dp.size}`);
+      if (dp.price_per_unit > 0) specTagVals.push(`R$${Number(dp.price_per_unit).toFixed(2)}/un`);
     }
     const specTagsHtml = [
       ...specTagVals.slice(0, 3).map(v => `<span class="ui-spec-tag">${v}</span>`),
@@ -9543,7 +10233,7 @@ function renderBFPromosCardsTab() {
     ].filter(Boolean).join('');
     const actionBtnLabel = ['mobo', 'ram', 'psu'].includes(d.matched_kind)
       ? 'Montar'
-      : (d.matched_kind === 'gpu' || d.matched_kind === 'laptop' || d.matched_kind === 'cpu' ? 'Duelo' : 'Ver BF');
+      : (['gpu', 'laptop', 'cpu', 'smartphone', 'peripheral', 'air_fryer', 'diapers'].includes(d.matched_kind) ? 'Duelo' : 'Ver BF');
 
     return `
       <article class="ui-promo-card ${cardModifier}">

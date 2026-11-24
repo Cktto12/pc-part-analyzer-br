@@ -874,18 +874,25 @@ html[data-theme="light"] .cb-hard-midline {
 .ui-topbar-context .ui-segmented {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @media (min-width: 768px) {
   .ui-topbar-context {
     order: 0;
     width: auto;
+    max-width: 100%;
   }
 
   .ui-topbar-context .ui-segmented {
     width: auto;
     display: inline-flex;
+    flex-wrap: nowrap;
+  }
+
+  .ui-topbar-context .ui-segmented-btn {
+    padding: 0.34rem 0.62rem;
+    font-size: 0.78rem;
   }
 }
 

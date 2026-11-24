@@ -848,6 +848,14 @@ def refresh_live_catalog_prices(db_path):
     except Exception as e:
         print(f"[Live Catalog Refresh] Peripherals refresh skipped: {e}")
 
+    try:
+        import misc_scraper
+        ms_upd, ms_drop = misc_scraper.refresh_live_misc_prices(db)
+        updated += ms_upd
+        dropped += ms_drop
+    except Exception as e:
+        print(f"[Live Catalog Refresh] Misc refresh skipped: {e}")
+
     db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(db_path, 'w', encoding='utf-8') as f:
         json.dump(db, f, ensure_ascii=False, indent=2)

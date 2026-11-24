@@ -30,14 +30,35 @@ SCRAPER_HEADERS = {
 ZOOM_SMARTPHONE_SHELVES = [
     "/celular",
     "/celular?page=2",
+    "/celular?page=3",
     "/celular/samsung",
     "/celular/apple",
     "/celular/xiaomi",
     "/celular/motorola",
     "/celular/realme",
-    "/search?q=poco+x7+f7+f6",
+    "/search?q=galaxy+s26+plus",
+    "/search?q=galaxy+s26",
+    "/search?q=galaxy+s26+ultra",
+    "/search?q=galaxy+a57",
+    "/search?q=galaxy+a37",
     "/search?q=galaxy+a56+a55+a36+s24+s25",
+    "/search?q=galaxy+z+flip",
+    "/search?q=galaxy+z+fold",
+    "/search?q=iphone+17",
+    "/search?q=iphone+17+pro+max",
+    "/search?q=iphone+18",
+    "/search?q=poco+x8",
+    "/search?q=poco+f8",
+    "/search?q=poco+f7",
+    "/search?q=poco+x7+f7+f6",
+    "/search?q=xiaomi+15t",
+    "/search?q=redmi+note+15+pro",
     "/search?q=motorola+edge+50+60",
+    "/search?q=edge+60",
+    "/search?q=pixel+10",
+    "/search?q=pixel+9",
+    "/search?q=realme+gt",
+    "/search?q=asus+rog+phone",
 ]
 
 # Mobile SoC benchmark table:
@@ -45,6 +66,8 @@ ZOOM_SMARTPHONE_SHELVES = [
 # antutu (v10 est), npu_tops, nm, arch, sustained_pct (thermal sustainability)
 MOBILE_SOC_TABLE = [
     # Apple Silicon Mobile
+    (r"a20\s*pro", {"label": "Apple A20 Pro", "single": 100, "multi": 10600, "gpu": 7100, "antutu": 2750000, "npu_tops": 58, "nm": 2, "arch": "Apple 2nm N2", "sustained": 85}),
+    (r"\ba20\b", {"label": "Apple A20", "single": 100, "multi": 9900, "gpu": 6200, "antutu": 2450000, "npu_tops": 52, "nm": 2, "arch": "Apple 2nm N2", "sustained": 84}),
     (r"a19\s*pro", {"label": "Apple A19 Pro", "single": 100, "multi": 9800, "gpu": 6200, "antutu": 2350000, "npu_tops": 48, "nm": 3, "arch": "Apple 3nm N3P", "sustained": 82}),
     (r"\ba19\b", {"label": "Apple A19", "single": 98, "multi": 9100, "gpu": 5400, "antutu": 2050000, "npu_tops": 44, "nm": 3, "arch": "Apple 3nm N3P", "sustained": 80}),
     (r"a18\s*pro", {"label": "Apple A18 Pro", "single": 96, "multi": 8850, "gpu": 5200, "antutu": 1920000, "npu_tops": 38, "nm": 3, "arch": "Apple 3nm N3E", "sustained": 80}),
@@ -54,6 +77,7 @@ MOBILE_SOC_TABLE = [
     (r"a15\s*bionic|\ba15\b", {"label": "Apple A15 Bionic", "single": 74, "multi": 5700, "gpu": 3100, "antutu": 1240000, "npu_tops": 15.8, "nm": 5, "arch": "Apple 5nm", "sustained": 82}),
     (r"a14\s*bionic|\ba14\b", {"label": "Apple A14 Bionic", "single": 64, "multi": 4800, "gpu": 2300, "antutu": 950000, "npu_tops": 11, "nm": 5, "arch": "Apple 5nm", "sustained": 80}),
     # Qualcomm Snapdragon
+    (r"snapdragon\s*8\s*elite\s*gen\s*5|snapdragon\s*8\s*elite\s*2|sm8850", {"label": "Snapdragon 8 Elite Gen 5", "single": 100, "multi": 11200, "gpu": 7600, "antutu": 3250000, "npu_tops": 80, "nm": 3, "arch": "Oryon Gen 3 3nm", "sustained": 82}),
     (r"snapdragon\s*8\s*elite|8\s*gen\s*4|sm8750", {"label": "Snapdragon 8 Elite", "single": 96, "multi": 9900, "gpu": 6500, "antutu": 2650000, "npu_tops": 60, "nm": 3, "arch": "Oryon 3nm", "sustained": 78}),
     (r"snapdragon\s*8\s*gen\s*3|sm8650", {"label": "Snapdragon 8 Gen 3", "single": 72, "multi": 7100, "gpu": 5100, "antutu": 2050000, "npu_tops": 45, "nm": 4, "arch": "ARMv9 4nm", "sustained": 76}),
     (r"snapdragon\s*8s\s*gen\s*4", {"label": "Snapdragon 8s Gen 4", "single": 74, "multi": 7000, "gpu": 4900, "antutu": 2000000, "npu_tops": 42, "nm": 4, "arch": "ARMv9 4nm", "sustained": 78}),
@@ -69,28 +93,38 @@ MOBILE_SOC_TABLE = [
     (r"snapdragon\s*685|snapdragon\s*680", {"label": "Snapdragon 685", "single": 22, "multi": 1620, "gpu": 520, "antutu": 345000, "npu_tops": 4, "nm": 6, "arch": "Kryo 265 6nm", "sustained": 92}),
     (r"snapdragon\s*4\s*gen\s*2", {"label": "Snapdragon 4 Gen 2", "single": 31, "multi": 2200, "gpu": 780, "antutu": 445000, "npu_tops": 5, "nm": 4, "arch": "ARMv8 4nm", "sustained": 90}),
     # MediaTek Dimensity & Helio
+    (r"dimensity\s*9500", {"label": "Dimensity 9500", "single": 98, "multi": 10600, "gpu": 7200, "antutu": 3050000, "npu_tops": 70, "nm": 3, "arch": "All-Big-Core 3nm", "sustained": 82}),
     (r"dimensity\s*9400", {"label": "Dimensity 9400", "single": 92, "multi": 9200, "gpu": 6200, "antutu": 2550000, "npu_tops": 56, "nm": 3, "arch": "All-Big-Core 3nm", "sustained": 80}),
     (r"dimensity\s*9300", {"label": "Dimensity 9300+", "single": 74, "multi": 7400, "gpu": 5300, "antutu": 2120000, "npu_tops": 46, "nm": 4, "arch": "All-Big-Core 4nm", "sustained": 77}),
+    (r"dimensity\s*8500|dimensity\s*8450", {"label": "Dimensity 8450 / 8500", "single": 63, "multi": 6700, "gpu": 4500, "antutu": 1820000, "npu_tops": 32, "nm": 4, "arch": "All-Big-Core 4nm", "sustained": 84}),
     (r"dimensity\s*8400", {"label": "Dimensity 8400 Ultra", "single": 58, "multi": 6200, "gpu": 4100, "antutu": 1680000, "npu_tops": 28, "nm": 4, "arch": "All-Big-Core 4nm", "sustained": 83}),
     (r"dimensity\s*8350|dimensity\s*8300", {"label": "Dimensity 8300 Ultra", "single": 52, "multi": 4800, "gpu": 3500, "antutu": 1440000, "npu_tops": 22, "nm": 4, "arch": "ARMv9 4nm", "sustained": 82}),
+    (r"dimensity\s*7400", {"label": "Dimensity 7400", "single": 41, "multi": 3350, "gpu": 1700, "antutu": 760000, "npu_tops": 14, "nm": 4, "arch": "ARMv8.2 4nm", "sustained": 88}),
     (r"dimensity\s*7300|dimensity\s*7350", {"label": "Dimensity 7300", "single": 37, "multi": 3100, "gpu": 1480, "antutu": 690000, "npu_tops": 12, "nm": 4, "arch": "ARMv8.2 4nm", "sustained": 88}),
     (r"dimensity\s*7060|dimensity\s*7050|dimensity\s*7025|dimensity\s*7200", {"label": "Dimensity 7050/7060", "single": 35, "multi": 2700, "gpu": 1280, "antutu": 620000, "npu_tops": 10, "nm": 6, "arch": "ARMv8.2 6nm", "sustained": 89}),
     (r"dimensity\s*6300|dimensity\s*6100|dimensity\s*6080", {"label": "Dimensity 6300 5G", "single": 27, "multi": 2050, "gpu": 780, "antutu": 430000, "npu_tops": 5, "nm": 6, "arch": "ARMv8.2 6nm", "sustained": 91}),
     (r"helio\s*g100|helio\s*g99", {"label": "Helio G99 / G100", "single": 26, "multi": 2020, "gpu": 760, "antutu": 425000, "npu_tops": 4, "nm": 6, "arch": "ARMv8.2 6nm", "sustained": 91}),
     (r"helio\s*g91|helio\s*g88|helio\s*g85|helio\s*g81", {"label": "Helio G85 / G81", "single": 18, "multi": 1350, "gpu": 460, "antutu": 270000, "npu_tops": 2, "nm": 12, "arch": "ARMv8 12nm", "sustained": 92}),
     # Samsung Exynos
+    (r"exynos\s*2600", {"label": "Exynos 2600", "single": 94, "multi": 10200, "gpu": 6800, "antutu": 2850000, "npu_tops": 68, "nm": 2, "arch": "Samsung 2nm GAA", "sustained": 80}),
     (r"exynos\s*2500", {"label": "Exynos 2500", "single": 76, "multi": 7600, "gpu": 4900, "antutu": 2050000, "npu_tops": 45, "nm": 3, "arch": "Samsung 3nm GAA", "sustained": 76}),
     (r"exynos\s*2400e?", {"label": "Exynos 2400", "single": 69, "multi": 6700, "gpu": 4400, "antutu": 1760000, "npu_tops": 38, "nm": 4, "arch": "Xclipse RDNA3 4nm", "sustained": 75}),
+    (r"exynos\s*1680", {"label": "Exynos 1680", "single": 51, "multi": 4450, "gpu": 2550, "antutu": 1050000, "npu_tops": 18, "nm": 4, "arch": "Xclipse 550 4nm", "sustained": 85}),
     (r"exynos\s*1580", {"label": "Exynos 1580", "single": 46, "multi": 3950, "gpu": 2150, "antutu": 910000, "npu_tops": 15, "nm": 4, "arch": "Xclipse 540 4nm", "sustained": 84}),
     (r"exynos\s*1480", {"label": "Exynos 1480", "single": 40, "multi": 3450, "gpu": 1680, "antutu": 740000, "npu_tops": 11, "nm": 4, "arch": "Xclipse 530 4nm", "sustained": 85}),
     (r"exynos\s*1380", {"label": "Exynos 1380", "single": 35, "multi": 2900, "gpu": 1240, "antutu": 605000, "npu_tops": 8, "nm": 5, "arch": "Samsung 5nm", "sustained": 86}),
     (r"exynos\s*1330|exynos\s*1280", {"label": "Exynos 1330 / 1280", "single": 30, "multi": 2180, "gpu": 860, "antutu": 455000, "npu_tops": 5, "nm": 5, "arch": "Samsung 5nm", "sustained": 88}),
+    # Google Tensor
+    (r"tensor\s*g5", {"label": "Google Tensor G5", "single": 76, "multi": 6800, "gpu": 3900, "antutu": 1580000, "npu_tops": 50, "nm": 3, "arch": "TSMC 3nm N3E", "sustained": 82}),
+    (r"tensor\s*g4", {"label": "Google Tensor G4", "single": 64, "multi": 5100, "gpu": 3100, "antutu": 1240000, "npu_tops": 42, "nm": 4, "arch": "Samsung 4nm", "sustained": 78}),
     # Unisoc / Entry
     (r"unisoc\s*t760|unisoc\s*t820", {"label": "Unisoc T760 5G", "single": 27, "multi": 2200, "gpu": 820, "antutu": 450000, "npu_tops": 4, "nm": 6, "arch": "ARMv8 6nm", "sustained": 89}),
     (r"unisoc\s*t61[26]|unisoc\s*t606|unisoc\s*t7250", {"label": "Unisoc T606 / T616", "single": 16, "multi": 1380, "gpu": 390, "antutu": 255000, "npu_tops": 1.5, "nm": 12, "arch": "ARMv8 12nm", "sustained": 92}),
 ]
 
 MODEL_SOC_HINTS = [
+    (r"iphone\s*18\s*(?:pro|air)", "a20 pro"),
+    (r"iphone\s*18\b", "a20"),
     (r"iphone\s*17\s*pro", "a19 pro"),
     (r"iphone\s*17\s*air", "a19 pro"),
     (r"iphone\s*17\b", "a19"),
@@ -99,27 +133,44 @@ MODEL_SOC_HINTS = [
     (r"iphone\s*15\s*pro", "a17 pro"),
     (r"iphone\s*15\b|iphone\s*14\s*pro", "a16 bionic"),
     (r"iphone\s*14\b|iphone\s*13\b", "a15 bionic"),
+    (r"galaxy\s*s26\s*ultra", "snapdragon 8 elite gen 5"),
+    (r"galaxy\s*s26\s*fe", "exynos 2500"),
+    (r"galaxy\s*s26\s*(?:plus|\+|edge)?\b", "exynos 2600"),
     (r"galaxy\s*s25\s*(?:ultra|plus|\+|edge)?\b", "snapdragon 8 elite"),
     (r"galaxy\s*s24\s*ultra", "snapdragon 8 gen 3"),
     (r"galaxy\s*s24\s*fe|galaxy\s*s24\b", "exynos 2400"),
     (r"galaxy\s*s23\b", "snapdragon 8 gen 2"),
-    (r"galaxy\s*z\s*fold\s*[67]|galaxy\s*z\s*flip\s*[67]", "snapdragon 8 gen 3"),
+    (r"galaxy\s*z\s*fold\s*8|galaxy\s*z\s*flip\s*7", "snapdragon 8 elite"),
+    (r"galaxy\s*z\s*fold\s*[67]|galaxy\s*z\s*flip\s*[6]", "snapdragon 8 gen 3"),
+    (r"galaxy\s*a57", "exynos 1680"),
     (r"galaxy\s*a56", "exynos 1580"),
     (r"galaxy\s*a55", "exynos 1480"),
+    (r"galaxy\s*a37", "snapdragon 6 gen 3"),
     (r"galaxy\s*a36", "snapdragon 6 gen 3"),
     (r"galaxy\s*a35", "exynos 1380"),
     (r"galaxy\s*a26|galaxy\s*a25", "exynos 1380"),
     (r"galaxy\s*a16|galaxy\s*a15|galaxy\s*a17", "helio g99"),
     (r"galaxy\s*a06|galaxy\s*a05", "helio g85"),
+    (r"pixel\s*10", "tensor g5"),
+    (r"pixel\s*9", "tensor g4"),
+    (r"poco\s*x8\s*pro", "dimensity 8500"),
+    (r"poco\s*x8\b", "dimensity 7400"),
     (r"poco\s*x7\s*pro", "dimensity 8400"),
     (r"poco\s*x7\b", "dimensity 7300"),
     (r"poco\s*x6\s*pro", "dimensity 8300"),
     (r"poco\s*x6\b", "snapdragon 7s gen 2"),
+    (r"poco\s*f8\s*(?:pro|ultra)?\b", "snapdragon 8 elite"),
     (r"poco\s*f7\s*pro|poco\s*f7\s*ultra", "snapdragon 8 gen 3"),
+    (r"poco\s*f7\b", "snapdragon 8s gen 4"),
     (r"poco\s*f6\s*pro", "snapdragon 8 gen 2"),
     (r"poco\s*f6\b", "snapdragon 8s gen 3"),
     (r"poco\s*m7\s*pro|poco\s*m6\s*pro", "dimensity 7050"),
     (r"poco\s*c[678]\d", "helio g85"),
+    (r"xiaomi\s*15t\s*pro", "dimensity 9400"),
+    (r"xiaomi\s*15t\b", "dimensity 8400"),
+    (r"redmi\s*note\s*15\s*pro\+", "snapdragon 7s gen 3"),
+    (r"redmi\s*note\s*15\s*pro", "dimensity 7400"),
+    (r"redmi\s*note\s*15", "dimensity 7060"),
     (r"redmi\s*note\s*14\s*pro\+", "snapdragon 7s gen 3"),
     (r"redmi\s*note\s*14\s*pro", "dimensity 7300"),
     (r"redmi\s*note\s*14\s*5g", "dimensity 7050"),
@@ -133,9 +184,11 @@ MODEL_SOC_HINTS = [
     (r"moto\s*g56|moto\s*g55|moto\s*g54", "dimensity 7060"),
     (r"moto\s*g35|moto\s*g34", "unisoc t760"),
     (r"moto\s*g24|moto\s*g15|moto\s*g05|moto\s*g04", "helio g85"),
+    (r"realme\s*gt\s*7\s*pro", "snapdragon 8 elite"),
     (r"realme\s*gt\s*[67]", "snapdragon 8s gen 3"),
     (r"realme\s*1[34]\s*pro", "snapdragon 7s gen 3"),
     (r"realme\s*c[67]\d", "unisoc t616"),
+    (r"rog\s*phone\s*[89]", "snapdragon 8 elite"),
 ]
 
 
@@ -212,19 +265,21 @@ def fetch_zoom_smartphone_listings():
                 continue
             if not (raw_url.startswith("/celular/") or slug.startswith("celular-") or slug.startswith("smartphone-") or "iphone" in slug):
                 continue
-            if re.search(r"\b(capa|pel[íi]cula|carregador|cabo|suporte|fone|smartwatch|watch|tablet|ipad)\b", name, re.I):
+            if re.search(r"\b(capa|pel[íi]cula|carregador|cabo|suporte|fone|smartwatch|watch|tablet|ipad|trocafy|recondicionado|reembalado|seminovo|usado|vitrine|combo)\b", name, re.I):
+                continue
+            if re.search(r"\+\s*(smartwatch|watch|buds|fone|capa|pel[íi]cula|carregador)", name, re.I):
                 continue
             price = h.get("price") or (h.get("bestOffer") or {}).get("price") or 0
             try:
                 price_f = float(price)
             except (TypeError, ValueError):
                 price_f = 0.0
-            if price_f < 420 or price_f > 18000:
+            if price_f < 420 or price_f > 21000:
                 continue
             seen_slugs.add(slug)
             candidates.append(h)
 
-    return candidates[:62]
+    return candidates[:130]
 
 
 def enrich_smartphone(raw):
@@ -245,6 +300,7 @@ def enrich_smartphone(raw):
     is_samsung = brand.lower() == "samsung" or "galaxy" in low
     is_motorola = brand.lower() == "motorola" or "moto " in low or "edge " in low
     is_xiaomi = brand.lower() in ("xiaomi", "poco", "redmi") or any(k in low for k in ("xiaomi", "poco", "redmi"))
+    is_google = brand.lower() == "google" or "pixel" in low
 
     os_name = "iOS" if is_apple else ((attrs.get("Sistema Operacional") or ["Android"])[0])
     line = (attrs.get("Linha") or attrs.get("Série") or [""])[0].strip()
@@ -259,7 +315,7 @@ def enrich_smartphone(raw):
             ram_gb = int(m_ram.group(1))
     if not ram_gb:
         if is_apple:
-            ram_gb = 12 if "17 pro" in low else (8 if any(x in low for x in ("17", "16", "15 pro")) else 6)
+            ram_gb = 12 if ("17 pro" in low or "18" in low) else (8 if any(x in low for x in ("17", "16", "15 pro")) else 6)
         else:
             ram_gb = 12 if price_brl >= 3200 else (8 if price_brl >= 1100 else 4)
 
@@ -286,9 +342,9 @@ def enrich_smartphone(raw):
         screen_inches = 6.9 if "ultra" in low or "pro max" in low else (6.1 if ("iphone 15" in low or "iphone 14" in low or ("s24" in low and "ultra" not in low and "plus" not in low)) else 6.67)
     screen_type_raw = " ".join(attrs.get("Tipo de Tela") or [])
     if is_apple:
-        screen_type = "LTPO Super Retina XDR OLED" if ("pro" in low or "17" in low) else "Super Retina XDR OLED"
-    elif re.search(r"dynamic\s*amoled|ltpo", screen_type_raw, re.I) or "galaxy s2" in low:
-        screen_type = "LTPO Dynamic AMOLED 2X"
+        screen_type = "LTPO Super Retina XDR OLED" if ("pro" in low or "17" in low or "18" in low) else "Super Retina XDR OLED"
+    elif re.search(r"dynamic\s*amoled|ltpo", screen_type_raw, re.I) or "galaxy s2" in low or is_google:
+        screen_type = "LTPO Dynamic AMOLED 2X" if is_samsung else ("LTPO OLED" if "pro" in low or is_google else "LTPO AMOLED")
     elif re.search(r"poled|p-oled", screen_type_raw, re.I) or ("edge" in low and is_motorola):
         screen_type = "pOLED"
     elif re.search(r"amoled|oled", screen_type_raw, re.I) or price_brl >= 1150:
@@ -303,7 +359,7 @@ def enrich_smartphone(raw):
     screen_hz = _first_int([hz_str], None)
     if not screen_hz or screen_hz not in (60, 90, 120, 144, 165):
         if is_apple:
-            screen_hz = 120 if ("pro" in low or "17" in low) else 60
+            screen_hz = 120 if ("pro" in low or "17" in low or "18" in low) else 60
         elif "edge" in low and is_motorola:
             screen_hz = 144 if "pro" in low or "ultra" in low else 120
         elif price_brl >= 1000 or is_oled:
@@ -321,7 +377,7 @@ def enrich_smartphone(raw):
             screen_res = "HD+ (1600x720)"
 
     if is_ltpo:
-        brightness_nits = 2600 if ("s25" in low or "17" in low or "16 pro" in low) else 2000
+        brightness_nits = 2600 if ("s25" in low or "s26" in low or "17" in low or "18" in low or "16 pro" in low or "pixel 10" in low or "pixel 9 pro" in low) else 2000
     elif is_oled:
         brightness_nits = 1600 if price_brl >= 2200 else 1200
     else:
@@ -347,10 +403,10 @@ def enrich_smartphone(raw):
     cam_diff = " ".join(attrs.get("Diferenciais da Câmera") or []) + " " + rear_raw
     video_raw = " ".join(attrs.get("Filma em(Câmera Traseira)") or [])
 
-    cam_ois = bool(re.search(r"ois|estabiliza[çc][ãa]o\s*[óo]ptica", cam_diff, re.I)) or is_apple or price_brl >= 1450
-    has_tele = bool(re.search(r"telefoto|teleobjetiva|perisc[óo]pio|zoom\s*[óo]ptico", cam_diff, re.I)) or any(k in low for k in ("ultra", "pro", "s25", "s24", "s23", "edge 50 pro", "edge 60 pro"))
-    cam_zoom_optical = 5 if ("ultra" in low or "16 pro" in low or "17 pro" in low or "15 pro max" in low) else (3 if has_tele else 0)
-    cam_ultrawide_mp = 48 if ("16 pro" in low or "17 pro" in low or "s25 ultra" in low) else (12 if (is_apple or price_brl >= 1600) else (8 if price_brl >= 1000 else 0))
+    cam_ois = bool(re.search(r"ois|estabiliza[çc][ãa]o\s*[óo]ptica", cam_diff, re.I)) or is_apple or is_google or price_brl >= 1450
+    has_tele = bool(re.search(r"telefoto|teleobjetiva|perisc[óo]pio|zoom\s*[óo]ptico", cam_diff, re.I)) or any(k in low for k in ("ultra", "pro", "s26", "s25", "s24", "s23", "edge 50 pro", "edge 60 pro", "pixel 9", "pixel 10", "15t"))
+    cam_zoom_optical = 5 if ("ultra" in low or "16 pro" in low or "17 pro" in low or "18 pro" in low or "15 pro max" in low or "pixel 10 pro" in low or "pixel 9 pro" in low) else (3 if has_tele else 0)
+    cam_ultrawide_mp = 48 if ("16 pro" in low or "17 pro" in low or "18 pro" in low or "s25 ultra" in low or "s26 ultra" in low or "pixel 10" in low or "pixel 9 pro" in low) else (12 if (is_apple or price_brl >= 1600) else (8 if price_brl >= 1000 else 0))
 
     if re.search(r"8k", video_raw, re.I) or ("galaxy s2" in low):
         cam_video_max = "8K 30fps / 4K 60fps"
@@ -383,8 +439,8 @@ def enrich_smartphone(raw):
     battery_mah = _first_int(attrs.get("Capacidade da Bateria"), None)
     if not battery_mah or battery_mah < 2500 or battery_mah > 10000:
         if is_apple:
-            battery_mah = 4685 if "pro max" in low else (3900 if "17" in low else (3561 if "16" in low else 3349))
-        elif "poco x7 pro" in low or "f7" in low:
+            battery_mah = 4850 if ("pro max" in low and ("17" in low or "18" in low)) else (4685 if "pro max" in low else (4050 if "18" in low else (3900 if "17" in low else (3561 if "16" in low else 3349))))
+        elif "poco x7 pro" in low or "poco x8" in low or "f7" in low or "f8" in low:
             battery_mah = 6000
         elif "m" in low and is_samsung:
             battery_mah = 6000
@@ -392,17 +448,20 @@ def enrich_smartphone(raw):
             battery_mah = 5000
 
     if is_apple:
-        charge_w = 35 if ("16" in low or "17" in low) else 25
-        wireless_charge_w = 25 if ("16" in low or "17" in low) else 15
+        charge_w = 35 if ("16" in low or "17" in low or "18" in low) else 25
+        wireless_charge_w = 25 if ("16" in low or "17" in low or "18" in low) else 15
     elif is_xiaomi:
-        charge_w = 90 if ("pro" in low or "f6" in low or "f7" in low) else (45 if price_brl >= 1300 else 33)
+        charge_w = 90 if ("pro" in low or "f6" in low or "f7" in low or "f8" in low or "x8" in low) else (45 if price_brl >= 1300 else 33)
         wireless_charge_w = 50 if "ultra" in low else 0
     elif is_motorola:
         charge_w = 125 if ("edge 50 pro" in low or "ultra" in low) else (68 if "edge" in low else 33)
         wireless_charge_w = 50 if ("edge 50 pro" in low or "ultra" in low) else (15 if "edge" in low else 0)
     elif is_samsung:
-        charge_w = 45 if ("ultra" in low or "plus" in low or "a56" in low or "a36" in low) else 25
+        charge_w = 45 if ("ultra" in low or "plus" in low or "a56" in low or "a57" in low or "a36" in low or "a37" in low) else 25
         wireless_charge_w = 15 if "galaxy s2" in low or "z fold" in low or "z flip" in low else 0
+    elif is_google:
+        charge_w = 45 if "10" in low else 37
+        wireless_charge_w = 23
     else:
         charge_w = 45 if price_brl >= 1500 else 33
         wireless_charge_w = 0
@@ -424,7 +483,7 @@ def enrich_smartphone(raw):
     has_esim = bool(re.search(r"e-?sim", all_attr_text)) or is_apple or ("galaxy s2" in low) or ("galaxy a5" in low) or ("edge" in low) or ("note 14 pro" in low)
     has_microsd = (not is_apple) and ("galaxy s2" not in low) and ("poco f" not in low) and (bool(re.search(r"micro\s*sd|cart[ãa]o\s*de\s*mem[óo]ria", all_attr_text)) or price_brl < 1900)
 
-    if is_apple or "galaxy s2" in low or "edge 50" in low or "edge 60" in low or "poco x7" in low or "note 14 pro" in low or "f7" in low:
+    if is_apple or "galaxy s2" in low or "edge 50" in low or "edge 60" in low or "poco x7" in low or "poco x8" in low or "note 14 pro" in low or "note 15 pro" in low or "f7" in low or "f8" in low or is_google or "xiaomi 15t" in low:
         ip_rating = "IP68"
     elif "galaxy a5" in low or "galaxy a3" in low or "galaxy a26" in low:
         ip_rating = "IP67"
@@ -433,9 +492,11 @@ def enrich_smartphone(raw):
     else:
         ip_rating = "IP52 / Básico"
 
-    if is_samsung and ("galaxy s24" in low or "galaxy s25" in low or "z fold" in low or "z flip" in low):
+    if is_samsung and ("galaxy s24" in low or "galaxy s25" in low or "galaxy s26" in low or "z fold" in low or "z flip" in low):
         os_updates_years = 7
-    elif is_samsung and ("galaxy a56" in low or "galaxy a36" in low or "galaxy a26" in low or "galaxy a16" in low):
+    elif is_google:
+        os_updates_years = 7
+    elif is_samsung and ("galaxy a56" in low or "galaxy a57" in low or "galaxy a36" in low or "galaxy a37" in low or "galaxy a26" in low or "galaxy a16" in low or "galaxy a17" in low):
         os_updates_years = 6
     elif is_apple:
         os_updates_years = 6

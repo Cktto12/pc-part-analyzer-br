@@ -883,7 +883,7 @@ def classify_smartphone_deal(title_and_text, price_brl, db):
     low = (title_and_text or "").lower()
     if re.search(r"\b(capa|capinha|pel[íi]cula|carregador|cabo\s*usb|suporte|smartwatch|watch|tablet|ipad|fone\s*bluetooth|earbud|airpods|buds)\b", low) and not re.search(r"\b(iphone\s*1[3-7]|galaxy\s*[sa]\d{2}|poco\s*[xfmc]\d|redmi\s*note\s*\d+|moto\s*[ge]\d+|edge\s*\d{2})\b", low):
         return None
-    if not re.search(r"\b(smartphone|celular|iphone\s*1[3-7]|galaxy\s*[saz]\d|poco\s*[xfmc]\d|redmi\s*(?:note|1[2-5]|a\d)|moto\s*[ge]\d{2}|motorola\s*edge|realme\s*(?:c\d|gt|\d{2}))\b", low):
+    if not re.search(r"\b(smartphone|celular|iphone\s*1[3-8]|galaxy\s*(?:[saz]\d|z\s*(?:fold|flip)\s*\d?)|poco\s*[xfmc]\d|redmi\s*(?:note|1[2-5]|a\d)|xiaomi\s*1[45]t|pixel\s*(?:8|9|10)|moto\s*[ge]\d{2}|motorola\s*edge|realme\s*(?:c\d|gt|\d{2})|rog\s*phone)\b", low):
         return None
 
     phones = (db or {}).get("smartphones") or []
@@ -898,11 +898,14 @@ def classify_smartphone_deal(title_and_text, price_brl, db):
         if pbrand and pbrand in low:
             score += 15
         for mod_pat in [
-            r"iphone\s*1[3-7](?:\s*pro(?:\s*max)?|\s*plus|\s*air|\s*e)?",
-            r"galaxy\s*s2[3-5](?:\s*ultra|\s*plus|\s*fe|\s*edge)?",
+            r"iphone\s*1[3-8](?:\s*pro(?:\s*max)?|\s*plus|\s*air|\s*e)?",
+            r"galaxy\s*s2[3-6](?:\s*ultra|\s*plus|\+|\s*fe|\s*edge)?",
+            r"galaxy\s*z\s*(?:fold|flip)\s*[5-8]",
             r"galaxy\s*a[01235]\d(?:\s*5g)?",
             r"poco\s*[xfmc]\d(?:\s*pro|\s*ultra)?",
-            r"redmi\s*note\s*1[34](?:\s*pro\+?)?",
+            r"redmi\s*note\s*1[3-5](?:\s*pro\+?)?",
+            r"xiaomi\s*1[45]t(?:\s*pro)?",
+            r"pixel\s*(?:8|9|10)(?:\s*pro)?",
             r"edge\s*[56]0(?:\s*pro|\s*fusion|\s*ultra|\s*neo)?",
             r"moto\s*g\d{2}(?:\s*5g)?",
         ]:
@@ -934,6 +937,8 @@ def classify_smartphone_deal(title_and_text, price_brl, db):
         inferred_brand = "Xiaomi"
     elif re.search(r"\b(motorola|moto\s*[ge]\d+|edge\s*[56]0)\b", low):
         inferred_brand = "Motorola"
+    elif re.search(r"\b(google\s*pixel|pixel\s*(?:8|9|10))\b", low):
+        inferred_brand = "Google"
     elif re.search(r"\brealme\b", low):
         inferred_brand = "Realme"
 
@@ -959,13 +964,98 @@ def classify_peripheral_deal(title_and_text, price_brl):
     low = (title_and_text or "").lower()
     if re.search(r"\b(mousepad|mouse\s*pad|keycap|wrist|apoio\s*de\s*pulso|cabo\s*coiled|suporte\s*para\s*headset|earpad|almofada)\b", low):
         return None
-    if re.search(r"\b(mouse\s*gamer|mouse\s*sem\s*fio|superlight|viper\s*v[23]|deathadder|g305|g203|g403|g502|g703|attack\s*shark|darmoshark)\b", low) or re.match(r"^\s*[^a-z]*mouse\b", low):
+    if re.search(r"\b(mouse\s*gamer|mouse\s*sem\s*fio|superlight|viper\s*v[23]|deathadder|g305|g203|g403|g502|g703|attack\s*shark|darmoshark|cobra\s*pro)\b", low) or re.match(r"^\s*[^a-z]*mouse\b", low):
         return "mouse"
-    if re.search(r"\b(teclado\s*mec[âa]nic|teclado\s*gamer|teclado\s*magn[ée]tico|teclado\s*sem\s*fio|kumara|fizz|draconic|aula\s*f75|keychron|huntsman|alloy\s*origins)\b", low) or re.match(r"^\s*[^a-z]*teclado\b", low):
+    if re.search(r"\b(teclado\s*mec[âa]nic|teclado\s*gamer|teclado\s*magn[ée]tico|teclado\s*sem\s*fio|kumara|fizz|draconic|aula\s*f75|keychron|huntsman|alloy\s*origins|wooting)\b", low) or re.match(r"^\s*[^a-z]*teclado\b", low):
         return "keyboard"
     if re.search(r"\b(headset|cloud\s*(?:ii|iii|stinger|alpha)|h2002d|zeus\s*x?|quantum\s*\d+|blackshark|barracuda|g435|g733|fifine\s*h[689]|arctis)\b", low):
         return "headset"
     return None
+
+
+def _enrich_peripheral_deal_metadata(txt_probe, price_brl, per_kind, db):
+    low = (txt_probe or "").lower()
+    brand = ""
+    for cand in ("Logitech", "Razer", "HyperX", "Redragon", "Corsair", "SteelSeries", "JBL", "Havit", "Fifine", "Attack Shark", "Fallen", "Keychron", "Akko", "Aula", "Darmoshark", "Dell", "Sony", "Sennheiser"):
+        if cand.lower() in low:
+            brand = cand
+            break
+    is_wireless = bool(re.search(r"\b(sem\s*fio|wireless|lightspeed|2\.4\s*g(?:hz)?|bluetooth|tri-?mode|superlight)\b", low))
+    is_gamer = bool(re.search(r"\b(gamer|gaming|hero\s*25k|paw\s*3\d{3}|8000\s*hz|magn[ée]tic|hall\s*effect|rgb|mec[âa]nic|superlight|cloud|blackshark|zeus|kumara)\b", low))
+
+    best_item = None
+    best_score = 0
+    norm_txt_tokens = {t for t in re.sub(r"[^a-z0-9]+", " ", low).split() if len(t) >= 2}
+    for pr in ((db or {}).get("peripherals") or []):
+        if pr.get("kind") != per_kind:
+            continue
+        pname = (pr.get("name") or "").lower()
+        pbrand = (pr.get("brand") or "").lower()
+        score = 10 if (brand and pbrand == brand.lower()) else 0
+        ptokens = [t for t in re.sub(r"[^a-z0-9]+", " ", pname).split() if len(t) >= 3 and t not in ("mouse", "teclado", "headset", "gamer", "preto", "branco", "fio", "sem", "usb")]
+        hits = sum(1 for t in ptokens if t in norm_txt_tokens)
+        score += hits * 18
+        ref_p = float(pr.get("price_brl") or 0)
+        if ref_p > 0 and (price_brl < ref_p * 0.35 or price_brl > ref_p * 1.55):
+            continue
+        if score > best_score:
+            best_score = score
+            best_item = pr
+
+    matched = bool(best_item and best_score >= 36)
+    hb_price = float(best_item.get("price_brl") or 0) if matched else 0.0
+    return {
+        "peripheral_kind": per_kind,
+        "matched_kind": "peripheral",
+        "brand": (best_item.get("brand") if matched else "") or brand,
+        "is_wireless": bool(best_item.get("is_wireless")) if matched else is_wireless,
+        "is_gamer": is_gamer,
+        "matched_slug": best_item["slug"] if matched else None,
+        "matched_name": best_item["name"] if matched else None,
+        "hb_price_brl": hb_price,
+        "savings_vs_hb_brl": round(hb_price - price_brl, 2) if hb_price > 0 else 0.0,
+        "item_specs": {
+            "sub_kind": per_kind,
+            "brand": (best_item.get("brand") if matched else "") or brand,
+            "wireless": bool(best_item.get("is_wireless")) if matched else is_wireless,
+            "gamer": is_gamer,
+        },
+    }
+
+
+def _enrich_misc_deal_metadata(txt_probe, price_brl, misc_cat_id, misc_specs, db):
+    low = (txt_probe or "").lower()
+    cat_list = ((db or {}).get("misc_catalog") or {}).get(misc_cat_id) or []
+    brand_low = str((misc_specs or {}).get("brand") or "").lower()
+    norm_tokens = {t for t in re.sub(r"[^a-z0-9]+", " ", low).split() if len(t) >= 2}
+    best_item = None
+    best_score = 0
+    for it in cat_list:
+        iname = (it.get("name") or "").lower()
+        ibrand = (it.get("brand") or "").lower()
+        score = 16 if (brand_low and ibrand == brand_low) else 0
+        itokens = [t for t in re.sub(r"[^a-z0-9]+", " ", iname).split() if len(t) >= 3 and t not in ("fralda", "air", "fryer", "fritadeira", "eletrica", "oleo", "pacote", "cesto")]
+        score += sum(15 for t in itokens if t in norm_tokens)
+        ref_p = float(it.get("price_brl") or 0)
+        if ref_p > 0 and (price_brl < ref_p * 0.35 or price_brl > ref_p * 1.55):
+            continue
+        if score > best_score:
+            best_score = score
+            best_item = it
+
+    matched = bool(best_item and best_score >= 38)
+    hb_price = float(best_item.get("price_brl") or 0) if matched else 0.0
+    return {
+        "misc_category": misc_cat_id,
+        "misc_specs": misc_specs or {},
+        "matched_kind": misc_cat_id,
+        "brand": (misc_specs or {}).get("brand") or (best_item.get("brand") if matched else ""),
+        "item_specs": misc_specs or {},
+        "matched_slug": best_item["slug"] if matched else None,
+        "matched_name": best_item["name"] if matched else None,
+        "hb_price_brl": hb_price,
+        "savings_vs_hb_brl": round(hb_price - price_brl, 2) if hb_price > 0 else 0.0,
+    }
 
 
 def classify_misc_deal(title_and_text, price_brl, misc_categories):
@@ -1137,8 +1227,7 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
             misc_cat_id, misc_specs = classify_misc_deal(txt_probe, float(item.get("price_brl") or 0), misc_categories)
             if misc_cat_id:
                 m_copy = dict(item)
-                m_copy["misc_category"] = misc_cat_id
-                m_copy["misc_specs"] = misc_specs
+                m_copy.update(_enrich_misc_deal_metadata(txt_probe, float(item.get("price_brl") or 0), misc_cat_id, misc_specs, db))
                 misc_deals.append(m_copy)
             else:
                 ph_match = classify_smartphone_deal(txt_probe, float(item.get("price_brl") or 0), db)
@@ -1150,7 +1239,7 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
                     per_kind = classify_peripheral_deal(txt_probe, float(item.get("price_brl") or 0))
                     if per_kind:
                         p_copy = dict(item)
-                        p_copy["peripheral_kind"] = per_kind
+                        p_copy.update(_enrich_peripheral_deal_metadata(txt_probe, float(item.get("price_brl") or 0), per_kind, db))
                         peripheral_deals.append(p_copy)
 
         all_promos.append(item)

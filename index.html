@@ -27,7 +27,7 @@
   </script>
   <title>GCA · Preços de Hardware & Black Friday</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261124-6" />
+  <link rel="stylesheet" href="styles/ui.css?v=20261124-7" />
   <link rel="stylesheet" href="styles/themes.css?v=20261124-1" />
   <script src="styles/chart-theme.js?v=20261124-1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -222,6 +222,12 @@
             </button>
             <button type="button" id="btn-ctx-smartphone" onclick="setMainContext('smartphone')" class="ui-segmented-btn" title="Smartphones &amp; Celulares">
               <span>Celular</span>
+            </button>
+            <button type="button" id="btn-ctx-peripherals" onclick="setMainContext('peripherals')" class="ui-segmented-btn" title="Mouse, Teclados e Headsets">
+              <span>Periféricos</span>
+            </button>
+            <button type="button" id="btn-ctx-misc" onclick="setMainContext('misc')" class="ui-segmented-btn" title="Air Fryers, Fraldas e Diversos">
+              <span>Diversos</span>
             </button>
           </div>
         </div>
@@ -1200,6 +1206,60 @@
         </div>
       </div>
     </div> <!-- /versus-smartphone-view -->
+
+    <!-- ===================================================================== -->
+    <!-- VERSUS PERIPHERALS VIEW                                               -->
+    <!-- ===================================================================== -->
+    <div id="versus-peripherals-view" class="hidden space-y-5">
+      <div class="ui-card space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <span class="ui-label">Duelo de Periféricos</span>
+            <h2 class="ui-title-lg">Comparativo A vs B — Mouse, Teclado &amp; Headset</h2>
+          </div>
+          <div id="periph-main-duel-controls" class="flex flex-wrap items-center gap-2"></div>
+        </div>
+        <div id="periph-main-duel-verdict" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Radar Técnico (4 Eixos)</h3>
+            <div class="h-64"><canvas id="chart-periph-main-radar"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Preços (Zoom BR)</h3>
+            <div class="h-64"><canvas id="chart-periph-main-history"></canvas></div>
+          </div>
+        </div>
+        <div id="periph-main-duel-specs" class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-3"></div>
+      </div>
+    </div> <!-- /versus-peripherals-view -->
+
+    <!-- ===================================================================== -->
+    <!-- VERSUS MISC VIEW (AIR FRYER, FRALDAS, CUSTOM)                         -->
+    <!-- ===================================================================== -->
+    <div id="versus-misc-view" class="hidden space-y-5">
+      <div class="ui-card space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <span class="ui-label">Duelo de Diversos</span>
+            <h2 class="ui-title-lg">Comparativo A vs B — Air Fryers, Fraldas &amp; Casa</h2>
+          </div>
+          <div id="misc-main-duel-controls" class="flex flex-wrap items-center gap-2"></div>
+        </div>
+        <div id="misc-main-duel-verdict" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Comparativo por Eixo (R$/Unid., Economia, Qualidade)</h3>
+            <div class="h-64"><canvas id="chart-misc-main-radar"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Preços Diário (Zoom BR)</h3>
+            <div class="h-64"><canvas id="chart-misc-main-history"></canvas></div>
+          </div>
+        </div>
+        <div id="misc-main-duel-specs" class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-3"></div>
+      </div>
+    </div> <!-- /versus-misc-view -->
   </section>
 
     <!-- ===================================================================== -->
@@ -1721,6 +1781,94 @@
           </div>
         </div>
       </div> <!-- /cb-smartphone-view -->
+
+      <!-- ===================================================================== -->
+      <!-- CUSTO-BENEFÍCIO PERIPHERALS VIEW                                      -->
+      <!-- ===================================================================== -->
+      <div id="cb-peripherals-view" class="hidden space-y-5">
+        <div class="ui-card space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="ui-label">Ranking Periféricos</span>
+              <h2 class="ui-title-lg">Custo-Benefício — Mouse, Teclado &amp; Headset</h2>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="periph-cb-search" oninput="renderPeripheralsCBView()" placeholder="Filtrar modelo, sensor, marca..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white w-56 focus:outline-none focus:border-sky-400" />
+              <select id="periph-cb-sort" onchange="renderPeripheralsCBView()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
+                <option value="cb" selected>Melhor Custo-Benefício</option>
+                <option value="score">Maior Nota Técnica</option>
+                <option value="price_asc">Menor Preço</option>
+                <option value="price_desc">Maior Preço</option>
+              </select>
+            </div>
+          </div>
+          <div id="periph-cb-filters" class="ui-filter-bar"></div>
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th class="w-10">#</th>
+                  <th>Periférico</th>
+                  <th>Especificações</th>
+                  <th class="text-right">Preço Atual</th>
+                  <th class="text-center">Tendência</th>
+                  <th class="text-center">Custo-Benefício</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="peripherals-cb-table-body"></tbody>
+            </table>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Dispersão Preço × Nota Técnica</h3>
+            <div class="h-64"><canvas id="chart-periph-cb-scatter"></canvas></div>
+          </div>
+        </div>
+      </div> <!-- /cb-peripherals-view -->
+
+      <!-- ===================================================================== -->
+      <!-- CUSTO-BENEFÍCIO MISC VIEW                                             -->
+      <!-- ===================================================================== -->
+      <div id="cb-misc-view" class="hidden space-y-5">
+        <div class="ui-card space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div>
+              <span class="ui-label">Ranking Diversos</span>
+              <h2 class="ui-title-lg">Custo-Benefício — Air Fryers (R$/L) &amp; Fraldas (R$/unid.)</h2>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="misc-cb-search" oninput="renderMiscCBView()" placeholder="Filtrar marca, tamanho, modelo..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white w-56 focus:outline-none focus:border-sky-400" />
+              <select id="misc-cb-sort" onchange="renderMiscCBView()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
+                <option value="cb" selected>Melhor Custo-Benefício</option>
+                <option value="unit_asc">Menor R$/Litro ou R$/Fralda</option>
+                <option value="price_asc">Menor Preço Total</option>
+                <option value="price_desc">Maior Preço Total</option>
+              </select>
+            </div>
+          </div>
+          <div id="misc-cb-filters" class="ui-filter-bar"></div>
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th class="w-10">#</th>
+                  <th>Produto</th>
+                  <th>Especificações &amp; Unidade</th>
+                  <th class="text-right">Preço Atual</th>
+                  <th class="text-center">Tendência</th>
+                  <th class="text-center">Custo-Benefício</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="misc-cb-table-body"></tbody>
+            </table>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Dispersão Preço × Eficiência / Qualidade</h3>
+            <div class="h-64"><canvas id="chart-misc-cb-scatter"></canvas></div>
+          </div>
+        </div>
+      </div> <!-- /cb-misc-view -->
     </section>
 
     <!-- ===================================================================== -->
@@ -1875,6 +2023,12 @@
           <div id="smartphone-builder-summary-card" class="ui-card space-y-4"></div>
         </div>
       </div>
+
+      <!-- BUILDER: PERIFÉRICOS -->
+      <div id="builder-peripherals-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5"></div>
+
+      <!-- BUILDER: DIVERSOS / CESTA & MONITOR -->
+      <div id="builder-misc-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5"></div>
     </section>
 
     <!-- ===================================================================== -->
@@ -2053,6 +2207,12 @@
           </div>
         </div>
       </div>
+
+      <!-- UPGRADES / GUIA PERIFÉRICOS -->
+      <div id="upgrades-peripherals-view" class="hidden ui-card space-y-5"></div>
+
+      <!-- UPGRADES / GUIA & GRUPOS DIVERSOS -->
+      <div id="upgrades-misc-view" class="hidden ui-card space-y-5"></div>
     </section>
 
     <!-- ===================================================================== -->
@@ -2350,6 +2510,22 @@
               <input type="checkbox" id="chk-pref-cat-smartphone" onchange="onPromoCategoryToggle('smartphone', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
               <span>Smartphones</span>
             </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-peripheral" onchange="onPromoCategoryToggle('peripheral', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Periféricos</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-air_fryer" onchange="onPromoCategoryToggle('air_fryer', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Air Fryer</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-diapers" onchange="onPromoCategoryToggle('diapers', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Fraldas</span>
+            </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-misc_custom" onchange="onPromoCategoryToggle('misc_custom', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Itens Livres</span>
+            </label>
           </div>
 
           <!-- Per-Category Spec Cards Grid -->
@@ -2581,13 +2757,14 @@
                   <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Apple" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Apple')">Apple</button>
                   <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Xiaomi" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Xiaomi')">Xiaomi</button>
                   <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Motorola" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Motorola')">Motorola</button>
+                  <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Google" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Google')">Google</button>
                   <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Realme" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Realme')">Realme</button>
                 </div>
               </div>
               <div class="space-y-1.5">
                 <label for="spec-smartphone-model-input" class="text-[11px] text-slate-400 block">Aparelho específico (sugestão inteligente)</label>
                 <div class="ui-autocomplete-wrap">
-                  <input type="text" id="spec-smartphone-model-input" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="spec-smartphone-suggestions" placeholder="Digite o modelo (ex: S25 Ultra, iPhone 16, Poco X7)..." oninput="onSmartphoneNotifyInput(this.value)" onfocus="onSmartphoneNotifyInput(this.value)" onkeydown="onSmartphoneNotifyKeydown(event)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400" />
+                  <input type="text" id="spec-smartphone-model-input" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="spec-smartphone-suggestions" placeholder="Digite o modelo (ex: S26 Plus, iPhone 17, Poco X8)..." oninput="onSmartphoneNotifyInput(this.value)" onfocus="onSmartphoneNotifyInput(this.value)" onkeydown="onSmartphoneNotifyKeydown(event)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400" />
                   <div id="spec-smartphone-suggestions" role="listbox" class="ui-autocomplete-menu hidden"></div>
                 </div>
                 <div id="spec-smartphone-selected-models" class="flex flex-wrap gap-1.5 pt-0.5"></div>
@@ -2598,6 +2775,181 @@
               </label>
               <p id="spec-smartphone-off-note" class="text-[11px] text-slate-400">
                 Selecione uma marca ou aparelho acima para ativar os alertas de Smartphones.
+              </p>
+            </div>
+
+            <!-- Periféricos -->
+            <div id="spec-card-peripheral" class="ui-spec-card is-disabled space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Periféricos (Mouse / Teclado / Headset)</span>
+                <span id="spec-peripheral-status-tag" class="ui-mono text-[11px] text-slate-500">Desativado</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Subtipo</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="sub_kinds" data-spec-val="mouse" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','sub_kinds','mouse')">🖱️ Mouse</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="sub_kinds" data-spec-val="keyboard" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','sub_kinds','keyboard')">⌨️ Teclado</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="sub_kinds" data-spec-val="headset" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','sub_kinds','headset')">🎧 Headset</button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Marca</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="Logitech" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','Logitech')">Logitech</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="Razer" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','Razer')">Razer</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="HyperX" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','HyperX')">HyperX</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="Redragon" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','Redragon')">Redragon</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="Corsair" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','Corsair')">Corsair</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="JBL" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','JBL')">JBL</button>
+                  <button type="button" class="ui-chip" data-spec-cat="peripheral" data-spec-key="brands" data-spec-val="Fifine" aria-pressed="false" onclick="onTogglePromoSpecChip('peripheral','brands','Fifine')">Fifine</button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <label for="spec-peripheral-model-input" class="text-[11px] text-slate-400 block">Modelo específico (sugestão inteligente)</label>
+                <div class="ui-autocomplete-wrap">
+                  <input type="text" id="spec-peripheral-model-input" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="spec-peripheral-suggestions" placeholder="Ex: Superlight 2, Cloud III, Aula F75..." oninput="onPeripheralNotifyInput(this.value)" onfocus="onPeripheralNotifyInput(this.value)" onkeydown="onPeripheralNotifyKeydown(event)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400" />
+                  <div id="spec-peripheral-suggestions" role="listbox" class="ui-autocomplete-menu hidden"></div>
+                </div>
+                <div id="spec-peripheral-selected-models" class="flex flex-wrap gap-1.5 pt-0.5"></div>
+              </div>
+              <div class="flex flex-wrap items-center gap-3">
+                <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                  <input type="checkbox" id="spec-peripheral-wireless" onchange="onPromoSpecInputChange()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                  <span>Somente Sem Fio</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                  <input type="checkbox" id="spec-peripheral-gamer" onchange="onPromoSpecInputChange()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                  <span>Linha Gamer</span>
+                </label>
+              </div>
+              <label class="space-y-1 block">
+                <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                <input type="number" id="spec-peripheral-max-price" min="0" step="25" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+              </label>
+              <p id="spec-peripheral-off-note" class="text-[11px] text-slate-400">
+                Marque Periféricos acima ou escolha tipo/marca/modelo para ativar alertas.
+              </p>
+            </div>
+
+            <!-- Air Fryer -->
+            <div id="spec-card-air_fryer" class="ui-spec-card is-disabled space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Air Fryer (Fritadeira Sem Óleo)</span>
+                <span id="spec-air_fryer-status-tag" class="ui-mono text-[11px] text-slate-500">Desativado</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Marca</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="air_fryer" data-spec-key="brands" data-spec-val="Electrolux" aria-pressed="false" onclick="onTogglePromoSpecChip('air_fryer','brands','Electrolux')">Electrolux</button>
+                  <button type="button" class="ui-chip" data-spec-cat="air_fryer" data-spec-key="brands" data-spec-val="Mondial" aria-pressed="false" onclick="onTogglePromoSpecChip('air_fryer','brands','Mondial')">Mondial</button>
+                  <button type="button" class="ui-chip" data-spec-cat="air_fryer" data-spec-key="brands" data-spec-val="Philips Walita" aria-pressed="false" onclick="onTogglePromoSpecChip('air_fryer','brands','Philips Walita')">Walita</button>
+                  <button type="button" class="ui-chip" data-spec-cat="air_fryer" data-spec-key="brands" data-spec-val="Oster" aria-pressed="false" onclick="onTogglePromoSpecChip('air_fryer','brands','Oster')">Oster</button>
+                  <button type="button" class="ui-chip" data-spec-cat="air_fryer" data-spec-key="brands" data-spec-val="Midea" aria-pressed="false" onclick="onTogglePromoSpecChip('air_fryer','brands','Midea')">Midea</button>
+                  <button type="button" class="ui-chip" data-spec-cat="air_fryer" data-spec-key="brands" data-spec-val="Britânia" aria-pressed="false" onclick="onTogglePromoSpecChip('air_fryer','brands','Britânia')">Britânia</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Formato</span>
+                  <select id="spec-air_fryer-format" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                    <option value="">Todas</option>
+                    <option value="cesto">Cesto Tradicional</option>
+                    <option value="oven">Oven / Forno 10L+</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Capacidade mín. (L)</span>
+                  <input type="number" id="spec-air_fryer-min-liters" min="0" step="0.5" oninput="onPromoSpecInputChange()" placeholder="Ex: 5" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Máx. R$/Litro</span>
+                  <input type="number" id="spec-air_fryer-max-ppl" min="0" step="5" oninput="onPromoSpecInputChange()" placeholder="Ex: 70" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                  <input type="number" id="spec-air_fryer-max-price" min="0" step="20" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
+                <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                  <input type="checkbox" id="spec-air_fryer-digital" onchange="onPromoSpecInputChange()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                  <span>Somente Digital</span>
+                </label>
+                <input type="text" id="spec-air_fryer-keyword" oninput="onPromoSpecInputChange()" placeholder="Palavra-chave (ex: Dual, Inox)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white" />
+              </div>
+              <p id="spec-air_fryer-off-note" class="text-[11px] text-slate-400">
+                Marque Air Fryer acima para monitorar ofertas em R$/L e lojas BR.
+              </p>
+            </div>
+
+            <!-- Fraldas Infantis -->
+            <div id="spec-card-diapers" class="ui-spec-card is-disabled space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Fraldas Infantis (R$/fralda)</span>
+                <span id="spec-diapers-status-tag" class="ui-mono text-[11px] text-slate-500">Desativado</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Marca</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="brands" data-spec-val="Pampers" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','brands','Pampers')">Pampers</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="brands" data-spec-val="Huggies" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','brands','Huggies')">Huggies</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="brands" data-spec-val="Babysec" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','brands','Babysec')">Babysec</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="brands" data-spec-val="Pom Pom" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','brands','Pom Pom')">Pom Pom</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="brands" data-spec-val="MamyPoko" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','brands','MamyPoko')">MamyPoko</button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Tamanhos</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="RN" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','RN')">RN</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="P" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','P')">P</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="M" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','M')">M</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="G" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','G')">G</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="XG" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','XG')">XG</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="XXG" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','XXG')">XXG</button>
+                  <button type="button" class="ui-chip" data-spec-cat="diapers" data-spec-key="sizes" data-spec-val="XXXG" aria-pressed="false" onclick="onTogglePromoSpecChip('diapers','sizes','XXXG')">XXXG</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-2">
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Modelo</span>
+                  <select id="spec-diapers-style" onchange="onPromoSpecInputChange()" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white">
+                    <option value="">Todos</option>
+                    <option value="pants">Pants (Calça)</option>
+                    <option value="fita">Fita Trad.</option>
+                  </select>
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Máx. R$/fralda</span>
+                  <input type="number" id="spec-diapers-max-ppu" min="0" step="0.05" oninput="onPromoSpecInputChange()" placeholder="Ex: 1.00" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+                <label class="space-y-1">
+                  <span class="text-[11px] text-slate-400 block">Pacote máx (<span class="currency-sym">R$</span>)</span>
+                  <input type="number" id="spec-diapers-max-price" min="0" step="10" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+                </label>
+              </div>
+              <input type="text" id="spec-diapers-keyword" oninput="onPromoSpecInputChange()" placeholder="Linha (ex: Confort Sec, Premium Care, Dermaprotect)" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white" />
+              <p id="spec-diapers-off-note" class="text-[11px] text-slate-400">
+                Marque Fraldas acima ou defina Máx. R$/fralda para alertas nos grupos de bebê.
+              </p>
+            </div>
+
+            <!-- Itens Livres (Custom Misc Keywords) -->
+            <div id="spec-card-misc_custom" class="ui-spec-card is-disabled space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Monitor Livre (Qualquer Produto)</span>
+                <span id="spec-misc_custom-status-tag" class="ui-mono text-[11px] text-slate-500">Desativado</span>
+              </div>
+              <label class="space-y-1 block">
+                <span class="text-[11px] text-slate-400 block">Palavras-chave (separadas por vírgula)</span>
+                <input type="text" id="spec-misc_custom-keywords" oninput="onPromoSpecInputChange()" placeholder="Ex: cafeteira, cadeira ergonomica, whey, aspirador" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400" />
+              </label>
+              <label class="space-y-1 block">
+                <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                <input type="number" id="spec-misc_custom-max-price" min="0" step="20" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+              </label>
+              <p id="spec-misc_custom-off-note" class="text-[11px] text-slate-400">
+                Digite o nome do produto acima para receber alertas sempre que aparecer nos grupos BR.
               </p>
             </div>
           </div>
@@ -2641,6 +2993,10 @@
               <button type="button" onclick="setBFCardsFilter('psu')" data-bf-filter="psu" class="ui-chip">Fontes</button>
               <button type="button" onclick="setBFCardsFilter('laptop')" data-bf-filter="laptop" class="ui-chip">Notebooks</button>
               <button type="button" onclick="setBFCardsFilter('smartphone')" data-bf-filter="smartphone" class="ui-chip hidden">Smartphones</button>
+              <button type="button" onclick="setBFCardsFilter('peripheral')" data-bf-filter="peripheral" class="ui-chip hidden">Periféricos</button>
+              <button type="button" onclick="setBFCardsFilter('air_fryer')" data-bf-filter="air_fryer" class="ui-chip hidden">Air Fryer</button>
+              <button type="button" onclick="setBFCardsFilter('diapers')" data-bf-filter="diapers" class="ui-chip hidden">Fraldas</button>
+              <button type="button" onclick="setBFCardsFilter('misc_custom')" data-bf-filter="misc_custom" class="ui-chip hidden">Itens Livres</button>
               <button type="button" onclick="setBFCardsFilter('in_stock')" data-bf-filter="in_stock" class="ui-chip">Em estoque</button>
               <button type="button" onclick="setBFCardsFilter('store_direct')" data-bf-filter="store_direct" class="ui-chip">Lojas diretas</button>
             </div>
@@ -2865,6 +3221,22 @@
                       <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
                         <input type="checkbox" id="chk-notify-prod-smartphone" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
                         <span>Smartphones</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-peripheral" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Periféricos</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-air_fryer" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Air Fryer</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-diapers" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Fraldas</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-misc_custom" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Itens Livres</span>
                       </label>
                     </div>
                   </div>
@@ -3508,6 +3880,12 @@
           </div>
         </div>
       </div>
+
+      <!-- SIMULATOR: PERIFÉRICOS -->
+      <div id="sim-peripherals-view" class="hidden space-y-5"></div>
+
+      <!-- SIMULATOR: DIVERSOS -->
+      <div id="sim-misc-view" class="hidden space-y-5"></div>
     </section>
 
     <!-- ===================================================================== -->
@@ -3817,6 +4195,26 @@
           </summary>
           <div class="ui-details-body space-y-3">
             <div id="cfg-ref-smartphone-container" class="space-y-3"></div>
+          </div>
+        </details>
+
+        <details id="cfg-ref-peripherals-section" class="hidden ui-details" open>
+          <summary class="ui-details-summary">
+            <span>1. Setup de Periféricos de Referência</span>
+            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Mouse, Teclado e Headset monitorados</span>
+          </summary>
+          <div class="ui-details-body space-y-3">
+            <div id="cfg-ref-peripherals-container" class="space-y-3"></div>
+          </div>
+        </details>
+
+        <details id="cfg-ref-misc-section" class="hidden ui-details" open>
+          <summary class="ui-details-summary">
+            <span>1. Categorias Diversos &amp; Grupos Telegram</span>
+            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Air Fryer, Fraldas e grupos ativos</span>
+          </summary>
+          <div class="ui-details-body space-y-3">
+            <div id="cfg-ref-misc-container" class="space-y-3"></div>
           </div>
         </details>
 
@@ -4308,13 +4706,13 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261124-7"></script>
-  <script src="app_features.js?v=20261124-10"></script>
+  <script src="app.js?v=20261124-8"></script>
+  <script src="app_features.js?v=20261124-11"></script>
   <script src="laptop_mode.js?v=20261124-5"></script>
   <script src="smartphone_mode.js?v=20261124-1"></script>
-  <script src="peripherals_mode.js?v=20261124-1"></script>
-  <script src="misc_mode.js?v=20261124-1"></script>
+  <script src="peripherals_mode.js?v=20261124-2"></script>
+  <script src="misc_mode.js?v=20261124-2"></script>
   <script src="styles/combo.js?v=20261119-3"></script>
-  <script src="mobile_mode.js?v=20261124-1"></script>
+  <script src="mobile_mode.js?v=20261124-2"></script>
 </body>
 </html>

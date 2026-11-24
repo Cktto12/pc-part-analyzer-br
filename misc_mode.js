@@ -78,10 +78,17 @@ function loadMiscConfigState() {
   return _miscConfig;
 }
 
+function _canUseMiscBackend() {
+  const localOk = typeof isLocalServerHost === 'function'
+    ? isLocalServerHost()
+    : (/^(localhost|127\.0\.0\.1|192\.168\.|10\.)$/.test(location.hostname) || location.hostname.startsWith('192.168.') || location.hostname.startsWith('10.'));
+  return localOk && (typeof SERVER_ONLINE === 'undefined' || SERVER_ONLINE);
+}
+
 async function syncMiscConfigFromServer() {
   if (_miscServerSyncLoaded) return;
   _miscServerSyncLoaded = true;
-  if (typeof SERVER_ONLINE !== 'undefined' && !SERVER_ONLINE) return;
+  if (!_canUseMiscBackend()) return;
   try {
     const res = await fetch('/api/misc/config');
     if (!res.ok) return;
@@ -98,7 +105,7 @@ async function syncMiscConfigFromServer() {
         if (!seenGrp.has(String(g.id).toLowerCase())) cur.telegram_groups.push(g);
       });
       localStorage.setItem(MISC_STORAGE_KEY, JSON.stringify(cur));
-      if (typeof STATE !== 'undefined' && STATE.activeTab === 'misc') renderMiscTab();
+      if (typeof STATE !== 'undefined' && (STATE.activeTab === 'misc' || STATE.context === 'misc')) renderMiscTab();
     }
   } catch (_) {}
 }
@@ -106,6 +113,7 @@ async function syncMiscConfigFromServer() {
 async function _persistMiscConfig() {
   const cfg = loadMiscConfigState();
   try { localStorage.setItem(MISC_STORAGE_KEY, JSON.stringify(cfg)); } catch (_) {}
+  if (!_canUseMiscBackend()) return;
   try {
     await fetch('/api/misc/config', {
       method: 'POST',
@@ -209,8 +217,7 @@ async function searchMiscLiveNow(explicitQuery = null) {
   renderMiscTab();
 
   const enabledCh = cfg.telegram_groups.filter(g => g.enabled !== false).map(g => g.id).join(',');
-  const canBackend = (typeof SERVER_ONLINE === 'undefined') || SERVER_ONLINE || location.hostname === '192.168.20.10' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  if (canBackend) {
+  if (_canUseMiscBackend()) {
     try {
       const url = `/api/misc/search?q=${encodeURIComponent(q)}&cat=${encodeURIComponent(_miscActiveCatId)}&channels=${encodeURIComponent(enabledCh)}`;
       const res = await fetch(url);
@@ -497,6 +504,647 @@ function renderMiscTab() {
   }
 }
 
+const _miscCharts = {};
+let _miscMainDuelCat = 'air_fryer';
+let _miscMainDuelASlug = '';
+let _miscMainDuelBSlug = '';
+let _miscCBCtxCat = 'air_fryer';
+let _miscCBCtxDiaperSize = 'ALL';
+let _miscCBCtxDiaperStyle = 'ALL';
+let _miscCBCtxAirType = 'ALL';
+let _miscBuilderAirSlug = '';
+let _miscBuilderDiaperSlug = '';
+let _miscSimChangesPerDay = 6;
+let _miscSimCouponBrl = 25;
+
+function _destroyMiscChartSafe(key) {
+  if (_miscCharts[key] && typeof _miscCharts[key].destroy === 'function') {
+    try { _miscCharts[key].destroy(); } catch (_) {}
+    delete _miscCharts[key];
+  }
+}
+
+function getMiscCatalogPool(catId = null) {
+  const map = (typeof DB !== 'undefined' && DB.misc_catalog && typeof DB.misc_catalog === 'object') ? DB.misc_catalog : {};
+  const list = [];
+  const cats = catId && catId !== 'all' ? [catId] : Object.keys(map);
+  cats.forEach(cid => {
+    (map[cid] || []).forEach(it => {
+      if (it && it.slug && Number(it.price_brl || 0) > 5) {
+        list.push({ ...it, category_id: it.category_id || cid });
+      }
+    });
+  });
+  return list;
+}
+
+function getMiscUnitValue(it) {
+  const sp = (it && it.specs) || {};
+  if ((it.category_id || '') === 'diapers' && Number(sp.price_per_unit || 0) > 0) {
+    return { val: Number(sp.price_per_unit), label: `R$ ${Number(sp.price_per_unit).toFixed(2)}/fralda`, unit: 'fralda' };
+  }
+  if ((it.category_id || '') === 'air_fryer' && Number(sp.price_per_liter || 0) > 0) {
+    return { val: Number(sp.price_per_liter), label: `R$ ${Math.round(sp.price_per_liter)}/L`, unit: 'L' };
+  }
+  return { val: Number((it && it.price_brl) || 0), label: '', unit: '' };
+}
+
+function _shortMiscName(it) {
+  if (!it || !it.name) return '--';
+  const s = String(it.name).replace(/\s+/g, ' ').trim();
+  return s.length > 48 ? s.slice(0, 46) + '…' : s;
+}
+
+function setMiscMainDuelCat(cid) {
+  _miscMainDuelCat = cid || 'air_fryer';
+  _miscMainDuelASlug = '';
+  _miscMainDuelBSlug = '';
+  renderMiscDuelAnalysis();
+}
+
+function onMiscMainDuelChange() {
+  const a = document.getElementById('misc-main-duel-a')?.value;
+  const b = document.getElementById('misc-main-duel-b')?.value;
+  if (a) _miscMainDuelASlug = a;
+  if (b) _miscMainDuelBSlug = b;
+  renderMiscDuelAnalysis();
+}
+
+function swapMiscMainDuel() {
+  const tmp = _miscMainDuelASlug;
+  _miscMainDuelASlug = _miscMainDuelBSlug;
+  _miscMainDuelBSlug = tmp;
+  renderMiscDuelAnalysis();
+}
+
+function setMiscMainDuelItem(slug, slot = 'b', catId = null) {
+  if (catId) _miscMainDuelCat = catId;
+  else {
+    const found = getMiscCatalogPool().find(x => x.slug === slug);
+    if (found && found.category_id) _miscMainDuelCat = found.category_id;
+  }
+  if (slot === 'a') _miscMainDuelASlug = slug;
+  else _miscMainDuelBSlug = slug;
+  if (typeof switchTab === 'function') switchTab('versus');
+  else renderMiscDuelAnalysis();
+}
+
+function renderMiscDuelAnalysis() {
+  const ctrlEl = document.getElementById('misc-main-duel-controls');
+  const verdEl = document.getElementById('misc-main-duel-verdict');
+  const specsEl = document.getElementById('misc-main-duel-specs');
+  if (!ctrlEl || !verdEl) return;
+
+  const pool = getMiscCatalogPool(_miscMainDuelCat);
+  const allPool = pool.length ? pool : getMiscCatalogPool();
+  if (!allPool.length) {
+    ctrlEl.innerHTML = '<span class="text-xs text-slate-400">Catálogo de Diversos vazio.</span>';
+    verdEl.innerHTML = '';
+    if (specsEl) specsEl.innerHTML = '';
+    return;
+  }
+
+  let itemA = allPool.find(x => x.slug === _miscMainDuelASlug) || allPool[0];
+  let itemB = allPool.find(x => x.slug === _miscMainDuelBSlug && x.slug !== itemA.slug) || allPool[Math.min(1, allPool.length - 1)];
+  _miscMainDuelASlug = itemA.slug;
+  _miscMainDuelBSlug = itemB.slug;
+
+  const opts = cur => allPool.map(it => {
+    const u = getMiscUnitValue(it);
+    return `<option value="${_escMiscHtml(it.slug)}" ${it.slug === cur ? 'selected' : ''}>${_escMiscHtml(_shortMiscName(it))} — ${fmtBRLShort(it.price_brl)}${u.label ? ` (${u.label})` : ''}</option>`;
+  }).join('');
+
+  ctrlEl.innerHTML = `
+    <div class="flex flex-wrap items-center gap-1.5 mr-2">
+      <button type="button" onclick="setMiscMainDuelCat('air_fryer')" class="ui-chip ${_miscMainDuelCat === 'air_fryer' ? 'is-active' : ''}">🍟 Air Fryer</button>
+      <button type="button" onclick="setMiscMainDuelCat('diapers')" class="ui-chip ${_miscMainDuelCat === 'diapers' ? 'is-active' : ''}">👶 Fraldas</button>
+    </div>
+    <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border" style="border-color:var(--ui-compare-a-border);">
+      <span class="ui-badge ui-badge--a ui-mono">A</span>
+      <select id="misc-main-duel-a" onchange="onMiscMainDuelChange()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[210px]">${opts(itemA.slug)}</select>
+    </div>
+    <button type="button" onclick="swapMiscMainDuel()" class="ui-btn ui-btn--icon" title="Inverter A e B">⇄</button>
+    <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border" style="border-color:var(--ui-compare-b-border);">
+      <span class="ui-badge ui-badge--b ui-mono">B</span>
+      <select id="misc-main-duel-b" onchange="onMiscMainDuelChange()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[210px]">${opts(itemB.slug)}</select>
+    </div>
+  `;
+
+  const uA = getMiscUnitValue(itemA);
+  const uB = getMiscUnitValue(itemB);
+  const cbWin = Number(itemA.cb_score || 0) >= Number(itemB.cb_score || 0) ? itemA : itemB;
+  const unitWin = (uA.val > 0 && uB.val > 0) ? (uA.val <= uB.val ? itemA : itemB) : cbWin;
+  const psA = itemA.price_stats || {};
+  const psB = itemB.price_stats || {};
+
+  verdEl.innerHTML = `
+    <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+      <span class="ui-label">Opção A</span>
+      <div class="font-bold text-white text-sm truncate" title="${_escMiscHtml(itemA.name)}">${_escMiscHtml(_shortMiscName(itemA))}</div>
+      <div class="text-xs ui-mono text-sky-300">${fmtBRL(itemA.price_brl)} ${uA.label ? `• ${uA.label}` : ''} • C/B ${Math.round(itemA.cb_score || 60)}</div>
+      <div class="text-xs text-slate-400 ui-mono">Vs média 90d: ${psA.vs_avg_90d_pct > 0 ? '+' : ''}${psA.vs_avg_90d_pct ?? 0}%</div>
+    </div>
+    <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1 flex flex-col justify-center">
+      <span class="ui-label">Veredito Comparativo</span>
+      <div class="text-sm font-black text-emerald-400">🏆 Melhor Economia: ${_escMiscHtml(_shortMiscName(unitWin))}</div>
+      <div class="text-xs text-slate-300 ui-mono">Diferença pacote: ${fmtBRLShort(Math.abs(Number(itemA.price_brl || 0) - Number(itemB.price_brl || 0)))}</div>
+      <div class="text-xs text-slate-400">Custo-Benefício geral: <strong class="text-slate-200">${_escMiscHtml(_shortMiscName(cbWin))} (${Math.round(cbWin.cb_score || 60)}/100)</strong></div>
+    </div>
+    <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+      <span class="ui-label">Opção B</span>
+      <div class="font-bold text-white text-sm truncate" title="${_escMiscHtml(itemB.name)}">${_escMiscHtml(_shortMiscName(itemB))}</div>
+      <div class="text-xs ui-mono text-purple-300">${fmtBRL(itemB.price_brl)} ${uB.label ? `• ${uB.label}` : ''} • C/B ${Math.round(itemB.cb_score || 60)}</div>
+      <div class="text-xs text-slate-400 ui-mono">Vs média 90d: ${psB.vs_avg_90d_pct > 0 ? '+' : ''}${psB.vs_avg_90d_pct ?? 0}%</div>
+    </div>
+  `;
+
+  const cs = getComputedStyle(document.documentElement);
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const colors = {
+    cmpA: (cs.getPropertyValue('--ui-compare-a') || '').trim() || '#38bdf8',
+    cmpAText: (cs.getPropertyValue('--ui-compare-a-text') || '').trim() || '#7dd3fc',
+    cmpAFill: isLight ? 'rgba(2, 132, 199, 0.22)' : 'rgba(56, 189, 248, 0.22)',
+    cmpB: (cs.getPropertyValue('--ui-compare-b') || '').trim() || '#a855f7',
+    cmpBText: (cs.getPropertyValue('--ui-compare-b-text') || '').trim() || '#d8b4fe',
+    cmpBFill: isLight ? 'rgba(124, 58, 237, 0.20)' : 'rgba(168, 85, 247, 0.22)',
+    text: isLight ? '#0f172a' : '#e2e8f0',
+    muted: isLight ? '#475569' : '#94a3b8',
+    grid: isLight ? 'rgba(15, 23, 42, 0.10)' : 'rgba(148, 163, 184, 0.14)'
+  };
+
+  const radarCanvas = document.getElementById('chart-misc-main-radar');
+  if (radarCanvas && typeof Chart !== 'undefined') {
+    _destroyMiscChartSafe('mainRadar');
+    const _miscVec = it => {
+      const sp = it.specs || {};
+      const ps = it.price_stats || {};
+      const discScore = Math.max(30, Math.min(98, 70 - Number(ps.vs_avg_90d_pct || 0) * 1.4));
+      if (_miscMainDuelCat === 'diapers') {
+        const ppu = Number(sp.price_per_unit || 1.1);
+        const econ = Math.max(25, Math.min(98, (2.0 - Math.min(1.9, ppu)) * 65));
+        const pack = Math.max(30, Math.min(98, ((sp.units || 60) / 180) * 90));
+        return [Math.round(econ), Math.round(pack), Math.round(Number(it.overall_score || 65)), Math.round(discScore)];
+      }
+      const lit = Math.max(35, Math.min(98, ((sp.liters || 4) / 12) * 95));
+      const pwr = Math.max(40, Math.min(98, ((sp.watts || 1500) / 2000) * 95));
+      return [Math.round(lit), Math.round(pwr), Math.round(Number(it.overall_score || 65)), Math.round(discScore)];
+    };
+    const rLbls = _miscMainDuelCat === 'diapers'
+      ? ['Economia R$/fralda', 'Volume Pacote', 'Qualidade Linha', 'Momento Preço']
+      : ['Capacidade (L)', 'Potência (W)', 'Nota Geral', 'Momento Preço'];
+    _miscCharts.mainRadar = new Chart(radarCanvas, {
+      type: 'radar',
+      data: {
+        labels: rLbls,
+        datasets: [
+          { label: _shortMiscName(itemA), data: _miscVec(itemA), borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, borderWidth: 2 },
+          { label: _shortMiscName(itemB), data: _miscVec(itemB), borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, borderWidth: 2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, backdropColor: 'transparent', color: colors.muted }, pointLabels: { color: colors.text, font: { size: 11 } }, grid: { color: colors.grid }, angleLines: { color: colors.grid } } },
+        plugins: { legend: { labels: { color: colors.text, boxWidth: 10 } } }
+      }
+    });
+  }
+
+  const histCanvas = document.getElementById('chart-misc-main-history');
+  if (histCanvas && typeof Chart !== 'undefined') {
+    _destroyMiscChartSafe('mainHistory');
+    const hA = Array.isArray(itemA.history) ? itemA.history : [];
+    const hB = Array.isArray(itemB.history) ? itemB.history : [];
+    const dates = Array.from(new Set([...hA.map(x => x.date), ...hB.map(x => x.date)])).sort();
+    const mA = Object.fromEntries(hA.map(x => [x.date, x.price]));
+    const mB = Object.fromEntries(hB.map(x => [x.date, x.price]));
+    const lbls = dates.length ? dates : ['Hoje'];
+    _miscCharts.mainHistory = new Chart(histCanvas, {
+      type: 'line',
+      data: {
+        labels: lbls.map(d => d.slice(5) || d),
+        datasets: [
+          { label: _shortMiscName(itemA), data: lbls.map(d => mA[d] ?? itemA.price_brl), borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, pointRadius: 2 },
+          { label: _shortMiscName(itemB), data: lbls.map(d => mB[d] ?? itemB.price_brl), borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, pointRadius: 2 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: colors.text, boxWidth: 10 } } },
+        scales: {
+          x: { ticks: { color: colors.muted, maxTicksLimit: 8 }, grid: { color: colors.grid } },
+          y: { ticks: { color: colors.muted, callback: v => fmtBRLShort(v) }, grid: { color: colors.grid } }
+        }
+      }
+    });
+  }
+
+  if (specsEl) {
+    const spA = itemA.specs || {};
+    const spB = itemB.specs || {};
+    const domainRows = _miscMainDuelCat === 'diapers'
+      ? [
+          ['Tamanho', spA.size || '--', spB.size || '--'],
+          ['Modelo', spA.style || '--', spB.style || '--'],
+          ['Unidades no pacote', spA.units ? `${spA.units} unid.` : '--', spB.units ? `${spB.units} unid.` : '--'],
+          ['Custo por fralda', uA.label || '--', uB.label || '--']
+        ]
+      : [
+          ['Capacidade (L)', spA.liters ? `${spA.liters}L` : '--', spB.liters ? `${spB.liters}L` : '--'],
+          ['Formato', spA.is_oven ? 'Oven / Forno' : 'Cesto', spB.is_oven ? 'Oven / Forno' : 'Cesto'],
+          ['Painel / Potência', `${spA.is_digital ? 'Digital' : 'Mecânica'} • ${spA.watts || '--'}W`, `${spB.is_digital ? 'Digital' : 'Mecânica'} • ${spB.watts || '--'}W`],
+          ['Custo por Litro', uA.label || '--', uB.label || '--']
+        ];
+    const rows = [
+      ['Marca', itemA.brand || '--', itemB.brand || '--'],
+      ['Preço Atual (Zoom BR)', fmtBRL(itemA.price_brl), fmtBRL(itemB.price_brl)],
+      ['Média 90d / Mín. Histórico', `${fmtBRLShort(psA.avg_90d || itemA.price_brl)} / ${fmtBRLShort(psA.min_all_time || itemA.price_brl)}`, `${fmtBRLShort(psB.avg_90d || itemB.price_brl)} / ${fmtBRLShort(psB.min_all_time || itemB.price_brl)}`],
+      ...domainRows,
+      ['Score C/B', `${itemA.cb_score || '--'}/100`, `${itemB.cb_score || '--'}/100`]
+    ];
+    specsEl.innerHTML = `
+      <table class="w-full text-xs">
+        <thead>
+          <tr class="border-b border-slate-800 text-slate-400">
+            <th class="text-left py-1.5 px-2">Critério</th>
+            <th class="text-left py-1.5 px-2" style="color:${colors.cmpAText};">A · ${_escMiscHtml(_shortMiscName(itemA))}</th>
+            <th class="text-left py-1.5 px-2" style="color:${colors.cmpBText};">B · ${_escMiscHtml(_shortMiscName(itemB))}</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60">
+          ${rows.map(r => `<tr><td class="py-1.5 px-2 text-slate-400">${_escMiscHtml(r[0])}</td><td class="py-1.5 px-2 text-slate-100 ui-mono">${_escMiscHtml(r[1])}</td><td class="py-1.5 px-2 text-slate-100 ui-mono">${_escMiscHtml(r[2])}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+}
+
+function setMiscCBCtxCat(cid) {
+  _miscCBCtxCat = cid || 'air_fryer';
+  _miscCBCtxDiaperSize = 'ALL';
+  _miscCBCtxDiaperStyle = 'ALL';
+  _miscCBCtxAirType = 'ALL';
+  renderMiscCBView();
+}
+
+function setMiscCBCtxSub(kind, val) {
+  if (kind === 'diaper_size') _miscCBCtxDiaperSize = val;
+  if (kind === 'diaper_style') _miscCBCtxDiaperStyle = val;
+  if (kind === 'air_type') _miscCBCtxAirType = val;
+  renderMiscCBView();
+}
+
+function setMiscCBCtxSort(key) {
+  const sel = document.getElementById('misc-cb-sort');
+  if (sel) sel.value = key;
+  renderMiscCBView();
+}
+
+function renderMiscCBView() {
+  const filtersEl = document.getElementById('misc-cb-filters');
+  const tbody = document.getElementById('misc-cb-table-body');
+  if (!tbody) return;
+
+  const cfg = loadMiscConfigState();
+  if (filtersEl) {
+    const cats = [{ id: 'all', name: 'Todos', icon: '📦' }, ...cfg.categories.filter(c => c.builtin || getMiscCatalogPool(c.id).length)];
+    let subHtml = '';
+    if (_miscCBCtxCat === 'diapers') {
+      subHtml = `
+        <div class="ui-filter-row mt-2">
+          <div class="ui-filter-group">
+            <span class="ui-label mr-1">Tam.:</span>
+            ${['ALL', 'RN', 'P', 'M', 'G', 'XG', 'XXG', 'XXXG'].map(sz => `<button type="button" onclick="setMiscCBCtxSub('diaper_size','${sz}')" class="ui-chip ${_miscCBCtxDiaperSize === sz ? 'is-active' : ''}">${sz === 'ALL' ? 'Todos' : sz}</button>`).join('')}
+          </div>
+          <div class="ui-filter-group ml-0 sm:ml-3">
+            <button type="button" onclick="setMiscCBCtxSub('diaper_style','ALL')" class="ui-chip ${_miscCBCtxDiaperStyle === 'ALL' ? 'is-active' : ''}">Todos</button>
+            <button type="button" onclick="setMiscCBCtxSub('diaper_style','pants')" class="ui-chip ${_miscCBCtxDiaperStyle === 'pants' ? 'is-active' : ''}">Pants</button>
+            <button type="button" onclick="setMiscCBCtxSub('diaper_style','fita')" class="ui-chip ${_miscCBCtxDiaperStyle === 'fita' ? 'is-active' : ''}">Fita</button>
+          </div>
+        </div>
+      `;
+    } else if (_miscCBCtxCat === 'air_fryer') {
+      subHtml = `
+        <div class="ui-filter-row mt-2">
+          <div class="ui-filter-group">
+            <span class="ui-label mr-1">Formato:</span>
+            <button type="button" onclick="setMiscCBCtxSub('air_type','ALL')" class="ui-chip ${_miscCBCtxAirType === 'ALL' ? 'is-active' : ''}">Todas</button>
+            <button type="button" onclick="setMiscCBCtxSub('air_type','cesto')" class="ui-chip ${_miscCBCtxAirType === 'cesto' ? 'is-active' : ''}">Cesto</button>
+            <button type="button" onclick="setMiscCBCtxSub('air_type','oven')" class="ui-chip ${_miscCBCtxAirType === 'oven' ? 'is-active' : ''}">Oven 10L+</button>
+          </div>
+        </div>
+      `;
+    }
+    filtersEl.innerHTML = `
+      <div class="ui-filter-row">
+        <div class="ui-filter-group">
+          <span class="ui-label mr-1">Categoria:</span>
+          ${cats.map(c => `<button type="button" onclick="setMiscCBCtxCat('${_escMiscHtml(c.id)}')" class="ui-chip ${_miscCBCtxCat === c.id ? 'is-active' : ''}">${_escMiscHtml(c.icon || '📦')} ${_escMiscHtml(c.name)}</button>`).join('')}
+        </div>
+      </div>
+      ${subHtml}
+    `;
+  }
+
+  let items = getMiscCatalogPool(_miscCBCtxCat);
+  const q = (document.getElementById('misc-cb-search')?.value || '').trim().toLowerCase();
+  const sortMode = document.getElementById('misc-cb-sort')?.value || 'cb';
+
+  items = items.filter(it => {
+    const sp = it.specs || {};
+    if (it.category_id === 'diapers') {
+      if (_miscCBCtxDiaperSize !== 'ALL' && sp.size !== _miscCBCtxDiaperSize) return false;
+      if (_miscCBCtxDiaperStyle === 'pants' && !sp.is_pants) return false;
+      if (_miscCBCtxDiaperStyle === 'fita' && sp.is_pants) return false;
+    } else if (it.category_id === 'air_fryer') {
+      if (_miscCBCtxAirType === 'cesto' && sp.is_oven) return false;
+      if (_miscCBCtxAirType === 'oven' && !sp.is_oven) return false;
+    }
+    if (q) {
+      const hay = `${it.name} ${it.brand || ''} ${sp.summary || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  items.sort((a, b) => {
+    if (sortMode === 'price_asc') return Number(a.price_brl || 0) - Number(b.price_brl || 0);
+    if (sortMode === 'price_desc') return Number(b.price_brl || 0) - Number(a.price_brl || 0);
+    if (sortMode === 'unit_asc') return getMiscUnitValue(a).val - getMiscUnitValue(b).val;
+    return Number(b.cb_score || 0) - Number(a.cb_score || 0);
+  });
+
+  if (!items.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">Nenhum produto encontrado para este filtro.</td></tr>';
+  } else {
+    tbody.innerHTML = items.map((it, i) => {
+      const ps = it.price_stats || {};
+      const tgt = Number(ps.target_price || it.price_brl * 0.88);
+      const u = getMiscUnitValue(it);
+      const spark = typeof renderPriceSparklineSVG === 'function' ? renderPriceSparklineSVG(it, it.price_brl, tgt) : '';
+      const cb = Math.round(it.cb_score || 65);
+      const cbTone = cb >= 72 ? 'text-emerald-400' : (cb >= 52 ? 'text-sky-300' : 'text-amber-300');
+      return `
+        <tr>
+          <td class="ui-mono text-xs text-slate-400">${i + 1}</td>
+          <td>
+            <div class="flex items-center gap-2.5">
+              ${it.image_url ? `<img src="${_escMiscHtml(it.image_url)}" alt="" class="w-9 h-9 rounded-lg object-contain bg-slate-950 border border-slate-800 p-0.5 shrink-0" loading="lazy" onerror="this.classList.add('hidden')">` : ''}
+              <div class="min-w-0">
+                <div class="font-bold text-slate-100 text-xs sm:text-sm truncate max-w-[240px]" title="${_escMiscHtml(it.name)}">${_escMiscHtml(_shortMiscName(it))}</div>
+                <div class="text-xs text-slate-400 ui-mono">${it.category_id === 'diapers' ? '👶 Fralda' : (it.category_id === 'air_fryer' ? '🍟 Air Fryer' : '📦 Diverso')} • ${_escMiscHtml(it.brand || '')}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-xs text-slate-300 ui-mono max-w-[240px]">
+            ${u.label ? `<span class="ui-badge ui-badge--good mr-1">${_escMiscHtml(u.label)}</span>` : ''}
+            <span>${_escMiscHtml((it.specs && it.specs.summary) || '--')}</span>
+          </td>
+          <td class="text-right ui-mono">
+            <span class="font-bold text-white">${fmtBRLShort(it.price_brl)}</span>
+            <span class="block text-xs text-slate-400">Alvo ${fmtBRLShort(tgt)}</span>
+          </td>
+          <td class="text-center">${spark}</td>
+          <td class="text-center ui-mono">
+            <span class="font-black text-sm ${cbTone}">${cb}</span>
+            <span class="block text-xs text-slate-400">Média ${fmtBRLShort(ps.avg_90d || it.price_brl)}</span>
+          </td>
+          <td class="text-center">
+            <div class="flex items-center justify-center gap-1">
+              <button type="button" onclick="setMiscMainDuelItem('${_escMiscHtml(it.slug)}','a','${_escMiscHtml(it.category_id)}')" class="ui-btn ui-btn--sm" title="Definir como A no duelo">A</button>
+              <button type="button" onclick="setMiscMainDuelItem('${_escMiscHtml(it.slug)}','b','${_escMiscHtml(it.category_id)}')" class="ui-btn ui-btn--sm" title="Definir como B no duelo">B</button>
+              ${it.offer_url ? `<a href="${_escMiscHtml(it.offer_url)}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm" title="Ver no Zoom BR">↗</a>` : ''}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const scCanvas = document.getElementById('chart-misc-cb-scatter');
+  if (scCanvas && typeof Chart !== 'undefined' && items.length) {
+    _destroyMiscChartSafe('cbScatter');
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const txtClr = isLight ? '#0f172a' : '#e2e8f0';
+    const mutClr = isLight ? '#475569' : '#94a3b8';
+    const grdClr = isLight ? 'rgba(15, 23, 42, 0.10)' : 'rgba(148, 163, 184, 0.14)';
+    const byCat = {
+      air_fryer: { label: '🍟 Air Fryer', color: '#f59e0b', pts: [] },
+      diapers: { label: '👶 Fraldas', color: '#10b981', pts: [] },
+      custom: { label: '📦 Outros', color: '#38bdf8', pts: [] }
+    };
+    items.forEach(it => {
+      const b = byCat[it.category_id] || byCat.custom;
+      b.pts.push({ x: Number(it.price_brl || 0), y: Number(it.cb_score || 60), name: _shortMiscName(it) });
+    });
+    _miscCharts.cbScatter = new Chart(scCanvas, {
+      type: 'scatter',
+      data: {
+        datasets: Object.values(byCat).filter(g => g.pts.length).map(g => ({
+          label: g.label, data: g.pts, backgroundColor: g.color, pointRadius: 5, pointHoverRadius: 7
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: txtClr } },
+          tooltip: { callbacks: { label: ctx => `${ctx.raw.name}: ${fmtBRLShort(ctx.raw.x)} • C/B ${Math.round(ctx.raw.y)}/100` } }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Preço Atual (R$)', color: mutClr }, ticks: { color: mutClr, callback: v => fmtBRLShort(v) }, grid: { color: grdClr } },
+          y: { title: { display: true, text: 'Score Custo-Benefício (0-100)', color: mutClr }, ticks: { color: mutClr }, grid: { color: grdClr } }
+        }
+      }
+    });
+  }
+}
+
+function setMiscBuilderSlot(kind, slug) {
+  if (kind === 'air_fryer') _miscBuilderAirSlug = slug;
+  else if (kind === 'diapers') _miscBuilderDiaperSlug = slug;
+  renderMiscBuilder();
+}
+
+function renderMiscBuilder() {
+  const root = document.getElementById('builder-misc-view');
+  if (!root) return;
+  const afs = getMiscCatalogPool('air_fryer');
+  const dps = getMiscCatalogPool('diapers');
+  if (!_miscBuilderAirSlug && afs.length) _miscBuilderAirSlug = afs[0].slug;
+  if (!_miscBuilderDiaperSlug && dps.length) _miscBuilderDiaperSlug = dps[0].slug;
+  const selAf = afs.find(x => x.slug === _miscBuilderAirSlug) || afs[0];
+  const selDp = dps.find(x => x.slug === _miscBuilderDiaperSlug) || dps[0];
+  const total = (selAf ? Number(selAf.price_brl || 0) : 0) + (selDp ? Number(selDp.price_brl || 0) : 0);
+  const cfg = loadMiscConfigState();
+  const customCats = cfg.categories.filter(c => !c.builtin);
+
+  root.innerHTML = `
+    <div class="lg:col-span-8 ui-card space-y-4">
+      <div class="pb-3 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <span class="ui-label">Cesta Casa &amp; Bebê</span>
+          <h2 class="ui-title-lg">Selecione sua Air Fryer, Pacote de Fraldas &amp; Item Personalizado</h2>
+        </div>
+        <button type="button" onclick="switchTab('misc')" class="ui-btn ui-btn--sm">Abrir Busca ao Vivo</button>
+      </div>
+      <div class="space-y-3">
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex justify-between text-xs"><span class="font-bold text-amber-300">🍟 Air Fryer</span><span class="ui-mono font-bold text-white">${selAf ? fmtBRL(selAf.price_brl) : '--'}</span></div>
+          <select onchange="setMiscBuilderSlot('air_fryer', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white font-semibold">
+            ${afs.map(x => `<option value="${_escMiscHtml(x.slug)}" ${selAf && selAf.slug === x.slug ? 'selected' : ''}>${_escMiscHtml(_shortMiscName(x))} — ${fmtBRLShort(x.price_brl)}</option>`).join('')}
+          </select>
+          ${selAf ? `<div class="text-xs text-slate-400 ui-mono">${_escMiscHtml((selAf.specs && selAf.specs.summary) || '')}</div>` : ''}
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex justify-between text-xs"><span class="font-bold text-emerald-300">👶 Fraldas Infantis</span><span class="ui-mono font-bold text-white">${selDp ? fmtBRL(selDp.price_brl) : '--'}</span></div>
+          <select onchange="setMiscBuilderSlot('diapers', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-xs text-white font-semibold">
+            ${dps.map(x => `<option value="${_escMiscHtml(x.slug)}" ${selDp && selDp.slug === x.slug ? 'selected' : ''}>${_escMiscHtml(_shortMiscName(x))} — ${fmtBRLShort(x.price_brl)} (${getMiscUnitValue(x).label})</option>`).join('')}
+          </select>
+          ${selDp ? `<div class="text-xs text-slate-400 ui-mono">${_escMiscHtml((selDp.specs && selDp.specs.summary) || '')}</div>` : ''}
+        </div>
+      </div>
+    </div>
+    <div class="lg:col-span-4 space-y-4">
+      <div class="ui-card space-y-3">
+        <span class="ui-label">Resumo da Cesta</span>
+        <div class="text-3xl font-black ui-mono text-white">${fmtBRL(total)}</div>
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
+          <div class="flex justify-between"><span class="text-slate-400">Categorias Personalizadas:</span><strong class="ui-mono text-sky-300">${customCats.length}</strong></div>
+          <div class="flex justify-between"><span class="text-slate-400">Grupos de Fraldas/Casa Ativos:</span><strong class="ui-mono text-emerald-400">${cfg.telegram_groups.filter(g => g.enabled !== false).length}</strong></div>
+        </div>
+        <button type="button" onclick="switchTab('bf-promos')" class="ui-btn ui-btn--primary w-full">Alertas de Air Fryer / Fraldas / Livre</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderMiscUpgrades() {
+  const root = document.getElementById('upgrades-misc-view');
+  if (!root) return;
+  const cfg = loadMiscConfigState();
+  root.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div>
+        <span class="ui-label">Guia de Compra + Grupos de Fraldas &amp; Casa</span>
+        <h2 class="ui-title-lg">Valores de Referência (R$/L &amp; R$/fralda) e Grupos Monitorados</h2>
+      </div>
+      <button type="button" onclick="switchTab('misc')" class="ui-btn ui-btn--sm ui-btn--primary">Buscar Produto ao Vivo</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+        <div class="text-sm font-bold text-emerald-300">👶 Referência R$/fralda por Tamanho</div>
+        <ul class="space-y-1 text-slate-300 ui-mono">
+          <li>• RN / P: alvo bom R$ 0,65 – R$ 0,85/unid.</li>
+          <li>• M / G: alvo bom R$ 0,80 – R$ 1,05/unid.</li>
+          <li>• XG / XXG / Pants: alvo bom R$ 0,95 – R$ 1,35/unid.</li>
+        </ul>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+        <div class="text-sm font-bold text-amber-300">🍟 Referência Air Fryer (R$/Litro)</div>
+        <ul class="space-y-1 text-slate-300 ui-mono">
+          <li>• Cesto 4L–5.5L: ideal R$ 55 – R$ 85/L</li>
+          <li>• Cesto 7L–8L: ideal R$ 55 – R$ 75/L</li>
+          <li>• Oven / Forno 10L–12L: ideal R$ 45 – R$ 75/L</li>
+        </ul>
+      </div>
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Grupos do Telegram onde Fraldas &amp; Casa aparecem</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+        ${cfg.telegram_groups.map(g => `
+          <div class="p-3 rounded-xl bg-slate-950 border ${g.enabled !== false ? 'border-slate-700' : 'border-slate-800/60'} flex items-center justify-between gap-2 text-xs">
+            <div class="min-w-0">
+              <div class="font-bold text-white truncate">@${_escMiscHtml(g.id)}</div>
+              <div class="text-slate-400 truncate">${_escMiscHtml(g.name || '')}</div>
+            </div>
+            <button type="button" onclick="toggleMiscTelegramGroup('${_escMiscHtml(g.id)}'); renderMiscUpgrades();" class="ui-btn ui-btn--sm shrink-0">${g.enabled !== false ? 'Ativo' : 'Pausado'}</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function setMiscSimParam(kind, val) {
+  if (kind === 'changes') _miscSimChangesPerDay = Math.max(1, Math.min(15, Number(val) || 6));
+  if (kind === 'coupon') _miscSimCouponBrl = Math.max(0, Number(val) || 0);
+  renderMiscSimulator();
+}
+
+function renderMiscSimulator() {
+  const root = document.getElementById('sim-misc-view');
+  if (!root) return;
+  const dps = getMiscCatalogPool('diapers').filter(x => Number((x.specs || {}).price_per_unit || 0) > 0);
+  const afs = getMiscCatalogPool('air_fryer');
+  const sortedDp = dps.slice().sort((a, b) => Number(a.specs.price_per_unit) - Number(b.specs.price_per_unit));
+  const bestDp = sortedDp[0];
+  const midDp = sortedDp[Math.floor(sortedDp.length / 2)] || bestDp;
+  const monthlyUnits = _miscSimChangesPerDay * 30;
+  const bestMonth = bestDp ? monthlyUnits * Number(bestDp.specs.price_per_unit) : 0;
+  const midMonth = midDp ? monthlyUnits * Number(midDp.specs.price_per_unit) : 0;
+  const annualSaving = Math.max(0, (midMonth - bestMonth) * 12);
+  const selAf = afs.find(x => x.slug === _miscBuilderAirSlug) || afs[0];
+  const afWithCoupon = selAf ? Math.max(50, Number(selAf.price_brl || 0) - _miscSimCouponBrl) : 0;
+
+  root.innerHTML = `
+    <div class="ui-card space-y-4">
+      <div class="pb-3 border-b border-slate-800">
+        <span class="ui-label">Calculadora Real de Economia</span>
+        <h2 class="ui-title-lg">Consumo Mensal de Fraldas &amp; Cupom Air Fryer</h2>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+          <div class="text-sm font-bold text-emerald-300">👶 Simulador de Gasto com Fraldas</div>
+          <div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Trocas por dia:</span><strong class="ui-mono text-white">${_miscSimChangesPerDay} trocas/dia (${monthlyUnits} fraldas/mês)</strong></div>
+            <input type="range" min="2" max="12" step="1" value="${_miscSimChangesPerDay}" oninput="setMiscSimParam('changes', this.value)" class="w-full" />
+          </div>
+          ${bestDp ? `
+            <div class="text-xs space-y-1 ui-mono">
+              <div class="text-emerald-400">Melhor R$/fralda: ${_escMiscHtml(_shortMiscName(bestDp))} → ${fmtBRL(bestMonth)}/mês (R$ ${Number(bestDp.specs.price_per_unit).toFixed(2)}/unid.)</div>
+              <div class="text-slate-400">Mediana do catálogo → ${fmtBRL(midMonth)}/mês (R$ ${Number(midDp.specs.price_per_unit).toFixed(2)}/unid.)</div>
+              <div class="text-sky-300 font-bold pt-1">Economia estimada em 1 ano escolhendo o pacote certo: ${fmtBRL(annualSaving)}!</div>
+            </div>
+          ` : '<div class="text-xs text-slate-400">Aguardando pacotes com contagem de fraldas.</div>'}
+        </div>
+        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+          <div class="text-sm font-bold text-amber-300">🍟 Simulador de Cupom Air Fryer</div>
+          <div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Cupom / Cashback aplicado (R$ OFF):</span><strong class="ui-mono text-amber-300">−${fmtBRLShort(_miscSimCouponBrl)}</strong></div>
+            <input type="number" min="0" max="500" step="10" value="${_miscSimCouponBrl}" onchange="setMiscSimParam('coupon', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs ui-mono text-white" />
+          </div>
+          ${selAf ? `
+            <div class="text-xs space-y-1 ui-mono">
+              <div class="text-slate-300 font-semibold">${_escMiscHtml(_shortMiscName(selAf))}</div>
+              <div>Hoje: ${fmtBRL(selAf.price_brl)} → Com cupom: <strong class="text-emerald-400">${fmtBRL(afWithCoupon)}</strong></div>
+              ${(selAf.specs && selAf.specs.liters) ? `<div class="text-sky-300">Custo por Litro cai para R$ ${(afWithCoupon / Number(selAf.specs.liters)).toFixed(2)}/L</div>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMiscConfigSection() {
+  const el = document.getElementById('cfg-ref-misc-container');
+  if (!el) return;
+  const cfg = loadMiscConfigState();
+  const afs = getMiscCatalogPool('air_fryer').length;
+  const dps = getMiscCatalogPool('diapers').length;
+  el.innerHTML = `
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+      <div class="p-3 rounded-xl bg-slate-950 border border-slate-800"><span class="text-slate-400 block">🍟 Air Fryers</span><strong class="text-lg ui-mono text-white">${afs}</strong></div>
+      <div class="p-3 rounded-xl bg-slate-950 border border-slate-800"><span class="text-slate-400 block">👶 Fraldas</span><strong class="text-lg ui-mono text-white">${dps}</strong></div>
+      <div class="p-3 rounded-xl bg-slate-950 border border-slate-800"><span class="text-slate-400 block">📢 Grupos Ativos</span><strong class="text-lg ui-mono text-emerald-400">${cfg.telegram_groups.filter(g => g.enabled !== false).length}</strong></div>
+    </div>
+    <p class="text-xs text-slate-400">Personalize alertas de Air Fryer, tamanho/preço por fralda (R$/unid.) ou qualquer item livre na aba <strong>Promoções → Filtros</strong>.</p>
+  `;
+}
+
+window.getMiscCatalogPool = getMiscCatalogPool;
 window.selectMiscCategory = selectMiscCategory;
 window.setMiscSubFilter = setMiscSubFilter;
 window.saveCustomMiscCategory = saveCustomMiscCategory;
@@ -505,3 +1153,18 @@ window.toggleMiscTelegramGroup = toggleMiscTelegramGroup;
 window.addCustomMiscTelegramGroup = addCustomMiscTelegramGroup;
 window.searchMiscLiveNow = searchMiscLiveNow;
 window.renderMiscTab = renderMiscTab;
+window.setMiscMainDuelCat = setMiscMainDuelCat;
+window.onMiscMainDuelChange = onMiscMainDuelChange;
+window.swapMiscMainDuel = swapMiscMainDuel;
+window.setMiscMainDuelItem = setMiscMainDuelItem;
+window.renderMiscDuelAnalysis = renderMiscDuelAnalysis;
+window.setMiscCBCtxCat = setMiscCBCtxCat;
+window.setMiscCBCtxSub = setMiscCBCtxSub;
+window.setMiscCBCtxSort = setMiscCBCtxSort;
+window.renderMiscCBView = renderMiscCBView;
+window.setMiscBuilderSlot = setMiscBuilderSlot;
+window.renderMiscBuilder = renderMiscBuilder;
+window.renderMiscUpgrades = renderMiscUpgrades;
+window.setMiscSimParam = setMiscSimParam;
+window.renderMiscSimulator = renderMiscSimulator;
+window.renderMiscConfigSection = renderMiscConfigSection;

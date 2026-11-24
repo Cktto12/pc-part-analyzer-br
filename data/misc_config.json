@@ -9,11 +9,16 @@
         "air fryer",
         "fritadeira"
       ],
+      "zoom_paths": [
+        "/fritadeira",
+        "/search?q=air+fryer+philips+walita+electrolux+mondial"
+      ],
       "keywords": [
         "air fryer",
         "airfryer",
         "fritadeira"
-      ]
+      ],
+      "target_price": 0
     },
     {
       "id": "diapers",
@@ -25,6 +30,11 @@
         "pampers",
         "huggies"
       ],
+      "zoom_paths": [
+        "/search?q=fralda+pampers",
+        "/search?q=fralda+huggies",
+        "/search?q=fralda+babysec+pom+pom"
+      ],
       "keywords": [
         "fralda",
         "pampers",
@@ -33,7 +43,8 @@
         "pom pom",
         "mamypoko",
         "cremer"
-      ]
+      ],
+      "target_price": 0
     }
   ],
   "telegram_groups": [
