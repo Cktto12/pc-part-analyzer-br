@@ -1,0 +1,90 @@
+{
+  "categories": [
+    {
+      "id": "air_fryer",
+      "name": "Air Fryer",
+      "icon": "🍟",
+      "builtin": true,
+      "queries": [
+        "air fryer",
+        "fritadeira"
+      ],
+      "keywords": [
+        "air fryer",
+        "airfryer",
+        "fritadeira"
+      ]
+    },
+    {
+      "id": "diapers",
+      "name": "Fraldas Infantis",
+      "icon": "👶",
+      "builtin": true,
+      "queries": [
+        "fralda",
+        "pampers",
+        "huggies"
+      ],
+      "keywords": [
+        "fralda",
+        "pampers",
+        "huggies",
+        "babysec",
+        "pom pom",
+        "mamypoko",
+        "cremer"
+      ]
+    }
+  ],
+  "telegram_groups": [
+    {
+      "id": "ofertasdospequenos",
+      "name": "Ofertas Dos Pequenos",
+      "focus": "diapers",
+      "desc": "Especialista em Fraldas (Pampers, Huggies, Babysec) e itens infantis",
+      "enabled": true
+    },
+    {
+      "id": "babyofertas",
+      "name": "Baby Ofertas",
+      "focus": "diapers",
+      "desc": "Promoções diárias de fraldas, lenços umedecidos e enxoval",
+      "enabled": true
+    },
+    {
+      "id": "promobebe",
+      "name": "PromoBebê & Fraldas",
+      "focus": "diapers",
+      "desc": "Alertas de pacotes mega/hiper de fraldas e R$/unidade",
+      "enabled": true
+    },
+    {
+      "id": "pechinchou",
+      "name": "Pechinchou",
+      "focus": "both",
+      "desc": "Air Fryers, eletroportáteis, fraldas e cupons Shopee/Amazon/ML",
+      "enabled": true
+    },
+    {
+      "id": "nerdofertas",
+      "name": "Nerd Ofertas",
+      "focus": "both",
+      "desc": "Casa inteligente, Air Fryers e descontos gerais BR",
+      "enabled": true
+    },
+    {
+      "id": "pelandobr",
+      "name": "Pelando BR",
+      "focus": "both",
+      "desc": "Curadoria comunitária de fraldas, cozinha e achados",
+      "enabled": true
+    },
+    {
+      "id": "escolhasegura",
+      "name": "EscolhaSegura",
+      "focus": "air_fryer",
+      "desc": "Reviews e alertas de Air Fryer, TVs e eletrodomésticos",
+      "enabled": true
+    }
+  ]
+}

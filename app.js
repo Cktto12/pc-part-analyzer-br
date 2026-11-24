@@ -415,6 +415,13 @@ function syncComparisonScaleControls() {
     btnAbsCfg.classList.toggle('is-active', isAbs);
   }
 
+  const btnRelSp = document.getElementById('btn-smartphone-scale-rel-duel');
+  const btnAbsSp = document.getElementById('btn-smartphone-scale-abs-duel');
+  if (btnRelSp && btnAbsSp) {
+    btnRelSp.classList.toggle('is-active', !isAbs);
+    btnAbsSp.classList.toggle('is-active', isAbs);
+  }
+
   // Fallback for checkboxes & labels
   const chkDuel = document.getElementById('chk-duel-scale-absolute');
   const chkCB = document.getElementById('chk-cb-scale-absolute');
@@ -1462,6 +1469,13 @@ const NAV_AREAS = {
       { id: 'builder', label: 'Montagem' },
       { id: 'upgrades', label: 'Upgrades' }
     ]
+  },
+  explore: {
+    label: 'Explorar',
+    tabs: [
+      { id: 'peripherals', label: 'Periféricos' },
+      { id: 'misc', label: 'Diversos' }
+    ]
   }
 };
 
@@ -1474,6 +1488,8 @@ const TAB_TO_AREA = {
   'bf-promos': 'prices',
   builder: 'build',
   upgrades: 'build',
+  peripherals: 'explore',
+  misc: 'explore',
   config: null
 };
 
@@ -1481,7 +1497,8 @@ const LAST_TAB_BY_AREA = {
   home: 'home',
   compare: 'versus',
   prices: 'cb',
-  build: 'builder'
+  build: 'builder',
+  explore: 'peripherals'
 };
 
 function renderAreaSubnav(tabId) {
@@ -1516,7 +1533,7 @@ function switchTab(tabId) {
   const areaKey = TAB_TO_AREA[tabId];
   if (areaKey) LAST_TAB_BY_AREA[areaKey] = tabId;
 
-  const allTabs = ['home', 'versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'config'];
+  const allTabs = ['home', 'versus', 'cb', 'builder', 'upgrades', 'bf', 'bf-promos', 'sim', 'peripherals', 'misc', 'config'];
   allTabs.forEach(id => {
     const sec = document.getElementById(`tab-${id}`);
     const btn = document.getElementById(`tab-btn-${id}`);
@@ -1529,7 +1546,7 @@ function switchTab(tabId) {
   });
 
   // Update mobile bottom navigation active area
-  ['home', 'compare', 'prices', 'build'].forEach(a => {
+  ['home', 'compare', 'prices', 'build', 'explore'].forEach(a => {
     const b = document.getElementById(`bnav-${a}`);
     if (b) b.classList.toggle('is-active', a === areaKey);
   });
@@ -1590,16 +1607,19 @@ function updateTopContextSummary() {
 
 function syncLaptopContextViews() {
   const isLap = STATE.context === 'laptop';
-  const togglePair = (deskId, lapId) => {
+  const isSp = STATE.context === 'smartphone';
+  const toggleTriple = (deskId, lapId, spId) => {
     const d = document.getElementById(deskId);
     const l = document.getElementById(lapId);
-    if (d) d.classList.toggle('hidden', isLap);
+    const s = document.getElementById(spId);
+    if (d) d.classList.toggle('hidden', isLap || isSp);
     if (l) l.classList.toggle('hidden', !isLap);
+    if (s) s.classList.toggle('hidden', !isSp);
   };
-  togglePair('builder-desktop-view', 'builder-laptop-view');
-  togglePair('upgrades-desktop-view', 'upgrades-laptop-view');
-  togglePair('sim-desktop-view', 'sim-laptop-view');
-  togglePair('cfg-ref-desktop-section', 'cfg-ref-laptop-section');
+  toggleTriple('builder-desktop-view', 'builder-laptop-view', 'builder-smartphone-view');
+  toggleTriple('upgrades-desktop-view', 'upgrades-laptop-view', 'upgrades-smartphone-view');
+  toggleTriple('sim-desktop-view', 'sim-laptop-view', 'sim-smartphone-view');
+  toggleTriple('cfg-ref-desktop-section', 'cfg-ref-laptop-section', 'cfg-ref-smartphone-section');
 
   // In Live Promos tab, isolate filter pills for Laptop Mode vs Desktop Mode
   const pills = document.querySelectorAll('#bf-cards-filter-pills button[data-bf-filter]');
@@ -1627,20 +1647,18 @@ function renderActiveTab() {
       const gpuView = document.getElementById('versus-gpu-view');
       const cpuView = document.getElementById('versus-cpu-view');
       const lapView = document.getElementById('versus-laptop-view');
+      const spView = document.getElementById('versus-smartphone-view');
+      if (gpuView) gpuView.classList.toggle('hidden', ctx !== 'gpu');
+      if (cpuView) cpuView.classList.toggle('hidden', ctx !== 'cpu');
+      if (lapView) lapView.classList.toggle('hidden', ctx !== 'laptop');
+      if (spView) spView.classList.toggle('hidden', ctx !== 'smartphone');
       if (ctx === 'laptop') {
-        if (gpuView) gpuView.classList.add('hidden');
-        if (cpuView) cpuView.classList.add('hidden');
-        if (lapView) lapView.classList.remove('hidden');
         if (typeof renderLaptopDuelAnalysis === 'function') renderLaptopDuelAnalysis();
+      } else if (ctx === 'smartphone') {
+        if (typeof renderSmartphoneDuelAnalysis === 'function') renderSmartphoneDuelAnalysis();
       } else if (ctx === 'cpu') {
-        if (gpuView) gpuView.classList.add('hidden');
-        if (lapView) lapView.classList.add('hidden');
-        if (cpuView) cpuView.classList.remove('hidden');
         if (typeof renderCpuDuelAnalysis === 'function') renderCpuDuelAnalysis();
       } else {
-        if (cpuView) cpuView.classList.add('hidden');
-        if (lapView) lapView.classList.add('hidden');
-        if (gpuView) gpuView.classList.remove('hidden');
         renderDuelAnalysis();
       }
     }
@@ -1648,40 +1666,44 @@ function renderActiveTab() {
       const gpuView = document.getElementById('cb-gpu-view');
       const cpuView = document.getElementById('cb-cpu-view');
       const lapView = document.getElementById('cb-laptop-view');
+      const spView = document.getElementById('cb-smartphone-view');
+      if (gpuView) gpuView.classList.toggle('hidden', ctx !== 'gpu');
+      if (cpuView) cpuView.classList.toggle('hidden', ctx !== 'cpu');
+      if (lapView) lapView.classList.toggle('hidden', ctx !== 'laptop');
+      if (spView) spView.classList.toggle('hidden', ctx !== 'smartphone');
       if (ctx === 'laptop') {
-        if (gpuView) gpuView.classList.add('hidden');
-        if (cpuView) cpuView.classList.add('hidden');
-        if (lapView) lapView.classList.remove('hidden');
         if (typeof renderLaptopCBTable === 'function') renderLaptopCBTable();
+      } else if (ctx === 'smartphone') {
+        if (typeof renderSmartphoneCBTable === 'function') renderSmartphoneCBTable();
       } else if (ctx === 'cpu') {
-        if (gpuView) gpuView.classList.add('hidden');
-        if (lapView) lapView.classList.add('hidden');
-        if (cpuView) cpuView.classList.remove('hidden');
         if (typeof renderCpuCBTable === 'function') renderCpuCBTable();
       } else {
-        if (cpuView) cpuView.classList.add('hidden');
-        if (lapView) lapView.classList.add('hidden');
-        if (gpuView) gpuView.classList.remove('hidden');
         renderCBTable();
       }
     }
     if (t === 'builder') {
       if (ctx === 'laptop' && typeof renderLaptopBuilder === 'function') renderLaptopBuilder();
+      else if (ctx === 'smartphone' && typeof renderSmartphoneBuilder === 'function') renderSmartphoneBuilder();
       else renderPCBuilder();
     }
     if (t === 'upgrades') {
       if (ctx === 'laptop' && typeof renderLaptopUpgrades === 'function') renderLaptopUpgrades();
+      else if (ctx === 'smartphone' && typeof renderSmartphoneUpgrades === 'function') renderSmartphoneUpgrades();
       else renderUpgradeSuggestions();
     }
     if (t === 'bf') renderBlackFridayTab();
     if (t === 'bf-promos' && typeof renderBFPromosCardsTab === 'function') renderBFPromosCardsTab();
     if (t === 'sim') {
       if (ctx === 'laptop' && typeof renderLaptopSimulator === 'function') renderLaptopSimulator();
+      else if (ctx === 'smartphone' && typeof renderSmartphoneSimulator === 'function') renderSmartphoneSimulator();
       else renderSimulator();
     }
+    if (t === 'peripherals' && typeof renderPeripheralsTab === 'function') renderPeripheralsTab();
+    if (t === 'misc' && typeof renderMiscTab === 'function') renderMiscTab();
     if (t === 'config') {
       renderConfigTab();
       if (ctx === 'laptop' && typeof renderConfigLaptopSection === 'function') renderConfigLaptopSection();
+      else if (ctx === 'smartphone' && typeof renderConfigSmartphoneSection === 'function') renderConfigSmartphoneSection();
     }
   } catch (e) {
     console.error('Render error on tab', t, e);
@@ -1727,6 +1749,15 @@ function openHomeItemInDuel(kind, slug) {
       if (typeof onLaptopDuelSelectionChange === 'function') onLaptopDuelSelectionChange();
     }
     return;
+  } else if (kind === 'smartphone') {
+    setMainContext('smartphone');
+    switchTab('versus');
+    const candSel = document.getElementById('smartphone-duel-select-cand');
+    if (candSel && [...candSel.options].some(o => o.value === slug)) {
+      candSel.value = slug;
+      if (typeof onSmartphoneDuelSelectionChange === 'function') onSmartphoneDuelSelectionChange();
+    }
+    return;
   } else {
     setMainContext('gpu');
     if (typeof setDuelPair === 'function') {
@@ -1740,7 +1771,7 @@ window.openHomeItemInDuel = openHomeItemInDuel;
 
 function renderHomeTab() {
   const ctx = STATE.context || 'gpu';
-  const ctxLabel = ctx === 'laptop' ? 'Notebooks' : (ctx === 'cpu' ? 'CPUs' : 'GPUs');
+  const ctxLabel = ctx === 'laptop' ? 'Notebooks' : (ctx === 'smartphone' ? 'Smartphones' : (ctx === 'cpu' ? 'CPUs' : 'GPUs'));
 
   // 1. KPI: Dias até a Black Friday
   const bfInfo = getNextBlackFridayCountdown();
@@ -1750,7 +1781,7 @@ function renderHomeTab() {
   if (kpiBfSub) kpiBfSub.textContent = `Próxima Black Friday: ${bfInfo.dateLabel}`;
 
   // 2. KPI: Produtos no mínimo histórico hoje (no contexto atual)
-  const items = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || []));
+  const items = ctx === 'laptop' ? (DB.laptops || []) : (ctx === 'smartphone' ? (DB.smartphones || []) : (ctx === 'cpu' ? (DB.cpus || []) : (DB.gpus || [])));
   const validItems = items.filter(it => it && it.price_brl > 0 && !it.is_xeon);
   const atMinItems = validItems.filter(it => {
     const ps = it.price_stats || {};
@@ -1767,23 +1798,30 @@ function renderHomeTab() {
   }
 
   // 3. KPI: Ofertas ativas hoje + Top 5 melhores ofertas do dia
-  const promoData = (typeof PROMO_STATE !== 'undefined' && PROMO_STATE.lastData) ? PROMO_STATE.lastData : null;
-  const activeDeals = (promoData && Array.isArray(promoData.matched_deals))
-    ? promoData.matched_deals.filter(d =>
-        d &&
-        d.price_brl > 0 &&
-        !d.is_expired &&
-        !d.is_coupon_expired &&
-        d.deal_status !== 'out_of_stock' &&
-        d.deal_status !== 'expired' &&
-        (d.age_hours || 0) <= 24 &&
-        (typeof dealMatchesPromoPreferences !== 'function' || dealMatchesPromoPreferences(d))
-      )
-    : [];
+  const promoData = (typeof PROMO_STATE !== 'undefined' && PROMO_STATE.lastData) ? PROMO_STATE.lastData : ((typeof DB !== 'undefined' && DB.live_promos) ? DB.live_promos : null);
+  const activeDeals = ctx === 'smartphone'
+    ? ((promoData && Array.isArray(promoData.smartphone_deals))
+        ? promoData.smartphone_deals.filter(d => d && d.price_brl > 0 && (d.age_hours || 0) <= 48)
+            .map(d => ({ ...d, matched_kind: 'smartphone', matched_name: d.matched_name || d.title }))
+        : [])
+    : ((promoData && Array.isArray(promoData.matched_deals))
+        ? promoData.matched_deals.filter(d =>
+            d &&
+            d.price_brl > 0 &&
+            !d.is_expired &&
+            !d.is_coupon_expired &&
+            d.deal_status !== 'out_of_stock' &&
+            d.deal_status !== 'expired' &&
+            (d.age_hours || 0) <= 24 &&
+            (typeof dealMatchesPromoPreferences !== 'function' || dealMatchesPromoPreferences(d))
+          )
+        : []);
 
   const kpiDeals = document.getElementById('home-kpi-deals');
   const kpiDealsSub = document.getElementById('home-kpi-deals-sub');
-  const offerCount = (typeof getActiveOfferCount === 'function') ? getActiveOfferCount() : null;
+  const offerCount = ctx === 'smartphone'
+    ? (promoData ? activeDeals.length : null)
+    : ((typeof getActiveOfferCount === 'function') ? getActiveOfferCount() : null);
   if (kpiDeals) kpiDeals.textContent = offerCount != null ? String(offerCount) : '--';
   if (kpiDealsSub) {
     kpiDealsSub.textContent = offerCount != null
@@ -1819,7 +1857,7 @@ function renderHomeTab() {
           ? `<span class="ui-badge ui-badge--warn ui-mono">${d.coupon_code || d.coupon_info}</span>`
           : '';
         const buyHref = d.buy_url || d.post_url || '#';
-        const canDuel = d.matched_slug && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu' || d.matched_kind === 'laptop');
+        const canDuel = d.matched_slug && (d.matched_kind === 'gpu' || d.matched_kind === 'cpu' || d.matched_kind === 'laptop' || d.matched_kind === 'smartphone');
         return `
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/65 border border-slate-800/90 hover:border-slate-700 transition">
             <div class="min-w-0 space-y-1">
@@ -1851,6 +1889,7 @@ function renderHomeTab() {
   if (ctx === 'gpu' && typeof enrichGPUsWithContextualMetrics === 'function') enrichGPUsWithContextualMetrics();
   else if (ctx === 'cpu' && typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
   else if (ctx === 'laptop' && typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+  else if (ctx === 'smartphone' && typeof enrichSmartphonesWithContextualMetrics === 'function') enrichSmartphonesWithContextualMetrics();
 
   const cbWrap = document.getElementById('home-top-cb');
   if (cbWrap) {
@@ -1876,7 +1915,9 @@ function renderHomeTab() {
           ? `${it.vram_gb || '?'}GB VRAM`
           : ctx === 'cpu'
             ? `${cpuSp.cores || it.cores || '?'}c/${cpuSp.threads || it.threads || '?'}t • ${cpuSp.socket || it.socket || ''}`
-            : `${it.gpu_name || it.cpu_name || ''}`;
+            : ctx === 'smartphone'
+              ? `${it.soc_name || ''} • ${it.ram_gb || 8}GB / ${it.storage_gb || 128}GB • ${it.cam_main_mp || 50}MP`
+              : `${it.gpu_name || it.cpu_name || ''}`;
         return `
           <button type="button" onclick="openHomeItemInDuel('${ctx}', '${it.slug}')" class="w-full text-left flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-slate-900/65 border border-slate-800/90 hover:border-sky-500/40 transition cursor-pointer">
             <div class="flex items-center gap-3 min-w-0">
@@ -1904,9 +1945,9 @@ function renderHomeTab() {
 }
 window.renderHomeTab = renderHomeTab;
 
-// Global Context Toggle: GPU vs CPU vs Notebook
-function setMainContext(ctx) {
-  STATE.context = (ctx === 'cpu') ? 'cpu' : (ctx === 'laptop' ? 'laptop' : 'gpu');
+// Global Context Toggle: GPU vs CPU vs Notebook vs Smartphone
+function setMainContext(ctx, shouldRender = true) {
+  STATE.context = (ctx === 'cpu') ? 'cpu' : (ctx === 'laptop' ? 'laptop' : (ctx === 'smartphone' ? 'smartphone' : 'gpu'));
   try {
     localStorage.setItem('gca_context', STATE.context);
   } catch (_) {}
@@ -1915,6 +1956,7 @@ function setMainContext(ctx) {
   const btnGpu = document.getElementById('btn-ctx-gpu');
   const btnCpu = document.getElementById('btn-ctx-cpu');
   const btnLap = document.getElementById('btn-ctx-laptop');
+  const btnPhone = document.getElementById('btn-ctx-smartphone');
   if (btnGpu) {
     btnGpu.className = `ui-segmented-btn${STATE.context === 'gpu' ? ' is-active' : ''}`;
     btnGpu.setAttribute('aria-selected', STATE.context === 'gpu' ? 'true' : 'false');
@@ -1927,12 +1969,18 @@ function setMainContext(ctx) {
     btnLap.className = `ui-segmented-btn${STATE.context === 'laptop' ? ' is-active' : ''}`;
     btnLap.setAttribute('aria-selected', STATE.context === 'laptop' ? 'true' : 'false');
   }
+  if (btnPhone) {
+    btnPhone.className = `ui-segmented-btn${STATE.context === 'smartphone' ? ' is-active' : ''}`;
+    btnPhone.setAttribute('aria-selected', STATE.context === 'smartphone' ? 'true' : 'false');
+  }
 
   const subText = STATE.context === 'laptop'
     ? 'Notebooks Completos'
-    : STATE.context === 'cpu'
-      ? 'Processadores & Plataforma'
-      : 'Placas de Vídeo';
+    : STATE.context === 'smartphone'
+      ? 'Smartphones & Celulares'
+      : STATE.context === 'cpu'
+        ? 'Processadores & Plataforma'
+        : 'Placas de Vídeo';
   const brandSub = document.getElementById('header-brand-sub');
   if (brandSub) brandSub.textContent = subText;
   const sbBrandSub = document.getElementById('sidebar-brand-sub');
@@ -1947,8 +1995,8 @@ function setMainContext(ctx) {
 
   if (tVersus) tVersus.textContent = 'Duelo';
   if (tCb) tCb.textContent = 'Custo-benefício';
-  if (tBuilder) tBuilder.textContent = STATE.context === 'laptop' ? 'Objetivo' : 'Montagem';
-  if (tUpgrades) tUpgrades.textContent = STATE.context === 'laptop' ? 'Upgrades (RAM/SSD)' : 'Upgrades';
+  if (tBuilder) tBuilder.textContent = (STATE.context === 'laptop' || STATE.context === 'smartphone') ? 'Objetivo' : 'Montagem';
+  if (tUpgrades) tUpgrades.textContent = STATE.context === 'laptop' ? 'Upgrades (RAM/SSD)' : (STATE.context === 'smartphone' ? 'Longevidade & OS' : 'Upgrades');
   if (tBf) tBf.textContent = 'Black Friday';
 
   renderAreaSubnav(STATE.activeTab || 'versus');
@@ -1959,9 +2007,11 @@ function setMainContext(ctx) {
   if (statusEl && DB && DB.gpus) {
     const countStr = STATE.context === 'laptop'
       ? `${(DB.laptops || []).length} Notebooks monitorados`
-      : STATE.context === 'cpu'
-        ? `${(DB.cpus || []).length} CPUs monitoradas`
-        : `${(DB.gpus || []).length} GPUs monitoradas`;
+      : STATE.context === 'smartphone'
+        ? `${(DB.smartphones || []).length} Smartphones monitorados`
+        : STATE.context === 'cpu'
+          ? `${(DB.cpus || []).length} CPUs monitoradas`
+          : `${(DB.gpus || []).length} GPUs monitoradas`;
     statusEl.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${countStr}`;
   }
 
@@ -1969,7 +2019,7 @@ function setMainContext(ctx) {
     updateBFFamilySelectorOptions();
   }
 
-  renderActiveTab();
+  if (shouldRender !== false) renderActiveTab();
 }
 window.setMainContext = setMainContext;
 
@@ -2398,6 +2448,7 @@ function onWorkloadChange() { onWeightSliderInput(); }
 // Populate GPU, CPU & Laptop Dropdowns
 function populateSelectors() {
   if (typeof populateLaptopSelectors === 'function') populateLaptopSelectors();
+  if (typeof populateSmartphoneSelectors === 'function') populateSmartphoneSelectors();
   const sortedGPUs = [...(DB.gpus || [])].sort((a, b) => a.name.localeCompare(b.name));
   const baseSel = document.getElementById('duel-select-base');
   const candSel = document.getElementById('duel-select-cand');
@@ -5847,11 +5898,12 @@ async function loadHardwareDatabase() {
     const sym = STATE.market?.monetary?.currency_symbol || (targetReg === 'mx' ? '$' : 'R$');
     const regName = STATE.market?.region_name || (targetReg === 'mx' ? 'México' : 'Brasil');
     if (status) {
-      status.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks`;
+      status.textContent = `Mercado: ${regName} (${sym}) • Sincronizado às ${DB.updated_at || 'hoje'} • ${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks • ${(DB.smartphones || []).length} Celulares`;
     }
     enrichGPUsWithContextualMetrics();
     if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
     if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+    if (typeof enrichSmartphonesWithContextualMetrics === 'function') enrichSmartphonesWithContextualMetrics();
     updateTopContextSummary();
     populateSelectors();
     if (typeof syncTechWeightsUI === 'function') syncTechWeightsUI();
@@ -5917,6 +5969,7 @@ async function refreshDatabase() {
       enrichGPUsWithContextualMetrics();
       if (typeof enrichCPUsWithContextualMetrics === 'function') enrichCPUsWithContextualMetrics();
       if (typeof enrichLaptopsWithContextualMetrics === 'function') enrichLaptopsWithContextualMetrics();
+      if (typeof enrichSmartphonesWithContextualMetrics === 'function') enrichSmartphonesWithContextualMetrics();
       updateTopContextSummary();
       populateSelectors();
       updateAllCurrencyLabels();
@@ -5924,7 +5977,7 @@ async function refreshDatabase() {
       renderPCBuilder();
       const sourceLabel = DB.source_name || (targetReg === 'mx' ? 'Cyberpuerta & DDTech MX' : 'Hardware Barato');
       if (status) {
-        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at || 'agora'} (${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks)`;
+        status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at || 'agora'} (${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks • ${(DB.smartphones || []).length} Celulares)`;
       }
     }
   } catch (e) {

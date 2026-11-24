@@ -192,7 +192,7 @@ def extract_price_and_coupon(lines):
 
     # extract_price_and_coupon parses Brazilian Telegram channel messages -> always use BRL format
     monetary = {"decimal_separator": ","}
-    min_val = 80.0
+    min_val = 18.0
     max_val = 45000.0
     price_pat = r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
     cash_keywords = ["por r$", "valor", "💵", "💰", "pix", "à vista", "a vista", "no app", "🔥"]
@@ -877,6 +877,126 @@ def fetch_mexico_native_promotions():
     return posts
 
 
+def classify_smartphone_deal(title_and_text, price_brl, db):
+    if price_brl < 420 or price_brl > 18000:
+        return None
+    low = (title_and_text or "").lower()
+    if re.search(r"\b(capa|capinha|pel[íi]cula|carregador|cabo\s*usb|suporte|smartwatch|watch|tablet|ipad|fone\s*bluetooth|earbud|airpods|buds)\b", low) and not re.search(r"\b(iphone\s*1[3-7]|galaxy\s*[sa]\d{2}|poco\s*[xfmc]\d|redmi\s*note\s*\d+|moto\s*[ge]\d+|edge\s*\d{2})\b", low):
+        return None
+    if not re.search(r"\b(smartphone|celular|iphone\s*1[3-7]|galaxy\s*[saz]\d|poco\s*[xfmc]\d|redmi\s*(?:note|1[2-5]|a\d)|moto\s*[ge]\d{2}|motorola\s*edge|realme\s*(?:c\d|gt|\d{2}))\b", low):
+        return None
+
+    phones = (db or {}).get("smartphones") or []
+    best_item = None
+    best_score = 0
+    norm_txt = re.sub(r"[^a-z0-9]+", " ", low)
+    txt_gb = re.search(r"\b(64|128|256|512)\s*gb\b", low)
+    for ph in phones:
+        pname = (ph.get("name") or "").lower()
+        pbrand = (ph.get("brand") or "").lower()
+        score = 0
+        if pbrand and pbrand in low:
+            score += 15
+        for mod_pat in [
+            r"iphone\s*1[3-7](?:\s*pro(?:\s*max)?|\s*plus|\s*air|\s*e)?",
+            r"galaxy\s*s2[3-5](?:\s*ultra|\s*plus|\s*fe|\s*edge)?",
+            r"galaxy\s*a[01235]\d(?:\s*5g)?",
+            r"poco\s*[xfmc]\d(?:\s*pro|\s*ultra)?",
+            r"redmi\s*note\s*1[34](?:\s*pro\+?)?",
+            r"edge\s*[56]0(?:\s*pro|\s*fusion|\s*ultra|\s*neo)?",
+            r"moto\s*g\d{2}(?:\s*5g)?",
+        ]:
+            m_t = re.search(mod_pat, low)
+            m_p = re.search(mod_pat, pname)
+            if m_t and m_p and re.sub(r"\s+", "", m_t.group(0)) == re.sub(r"\s+", "", m_p.group(0)):
+                score += 48
+            elif m_t and m_t.group(0) in pname:
+                score += 40
+        if txt_gb and str(ph.get("storage_gb") or "") == txt_gb.group(1):
+            score += 12
+        # Sanity price check
+        ref_p = float(ph.get("price_brl") or 0)
+        if ref_p > 0 and (price_brl < ref_p * 0.42 or price_brl > ref_p * 1.45):
+            continue
+        if score > best_score:
+            best_score = score
+            best_item = ph
+
+    matched = bool(best_item and best_score >= 40)
+    inferred_brand = ""
+    if matched and best_item.get("brand"):
+        inferred_brand = str(best_item["brand"]).strip()
+    elif re.search(r"\b(iphone|apple)\b", low):
+        inferred_brand = "Apple"
+    elif re.search(r"\b(galaxy|samsung)\b", low):
+        inferred_brand = "Samsung"
+    elif re.search(r"\b(xiaomi|poco|redmi)\b", low):
+        inferred_brand = "Xiaomi"
+    elif re.search(r"\b(motorola|moto\s*[ge]\d+|edge\s*[56]0)\b", low):
+        inferred_brand = "Motorola"
+    elif re.search(r"\brealme\b", low):
+        inferred_brand = "Realme"
+
+    hb_price = float(best_item.get("price_brl") or 0) if matched else 0.0
+    return {
+        "matched_kind": "smartphone",
+        "matched_slug": best_item["slug"] if matched else None,
+        "matched_name": best_item["name"] if matched else None,
+        "brand": inferred_brand,
+        "hb_price_brl": hb_price,
+        "savings_vs_hb_brl": round(hb_price - price_brl, 2) if hb_price > 0 else 0.0,
+        "item_specs": {
+            "brand": inferred_brand,
+            "ram_gb": int(best_item.get("ram_gb") or 0) if matched else 0,
+            "storage_gb": int(best_item.get("storage_gb") or 0) if matched else 0,
+        },
+    }
+
+
+def classify_peripheral_deal(title_and_text, price_brl):
+    if price_brl < 25 or price_brl > 4500:
+        return None
+    low = (title_and_text or "").lower()
+    if re.search(r"\b(mousepad|mouse\s*pad|keycap|wrist|apoio\s*de\s*pulso|cabo\s*coiled|suporte\s*para\s*headset|earpad|almofada)\b", low):
+        return None
+    if re.search(r"\b(mouse\s*gamer|mouse\s*sem\s*fio|superlight|viper\s*v[23]|deathadder|g305|g203|g403|g502|g703|attack\s*shark|darmoshark)\b", low) or re.match(r"^\s*[^a-z]*mouse\b", low):
+        return "mouse"
+    if re.search(r"\b(teclado\s*mec[âa]nic|teclado\s*gamer|teclado\s*magn[ée]tico|teclado\s*sem\s*fio|kumara|fizz|draconic|aula\s*f75|keychron|huntsman|alloy\s*origins)\b", low) or re.match(r"^\s*[^a-z]*teclado\b", low):
+        return "keyboard"
+    if re.search(r"\b(headset|cloud\s*(?:ii|iii|stinger|alpha)|h2002d|zeus\s*x?|quantum\s*\d+|blackshark|barracuda|g435|g733|fifine\s*h[689]|arctis)\b", low):
+        return "headset"
+    return None
+
+
+def classify_misc_deal(title_and_text, price_brl, misc_categories):
+    low = (title_and_text or "").lower()
+    if re.search(r"\b(fralda|pampers|huggies|babysec|pom\s*pom|mamypoko|cremer)\b", low) and not re.search(r"\blen[çc]o\b", low):
+        if price_brl < 18 or price_brl > 600:
+            return None, {}
+        try:
+            import misc_scraper
+            specs = misc_scraper.parse_diaper_specs(title_and_text, price_brl)
+        except Exception:
+            specs = {}
+        return "diapers", specs
+    if re.search(r"\b(air\s*fry(?:er)?|fritadeira\s*(?:el[ée]trica|sem\s*[óo]leo))\b", low):
+        if price_brl < 120 or price_brl > 3000:
+            return None, {}
+        try:
+            import misc_scraper
+            specs = misc_scraper.parse_air_fryer_specs(title_and_text, price_brl)
+        except Exception:
+            specs = {}
+        return "air_fryer", specs
+    for cat in (misc_categories or []):
+        if cat.get("builtin"):
+            continue
+        kws = [str(k).lower().strip() for k in (cat.get("keywords") or cat.get("queries") or [cat.get("name", "")]) if str(k).strip()]
+        if any(k in low for k in kws):
+            return cat["id"], {"brand": "", "summary": cat.get("name") or cat["id"]}
+    return None, {}
+
+
 def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_hours=72.0, force=False, region_id=None, fast_poll=False):
     """
     Scans live promotions strictly isolated by region_id ('br' or 'mx').
@@ -892,32 +1012,66 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     if not force and reg_cache["data"] and (now_ts - reg_cache["updated_at"] < 180):
         return reg_cache["data"]
 
+    misc_cfg = {}
+    misc_categories = []
+    misc_channels_meta = []
     if reg == "mx":
         raw_posts = fetch_mexico_native_promotions()
         channels_scanned = ["promodescuentos_gpus", "promodescuentos_pc", "cyberpuerta_ofertas"]
     else:
+        try:
+            import misc_scraper
+            misc_cfg = misc_scraper.load_misc_config()
+            misc_categories = misc_cfg.get("categories") or []
+            misc_channels_meta = misc_cfg.get("telegram_groups") or []
+        except Exception:
+            misc_cfg = {}
+
         channels = list(DEFAULT_BR_CHANNELS)
         if extra_channels:
             for ch in extra_channels:
                 cid = ch.strip().lstrip("@").split("/")[-1]
                 if cid and not any(c["id"].lower() == cid.lower() for c in channels):
                     channels.append({"id": cid, "name": f"@{cid}"})
-        queries = ["", "RTX", "RX ", "Ryzen"] if fast_poll else list(DEFAULT_SEARCH_QUERIES)
+        queries = ["", "RTX", "RX ", "Ryzen"] if fast_poll else (list(DEFAULT_SEARCH_QUERIES) + ["iphone", "galaxy", "poco", "mouse", "teclado", "headset"])
         if not fast_poll and extra_queries:
             for q in extra_queries:
                 if q and q not in queries:
                     queries.append(q)
 
         tasks = [(ch["id"], ch["name"], q) for ch in channels for q in queries]
+        if not fast_poll:
+            hw_ids = {c["id"].lower() for c in channels}
+            for tg in misc_channels_meta:
+                if not tg.get("enabled", True):
+                    continue
+                gid = tg["id"]
+                gname = tg.get("name") or f"@{gid}"
+                focus = tg.get("focus") or "both"
+                if focus == "diapers":
+                    g_queries = ["", "fralda", "pampers", "huggies"]
+                elif focus == "air_fryer":
+                    g_queries = ["", "air fryer", "mouse", "teclado", "headset", "iphone", "galaxy"]
+                else:
+                    g_queries = ["", "fralda", "air fryer", "iphone", "galaxy", "poco", "mouse", "teclado", "headset"]
+                for mc in misc_categories:
+                    if not mc.get("builtin"):
+                        for cq in (mc.get("queries") or [mc.get("name", "")])[:2]:
+                            if cq and cq not in g_queries:
+                                g_queries.append(cq)
+                for gq in g_queries:
+                    if not (gid.lower() in hw_ids and gq in queries):
+                        tasks.append((gid, gname, gq))
+
         raw_posts = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=14) as ex:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=16) as ex:
             futures = [ex.submit(fetch_channel_query, cid, cname, q) for cid, cname, q in tasks]
             for fut in concurrent.futures.as_completed(futures):
                 try:
                     raw_posts.extend(fut.result())
                 except Exception:
                     pass
-        channels_scanned = [c["id"] for c in channels]
+        channels_scanned = list(dict.fromkeys([c["id"] for c in channels] + [g["id"] for g in misc_channels_meta if g.get("enabled", True)]))
 
     by_post = {}
     for p in raw_posts:
@@ -926,6 +1080,9 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     now_dt = datetime.now(timezone.utc)
     matched_deals = []
     all_promos = []
+    smartphone_deals = []
+    peripheral_deals = []
+    misc_deals = []
     best_by_slug = {}
 
     for post_id, orig in by_post.items():
@@ -942,6 +1099,7 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
         if item["age_hours"] > max_age_hours:
             continue
 
+        txt_probe = (item.get("head_text", "") or item.get("title", "")) + " " + (item.get("raw_text", "")[:180])
         kind, cat_item = match_catalog_item(item.get("head_text", "") or item.get("title", ""), db)
         if kind and cat_item:
             if kind == "mobo" and float(item.get("price_brl") or 0) < 220:
@@ -974,11 +1132,34 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
             item["is_coupon_expired"] = False
             item["coupon_status"] = "unverified" if requires_coup else "none"
             matched_deals.append(item)
+        else:
+            # Classify isolated tracks: Misc (diapers / air fryer / custom), Smartphone, Peripherals
+            misc_cat_id, misc_specs = classify_misc_deal(txt_probe, float(item.get("price_brl") or 0), misc_categories)
+            if misc_cat_id:
+                m_copy = dict(item)
+                m_copy["misc_category"] = misc_cat_id
+                m_copy["misc_specs"] = misc_specs
+                misc_deals.append(m_copy)
+            else:
+                ph_match = classify_smartphone_deal(txt_probe, float(item.get("price_brl") or 0), db)
+                if ph_match:
+                    s_copy = dict(item)
+                    s_copy.update(ph_match)
+                    smartphone_deals.append(s_copy)
+                else:
+                    per_kind = classify_peripheral_deal(txt_probe, float(item.get("price_brl") or 0))
+                    if per_kind:
+                        p_copy = dict(item)
+                        p_copy["peripheral_kind"] = per_kind
+                        peripheral_deals.append(p_copy)
 
         all_promos.append(item)
 
     matched_deals.sort(key=lambda d: (-d.get("savings_vs_hb_brl", 0), d.get("price_brl", 999999)))
     all_promos.sort(key=lambda d: d.get("age_hours", 999))
+    smartphone_deals.sort(key=lambda d: d.get("age_hours", 999))
+    peripheral_deals.sort(key=lambda d: d.get("age_hours", 999))
+    misc_deals.sort(key=lambda d: d.get("age_hours", 999))
 
     # Validate deals and coupons against live store pages & Hardware Barato in-stock index
     cache_filename = "promos_cache.json" if reg == "br" else f"promos_cache_{reg}.json"
@@ -1000,6 +1181,13 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
                 if pid and pid not in seen_feed_ids and float(prev_f.get("age_hours") or 0) <= max_age_hours:
                     all_promos.append(prev_f)
                     seen_feed_ids.add(pid)
+            for key_list, dest_list in (("smartphone_deals", smartphone_deals), ("peripheral_deals", peripheral_deals), ("misc_deals", misc_deals)):
+                seen_k = {x.get("post_id") for x in dest_list if x.get("post_id")}
+                for prev_x in existing_cache.get(key_list, []):
+                    pid = prev_x.get("post_id")
+                    if pid and pid not in seen_k and float(prev_x.get("age_hours") or 0) <= max_age_hours:
+                        dest_list.append(prev_x)
+                        seen_k.add(pid)
         except Exception:
             pass
 
@@ -1035,6 +1223,10 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
         "matched_count": len(matched_deals),
         "matched_deals": matched_deals[:80],
         "best_by_slug": best_by_slug,
+        "smartphone_deals": smartphone_deals[:40],
+        "peripheral_deals": peripheral_deals[:45],
+        "misc_deals": misc_deals[:60],
+        "misc_channels": misc_channels_meta,
         "recent_feed": all_promos[:60],
         "coupon_status": coupon_status_obj
     }

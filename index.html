@@ -27,14 +27,14 @@
   </script>
   <title>GCA · Preços de Hardware & Black Friday</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="styles/ui.css?v=20261124-3" />
+  <link rel="stylesheet" href="styles/ui.css?v=20261124-6" />
   <link rel="stylesheet" href="styles/themes.css?v=20261124-1" />
   <script src="styles/chart-theme.js?v=20261124-1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/tailwind.css?v=20261119-1" />
-  <link rel="stylesheet" href="mobile.css?v=20261123-3" />
+  <link rel="stylesheet" href="mobile.css?v=20261124-1" />
   <style>
     body {
       background-color: #070b12;
@@ -155,6 +155,19 @@
           <span id="sidebar-tab-title-upgrades">Upgrades</span>
         </button>
       </div>
+
+      <!-- Área 5: Explorar -->
+      <div class="ui-nav-group">
+        <span class="ui-nav-group-label">Explorar</span>
+        <button type="button" onclick="switchTab('peripherals')" id="tab-btn-peripherals" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5"></path></svg>
+          <span>Periféricos</span>
+        </button>
+        <button type="button" onclick="switchTab('misc')" id="tab-btn-misc" class="tab-btn ui-nav-item">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"></path></svg>
+          <span>Diversos</span>
+        </button>
+      </div>
     </nav>
 
     <!-- Sidebar Footer: Live Status + Config shortcut -->
@@ -206,6 +219,9 @@
             </button>
             <button type="button" id="btn-ctx-laptop" onclick="setMainContext('laptop')" class="ui-segmented-btn" title="Notebooks Completos">
               <span>Notebook</span>
+            </button>
+            <button type="button" id="btn-ctx-smartphone" onclick="setMainContext('smartphone')" class="ui-segmented-btn" title="Smartphones &amp; Celulares">
+              <span>Celular</span>
             </button>
           </div>
         </div>
@@ -1004,6 +1020,186 @@
         </div>
       </div>
     </div> <!-- /versus-laptop-view -->
+
+    <!-- SMARTPHONE DUEL VIEW -->
+    <div id="versus-smartphone-view" class="hidden space-y-5">
+      <div class="ui-card space-y-5">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div class="flex items-center gap-2 shrink-0">
+            <h2 class="ui-title-xl whitespace-nowrap">Duelo de Smartphones</h2>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Sobre o duelo de smartphones">i</button>
+              <span class="ui-info-popover" role="tooltip">Compara dois celulares lado a lado: SoC/AnTuTu, Câmeras/OIS/Zoom, Tela AMOLED/Hz, Bateria SOT/Carga, NPU IA, Updates de OS e Histórico Zoom BR.</span>
+            </span>
+          </div>
+          <div id="smartphone-duel-presets" class="flex flex-wrap items-center gap-2"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-11 gap-4 items-center">
+          <div class="lg:col-span-5 ui-duel-picker ui-duel-picker--a">
+            <div class="flex items-center justify-between mb-2.5 gap-2">
+              <span class="ui-badge ui-badge--a">A · Celular Base</span>
+              <span id="smartphone-base-status-badge" class="text-xs font-mono"></span>
+            </div>
+            <div class="flex items-center gap-3 mb-3">
+              <img id="smartphone-base-thumb" src="" alt="" class="w-14 h-14 rounded-xl object-contain bg-slate-950 border border-slate-800 p-1 shrink-0 hidden" onerror="this.classList.add('hidden')" />
+              <select id="smartphone-duel-select-base" onchange="onSmartphoneDuelSelectionChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-sky-400"></select>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div class="ui-duel-metric-tile col-span-2 sm:col-span-1">
+                <span class="ui-label block">Preço atual</span>
+                <div class="flex items-center gap-1 mt-1">
+                  <span class="text-slate-400 font-mono text-xs currency-sym">R$</span>
+                  <input type="number" id="smartphone-duel-price-base" oninput="renderSmartphoneDuelAnalysis()" class="w-full bg-transparent font-mono font-bold text-sky-300 text-sm focus:outline-none border-b border-slate-700 focus:border-sky-400" step="50" />
+                </div>
+              </div>
+              <div class="ui-duel-metric-tile">
+                <span class="ui-label block">Preço alvo</span>
+                <span id="smartphone-duel-target-base" class="font-mono font-bold text-slate-100 text-sm mt-1 block">--</span>
+              </div>
+              <div class="ui-duel-metric-tile">
+                <span class="ui-label block">Mín. histórico</span>
+                <span id="smartphone-duel-hist-base" class="font-mono font-semibold text-slate-300 text-xs mt-1 block">--</span>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 pt-2.5 border-t border-slate-800/80" id="smartphone-duel-specs-base"></div>
+          </div>
+
+          <div class="lg:col-span-1 flex flex-col items-center justify-center py-1">
+            <button type="button" onclick="swapSmartphoneDuelPair()" title="Inverter Celular A e B" class="w-11 h-11 rounded-full bg-slate-900 hover:bg-slate-800 border border-slate-700 flex items-center justify-center font-mono font-black text-slate-200 text-sm shadow-md cursor-pointer transition">VS</button>
+            <button type="button" onclick="resetSmartphoneDuelPricesToLive()" class="mt-2 text-xs text-slate-400 hover:text-sky-300 underline cursor-pointer">Resetar</button>
+          </div>
+
+          <div class="lg:col-span-5 ui-duel-picker ui-duel-picker--b">
+            <div class="flex items-center justify-between mb-2.5 gap-2">
+              <span class="ui-badge ui-badge--b">B · Candidato</span>
+              <span id="smartphone-cand-status-badge" class="text-xs font-mono"></span>
+            </div>
+            <div class="flex items-center gap-3 mb-3">
+              <img id="smartphone-cand-thumb" src="" alt="" class="w-14 h-14 rounded-xl object-contain bg-slate-950 border border-slate-800 p-1 shrink-0 hidden" onerror="this.classList.add('hidden')" />
+              <select id="smartphone-duel-select-cand" onchange="onSmartphoneDuelSelectionChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white focus:outline-none focus:border-violet-400"></select>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div class="ui-duel-metric-tile col-span-2 sm:col-span-1">
+                <span class="ui-label block">Preço atual</span>
+                <div class="flex items-center gap-1 mt-1">
+                  <span class="text-slate-400 font-mono text-xs currency-sym">R$</span>
+                  <input type="number" id="smartphone-duel-price-cand" oninput="renderSmartphoneDuelAnalysis()" class="w-full bg-transparent font-mono font-bold text-violet-300 text-sm focus:outline-none border-b border-slate-700 focus:border-violet-400" step="50" />
+                </div>
+              </div>
+              <div class="ui-duel-metric-tile">
+                <span class="ui-label block">Preço alvo</span>
+                <span id="smartphone-duel-target-cand" class="font-mono font-bold text-slate-100 text-sm mt-1 block">--</span>
+              </div>
+              <div class="ui-duel-metric-tile">
+                <span class="ui-label block">Mín. histórico</span>
+                <span id="smartphone-duel-hist-cand" class="font-mono font-semibold text-slate-300 text-xs mt-1 block">--</span>
+              </div>
+            </div>
+            <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2 pt-2.5 border-t border-slate-800/80" id="smartphone-duel-specs-cand"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="smartphone-duel-verdict-box" class="ui-verdict"></div>
+
+      <div class="ui-card space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <h3 class="ui-title-lg">Desempenho lado a lado</h3>
+          </div>
+          <div class="ui-segmented">
+            <button type="button" id="btn-smartphone-scale-rel-duel" onclick="setComparisonScaleMode('relative')" class="ui-segmented-btn is-active">Relativa (A vs B)</button>
+            <button type="button" id="btn-smartphone-scale-abs-duel" onclick="setComparisonScaleMode('absolute')" class="ui-segmented-btn">Absoluta (0–100)</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-7 space-y-4">
+            <div class="grid grid-cols-2 gap-3" id="smartphone-duel-versus-ratings"></div>
+            <div class="space-y-2.5" id="smartphone-duel-versus-bars"></div>
+          </div>
+          <div class="lg:col-span-5 bg-slate-950/60 rounded-xl p-4 border border-slate-800 flex flex-col items-center justify-center">
+            <div class="w-full flex items-center justify-between pb-2 mb-2 border-b border-slate-800/80">
+              <span class="ui-title-md text-sm">Radar Mobile (6 dimensões)</span>
+            </div>
+            <div class="h-72 w-full relative">
+              <canvas id="chart-smartphone-duel-radar"></canvas>
+            </div>
+            <div class="w-full flex flex-wrap items-center justify-center gap-4 mt-2 pt-2 border-t border-slate-800/60 text-xs font-mono" id="smartphone-duel-radar-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <details class="ui-details">
+        <summary><span>Ver detalhes: por que escolher A ou B, termômetro de preço e cenários</span></summary>
+        <div class="ui-details-body space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div id="smartphone-duel-why-a" class="rounded-xl p-4 bg-slate-950/70 border border-sky-500/30 space-y-2"></div>
+            <div id="smartphone-duel-why-b" class="rounded-xl p-4 bg-slate-950/70 border border-violet-500/30 space-y-2"></div>
+          </div>
+          <div class="rounded-xl p-4 bg-slate-950/80 border border-slate-800 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="ui-title-md text-sm">Termômetro da diferença de preço</span>
+              <span class="text-xs font-mono text-slate-400" id="smartphone-duel-thermometer-subtitle"></span>
+            </div>
+            <div class="relative pt-7 pb-6">
+              <div class="h-5 w-full rounded-full overflow-hidden grid grid-cols-4 border border-slate-700/80 shadow-inner">
+                <div class="bg-emerald-500 flex items-center justify-center text-xs font-bold text-slate-950">EXCELENTE</div>
+                <div class="bg-sky-400 flex items-center justify-center text-xs font-bold text-slate-950">JUSTO</div>
+                <div class="bg-amber-400 flex items-center justify-center text-xs font-bold text-slate-950">AGUARDE</div>
+                <div class="bg-rose-500 flex items-center justify-center text-xs font-bold text-white">CARO</div>
+              </div>
+              <div class="grid grid-cols-4 text-xs font-mono text-slate-400 mt-2 gap-2">
+                <div id="smartphone-zone-lbl-1">Zona Excelente</div>
+                <div id="smartphone-zone-lbl-2">Teto Justo</div>
+                <div id="smartphone-zone-lbl-3">Aguarde</div>
+                <div id="smartphone-zone-lbl-4">Não compensa</div>
+              </div>
+              <div id="smartphone-thermometer-marker" class="absolute top-0 transition-all duration-300 transform -translate-x-1/2" style="left: 50%;">
+                <div class="px-2 py-0.5 rounded bg-white text-slate-950 font-mono font-extrabold text-xs shadow-lg whitespace-nowrap">
+                  Hoje: <span id="smartphone-marker-delta-val">--</span>
+                </div>
+                <div class="w-0.5 h-6 bg-white mx-auto"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-slate-800/80" id="smartphone-duel-scenarios-grid"></div>
+          </div>
+        </div>
+      </details>
+
+      <details class="ui-details">
+        <summary><span>Ver ficha técnica completa lado a lado (SoC, Tela, Câmeras, Bateria, Memória, Updates)</span></summary>
+        <div class="ui-details-body space-y-4">
+          <div id="smartphone-duel-spec-sheet" class="space-y-4"></div>
+        </div>
+      </details>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-7 ui-card">
+          <div class="ui-card-header">
+            <h3 class="ui-card-title">Histórico diário de preços (Zoom BR)</h3>
+          </div>
+          <div class="h-72">
+            <canvas id="chart-smartphone-duel-history"></canvas>
+          </div>
+        </div>
+        <div class="lg:col-span-5 ui-card flex flex-col justify-between gap-4">
+          <div>
+            <div class="ui-card-header mb-3">
+              <div>
+                <span class="ui-label">Alternativas</span>
+                <h3 class="ui-card-title mt-0.5">Melhores celulares na mesma faixa</h3>
+              </div>
+            </div>
+            <div id="smartphone-duel-alternatives-list" class="space-y-2.5"></div>
+          </div>
+          <details class="ui-details">
+            <summary>Ver nota técnica do chipset</summary>
+            <div class="ui-details-body" id="smartphone-duel-system-insight"></div>
+          </details>
+        </div>
+      </div>
+    </div> <!-- /versus-smartphone-view -->
   </section>
 
     <!-- ===================================================================== -->
@@ -1408,6 +1604,123 @@
           </div>
         </div>
       </div> <!-- /cb-laptop-view -->
+
+      <!-- SMARTPHONE CB VIEW -->
+      <div id="cb-smartphone-view" class="hidden space-y-5">
+        <div class="ui-card space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h2 class="ui-title-xl">Custo-benefício — Smartphones</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Sobre o ranking de smartphones">i</button>
+                <span class="ui-info-popover" role="tooltip">Avalia SoC/AnTuTu, Câmeras/OIS/Zoom, Tela AMOLED/Hz, Bateria SOT, IA NPU e anos de atualização OS.</span>
+              </span>
+              <button type="button" id="smartphone-cb-intensity-pill" onclick="toggleContextSettings()" class="ui-chip" title="Ajustar pesos de uso nas Configurações"></button>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <input type="text" id="smartphone-cb-search" oninput="renderSmartphoneCBTable()" placeholder="Buscar celular (ex: S25, A56, iPhone, Poco)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-400 w-56" />
+              <select id="smartphone-cb-filter-base-rel" onchange="renderSmartphoneCBTable()" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs text-sky-300 font-semibold" title="Smartphone base para comparação"></select>
+            </div>
+          </div>
+
+          <select id="smartphone-cb-filter-brand" onchange="renderSmartphoneCBTable()" class="hidden">
+            <option value="ALL">Todas</option>
+            <option value="Samsung">Samsung</option>
+            <option value="Apple">Apple</option>
+            <option value="Xiaomi">Xiaomi</option>
+            <option value="Motorola">Motorola</option>
+            <option value="Realme">Realme</option>
+          </select>
+          <select id="smartphone-cb-filter-category" onchange="renderSmartphoneCBTable()" class="hidden">
+            <option value="ALL">Todas</option>
+            <option value="flagship">Flagship</option>
+            <option value="upper_mid">Inter. Pro</option>
+            <option value="midrange">Intermediário</option>
+            <option value="entry">Entrada</option>
+          </select>
+          <select id="smartphone-cb-filter-ram" onchange="renderSmartphoneCBTable()" class="hidden">
+            <option value="0">Qualquer</option>
+            <option value="8">8GB+</option>
+            <option value="12">12GB+</option>
+          </select>
+          <select id="smartphone-cb-filter-extra" onchange="renderSmartphoneCBTable()" class="hidden">
+            <option value="ALL">Todos</option>
+            <option value="5G_NFC">5G + NFC</option>
+            <option value="OLED">Tela OLED/AMOLED</option>
+            <option value="IP68">IP67 / IP68</option>
+          </select>
+
+          <div class="ui-filter-bar">
+            <div class="ui-filter-row">
+              <div class="ui-filter-group" data-chip-target="smartphone-cb-filter-category">
+                <span class="ui-label mr-1">Categoria:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('smartphone-cb-filter-category', 'ALL', renderSmartphoneCBTable)">Todas</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-category', 'flagship', renderSmartphoneCBTable)">Flagship</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-category', 'upper_mid', renderSmartphoneCBTable)">Inter. Pro</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-category', 'midrange', renderSmartphoneCBTable)">Intermediário</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-category', 'entry', renderSmartphoneCBTable)">Entrada</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="smartphone-cb-filter-ram">
+                <span class="ui-label mr-1">RAM:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('smartphone-cb-filter-ram', '0', renderSmartphoneCBTable)">Qualquer</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-ram', '8', renderSmartphoneCBTable)">8GB+</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-ram', '12', renderSmartphoneCBTable)">12GB+</button>
+              </div>
+              <div class="ui-filter-group ml-0 sm:ml-3" data-chip-target="smartphone-cb-filter-extra">
+                <span class="ui-label mr-1">Recursos:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('smartphone-cb-filter-extra', 'ALL', renderSmartphoneCBTable)">Todos</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-extra', '5G_NFC', renderSmartphoneCBTable)">5G + NFC</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-extra', 'OLED', renderSmartphoneCBTable)">AMOLED</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-extra', 'IP68', renderSmartphoneCBTable)">IP67/68</button>
+              </div>
+            </div>
+            <div class="ui-filter-row">
+              <div class="ui-filter-group" data-chip-target="smartphone-cb-filter-brand">
+                <span class="ui-label mr-1">Marca:</span>
+                <button type="button" class="ui-chip is-active" onclick="setFilterChip('smartphone-cb-filter-brand', 'ALL', renderSmartphoneCBTable)">Todas</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-brand', 'Samsung', renderSmartphoneCBTable)">Samsung</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-brand', 'Apple', renderSmartphoneCBTable)">Apple</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-brand', 'Xiaomi', renderSmartphoneCBTable)">Xiaomi</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-brand', 'Motorola', renderSmartphoneCBTable)">Motorola</button>
+                <button type="button" class="ui-chip" onclick="setFilterChip('smartphone-cb-filter-brand', 'Realme', renderSmartphoneCBTable)">Realme</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="ui-table-wrap">
+            <table class="ui-table">
+              <thead>
+                <tr>
+                  <th class="cursor-pointer hover:text-white" onclick="setSmartphoneCBSort('rank')">#</th>
+                  <th class="cursor-pointer hover:text-white" onclick="setSmartphoneCBSort('name')">Smartphone (SoC)</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setSmartphoneCBSort('ram')">RAM / Armaz.</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setSmartphoneCBSort('screen')">Tela &amp; Câmera</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setSmartphoneCBSort('price')">Preço &amp; Status</th>
+                  <th class="cursor-pointer hover:text-white text-right" onclick="setSmartphoneCBSort('target')">Preço Alvo</th>
+                  <th class="text-center">Tendência</th>
+                  <th class="cursor-pointer hover:text-white text-center" onclick="setSmartphoneCBSort('my_cb')">Custo-Benefício</th>
+                  <th class="text-right">Relação vs Base</th>
+                  <th class="text-center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="smartphone-cb-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="ui-card">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <h3 id="smartphone-cb-chart-title" class="ui-card-title">Mapa de Eficiência de Smartphones: Preço (R$) vs Custo-Benefício (0–100)</h3>
+            <div class="ui-segmented">
+              <button type="button" id="smartphone-cb-chart-btn-benefit" onclick="setSmartphoneCBChartMetric('benefit')" class="ui-segmented-btn is-active">Custo-Benefício</button>
+              <button type="button" id="smartphone-cb-chart-btn-benchmark" onclick="setSmartphoneCBChartMetric('benchmark')" class="ui-segmented-btn">Score Contextual</button>
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="chart-smartphone-cb-scatter"></canvas>
+          </div>
+        </div>
+      </div> <!-- /cb-smartphone-view -->
     </section>
 
     <!-- ===================================================================== -->
@@ -1534,6 +1847,34 @@
           <div id="laptop-builder-summary-card" class="ui-card space-y-4"></div>
         </div>
       </div>
+
+      <!-- SMARTPHONE PURCHASE GOAL & ECOSYSTEM KIT PLANNER -->
+      <div id="builder-smartphone-view" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="lg:col-span-8 ui-card space-y-5">
+          <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-lg">Objetivo — Smartphone &amp; Ecossistema</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Escolha o celular ideal para seu uso e calcule carregador GaN, película/capa e fone TWS no orçamento total.</span>
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5" id="smartphone-builder-presets">
+              <button type="button" onclick="pickSmartphoneForObjective('camera')" class="ui-chip ui-chip--good">Melhor Câmera</button>
+              <button type="button" onclick="pickSmartphoneForObjective('gaming')" class="ui-chip">Melhor Gamer 120Hz</button>
+              <button type="button" onclick="pickSmartphoneForObjective('battery')" class="ui-chip ui-chip--warn">Bateria 2 Dias</button>
+              <button type="button" onclick="pickSmartphoneForObjective('ai')" class="ui-chip">IA &amp; NPU</button>
+              <button type="button" onclick="pickSmartphoneForObjective('cb')" class="ui-chip">Melhor C/B</button>
+            </div>
+          </div>
+          <div id="smartphone-builder-parts-container" class="space-y-3"></div>
+        </div>
+
+        <div class="lg:col-span-4 space-y-5">
+          <div id="smartphone-builder-power-card" class="ui-card space-y-4"></div>
+          <div id="smartphone-builder-summary-card" class="ui-card space-y-4"></div>
+        </div>
+      </div>
     </section>
 
     <!-- ===================================================================== -->
@@ -1652,6 +1993,63 @@
           </div>
           <div class="lg:col-span-5 ui-card ui-card--compact flex flex-col justify-between">
             <div id="laptop-upg-verdict" class="space-y-2 text-xs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SMARTPHONE LONGEVITY, STORAGE & OS UPDATES MATRIX -->
+      <div id="upgrades-smartphone-view" class="hidden ui-card space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <h2 class="ui-title-lg">Longevidade, Armazenamento &amp; Updates (Smartphone)</h2>
+            <span class="ui-info ui-info--bottom">
+              <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+              <span class="ui-info-popover" role="tooltip">Avalia 128GB vs 256GB vs 512GB (custo real sem MicroSD), RAM para IA local e quantos anos de atualização de Android/iOS restam.</span>
+            </span>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <div>
+              <label for="sp-upg-storage-cap" class="ui-label block mb-1">Armaz. Alvo</label>
+              <select id="sp-upg-storage-cap" onchange="renderSmartphoneUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
+                <option value="128">128 GB (Mínimo)</option>
+                <option value="256" selected>256 GB (Ideal 2026+)</option>
+                <option value="512">512 GB (4K RAW / IA)</option>
+              </select>
+            </div>
+            <div>
+              <label for="sp-upg-min-updates" class="ui-label block mb-1">Updates OS Mín.</label>
+              <select id="sp-upg-min-updates" onchange="renderSmartphoneUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
+                <option value="3">3+ anos</option>
+                <option value="4" selected>4+ anos</option>
+                <option value="5">5+ anos</option>
+                <option value="7">6–7 anos</option>
+              </select>
+            </div>
+            <div>
+              <label for="sp-upg-strategy" class="ui-label block mb-1">Estratégia</label>
+              <select id="sp-upg-strategy" onchange="renderSmartphoneUpgrades()" class="bg-slate-800 text-xs font-bold text-white rounded-lg px-2.5 py-1.5 border border-slate-700">
+                <option value="ALL" selected>Todos os modelos</option>
+                <option value="LONG_OS">Foco Longa Vida (5a+ OS)</option>
+                <option value="MICROSD">Com slot MicroSD</option>
+                <option value="AI_READY">IA / 12GB+ RAM</option>
+              </select>
+            </div>
+            <div>
+              <label for="sp-upg-budget" class="ui-label block mb-1">Orçamento Máx (<span class="currency-sym">R$</span>)</label>
+              <input type="number" id="sp-upg-budget" oninput="renderSmartphoneUpgrades()" value="4500" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs ui-mono font-bold text-amber-400" step="200" />
+            </div>
+          </div>
+        </div>
+
+        <div id="sp-upg-cards-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          <div class="lg:col-span-7 ui-card ui-card--compact space-y-2.5">
+            <h3 class="ui-title-md">Escala Real: 128 GB vs 256 GB vs 512 GB</h3>
+            <div id="sp-upg-costs-table" class="space-y-2 text-xs"></div>
+          </div>
+          <div class="lg:col-span-5 ui-card ui-card--compact flex flex-col justify-between">
+            <div id="sp-upg-verdict" class="space-y-2 text-xs"></div>
           </div>
         </div>
       </div>
@@ -1948,6 +2346,10 @@
               <input type="checkbox" id="chk-pref-cat-laptop" onchange="onPromoCategoryToggle('laptop', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
               <span>Notebooks</span>
             </label>
+            <label class="ui-cat-pill-toggle">
+              <input type="checkbox" id="chk-pref-cat-smartphone" onchange="onPromoCategoryToggle('smartphone', this.checked)" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+              <span>Smartphones</span>
+            </label>
           </div>
 
           <!-- Per-Category Spec Cards Grid -->
@@ -2165,6 +2567,39 @@
                 </label>
               </div>
             </div>
+
+            <!-- Smartphones -->
+            <div id="spec-card-smartphone" class="ui-spec-card is-disabled space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-slate-100">Smartphones (Celulares)</span>
+                <span id="spec-smartphone-status-tag" class="ui-mono text-[11px] text-slate-500">Desativado</span>
+              </div>
+              <div class="space-y-1.5">
+                <span class="text-[11px] text-slate-400 block">Marca</span>
+                <div id="spec-smartphone-brand-chips" class="flex flex-wrap gap-1.5">
+                  <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Samsung" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Samsung')">Samsung</button>
+                  <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Apple" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Apple')">Apple</button>
+                  <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Xiaomi" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Xiaomi')">Xiaomi</button>
+                  <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Motorola" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Motorola')">Motorola</button>
+                  <button type="button" class="ui-chip" data-spec-cat="smartphone" data-spec-key="brands" data-spec-val="Realme" aria-pressed="false" onclick="onTogglePromoSpecChip('smartphone','brands','Realme')">Realme</button>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <label for="spec-smartphone-model-input" class="text-[11px] text-slate-400 block">Aparelho específico (sugestão inteligente)</label>
+                <div class="ui-autocomplete-wrap">
+                  <input type="text" id="spec-smartphone-model-input" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="spec-smartphone-suggestions" placeholder="Digite o modelo (ex: S25 Ultra, iPhone 16, Poco X7)..." oninput="onSmartphoneNotifyInput(this.value)" onfocus="onSmartphoneNotifyInput(this.value)" onkeydown="onSmartphoneNotifyKeydown(event)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-400" />
+                  <div id="spec-smartphone-suggestions" role="listbox" class="ui-autocomplete-menu hidden"></div>
+                </div>
+                <div id="spec-smartphone-selected-models" class="flex flex-wrap gap-1.5 pt-0.5"></div>
+              </div>
+              <label class="space-y-1 block">
+                <span class="text-[11px] text-slate-400 block">Preço máx (<span class="currency-sym">R$</span>)</span>
+                <input type="number" id="spec-smartphone-max-price" min="0" step="100" oninput="onPromoSpecInputChange()" placeholder="Sem limite" class="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs ui-mono text-white" />
+              </label>
+              <p id="spec-smartphone-off-note" class="text-[11px] text-slate-400">
+                Selecione uma marca ou aparelho acima para ativar os alertas de Smartphones.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -2205,6 +2640,7 @@
               <button type="button" onclick="setBFCardsFilter('mobo')" data-bf-filter="mobo" class="ui-chip">Placas-Mãe</button>
               <button type="button" onclick="setBFCardsFilter('psu')" data-bf-filter="psu" class="ui-chip">Fontes</button>
               <button type="button" onclick="setBFCardsFilter('laptop')" data-bf-filter="laptop" class="ui-chip">Notebooks</button>
+              <button type="button" onclick="setBFCardsFilter('smartphone')" data-bf-filter="smartphone" class="ui-chip hidden">Smartphones</button>
               <button type="button" onclick="setBFCardsFilter('in_stock')" data-bf-filter="in_stock" class="ui-chip">Em estoque</button>
               <button type="button" onclick="setBFCardsFilter('store_direct')" data-bf-filter="store_direct" class="ui-chip">Lojas diretas</button>
             </div>
@@ -2425,6 +2861,10 @@
                       <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
                         <input type="checkbox" id="chk-notify-prod-laptop" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
                         <span>Notebooks</span>
+                      </label>
+                      <label class="inline-flex items-center gap-1.5 text-slate-200 cursor-pointer select-none">
+                        <input type="checkbox" id="chk-notify-prod-smartphone" onchange="onUpdatePromoNotificationSettings()" class="w-3.5 h-3.5 accent-sky-400 cursor-pointer" />
+                        <span>Smartphones</span>
                       </label>
                     </div>
                   </div>
@@ -2968,6 +3408,262 @@
           </div>
         </div>
       </div>
+
+      <!-- REAL-WORLD SMARTPHONE SIMULATOR VIEW -->
+      <div id="sim-smartphone-view" class="hidden space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-800">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <h2 class="ui-title-lg">Simulador Mobile Real</h2>
+              <span class="ui-info ui-info--bottom">
+                <button type="button" class="ui-info-trigger" aria-label="Mais informações">i</button>
+                <span class="ui-info-popover" role="tooltip">Simula FPS em jogos mobile (respeitando teto da CPU e Hz da tela), throttling térmico após 30–45 min, câmera/vídeo 4K, NPU IA local e autonomia real de bateria (SOT).</span>
+              </span>
+            </div>
+            <div class="ui-segmented" id="sim-phone-compare-toggle" role="group" aria-label="Modo de simulação de smartphones">
+              <button type="button" id="btn-sim-phone-mode-single" onclick="setSimCompareEnabled(false)" class="ui-segmented-btn" aria-pressed="false"><span>1 Celular</span></button>
+              <button type="button" id="btn-sim-phone-mode-compare" onclick="setSimCompareEnabled(true)" class="ui-segmented-btn is-active" aria-pressed="true"><span>Comparar A vs B</span></button>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div id="sim-phone-a-group" class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-a-border);">
+              <span id="sim-phone-a-badge" class="ui-badge ui-badge--a ui-mono">Celular A</span>
+              <select id="sim-select-phone-a" onchange="renderSmartphoneSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[220px]"></select>
+            </div>
+            <button type="button" id="btn-sim-phone-swap" onclick="swapSimulatorSmartphones()" title="Inverter Celular A e B" class="ui-btn ui-btn--icon">⇄</button>
+            <div id="sim-phone-b-group" class="flex items-center gap-2 p-1.5 rounded-xl bg-slate-900/90 border" style="border-color: var(--ui-compare-b-border);">
+              <span class="ui-badge ui-badge--b ui-mono">Celular B</span>
+              <select id="sim-select-phone-b" onchange="renderSmartphoneSimulator()" class="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-white max-w-[220px]"></select>
+            </div>
+            <select id="sim-phone-thermal-mode" onchange="renderSmartphoneSimulator()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-100">
+              <option value="sustained" selected>🔥 Sessão Longa (Thermal Throttling)</option>
+              <option value="burst">⚡ Pico Curto (Primeiros Minutos)</option>
+            </select>
+            <select id="sim-phone-usage-mode" onchange="renderSmartphoneSimulator()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
+              <option value="mixed" selected>🏠 Uso Misto Wi-Fi</option>
+              <option value="heavy_5g">📶 5G + Sol + Jogos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="sim-graphics-bar grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+          <div class="lg:col-span-8 space-y-2 min-w-0">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <label for="sim-phone-preset-slider" class="ui-label">Qualidade Gráfica Mobile</label>
+                <span id="sim-phone-preset-active-badge" class="ui-badge ui-badge--brand ui-mono">Alto</span>
+              </div>
+              <span id="sim-phone-res-live-pill" class="ui-badge ui-mono">FHD+ • 120Hz</span>
+            </div>
+            <input type="range" id="sim-phone-preset-slider" min="0" max="4" step="1" value="3" list="sim-preset-ticks" aria-label="Preset gráfico mobile" oninput="setSmartphoneSimQuality(this.value)" onchange="setSmartphoneSimQuality(this.value)" class="sim-preset-range" />
+            <div id="sim-phone-preset-step-labels" class="sim-preset-steps">
+              <button type="button" data-preset="0" onclick="setSmartphoneSimQuality(0)" class="sim-preset-step-btn">M. Baixo</button>
+              <button type="button" data-preset="1" onclick="setSmartphoneSimQuality(1)" class="sim-preset-step-btn">Baixo</button>
+              <button type="button" data-preset="2" onclick="setSmartphoneSimQuality(2)" class="sim-preset-step-btn">Médio</button>
+              <button type="button" data-preset="3" onclick="setSmartphoneSimQuality(3)" class="sim-preset-step-btn is-active">Alto</button>
+              <button type="button" data-preset="4" onclick="setSmartphoneSimQuality(4)" class="sim-preset-step-btn">Ultra</button>
+            </div>
+            <p id="sim-phone-preset-desc" class="text-xs text-slate-400">Qualidade nativa alta respeitando o teto da CPU e Hz da tela.</p>
+          </div>
+          <div class="lg:col-span-4 text-xs text-slate-400 ui-mono lg:border-l lg:border-slate-800 lg:pl-4">
+            Mesmo reduzindo efeitos gráficos, a taxa de quadros nunca excede o teto do núcleo principal nem a frequência (Hz) da tela.
+          </div>
+        </div>
+
+        <div id="sim-phone-status-banner"></div>
+        <div id="sim-phone-hero-cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
+        <div class="ui-card ui-card--elevated space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div>
+              <span class="ui-label">Radar Mobile</span>
+              <h3 id="sim-phone-radar-title" class="ui-title-md mt-0.5">Celular A vs Celular B — 6 Dimensões Reais</h3>
+            </div>
+            <div id="sim-phone-radar-winner-badge" class="flex items-center gap-2"></div>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-6 flex justify-center items-center">
+              <div class="w-full max-w-[440px] h-[300px] relative">
+                <canvas id="chart-sim-phone-radar"></canvas>
+              </div>
+            </div>
+            <div id="sim-phone-radar-metrics-breakdown" class="lg:col-span-6 space-y-2 text-xs ui-mono"></div>
+          </div>
+        </div>
+
+        <div id="sim-phone-hardware-panel" class="ui-card ui-card--elevated space-y-4"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="border-b border-slate-800 pb-2.5"><span class="ui-label">FPS Estimado</span><h3 class="ui-title-md">Jogos &amp; Teto CPU/Hz</h3></div>
+            <div id="sim-phone-games-list" class="space-y-2.5"></div>
+          </div>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="border-b border-slate-800 pb-2.5"><span class="ui-label">Câmera &amp; IA</span><h3 class="ui-title-md">NPU, CapCut 4K &amp; Fotos</h3></div>
+            <div id="sim-phone-ai-list" class="space-y-2.5"></div>
+          </div>
+          <div class="ui-card ui-card--compact space-y-3">
+            <div class="border-b border-slate-800 pb-2.5"><span class="ui-label">Autonomia &amp; Updates</span><h3 class="ui-title-md">SOT, Carga &amp; Longevidade</h3></div>
+            <div id="sim-phone-soft-list" class="space-y-2.5"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB: PERIFÉRICOS (MOUSE, TECLADO E HEADSET)                           -->
+    <!-- ===================================================================== -->
+    <section id="tab-peripherals" class="hidden space-y-5">
+      <div class="ui-card space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <span class="ui-label">Catálogo Zoom BR &amp; Telegram</span>
+            <h2 class="ui-title-xl">Periféricos — Mouses, Teclados e Headsets</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="peripherals-search" oninput="renderPeripheralsTab()" placeholder="Buscar sensor, switch, modelo..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-400 w-56" />
+            <select id="peripherals-sort" onchange="renderPeripheralsTab()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
+              <option value="cb" selected>Melhor Custo-Benefício</option>
+              <option value="score">Maior Nota Técnica</option>
+              <option value="price_asc">Menor Preço</option>
+              <option value="price_desc">Maior Preço</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="ui-filter-bar">
+          <div class="ui-filter-row">
+            <div id="peripherals-kind-chips" class="ui-filter-group">
+              <span class="ui-label mr-1">Categoria:</span>
+              <button type="button" data-kind="all" onclick="setPeripheralsKindFilter('all')" class="ui-chip is-active">Todos</button>
+              <button type="button" data-kind="mouse" onclick="setPeripheralsKindFilter('mouse')" class="ui-chip">🖱️ Mouses</button>
+              <button type="button" data-kind="keyboard" onclick="setPeripheralsKindFilter('keyboard')" class="ui-chip">⌨️ Teclados</button>
+              <button type="button" data-kind="headset" onclick="setPeripheralsKindFilter('headset')" class="ui-chip">🎧 Headsets</button>
+            </div>
+            <div class="ui-filter-group ml-0 sm:ml-3">
+              <span class="ui-label mr-1">Filtros:</span>
+              <button type="button" id="periph-chip-wireless" onclick="togglePeripheralsFeatureFilter('wireless')" class="ui-chip">Sem Fio</button>
+              <button type="button" id="periph-chip-gamer" onclick="togglePeripheralsFeatureFilter('gamer')" class="ui-chip">Gamer / Mecânico</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="peripherals-kpis" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+      </div>
+
+      <!-- Quick Duel A vs B -->
+      <div id="peripherals-duel-card" class="ui-card space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <span class="ui-label">Comparativo Rápido</span>
+            <h3 class="ui-title-lg">Duelo de Periféricos (A vs B)</h3>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="periph-duel-a" onchange="setPeripheralDuelItem(this.value, 'a')" class="bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white max-w-[230px]"></select>
+            <button type="button" id="btn-periph-duel-swap" onclick="swapPeripheralDuel()" class="ui-btn ui-btn--icon" title="Inverter A e B">⇄</button>
+            <select id="periph-duel-b" onchange="setPeripheralDuelItem(this.value, 'b')" class="bg-slate-900 border border-violet-500/40 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white max-w-[230px]"></select>
+          </div>
+        </div>
+        <div id="periph-duel-verdict" class="p-3 rounded-xl bg-slate-950 border border-slate-800"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div class="lg:col-span-4 h-64"><canvas id="chart-periph-duel-radar"></canvas></div>
+          <div class="lg:col-span-4 h-64"><canvas id="chart-periph-duel-history"></canvas></div>
+          <div id="periph-duel-specs" class="lg:col-span-4 rounded-xl bg-slate-950/70 border border-slate-800 p-2 overflow-x-auto"></div>
+        </div>
+      </div>
+
+      <!-- Ranking Table -->
+      <div class="ui-card space-y-3">
+        <h3 class="ui-title-md">Ranking &amp; Especificações</h3>
+        <div class="ui-table-wrap">
+          <table class="ui-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Periférico</th>
+                <th>Especificações-Chave</th>
+                <th class="text-right">Preço &amp; Alvo</th>
+                <th class="text-center">Tendência</th>
+                <th class="text-center">C/B</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="peripherals-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Live Promos -->
+      <div class="ui-card space-y-3">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="ui-title-md">Promoções ao Vivo (Telegram BR)</h3>
+          <span class="ui-badge">Radar 48h</span>
+        </div>
+        <div id="peripherals-promos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TAB: DIVERSOS (AIR FRYER, FRALDAS INFANTIS E BUSCA CUSTOMIZADA)        -->
+    <!-- ===================================================================== -->
+    <section id="tab-misc" class="hidden space-y-5">
+      <div class="ui-card space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <span class="ui-label">Monitor Pessoal &amp; Casa</span>
+            <h2 class="ui-title-xl">Diversos — Air Fryer, Fraldas &amp; Busca Livre</h2>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="misc-custom-query" onkeydown="if(event.key==='Enter')searchMiscLiveNow()" placeholder="Digite qualquer produto (ex: Cafeteira, Creatina, Pampers XG)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-sky-400 w-full sm:w-72" />
+            <button type="button" onclick="searchMiscLiveNow()" class="ui-btn ui-btn--sm ui-btn--primary">🔎 Buscar Agora</button>
+            <button type="button" onclick="saveCustomMiscCategory()" class="ui-btn ui-btn--sm">+ Salvar Categoria</button>
+          </div>
+        </div>
+
+        <div id="misc-categories-bar" class="flex flex-wrap items-center gap-2"></div>
+        <div id="misc-subfilters-wrap"></div>
+        <div id="misc-search-status-banner"></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div class="lg:col-span-8 space-y-5">
+          <div class="ui-card space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="ui-title-md">Promoções Encontradas (Telegram BR)</h3>
+              <span class="ui-badge ui-badge--good">Ordenado p/ melhor custo unitário</span>
+            </div>
+            <div id="misc-promos-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+          </div>
+
+          <div class="ui-card space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="ui-title-md">Catálogo de Referência (Zoom BR)</h3>
+              <span class="ui-badge">Preços comparados</span>
+            </div>
+            <div id="misc-catalog-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-4 ui-card space-y-3">
+          <div>
+            <span class="ui-label">Canais Específicos</span>
+            <h3 class="ui-title-md">Grupos do Telegram (Fraldas &amp; Casa)</h3>
+            <p class="text-xs text-slate-400 mt-1">Canais ativos no Brasil onde aparecem pacotes de fraldas (R$/unid.), Air Fryers e achados diários. Ative ou adicione novos @grupos abaixo:</p>
+          </div>
+          <div class="space-y-2 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <input type="text" id="misc-new-group-input" placeholder="@canal_telegram ou link t.me/..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white" />
+            <div class="flex items-center gap-2">
+              <select id="misc-new-group-focus" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-200">
+                <option value="diapers">Foco: Fraldas &amp; Bebê</option>
+                <option value="both" selected>Foco: Fraldas + Casa / Geral</option>
+                <option value="air_fryer">Foco: Air Fryer / Casa</option>
+              </select>
+              <button type="button" onclick="addCustomMiscTelegramGroup()" class="ui-btn ui-btn--sm ui-btn--primary">+ Adicionar Grupo</button>
+            </div>
+          </div>
+          <div id="misc-telegram-groups-list" class="space-y-2.5"></div>
+        </div>
+      </div>
     </section>
 
     <!-- ===================================================================== -->
@@ -3110,6 +3806,17 @@
           </summary>
           <div class="ui-details-body space-y-3">
             <div id="cfg-ref-laptop-container" class="space-y-3"></div>
+          </div>
+        </details>
+
+        <!-- 1C. MEU SMARTPHONE DE REFERÊNCIA (MODO CELULAR) -->
+        <details id="cfg-ref-smartphone-section" class="hidden ui-details" open>
+          <summary class="ui-details-summary">
+            <span>1. Meu Smartphone de Referência</span>
+            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Celular atual para comparativos</span>
+          </summary>
+          <div class="ui-details-body space-y-3">
+            <div id="cfg-ref-smartphone-container" class="space-y-3"></div>
           </div>
         </details>
 
@@ -3592,15 +4299,22 @@
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
       <span>Montar</span>
     </button>
+    <button type="button" id="bnav-explore" onclick="switchArea('explore')" class="ui-bottom-nav-btn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"></path></svg>
+      <span>Explorar</span>
+    </button>
   </nav>
 
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261124-6"></script>
-  <script src="app_features.js?v=20261124-7"></script>
+  <script src="app.js?v=20261124-7"></script>
+  <script src="app_features.js?v=20261124-9"></script>
   <script src="laptop_mode.js?v=20261124-5"></script>
+  <script src="smartphone_mode.js?v=20261124-1"></script>
+  <script src="peripherals_mode.js?v=20261124-1"></script>
+  <script src="misc_mode.js?v=20261124-1"></script>
   <script src="styles/combo.js?v=20261119-3"></script>
-  <script src="mobile_mode.js?v=20261123-2"></script>
+  <script src="mobile_mode.js?v=20261124-1"></script>
 </body>
 </html>

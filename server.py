@@ -24,6 +24,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, quote
 import urllib.request
 import re
+import unicodedata
 import sources
 import config
 
@@ -254,6 +255,7 @@ DEFAULT_NOTIFY_CATEGORIES = {
     "mobo": True,
     "psu": True,
     "laptop": False,
+    "smartphone": False,
 }
 
 DEFAULT_SPEC_FILTERS = {
@@ -263,7 +265,88 @@ DEFAULT_SPEC_FILTERS = {
     "gpu": {},
     "psu": {},
     "laptop": {},
+    "smartphone": {},
 }
+
+_PHONE_NOISE_TOKENS = {
+    "celular", "smartphone", "tela", "dual", "chip", "sim", "esim", "5g", "4g",
+    "nfc", "ram", "gb", "tb", "de", "com", "para", "sem", "em", "no", "na",
+    "preto", "azul", "branco", "verde", "prata", "titanio", "grafite", "cinza",
+    "rosa", "dourado", "roxo", "laranja", "amarelo", "vermelho", "black", "white",
+}
+_PHONE_TIER_WORDS = ("ultra", "pro", "max", "plus", "fe", "lite", "neo", "fusion")
+
+
+def _strip_accents_lower(text):
+    norm = unicodedata.normalize("NFD", str(text or ""))
+    return "".join(ch for ch in norm if unicodedata.category(ch) != "Mn").lower()
+
+
+def _normalize_phone_tokens(text):
+    low = _strip_accents_lower(text)
+    tokens = []
+    for tok in re.findall(r"[a-z0-9]+", low):
+        if tok in _PHONE_NOISE_TOKENS:
+            continue
+        if re.match(r"^(?:64|128|256|512|1024)(?:gb|tb)?$", tok) or re.match(r"^(?:4|6|8|12|16|24)gb$", tok):
+            continue
+        tokens.append(tok)
+    return tokens
+
+
+def _infer_phone_brand_server(deal, cat_item, specs, txt):
+    b = str(specs.get("brand") or deal.get("brand") or (cat_item or {}).get("brand") or "").strip()
+    if b:
+        return b
+    low = _strip_accents_lower(txt)
+    if re.search(r"\b(iphone|apple)\b", low):
+        return "Apple"
+    if re.search(r"\b(samsung|galaxy)\b", low):
+        return "Samsung"
+    if re.search(r"\b(xiaomi|poco|redmi)\b", low):
+        return "Xiaomi"
+    if re.search(r"\b(motorola|moto\s*[ge]\d+|edge\s*[56]0)\b", low):
+        return "Motorola"
+    if re.search(r"\brealme\b", low):
+        return "Realme"
+    return ""
+
+
+def _smartphone_deal_matches_model(deal, cat_item, model_entry):
+    if isinstance(model_entry, dict):
+        m_slug = str(model_entry.get("slug") or "").strip().lower()
+        m_name = str(model_entry.get("name") or "").strip()
+    else:
+        m_slug = ""
+        m_name = str(model_entry or "").strip()
+
+    if m_slug and str(deal.get("matched_slug") or "").strip().lower() == m_slug:
+        return True
+
+    target_tokens = _normalize_phone_tokens(m_name or m_slug.replace("-", " "))
+    if not target_tokens:
+        return False
+
+    title_raw = str(deal.get("title") or "")
+    matched_raw = str(deal.get("matched_name") or (cat_item or {}).get("name") or "")
+    combined_raw = f"{title_raw} {deal.get('head_text') or ''} {matched_raw}"
+    deal_tokens = set(_normalize_phone_tokens(combined_raw))
+
+    # Strip brand token when checking model core match? Keep brand + model, e.g. ['samsung', 'galaxy', 's25', 'ultra']
+    # Wait: Telegram titles often say "Galaxy S25 Ultra" omitting "Samsung", so allow optional leading brand omit.
+    brand_words = {"samsung", "apple", "xiaomi", "motorola", "realme"}
+    core_target = [t for t in target_tokens if t not in brand_words] or target_tokens
+    if not all(t in deal_tokens for t in core_target):
+        return False
+
+    # Guard against matching "Galaxy S25 Ultra" when user asked only for "Galaxy S25" (and vice versa)
+    deal_title_low = _strip_accents_lower(title_raw)
+    target_set = set(target_tokens)
+    for tw in _PHONE_TIER_WORDS:
+        deal_has_tier = bool(re.search(rf"\b{tw}\b", deal_title_low))
+        if deal_has_tier and tw not in target_set:
+            return False
+    return True
 
 
 def _with_alert_pref_defaults(cfg_dict):
@@ -524,7 +607,7 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
     cfg = _with_alert_pref_defaults(cfg)
     kind = (deal.get("matched_kind") or "gpu").lower().strip()
     cats = cfg.get("notifyCategories") or DEFAULT_NOTIFY_CATEGORIES
-    if not cats.get(kind, kind != "laptop"):
+    if not cats.get(kind, kind not in ("laptop", "smartphone")):
         return False
 
     sf = (cfg.get("specFilters") or {}).get(kind) or {}
@@ -688,6 +771,26 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
             if not is_dgpu:
                 return False
 
+    elif kind == "smartphone":
+        deal_brand = _infer_phone_brand_server(deal, cat_item, specs, txt).lower()
+        req_brands = [str(b).strip().lower() for b in (sf.get("brands") or []) if str(b).strip()]
+        req_models = [m for m in (sf.get("models") or []) if (isinstance(m, dict) and (m.get("slug") or m.get("name"))) or (isinstance(m, str) and m.strip())]
+
+        if req_models:
+            model_brands = set()
+            for m in req_models:
+                mb = _infer_phone_brand_server({"brand": m.get("brand", "")} if isinstance(m, dict) else {}, None, {}, m.get("name", "") if isinstance(m, dict) else str(m)).lower()
+                if mb:
+                    model_brands.add(mb)
+            open_brands = [b for b in req_brands if b not in model_brands]
+            brand_open_hit = bool(deal_brand and deal_brand in open_brands)
+            model_hit = any(_smartphone_deal_matches_model(deal, cat_item, m) for m in req_models)
+            if not (brand_open_hit or model_hit):
+                return False
+        elif req_brands:
+            if not deal_brand or deal_brand not in req_brands:
+                return False
+
     return True
 
 
@@ -713,15 +816,24 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     pass
 
     catalog_by_slug = {}
-    for grp in ("gpus", "cpus", "rams", "motherboards", "psus", "laptops"):
-        kind_name = "gpu" if grp == "gpus" else ("cpu" if grp == "cpus" else ("ram" if grp == "rams" else ("mobo" if grp == "motherboards" else ("psu" if grp == "psus" else "laptop"))))
+    for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu"), ("laptops", "laptop"), ("smartphones", "smartphone")):
         for it in db.get(grp, []):
             if it.get("slug"):
                 catalog_by_slug[it["slug"]] = (kind_name, it)
 
     from promo_radar import scan_live_promotions
     res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id, force=fast_poll, fast_poll=fast_poll)
-    matched = res.get("matched_deals", [])
+    matched = list(res.get("matched_deals", []))
+    if cfg.get("notifyCategories", {}).get("smartphone"):
+        seen_pids = {d.get("post_id") for d in matched if d.get("post_id")}
+        for sd in (res.get("smartphone_deals") or []):
+            sd_copy = dict(sd)
+            sd_copy.setdefault("matched_kind", "smartphone")
+            if not sd_copy.get("is_expired") and sd_copy.get("deal_status") not in ("expired", "out_of_stock"):
+                sd_copy.setdefault("stock_verified", True)
+                sd_copy.setdefault("deal_status", "ok")
+            if sd_copy.get("post_id") not in seen_pids:
+                matched.append(sd_copy)
     history = load_notified_history(reg_id)
     notified_count = 0
 
@@ -828,6 +940,13 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     qualifies = True
                     reasons.append(bf_reason)
 
+        # 5B. Explicit Smartphone alert watch (picked device(s) or explicit max_price)
+        if (d.get("matched_kind") or "").lower() == "smartphone":
+            sp_sf = (cfg.get("specFilters") or {}).get("smartphone") or {}
+            if sp_sf.get("models") or float(sp_sf.get("max_price") or 0) > 0:
+                qualifies = True
+                reasons.append("📱 Smartphone monitorado")
+
         if qualifies:
             if d.get("unverified_memory_type") and not any("DDR4/DDR5" in str(r) for r in reasons):
                 reasons.append("⚠️ Verificar tipo de RAM (DDR4/DDR5)")
@@ -843,7 +962,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         import coupon_tracker
         target_map = {t.get("slug"): float(t.get("max_price") or 0) for t in targets if t.get("slug")}
         cat_candidates = []
-        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu")):
+        for grp, kind_name in (("gpus", "gpu"), ("cpus", "cpu"), ("rams", "ram"), ("motherboards", "mobo"), ("psus", "psu"), ("smartphones", "smartphone")):
             for it in db.get(grp, []):
                 if it.get("slug") == "x99-p4-lga2011" or it.get("is_xeon") or it.get("store_name") == "referencia":
                     continue
@@ -1345,6 +1464,23 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 return self.send_json({"ok": True, "status": coupon_tracker.load_coupon_status()})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/misc/config":
+            try:
+                import misc_scraper
+                return self.send_json({"ok": True, "config": misc_scraper.load_misc_config()})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/misc/search":
+            try:
+                qs = parse_qs(parsed.query)
+                q = qs.get("q", [""])[0].strip()
+                cat = qs.get("cat", ["custom"])[0].strip()
+                ch_raw = qs.get("channels", [""])[0].strip()
+                ch_list = [c.strip() for c in ch_raw.split(",") if c.strip()] if ch_raw else None
+                import misc_scraper
+                return self.send_json(misc_scraper.search_misc_live(q, category_id=cat, channels=ch_list))
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
         return super().do_GET()
 
     def do_POST(self):
@@ -1402,6 +1538,15 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
                 save_alert_config(body)
                 return self.send_json({"ok": True, "config": body})
+            except Exception as e:
+                return self.send_json({"ok": False, "error": str(e)}, status=500)
+        elif parsed.path == "/api/misc/config":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
+                import misc_scraper
+                saved = misc_scraper.save_misc_config(body)
+                return self.send_json({"ok": True, "config": saved})
             except Exception as e:
                 return self.send_json({"ok": False, "error": str(e)}, status=500)
         elif parsed.path == "/api/test-background-alert":

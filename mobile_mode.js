@@ -39,6 +39,21 @@
       ]
     },
     {
+      tbodyId: 'smartphone-cb-table-body',
+      sortFnName: 'setSmartphoneCBSort',
+      sortOptions: [
+        { key: 'my_cb', label: 'Melhor C/B' },
+        { key: 'price', label: 'Menor Preço' },
+        { key: 'ram', label: 'RAM / Armaz.' },
+        { key: 'target', label: 'Preço Alvo' }
+      ]
+    },
+    {
+      tbodyId: 'peripherals-table-body',
+      sortFnName: null,
+      sortOptions: []
+    },
+    {
       tbodyId: 'bf-table-body',
       sortFnName: null,
       sortOptions: []
@@ -90,7 +105,7 @@
     if (low === '#' || (colIdx === 0 && low === '')) return 'rank';
     if (
       colIdx <= 1 &&
-      (low.includes('placa') || low.includes('processador') || low.includes('notebook') || low.includes('modelo'))
+      (low.includes('placa') || low.includes('processador') || low.includes('notebook') || low.includes('smartphone') || low.includes('celular') || low.includes('periférico') || low.includes('produto') || low.includes('modelo'))
     ) {
       return 'name';
     }

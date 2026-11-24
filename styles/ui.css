@@ -874,7 +874,7 @@ html[data-theme="light"] .cb-hard-midline {
 .ui-topbar-context .ui-segmented {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 @media (min-width: 768px) {
@@ -2232,4 +2232,128 @@ select.gca-combo-native {
   color: var(--ui-warn-text);
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  #header-context-toggle {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  #header-context-toggle .ui-segmented-btn {
+    padding: 0.3rem 0.48rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  #smartphone-duel-spec-sheet table,
+  #periph-duel-specs table {
+    display: block;
+    width: 100%;
+  }
+  #smartphone-duel-spec-sheet thead,
+  #periph-duel-specs thead {
+    display: none;
+  }
+  #smartphone-duel-spec-sheet tbody,
+  #periph-duel-specs tbody {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.45rem;
+  }
+  #smartphone-duel-spec-sheet tr,
+  #periph-duel-specs tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.65rem;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius-md);
+    background: var(--ui-bg-elevated);
+  }
+  #smartphone-duel-spec-sheet td,
+  #periph-duel-specs td {
+    display: block;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+  #smartphone-duel-spec-sheet td:first-child,
+  #periph-duel-specs td:first-child {
+    grid-column: 1 / -1;
+    color: var(--ui-text-muted);
+    font-weight: 700;
+  }
+}
+
+/* Smart Autocomplete Picker & Selected Model Pills (Smartphone Alerts) */
+.ui-autocomplete-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.ui-autocomplete-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 60;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--ui-bg-elevated);
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  box-shadow: var(--ui-shadow-md);
+  padding: 0.25rem;
+}
+
+.ui-autocomplete-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: var(--ui-radius-sm);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ui-text-primary);
+  transition: background-color var(--ui-transition), border-color var(--ui-transition);
+}
+
+.ui-autocomplete-item:hover,
+.ui-autocomplete-item.is-highlighted {
+  background: var(--ui-brand-soft);
+  border-color: var(--ui-brand-border);
+}
+
+.ui-model-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--ui-radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--ui-brand-soft);
+  border: 1px solid var(--ui-brand-border);
+  color: var(--ui-text-primary);
+}
+
+.ui-model-pill button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 0.75rem;
+  color: var(--ui-text-muted);
+  cursor: pointer;
+}
+
+.ui-model-pill button:hover {
+  color: var(--ui-bad-text);
 }

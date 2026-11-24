@@ -393,13 +393,17 @@ def fetch_gpu_detail(gpu_item):
     }
 
 def build_database(output_path):
-    prev_laptops = []
+    prev_db = {}
     if os.path.exists(output_path):
         try:
             with open(output_path, 'r', encoding='utf-8') as f:
-                prev_laptops = json.load(f).get('laptops') or []
+                prev_db = json.load(f) or {}
         except Exception:
-            prev_laptops = []
+            prev_db = {}
+    prev_laptops = prev_db.get('laptops') or []
+    prev_smartphones = prev_db.get('smartphones') or []
+    prev_peripherals = prev_db.get('peripherals') or []
+    prev_misc_catalog = prev_db.get('misc_catalog') or {}
 
     print("Fetching live catalog from Hardware Barato...")
     _, gpu_arrays = fetch_json_arrays('/produtos/placas-de-video')
@@ -679,6 +683,52 @@ def build_database(output_path):
     except Exception as e:
         print(f"Warning building laptops catalog: {e}")
 
+    smartphones = list(prev_smartphones or [])
+    try:
+        import smartphone_scraper
+        scraped_phones = smartphone_scraper.build_smartphones_catalog(existing_smartphones=prev_smartphones)
+        if scraped_phones:
+            min_full_ph = max(10, int(len(smartphones) * 0.6))
+            if not smartphones or len(scraped_phones) >= min_full_ph:
+                by_slug = {item.get("slug"): item for item in scraped_phones if item.get("slug")}
+                merged_ph = list(scraped_phones)
+                for prev in smartphones:
+                    if prev.get("slug") and prev["slug"] not in by_slug and len(prev.get("history") or []) >= 5:
+                        merged_ph.append(prev)
+                smartphones = merged_ph
+            else:
+                by_slug = {item.get("slug"): item for item in smartphones if item.get("slug")}
+                for item in scraped_phones:
+                    if item.get("slug"):
+                        by_slug[item["slug"]] = item
+                smartphones = list(by_slug.values())
+    except Exception as e:
+        print(f"Warning building smartphones catalog: {e}")
+
+    peripherals = list(prev_peripherals or [])
+    try:
+        import peripherals_scraper
+        scraped_periph = peripherals_scraper.build_peripherals_catalog(existing_peripherals=prev_peripherals)
+        if scraped_periph:
+            by_slug = {item.get("slug"): item for item in peripherals if item.get("slug")}
+            for item in scraped_periph:
+                if item.get("slug"):
+                    by_slug[item["slug"]] = item
+            peripherals = list(by_slug.values())
+    except Exception as e:
+        print(f"Warning building peripherals catalog: {e}")
+
+    misc_catalog = dict(prev_misc_catalog or {})
+    misc_cfg = {}
+    try:
+        import misc_scraper
+        misc_cfg = misc_scraper.load_misc_config()
+        scraped_misc = misc_scraper.build_misc_catalog(existing_misc=prev_misc_catalog)
+        if scraped_misc:
+            misc_catalog.update(scraped_misc)
+    except Exception as e:
+        print(f"Warning building misc catalog: {e}")
+
     db = {
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "source": "https://www.hardwarebarato.com/",
@@ -687,13 +737,17 @@ def build_database(output_path):
         "rams": rams,
         "motherboards": mobos,
         "psus": psus,
-        "laptops": laptops
+        "laptops": laptops,
+        "smartphones": smartphones,
+        "peripherals": peripherals,
+        "misc_catalog": misc_catalog,
+        "misc_config": misc_cfg
     }
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(db, f, ensure_ascii=False, indent=2)
-    print(f"Database saved to {output_path} ({len(enriched_gpus)} GPUs, {len(cpus)} CPUs, {len(rams)} RAMs, {len(mobos)} Mobos, {len(psus)} PSUs, {len(laptops)} Laptops)")
+    print(f"Database saved to {output_path} ({len(enriched_gpus)} GPUs, {len(cpus)} CPUs, {len(rams)} RAMs, {len(mobos)} Mobos, {len(psus)} PSUs, {len(laptops)} Laptops, {len(smartphones)} Smartphones, {len(peripherals)} Peripherals)")
     return db
 
 
@@ -777,6 +831,22 @@ def refresh_live_catalog_prices(db_path):
         dropped += lap_drop
     except Exception as e:
         print(f"[Live Catalog Refresh] Laptop refresh skipped: {e}")
+
+    try:
+        import smartphone_scraper
+        ph_upd, ph_drop = smartphone_scraper.refresh_live_smartphone_prices(db)
+        updated += ph_upd
+        dropped += ph_drop
+    except Exception as e:
+        print(f"[Live Catalog Refresh] Smartphone refresh skipped: {e}")
+
+    try:
+        import peripherals_scraper
+        pr_upd, pr_drop = peripherals_scraper.refresh_live_peripheral_prices(db)
+        updated += pr_upd
+        dropped += pr_drop
+    except Exception as e:
+        print(f"[Live Catalog Refresh] Peripherals refresh skipped: {e}")
 
     db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(db_path, 'w', encoding='utf-8') as f:

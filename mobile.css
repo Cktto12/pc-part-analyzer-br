@@ -83,7 +83,7 @@
 
   /* 4. Bottom Navigation Bar (5 thumb targets with safe-area padding) */
   #mobile-bottom-nav.ui-bottom-nav {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     height: calc(4.15rem + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
