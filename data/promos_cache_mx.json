@@ -1,8 +1,8 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "18:32:22",
-  "last_sitewise_test_at": "2026-11-25 18:32:22",
+  "scanned_at": "18:37:01",
+  "last_sitewise_test_at": "2026-11-25 18:37:01",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -14,7 +14,57 @@
   "smartphone_deals": [],
   "peripheral_deals": [],
   "misc_deals": [],
-  "misc_channels": [],
+  "misc_channels": [
+    {
+      "id": "ofertasdospequenos",
+      "name": "Ofertas Dos Pequenos",
+      "focus": "diapers",
+      "desc": "Especialista em Fraldas (Pampers, Huggies, Babysec) e itens infantis",
+      "enabled": true
+    },
+    {
+      "id": "babyofertas",
+      "name": "Baby Ofertas",
+      "focus": "diapers",
+      "desc": "Promoções diárias de fraldas, lenços umedecidos e enxoval",
+      "enabled": true
+    },
+    {
+      "id": "promobebe",
+      "name": "PromoBebê & Fraldas",
+      "focus": "diapers",
+      "desc": "Alertas de pacotes mega/hiper de fraldas e R$/unidade",
+      "enabled": true
+    },
+    {
+      "id": "pechinchou",
+      "name": "Pechinchou",
+      "focus": "both",
+      "desc": "Air Fryers, eletroportáteis, fraldas e cupons Shopee/Amazon/ML",
+      "enabled": true
+    },
+    {
+      "id": "nerdofertas",
+      "name": "Nerd Ofertas",
+      "focus": "both",
+      "desc": "Casa inteligente, Air Fryers e descontos gerais BR",
+      "enabled": true
+    },
+    {
+      "id": "pelandobr",
+      "name": "Pelando BR",
+      "focus": "both",
+      "desc": "Curadoria comunitária de fraldas, cozinha e achados",
+      "enabled": true
+    },
+    {
+      "id": "escolhasegura",
+      "name": "EscolhaSegura",
+      "focus": "air_fryer",
+      "desc": "Reviews e alertas de Air Fryer, TVs e eletrodomésticos",
+      "enabled": true
+    }
+  ],
   "recent_feed": [
     {
       "post_id": "pdmx/1212958",
@@ -34,7 +84,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1212958",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 26.0
+      "age_hours": 26.1
     },
     {
       "post_id": "pdmx/1212895",
@@ -54,7 +104,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1212895",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 36.0
+      "age_hours": 36.1
     },
     {
       "post_id": "pdmx/1212877",
@@ -74,7 +124,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1212877",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 37.3
+      "age_hours": 37.4
     },
     {
       "post_id": "pdmx/1212847",
@@ -94,7 +144,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1212847",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 39.1
+      "age_hours": 39.2
     },
     {
       "post_id": "pdmx/1212756",
@@ -114,7 +164,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1212756",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 46.0
+      "age_hours": 46.1
     }
   ],
   "coupon_status": {
@@ -332,7 +382,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-        "updated_at": "2026-11-25 18:27:18"
+        "updated_at": "2026-11-25 18:32:22"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
         "status": "untested",
@@ -343,7 +393,7 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-        "updated_at": "2026-11-25 18:27:18"
+        "updated_at": "2026-11-25 18:32:23"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
         "status": "untested",
@@ -354,9 +404,9 @@
         "coupon_status": null,
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-        "updated_at": "2026-11-25 18:27:19"
+        "updated_at": "2026-11-25 18:32:24"
       }
     },
-    "updated_at": "2026-11-25 18:27:19"
+    "updated_at": "2026-11-25 18:32:24"
   }
 }
