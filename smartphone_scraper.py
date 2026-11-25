@@ -29,6 +29,12 @@ SCRAPER_HEADERS = {
 
 ZOOM_SMARTPHONE_SHELVES = [
     "/celular",
+    "/celular/samsung/galaxy-s26",
+    "/celular/samsung/galaxy-s24",
+    "/search?q=galaxy+s26+fe",
+    "/search?q=galaxy+s24+ultra",
+    "/search?q=galaxy+s24+plus",
+    "/search?q=galaxy+s24+fe",
     "/celular?page=2",
     "/celular?page=3",
     "/celular/samsung",
@@ -59,6 +65,25 @@ ZOOM_SMARTPHONE_SHELVES = [
     "/search?q=pixel+9",
     "/search?q=realme+gt",
     "/search?q=asus+rog+phone",
+]
+
+PINNED_SMARTPHONE_SLUGS = [
+    # Samsung Galaxy S26 Lineup (8 models)
+    "celular-samsung-galaxy-s26-5g-256gb",
+    "celular-samsung-galaxy-s26-5g-512gb-12-gb",
+    "celular-samsung-galaxy-s26-plus-5g-256gb",
+    "celular-samsung-galaxy-s26-plus-5g-512gb-12-gb",
+    "celular-samsung-galaxy-s26-ultra-5g-256gb",
+    "celular-samsung-galaxy-s26-ultra-5g-512gb",
+    "celular-samsung-galaxy-s26-ultra-5g-1tb",
+    "celular-samsung-galaxy-s26-fe-5g-128gb-8-gb",
+    # Samsung Galaxy S24 Lineup (6 models)
+    "smartphone-samsung-galaxy-s24-128gb-5g",
+    "smartphone-samsung-galaxy-s24-plus-5g-512gb-camera-tripla",
+    "smartphone-samsung-galaxy-s24-ultra-5g-256gb-camera-quadrupla",
+    "smartphone-samsung-galaxy-s24-ultra-5g-512gb-camera-quadrupla",
+    "celular-samsung-galaxy-s24-fe-5g-128gb-8-gb",
+    "celular-samsung-galaxy-s24-fe-5g-256gb-8-gb",
 ]
 
 # Mobile SoC benchmark table:
@@ -235,8 +260,8 @@ def _detect_soc(text, model_name):
 
 
 def fetch_zoom_smartphone_listings():
-    seen_slugs = set()
-    candidates = []
+    hit_by_slug = {}
+    shelf_ordered = []
 
     def _fetch_shelf(path):
         url = ZOOM_BASE_URL + path
@@ -261,7 +286,7 @@ def fetch_zoom_smartphone_listings():
             slug = (h.get("seoUrl") or "").strip().lower()
             name = (h.get("name") or "").strip()
             raw_url = (h.get("url") or "").lower()
-            if not slug or slug in seen_slugs:
+            if not slug or slug in hit_by_slug:
                 continue
             if not (raw_url.startswith("/celular/") or slug.startswith("celular-") or slug.startswith("smartphone-") or "iphone" in slug):
                 continue
@@ -276,10 +301,24 @@ def fetch_zoom_smartphone_listings():
                 price_f = 0.0
             if price_f < 420 or price_f > 21000:
                 continue
-            seen_slugs.add(slug)
+            hit_by_slug[slug] = h
+            shelf_ordered.append(h)
+
+    seen_slugs = set()
+    candidates = []
+    for sl in PINNED_SMARTPHONE_SLUGS:
+        if sl in seen_slugs:
+            continue
+        seen_slugs.add(sl)
+        candidates.append(hit_by_slug.get(sl) or {"seoUrl": sl, "url": f"/celular/{sl}", "name": sl})
+
+    for h in shelf_ordered:
+        sl = (h.get("seoUrl") or "").strip().lower()
+        if sl and sl not in seen_slugs:
+            seen_slugs.add(sl)
             candidates.append(h)
 
-    return candidates[:130]
+    return candidates[:165]
 
 
 def enrich_smartphone(raw):
@@ -319,7 +358,14 @@ def enrich_smartphone(raw):
         else:
             ram_gb = 12 if price_brl >= 3200 else (8 if price_brl >= 1100 else 4)
 
-    storage_gb = _first_int(attrs.get("Memória Interna"), None)
+    raw_st_vals = attrs.get("Memória Interna") or []
+    raw_st_str = " ".join(str(x) for x in raw_st_vals)
+    if re.search(r"\b1\s*tb\b", raw_st_str, re.I) or re.search(r"\b1\s*tb\b", low):
+        storage_gb = 1024
+    else:
+        storage_gb = _first_int(raw_st_vals, None)
+        if storage_gb and storage_gb <= 4:
+            storage_gb *= 1024
     if not storage_gb:
         m_st = re.search(r"\b(64|128|256|512)\s*gb\b|\b(1)\s*tb\b", low)
         if m_st:
@@ -339,7 +385,20 @@ def enrich_smartphone(raw):
 
     screen_inches = _first_float(attrs.get("Tamanho da Tela"), None)
     if not screen_inches or screen_inches < 4.5 or screen_inches > 8.5:
-        screen_inches = 6.9 if "ultra" in low or "pro max" in low else (6.1 if ("iphone 15" in low or "iphone 14" in low or ("s24" in low and "ultra" not in low and "plus" not in low)) else 6.67)
+        if "s26 ultra" in low:
+            screen_inches = 6.9
+        elif "s24 ultra" in low or "s25 ultra" in low:
+            screen_inches = 6.8
+        elif "ultra" in low or "pro max" in low:
+            screen_inches = 6.9
+        elif is_samsung and ("plus" in low or "fe" in low) and "s2" in low:
+            screen_inches = 6.7
+        elif ("s24" in low or "s25" in low or "s26" in low) and "ultra" not in low and "plus" not in low and "fe" not in low:
+            screen_inches = 6.2
+        elif "iphone 15" in low or "iphone 14" in low:
+            screen_inches = 6.1
+        else:
+            screen_inches = 6.67
     screen_type_raw = " ".join(attrs.get("Tipo de Tela") or [])
     if is_apple:
         screen_type = "LTPO Super Retina XDR OLED" if ("pro" in low or "17" in low or "18" in low) else "Super Retina XDR OLED"
@@ -377,7 +436,7 @@ def enrich_smartphone(raw):
             screen_res = "HD+ (1600x720)"
 
     if is_ltpo:
-        brightness_nits = 2600 if ("s25" in low or "s26" in low or "17" in low or "18" in low or "16 pro" in low or "pixel 10" in low or "pixel 9 pro" in low) else 2000
+        brightness_nits = 2600 if ("s24" in low or "s25" in low or "s26" in low or "17" in low or "18" in low or "16 pro" in low or "pixel 10" in low or "pixel 9 pro" in low) else 2000
     elif is_oled:
         brightness_nits = 1600 if price_brl >= 2200 else 1200
     else:
@@ -442,7 +501,7 @@ def enrich_smartphone(raw):
             battery_mah = 4850 if ("pro max" in low and ("17" in low or "18" in low)) else (4685 if "pro max" in low else (4050 if "18" in low else (3900 if "17" in low else (3561 if "16" in low else 3349))))
         elif "poco x7 pro" in low or "poco x8" in low or "f7" in low or "f8" in low:
             battery_mah = 6000
-        elif "m" in low and is_samsung:
+        elif is_samsung and re.search(r"\bgalaxy\s*m\d+", low):
             battery_mah = 6000
         else:
             battery_mah = 5000
@@ -659,9 +718,22 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
         print(f"Warning fetching smartphone {slug}: {e}")
 
     price_brl = float(best_offer.get("price") or hit.get("price") or 0.0)
+    if price_brl <= 0 and ph_days:
+        valid_days = []
+        for d_item in ph_days:
+            try:
+                dp = float(d_item.get("price") or 0)
+            except (TypeError, ValueError):
+                dp = 0.0
+            ds = str(d_item.get("date") or "")[:10]
+            if ds and dp > 400:
+                valid_days.append((ds, dp))
+        if valid_days:
+            valid_days.sort(key=lambda x: x[0])
+            price_brl = valid_days[-1][1]
     if best_offer.get("imageUrl"):
         img_url = best_offer["imageUrl"]
-    store_name = best_offer.get("sellerName") or "Loja BR"
+    store_name = best_offer.get("sellerName") or "Zoom BR (Ref.)"
     num_parcels = best_offer.get("numParcels") or 10
     total_parceled = float(best_offer.get("totalParceledValue") or price_brl)
 

@@ -3311,12 +3311,38 @@ const BF_FAMILIES = {
   // --- SMARTPHONE FAMILIES (DYNAMIC ZOOM CATALOG) ---
   phone_flagship: {
     kind: 'smartphone',
-    label: '📱 Smartphones Flagship & Inter. Pro (Galaxy S, iPhone Pro, Poco F)',
+    label: '📱 Smartphones Flagship & Inter. Pro (Galaxy S26/S25/S24, iPhone, Poco F)',
+    maxItems: 14,
     filterFn: s => s.category === 'flagship' || s.category === 'upper_mid'
+  },
+  phone_galaxy_s26: {
+    kind: 'smartphone',
+    label: '🚀 Samsung Galaxy S26 Lineup (S26 / S26+ / S26 Ultra / S26 FE)',
+    maxItems: 12,
+    filterFn: s => /galaxy\s*s26\b/i.test(s.name || '')
+  },
+  phone_galaxy_s24: {
+    kind: 'smartphone',
+    label: '🔥 Samsung Galaxy S24 Lineup (S24 / S24+ / S24 Ultra / S24 FE)',
+    maxItems: 12,
+    filterFn: s => /galaxy\s*s24\b/i.test(s.name || '')
+  },
+  phone_galaxy_s25: {
+    kind: 'smartphone',
+    label: '⚡ Samsung Galaxy S25 Lineup (S25 / S25+ / S25 Ultra / Edge / FE)',
+    maxItems: 12,
+    filterFn: s => /galaxy\s*s25\b/i.test(s.name || '')
+  },
+  phone_iphone: {
+    kind: 'smartphone',
+    label: '🍎 Apple iPhone Lineup (iPhone 13–17 Pro Max)',
+    maxItems: 12,
+    filterFn: s => s.brand === 'Apple' || /iphone/i.test(s.name || '')
   },
   phone_midrange: {
     kind: 'smartphone',
     label: '🔥 Smartphones Intermediários & Entrada 5G (Galaxy A, Redmi Note, Poco X)',
+    maxItems: 12,
     filterFn: s => s.category === 'midrange' || s.category === 'entry'
   },
 
@@ -3681,7 +3707,7 @@ function renderBlackFridayTab() {
   if (famKey === 'custom' && STATE.bfCustomSlugs && STATE.bfCustomSlugs.size > 0) {
     items = [...STATE.bfCustomSlugs].map(s => pool.find(x => x.slug === s)).filter(Boolean);
   } else if (fam.filterFn) {
-    items = pool.filter(fam.filterFn).slice(0, 10);
+    items = pool.filter(fam.filterFn).slice(0, fam.maxItems || 10);
   } else {
     const slugsToUse = (fam.slugs && fam.slugs.length) ? fam.slugs : pool.slice(0, 8).map(x => x.slug);
     items = slugsToUse.map(s => pool.find(x => x.slug === s)).filter(Boolean);

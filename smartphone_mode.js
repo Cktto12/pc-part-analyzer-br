@@ -154,7 +154,7 @@ function _computeSmartphoneAiMemoryRaw(sp) {
   const ramFactor = ram >= 12 ? 1.24 : (ram >= 8 ? 1.08 : 0.85);
   const storBonus = Math.min(900, Math.sqrt(storage) * 32);
   const isFlagshipAi = (sp.brand === 'Apple' && /15\s*Pro|16|17/i.test(sp.name)) ||
-    (sp.brand === 'Samsung' && /\bS2[345]\b/i.test(sp.name)) || npu >= 35;
+    (sp.brand === 'Samsung' && /\bS2[3456]\b/i.test(sp.name)) || npu >= 35;
   const aiBonus = isFlagshipAi ? 650 : 0;
   return Math.max(600, Math.round((npu * 78 + ram * 260 + storBonus + aiBonus) * ufsMult * ramFactor));
 }
@@ -363,7 +363,7 @@ function populateSmartphoneSelectors() {
     st.smartphoneDuelBaseSlug = mid.slug;
   }
   if (!st.smartphoneDuelCandSlug || !valid.has(st.smartphoneDuelCandSlug) || st.smartphoneDuelCandSlug === st.smartphoneDuelBaseSlug) {
-    const top = pool.find(s => /s24|s25|iphone\s*1[567]|poco\s*f/i.test(s.name) && s.slug !== st.smartphoneDuelBaseSlug) || sortedByScore[0];
+    const top = pool.find(s => /s26|s25|s24|iphone\s*1[567]|poco\s*f/i.test(s.name) && s.slug !== st.smartphoneDuelBaseSlug) || sortedByScore[0];
     st.smartphoneDuelCandSlug = top.slug;
   }
   if (!st.smartphoneCbRelBaseSlug || !valid.has(st.smartphoneCbRelBaseSlug)) {
@@ -443,7 +443,7 @@ function applySmartphoneDuelPreset(presetId) {
   const byCb = pool.slice().sort((a, b) => Number(b._myCBScore || 0) - Number(a._myCBScore || 0));
 
   if (presetId === 'samsung_vs_apple') {
-    const gal = findMatch(/galaxy\s*s2[45]/i, pool.filter(s => s.brand === 'Samsung')) || byScore[0];
+    const gal = findMatch(/galaxy\s*s2[654]/i, pool.filter(s => s.brand === 'Samsung')) || byScore[0];
     const iph = findMatch(/iphone\s*1[567]/i, pool.filter(s => s.brand === 'Apple')) || byScore[1];
     st.smartphoneDuelBaseSlug = gal.slug;
     st.smartphoneDuelCandSlug = iph.slug;
