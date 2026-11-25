@@ -138,7 +138,7 @@ def parse_diaper_specs(title, price_brl):
         if 1 <= p1 <= 12 and 12 <= p2 <= 250:
             units = p1 * p2
     if not units:
-        m_u = re.search(r"(?:com\s*|c/\s*)?(\d{2,3})\s*(?:unid(?:ades?)?|un\.?|tiras?|fraldas?)\b", low)
+        m_u = re.search(r"(?:com\s*|c/\s*|x\s*)?(\d{2,3})\s*(?:unid(?:ades?)?|un\.?|tiras?|fraldas?|st[üu]ck|stk\.?|couches|pa[ñn]ales|pcs|pieces|pi[èe]ces)\b", low)
         if m_u:
             u_val = int(m_u.group(1))
             if 10 <= u_val <= 600:

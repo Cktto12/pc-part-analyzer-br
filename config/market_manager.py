@@ -11,13 +11,13 @@ from typing import Dict, Any, List, Optional
 CONFIG_DIR = os.path.dirname(os.path.abspath(__file__))
 REGIONS_DIR = os.path.join(CONFIG_DIR, "regions")
 ACTIVE_CONFIG_PATH = os.path.join(CONFIG_DIR, "market_config.json")
-ALLOWED_REGIONS = ("br", "mx")
+ALLOWED_REGIONS = ("br", "mx", "eu")
 
 # In-memory cache for fast lookups
 _CACHED_CONFIG: Optional[Dict[str, Any]] = None
 
 def get_market_config(force_reload: bool = False) -> Dict[str, Any]:
-    """Returns the currently active market configuration dictionary (restricted to br and mx)."""
+    """Returns the currently active market configuration dictionary (restricted to br, mx, eu)."""
     global _CACHED_CONFIG
     if not force_reload and _CACHED_CONFIG is not None:
         if _CACHED_CONFIG.get("region_id") in ALLOWED_REGIONS:
@@ -33,7 +33,7 @@ def get_market_config(force_reload: bool = False) -> Dict[str, Any]:
         except Exception:
             pass
 
-    # If active config was set to a shut-down region (us/uk/eu), reset automatically to Brazil ('br')
+    # If active config was set to an unsupported/shut-down region (us/uk), reset automatically to Brazil ('br')
     br_path = os.path.join(REGIONS_DIR, "br.json")
     if os.path.exists(br_path):
         with open(br_path, "r", encoding="utf-8") as f:
@@ -58,7 +58,7 @@ def save_market_config(cfg: Dict[str, Any]) -> bool:
 
 
 def list_available_regions() -> List[Dict[str, Any]]:
-    """Exposes ONLY Brasil ('br') and México ('mx'). US, UK, and EU are kept shut and undisclosed."""
+    """Exposes Brasil ('br'), México ('mx'), and European Union ('eu'). US and UK remain shut."""
     regions = []
     if not os.path.exists(REGIONS_DIR):
         return regions
@@ -88,7 +88,7 @@ def list_available_regions() -> List[Dict[str, Any]]:
 
 
 def set_active_region(region_id: str) -> bool:
-    """Activates only allowed regions ('br' or 'mx'). Rejects shut-down regions."""
+    """Activates allowed regions ('br', 'mx', 'eu'). Rejects shut-down regions."""
     global _CACHED_CONFIG
     region_id = (region_id or "").lower().strip()
     if region_id not in ALLOWED_REGIONS:

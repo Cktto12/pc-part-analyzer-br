@@ -176,6 +176,14 @@
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         <span>Configurações</span>
       </button>
+      <div class="px-2 pt-2 border-t border-slate-800/80 space-y-1">
+        <label for="select-market-region-sidebar" class="text-xs font-semibold text-slate-400 block">Mercado / Moeda</label>
+        <select id="select-market-region-sidebar" onchange="changeMarketRegion(this.value)" class="w-full bg-slate-900 text-amber-300 font-bold text-xs border border-slate-700 rounded-lg p-2 focus:outline-none cursor-pointer">
+          <option value="br" class="bg-slate-900 text-white font-medium">🇧🇷 Brasil (BRL - R$)</option>
+          <option value="mx" class="bg-slate-900 text-white font-medium">🇲🇽 México (MXN - $)</option>
+          <option value="eu" class="bg-slate-900 text-white font-medium">🇪🇺 European Union (EUR - €)</option>
+        </select>
+      </div>
       <div class="px-2 pt-2 border-t border-slate-800/80">
         <div class="flex items-center gap-2">
           <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></div>
@@ -1226,7 +1234,7 @@
             <div class="h-64"><canvas id="chart-periph-main-radar"></canvas></div>
           </div>
           <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Preços (Zoom BR)</h3>
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Preços</h3>
             <div class="h-64"><canvas id="chart-periph-main-history"></canvas></div>
           </div>
         </div>
@@ -1249,11 +1257,11 @@
         <div id="misc-main-duel-verdict" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Comparativo por Eixo (R$/Unid., Economia, Qualidade)</h3>
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Comparativo por Eixo (Unid., Economia, Qualidade)</h3>
             <div class="h-64"><canvas id="chart-misc-main-radar"></canvas></div>
           </div>
           <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
-            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Preços Diário (Zoom BR)</h3>
+            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Histórico de Preços Diário</h3>
             <div class="h-64"><canvas id="chart-misc-main-history"></canvas></div>
           </div>
         </div>
@@ -1644,7 +1652,7 @@
         <div class="ui-card">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
             <div class="flex items-center gap-2">
-              <h3 id="laptop-cb-chart-title" class="ui-card-title">Mapa de Eficiência de Notebooks: Preço (R$) vs Custo-Benefício (0–100)</h3>
+              <h3 id="laptop-cb-chart-title" class="ui-card-title">Mapa de Eficiência de Notebooks: Preço vs Custo-Benefício (0–100)</h3>
               <span class="ui-info ui-info--bottom">
                 <button type="button" class="ui-info-trigger" aria-label="Sobre o mapa de notebooks">i</button>
                 <span class="ui-info-popover" role="tooltip">Clique em qualquer ponto para enviar o notebook ao Duelo.</span>
@@ -1770,7 +1778,7 @@
 
         <div class="ui-card">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <h3 id="smartphone-cb-chart-title" class="ui-card-title">Mapa de Eficiência de Smartphones: Preço (R$) vs Custo-Benefício (0–100)</h3>
+            <h3 id="smartphone-cb-chart-title" class="ui-card-title">Mapa de Eficiência de Smartphones: Preço vs Custo-Benefício (0–100)</h3>
             <div class="ui-segmented">
               <button type="button" id="smartphone-cb-chart-btn-benefit" onclick="setSmartphoneCBChartMetric('benefit')" class="ui-segmented-btn is-active">Custo-Benefício</button>
               <button type="button" id="smartphone-cb-chart-btn-benchmark" onclick="setSmartphoneCBChartMetric('benchmark')" class="ui-segmented-btn">Score Contextual</button>
@@ -1834,13 +1842,13 @@
           <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
             <div>
               <span class="ui-label">Ranking Diversos</span>
-              <h2 class="ui-title-lg">Custo-Benefício — Air Fryers (R$/L) &amp; Fraldas (R$/unid.)</h2>
+              <h2 class="ui-title-lg">Custo-Benefício — Air Fryers (Preço/L) &amp; Fraldas (Preço/unid.)</h2>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               <input type="text" id="misc-cb-search" oninput="renderMiscCBView()" placeholder="Filtrar marca, tamanho, modelo..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white w-56 focus:outline-none focus:border-sky-400" />
               <select id="misc-cb-sort" onchange="renderMiscCBView()" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-200">
                 <option value="cb" selected>Melhor Custo-Benefício</option>
-                <option value="unit_asc">Menor R$/Litro ou R$/Fralda</option>
+                <option value="unit_asc">Menor Preço/Litro ou Preço/Fralda</option>
                 <option value="price_asc">Menor Preço Total</option>
                 <option value="price_desc">Maior Preço Total</option>
               </select>
@@ -4604,7 +4612,7 @@
         <details class="ui-details">
           <summary class="ui-details-summary">
             <span>5. Região, Mercado &amp; Moeda</span>
-            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">Brasil (R$) ou México ($)</span>
+            <span class="text-xs text-slate-400 ml-auto mr-2 hidden sm:inline">País, Mercado &amp; Moeda Ativa</span>
           </summary>
           <div class="ui-details-body">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4613,6 +4621,7 @@
                 <select id="cfg-select-market-region" onchange="changeMarketRegion(this.value)" class="w-full bg-slate-900 text-amber-300 font-bold text-xs border border-slate-700 rounded-lg p-2.5 focus:outline-none cursor-pointer">
                   <option value="br" class="bg-slate-900 text-white font-medium">🇧🇷 Brasil (BRL - R$)</option>
                   <option value="mx" class="bg-slate-900 text-white font-medium">🇲🇽 México (MXN - $)</option>
+                  <option value="eu" class="bg-slate-900 text-white font-medium">🇪🇺 European Union (EUR - €)</option>
                 </select>
               </div>
               <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs ui-mono" id="cfg-market-monetary-preview">
@@ -4706,12 +4715,12 @@
   <!-- Floating Deal Notification Toast Container (max 1 compact toast at a time) -->
   <div id="promo-toast-container" class="ui-toast-host" aria-live="polite"></div>
 
-  <script src="app.js?v=20261124-8"></script>
-  <script src="app_features.js?v=20261125-s26"></script>
-  <script src="laptop_mode.js?v=20261124-5"></script>
-  <script src="smartphone_mode.js?v=20261125-s26"></script>
-  <script src="peripherals_mode.js?v=20261124-2"></script>
-  <script src="misc_mode.js?v=20261124-2"></script>
+  <script src="app.js?v=20261125-eu1"></script>
+  <script src="app_features.js?v=20261125-eu1"></script>
+  <script src="laptop_mode.js?v=20261125-eu1"></script>
+  <script src="smartphone_mode.js?v=20261125-eu1"></script>
+  <script src="peripherals_mode.js?v=20261125-eu1"></script>
+  <script src="misc_mode.js?v=20261125-eu1"></script>
   <script src="styles/combo.js?v=20261119-3"></script>
   <script src="mobile_mode.js?v=20261124-2"></script>
 </body>

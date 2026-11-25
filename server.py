@@ -13,6 +13,7 @@ import base64
 import socket
 import argparse
 import threading
+import concurrent.futures
 import webbrowser
 from datetime import datetime, timezone
 import subprocess
@@ -443,16 +444,20 @@ def load_alert_config(reg_id=None):
         except Exception:
             pass
 
+    reg_cfg_path = get_alert_config_path(reg)
     base_cfg = {}
-    if os.path.exists(ALERT_CONFIG_PATH):
-        try:
-            with open(ALERT_CONFIG_PATH, "r", encoding="utf-8") as f:
-                base_cfg = json.load(f)
-        except Exception:
-            pass
+    for cand_path in (reg_cfg_path, ALERT_CONFIG_PATH):
+        if os.path.exists(cand_path):
+            try:
+                with open(cand_path, "r", encoding="utf-8") as f:
+                    base_cfg = json.load(f)
+                if base_cfg:
+                    break
+            except Exception:
+                pass
 
     if reg == "mx":
-        return _with_alert_pref_defaults({
+        return _with_alert_pref_defaults(base_cfg if os.path.exists(reg_cfg_path) else {
             "notifyEnabled": base_cfg.get("notifyEnabled", True),
             "intervalMins": base_cfg.get("intervalMins", 10),
             "notifyWinToast": base_cfg.get("notifyWinToast", True),
@@ -473,6 +478,30 @@ def load_alert_config(reg_id=None):
                 {"slug": "rtx-5060", "name": "RTX 5060", "max_price": 8500},
                 {"slug": "rtx-5070", "name": "RTX 5070", "max_price": 14000},
                 {"slug": "rtx-4060", "name": "RTX 4060", "max_price": 6800}
+            ]
+        })
+    if reg == "eu":
+        return _with_alert_pref_defaults(base_cfg if os.path.exists(reg_cfg_path) else {
+            "notifyEnabled": base_cfg.get("notifyEnabled", True),
+            "intervalMins": base_cfg.get("intervalMins", 10),
+            "notifyWinToast": base_cfg.get("notifyWinToast", True),
+            "notifyPhone": base_cfg.get("notifyPhone", True),
+            "phoneService": base_cfg.get("phoneService", "ntfy"),
+            "ntfyTopic": base_cfg.get("ntfyTopic", "meu_alerta_gpu_cecatto"),
+            "ntfyRing": base_cfg.get("ntfyRing", False),
+            "ntfyPriority": base_cfg.get("ntfyPriority", "default"),
+            "trigCB": True,
+            "notifyMinCB": 90,
+            "trigBF": True,
+            "bfMode": "user_or_low",
+            "trigHB": True,
+            "hbMinBrl": 25,
+            "hbMinPct": 8,
+            "notifyLogic": "OR",
+            "custom_targets": [
+                {"slug": "rtx-5060", "name": "RTX 5060", "max_price": 320},
+                {"slug": "rtx-5070", "name": "RTX 5070", "max_price": 550},
+                {"slug": "rx-9060-xt-16gb", "name": "RX 9060 XT 16GB", "max_price": 380}
             ]
         })
     return _with_alert_pref_defaults(base_cfg or {
@@ -550,13 +579,13 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
     price = d.get("price_brl", 0)
     name = d.get("matched_name") or d.get("title", "Hardware")
     coup = (coup_code or d.get("coupon_code") or d.get("coupon_info") or "").strip()
-    coupon_word = "Cupón" if reg == "mx" else "Cupom"
+    coupon_word = "Cupón" if reg == "mx" else ("Code" if reg == "eu" else "Cupom")
     coupon_tag = f" (c/ {coupon_word}: {coup})" if coup else ""
     fmt_p = config.format_currency(price, short=False, region_id=reg)
-    prefix = "[MX] 🇲🇽 " if reg == "mx" else "🔥 "
-    title = f"{prefix}{name} por {fmt_p}{coupon_tag}"
+    prefix = "[MX] 🇲🇽 " if reg == "mx" else ("[EU] 🇪🇺 " if reg == "eu" else "🔥 ")
+    title = f"{prefix}{name} — {fmt_p}{coupon_tag}" if reg == "eu" else f"{prefix}{name} por {fmt_p}{coupon_tag}"
 
-    reasons_line = " • ".join(reasons_list) if reasons_list else ("🔥 Oferta Detectada" if reg == "br" else "🔥 Oferta en México")
+    reasons_line = " • ".join(reasons_list) if reasons_list else ("🔥 Oferta Detectada" if reg == "br" else ("🔥 EU Deal Detected" if reg == "eu" else "🔥 Oferta en México"))
     bf_banner = (d.get("bf_alert_banner") or "").strip()
     bf_banner_line = f"{bf_banner}\n" if bf_banner else ""
     mem_warn_text = "⚠️ Conferir se é DDR4 ou DDR5 no anúncio!" if d.get("unverified_memory_type") else ""
@@ -565,10 +594,10 @@ def format_deal_notification(d, reasons_list=None, coup_code=None, region_id=Non
 
     savings_brl = d.get("savings_vs_hb_brl", 0)
     hb_price = d.get("hb_price_brl", 0)
-    ref_word = "Ahorro vs Ref" if reg == "mx" else "Economia vs Ref"
+    ref_word = "Ahorro vs Ref" if reg == "mx" else ("Saving vs Ref" if reg == "eu" else "Economia vs Ref")
     diff_line = f"\n📉 {ref_word}: -{config.format_currency(savings_brl, short=True, region_id=reg)} (Ref: {config.format_currency(hb_price, short=True, region_id=reg)})" if savings_brl > 0 else ""
     store_or_ch = d.get("store_name") or f"@{d.get('channel_id', 'radar')}"
-    channel_word = "Fuente" if reg == "mx" else "Fonte"
+    channel_word = "Fuente" if reg == "mx" else ("Source" if reg == "eu" else "Fonte")
     channel_line = f"\n📢 {channel_word}: {store_or_ch}"
     deal_title = (d.get("title") or "").strip()[:140]
 
@@ -1060,8 +1089,8 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
 
     br_channels = {"ofertasadrenaline", "peperaiohardware", "iskandarsouza", "benchpromos", "kabumofertas", "nerdofertas"}
 
-    min_cb = int(cfg.get("notifyMinCB", 90 if reg_id == "mx" else 92))
-    hb_brl = float(cfg.get("hbMinBrl", 600 if reg_id == "mx" else 150))
+    min_cb = int(cfg.get("notifyMinCB", 90 if reg_id in ("mx", "eu") else 92))
+    hb_brl = float(cfg.get("hbMinBrl", 600 if reg_id == "mx" else (25 if reg_id == "eu" else 150)))
     hb_pct = float(cfg.get("hbMinPct", 8))
     trig_cb = bool(cfg.get("trigCB", True))
     trig_bf = bool(cfg.get("trigBF", True))
@@ -1085,13 +1114,13 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         d_reg = (d.get("region_id") or reg_id).lower()
         if d_reg != reg_id:
             continue
-        if reg_id == "mx":
+        if reg_id in ("mx", "eu"):
             ch_id = (d.get("channel_id") or "").lower()
             url_str = (d.get("buy_url") or d.get("post_url") or "").lower()
             if ch_id in br_channels or ".br" in url_str or "t.me/" in url_str:
                 continue
         elif reg_id == "br":
-            if d.get("region_id") == "mx":
+            if d.get("region_id") in ("mx", "eu"):
                 continue
 
         post_id = d.get("post_id") or f"{d.get('channel_id')}_{d.get('matched_slug')}_{round(d.get('price_brl', 0))}"
@@ -1479,6 +1508,139 @@ def localize_item_for_mexico(it, rate, live_mx_map=None):
         it["offer_url"] = f"https://www.cyberpuerta.mx/index.php?cl=search&searchparam={q_name}"
         it["href"] = it["offer_url"]
 
+
+def fetch_caseking_live_eu_prices():
+    """Scrapes live EUR GPU and CPU prices and direct .de product links from Caseking JSON-LD catalogs."""
+    urls = [
+        ("gpus", "https://www.caseking.de/en/pc-components/graphics-cards/nvidia?sz=100"),
+        ("gpus", "https://www.caseking.de/en/pc-components/graphics-cards/amd?sz=100"),
+        ("cpus", "https://www.caseking.de/en/pc-components/cpus-processors?sz=100"),
+    ]
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8",
+    }
+    from promo_radar import GPU_MATCH_RULES, CPU_MATCH_RULES
+    found = {"gpus": {}, "cpus": {}}
+    exclude_re = re.compile(r"\b(wireview|water\s*block|waterblock|k[üu]hler|cooler|bracket|riser|backplate|cable|adapter|bundle)\b", re.I)
+
+    def _fetch_one(args):
+        grp, u = args
+        try:
+            req = urllib.request.Request(u, headers=headers)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return grp, resp.read().decode("utf-8", errors="ignore")
+        except Exception as e:
+            print(f"[Europe Scraper] Warning on {u}: {e}")
+            return grp, ""
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
+        pages = list(ex.map(_fetch_one, urls))
+
+    for grp, html_str in pages:
+        if not html_str:
+            continue
+        rules = GPU_MATCH_RULES if grp == "gpus" else CPU_MATCH_RULES
+        target_map = found[grp]
+        min_eur, max_eur = (90.0, 4800.0) if grp == "gpus" else (45.0, 2200.0)
+        for ld_raw in re.findall(r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>', html_str, re.S):
+            try:
+                d = json.loads(ld_raw)
+            except Exception:
+                continue
+            if d.get("@type") != "ItemList":
+                continue
+            for entry in (d.get("itemListElement") or []):
+                it = entry.get("item") or {}
+                title = (it.get("name") or "").strip()
+                prod_url = (it.get("url") or "").strip()
+                offers = it.get("offers") or {}
+                try:
+                    price_eur = float(offers.get("price") or 0)
+                except (TypeError, ValueError):
+                    price_eur = 0.0
+                if not title or not prod_url or price_eur < min_eur or price_eur > max_eur:
+                    continue
+                if exclude_re.search(title):
+                    continue
+                for slug, pat in rules:
+                    if re.search(pat, title, re.IGNORECASE):
+                        if slug not in target_map or price_eur < target_map[slug]["price"]:
+                            target_map[slug] = {
+                                "price": round(price_eur, 2),
+                                "url": prod_url,
+                                "title": title,
+                                "store": "Caseking DE",
+                                "image": it.get("image") or "",
+                            }
+                        break
+    return found
+
+
+def localize_item_for_europe(it, rate, live_eu_map=None, group="gpus"):
+    """Converts prices to EUR, applies live Caseking EUR prices when matched, and strips 100% of Brazilian links/coupons."""
+    def conv_val(v):
+        if v is None or not isinstance(v, (int, float)):
+            return v
+        return round(float(v) * rate, 2)
+
+    for k in ("price_brl", "regular_price_brl", "installment_price_brl", "custom_price"):
+        if k in it and it[k]:
+            it[k] = conv_val(it[k])
+    if "price_stats" in it and isinstance(it["price_stats"], dict):
+        ps = it["price_stats"]
+        for pk in ("target_price", "min_all_time", "min_90d", "avg_30d", "avg_90d", "median_180d", "vs_target_brl"):
+            if pk in ps and ps[pk] is not None:
+                ps[pk] = conv_val(ps[pk])
+    store_hist_lbl = "Amazon DE / Idealo" if group == "misc_catalog" else "Caseking DE / Geizhals EU"
+    if "history" in it and isinstance(it["history"], list):
+        for h in it["history"]:
+            if "price" in h and h["price"]:
+                h["price"] = conv_val(h["price"])
+            h["store"] = store_hist_lbl
+
+    if group == "misc_catalog" and isinstance(it.get("specs"), dict):
+        sp = it["specs"]
+        if sp.get("price_per_unit"):
+            sp["price_per_unit"] = round(float(sp["price_per_unit"]) * rate, 2)
+        if sp.get("price_per_liter"):
+            sp["price_per_liter"] = round(float(sp["price_per_liter"]) * rate, 2)
+        if sp.get("summary"):
+            if sp.get("price_per_unit"):
+                sp["summary"] = re.sub(r"R\$\s*[0-9.,]+/fralda", f"€ {sp['price_per_unit']:.2f}/unit", sp["summary"])
+            elif sp.get("price_per_liter"):
+                sp["summary"] = re.sub(r"R\$\s*[0-9.,]+/L", f"€ {sp['price_per_liter']:.0f}/L", sp["summary"])
+
+    # Strip region-locked Brazilian coupons and links completely!
+    it["coupon"] = None
+    it["coupon_label"] = None
+    slug = it.get("slug", "")
+    q_name = quote(it.get("name", slug))
+
+    if live_eu_map and slug in live_eu_map:
+        eu_hit = live_eu_map[slug]
+        it["price_brl"] = eu_hit["price"]
+        it["regular_price_brl"] = eu_hit["price"]
+        it["store_name"] = eu_hit["store"]
+        it["offer_url"] = eu_hit["url"]
+        it["offer_title"] = eu_hit["title"]
+        it["href"] = eu_hit["url"]
+        if eu_hit.get("image"):
+            it["image"] = eu_hit["image"]
+        today_str = time.strftime("%Y-%m-%d")
+        if "history" in it and isinstance(it["history"], list):
+            if not it["history"] or it["history"][-1].get("date") != today_str:
+                it["history"].append({"date": today_str, "price": eu_hit["price"], "store": eu_hit["store"]})
+    elif group == "misc_catalog":
+        it["store_name"] = "Amazon DE"
+        it["offer_url"] = f"https://www.amazon.de/s?k={q_name}"
+        it["href"] = it["offer_url"]
+    else:
+        it["store_name"] = "Geizhals EU"
+        it["offer_url"] = f"https://geizhals.eu/?fs={q_name}"
+        it["href"] = it["offer_url"]
+
+
 def convert_db_to_active_region(raw_db=None, force_refresh=False):
     """Returns a strictly isolated regional database with zero cross-region store/coupon/link leakage."""
     market_cfg = config.get_market_config()
@@ -1488,11 +1650,11 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
     curr_sym = market_cfg.get("monetary", {}).get("currency_symbol", "R$")
 
     reg_db_path = get_db_path(active_region)
-    if active_region == "mx" and not force_refresh and os.path.exists(reg_db_path):
+    if active_region in ("mx", "eu") and not force_refresh and os.path.exists(reg_db_path):
         try:
             with open(reg_db_path, "r", encoding="utf-8") as f:
                 db = json.load(f)
-            db["region_id"] = "mx"
+            db["region_id"] = active_region
             db["currency_code"] = curr_code
             db["currency_symbol"] = curr_sym
             db["exchange_rate"] = rate
@@ -1531,6 +1693,40 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
         db["source_id"] = "cyberpuerta_mlm_mx"
         db["source_name"] = "Cyberpuerta & Mercado Libre MX"
         db["source"] = "https://www.cyberpuerta.mx/"
+        db["region_id"] = active_region
+        db["currency_code"] = curr_code
+        db["currency_symbol"] = curr_sym
+        db["exchange_rate"] = rate
+        try:
+            with open(reg_db_path, "w", encoding="utf-8") as f:
+                json.dump(db, f, ensure_ascii=False, indent=2)
+        except Exception:
+            pass
+    elif active_region == "eu":
+        live_eu = fetch_caseking_live_eu_prices()
+        for group in ("gpus", "cpus", "motherboards", "rams", "psus", "laptops", "smartphones", "peripherals"):
+            live_map = live_eu.get(group) if group in ("gpus", "cpus") else None
+            for item in db.get(group, []):
+                localize_item_for_europe(item, rate, live_map, group=group)
+        for mcid, mitems in (db.get("misc_catalog") or {}).items():
+            for item in (mitems or []):
+                localize_item_for_europe(item, rate, None, group="misc_catalog")
+
+        # Attach ONLY European promos_cache_eu.json (never Brazilian live_promos!)
+        eu_promo_path = get_promos_cache_path("eu")
+        if os.path.exists(eu_promo_path):
+            try:
+                with open(eu_promo_path, "r", encoding="utf-8") as f:
+                    db["live_promos"] = json.load(f)
+            except Exception:
+                db["live_promos"] = None
+        else:
+            db["live_promos"] = None
+
+        db["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        db["source_id"] = "caseking_geizhals_eu"
+        db["source_name"] = "Caseking DE & Geizhals EU"
+        db["source"] = "https://www.caseking.de/en"
         db["region_id"] = active_region
         db["currency_code"] = curr_code
         db["currency_symbol"] = curr_sym
@@ -1865,7 +2061,7 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 if req_reg and req_reg in config.ALLOWED_REGIONS:
                     config.set_active_region(req_reg)
                 active_reg = get_active_region_id()
-                if active_reg == "mx":
+                if active_reg in ("mx", "eu"):
                     return self.send_json({"ok": True, "db": convert_db_to_active_region(force_refresh=True)})
                 raw_db = sources.sync_active_source(get_db_path("br"))
                 return self.send_json({"ok": True, "db": convert_db_to_active_region(raw_db, force_refresh=True)})
@@ -1896,7 +2092,7 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 post_id = body.get("post_id") or body.get("deal_id")
                 force = bool(body.get("force", False))
                 reg_id = str(body.get("region") or get_active_region()).lower().strip()
-                if reg_id not in ("br", "mx"):
+                if reg_id not in ("br", "mx", "eu"):
                     reg_id = "br"
 
                 # Deduplication check: prevent duplicate notifications across browser & background monitor
@@ -2068,7 +2264,7 @@ if __name__ == "__main__":
             if a == "--region" and i + 1 < len(sys.argv):
                 reg_arg = sys.argv[i + 1].lower()
 
-        regions_to_scan = [reg_arg] if reg_arg in ("br", "mx") else ["br", "mx"]
+        regions_to_scan = [reg_arg] if reg_arg in ("br", "mx", "eu") else ["br", "mx", "eu"]
 
         for reg in regions_to_scan:
             print(f"[Cloud Cron] Processando região: {reg.upper()}")
@@ -2089,7 +2285,7 @@ if __name__ == "__main__":
             cfg = load_alert_config(reg)
             cfg["notifyEnabled"] = True
             cfg["notifyWinToast"] = False  # Headless Linux no GitHub Actions runner
-            cfg["notifyPhone"] = True
+            cfg["notifyPhone"] = bool(cfg.get("notifyPhone", False)) if reg == "eu" else True
 
             # 1. Dispara alertas de celular para esta região
             res = check_and_notify_deals(cfg=cfg, force_notify=False, region_id=reg)

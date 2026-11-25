@@ -3484,6 +3484,7 @@ function renderBFCustomModelsCheckboxes() {
     STATE.bfCustomSlugs = new Set(seed);
   }
 
+  const _cSym = (typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$';
   container.innerHTML = pool.map(item => {
     const checked = STATE.bfCustomSlugs.has(item.slug);
     const sub = ctx === 'laptop'
@@ -3493,7 +3494,7 @@ function renderBFCustomModelsCheckboxes() {
         : (ctx === 'peripherals'
           ? (item.kind || item.brand || 'Perif.')
           : (ctx === 'misc'
-            ? ((item.specs && (item.specs.price_per_unit ? `R$${Number(item.specs.price_per_unit).toFixed(2)}/u` : (item.specs.price_per_liter ? `R$${Math.round(item.specs.price_per_liter)}/L` : item.category_id))) || 'Misc')
+            ? ((item.specs && (item.specs.price_per_unit ? `${_cSym}${Number(item.specs.price_per_unit).toFixed(2)}/u` : (item.specs.price_per_liter ? `${_cSym}${Math.round(item.specs.price_per_liter)}/L` : item.category_id))) || 'Misc')
             : (ctx === 'cpu' ? (item.socket || 'CPU') : `${item.vram_gb || 8}GB`))));
     return `
       <label class="flex items-center gap-1.5 p-1.5 rounded-lg bg-slate-950/70 border ${checked ? 'border-sky-500/50 text-sky-200' : 'border-slate-800 text-slate-400'} text-xs font-mono cursor-pointer hover:border-slate-700 transition">
@@ -4197,11 +4198,12 @@ function onBFTargetItemChange(silent) {
           if (d.matched_slug !== slug) return false;
           const dReg = (d.region_id || lastDataReg).toLowerCase();
           if (dReg !== activeReg) return false;
-          if (activeReg === 'mx') {
+          if (activeReg === 'mx' || activeReg === 'eu') {
             const isBr = brChannels.has((d.channel_id || '').toLowerCase()) || /\.br\b|t\.me\//i.test(d.buy_url || d.post_url || '');
             if (isBr) return false;
+            if (activeReg === 'eu' && /\.mx\b|cyberpuerta|ddtech|promodescuentos/i.test(d.buy_url || d.post_url || '')) return false;
           } else if (activeReg === 'br') {
-            if (dReg === 'mx') return false;
+            if (dReg === 'mx' || dReg === 'eu') return false;
           }
           return true;
         }) 
@@ -4232,15 +4234,51 @@ function onBFTargetItemChange(silent) {
       }
     }
 
+    const regLabels = {
+      br: {
+        sym: 'R$', defStore: 'E-commerce', expired: 'OFERTA ENCERRADA NA LOJA',
+        verified: '✅ CONFIRMADO EM ESTOQUE NA LOJA', riskExp: 'Risco de Expirado',
+        couponTitle: 'Cupom Detectado', directTitle: 'Oferta Direta (Sem Cupom)',
+        directSub: 'Preço à vista no link', btnTest: 'Testar', btnCopy: 'Copiar Cupom',
+        btnOpen: 'Abrir Loja', btnSim: 'Simular Preço', src: 'Canal', store: 'Loja',
+        worked: 'Funcionou no carrinho?', yes: '👍 Sim', expBtn: '👎 Expirou', clr: 'Limpar',
+        noneTitle: 'Nenhuma promoção ativa no momento',
+        noneDesc: p => `Última oferta de ${formatMoney(p)} encerrada`,
+        refDesc: p => `Preço mantido no catálogo oficial: ${formatMoney(p)}`
+      },
+      mx: {
+        sym: '$', defStore: 'Cyberpuerta', expired: 'OFERTA TERMINADA EN TIENDA',
+        verified: '✅ CONFIRMADO ACTIVO EN TIENDA', riskExp: 'Riesgo de Expirado',
+        couponTitle: 'Cupón Detectado', directTitle: 'Oferta Directa (Sin Cupón)',
+        directSub: 'Precio de contado en enlace', btnTest: 'Probar', btnCopy: 'Copiar Cupón',
+        btnOpen: 'Abrir Tienda', btnSim: 'Simular Precio', src: 'Fuente', store: 'Tienda',
+        worked: '¿Funcionó en el carrito?', yes: '👍 Sí', expBtn: '👎 Expiró', clr: 'Limpiar',
+        noneTitle: 'Ninguna promoción activa en México',
+        noneDesc: p => `Última oferta de ${formatMoney(p)} terminada`,
+        refDesc: p => `Precio de referencia en México: ${formatMoney(p)}`
+      },
+      eu: {
+        sym: '€', defStore: 'Geizhals EU', expired: 'OFERTA ENCERRADA NA EUROPA',
+        verified: '✅ CONFIRMADO EM ESTOQUE (EU)', riskExp: 'Risco de Expirado',
+        couponTitle: 'Cupom / Voucher EU', directTitle: 'Oferta Direta EU',
+        directSub: 'Preço direto no link europeu', btnTest: 'Testar', btnCopy: 'Copiar Cupom',
+        btnOpen: 'Abrir Loja EU', btnSim: 'Simular Preço', src: 'Fonte', store: 'Loja EU',
+        worked: 'Funcionou no checkout?', yes: '👍 Sim', expBtn: '👎 Expirou', clr: 'Limpar',
+        noneTitle: 'Sem promoções ativas na Europa no momento',
+        noneDesc: p => `Última oferta EU de ${formatMoney(p)} encerrada`,
+        refDesc: p => `Preço de referência na Europa: ${formatMoney(p)}`
+      }
+    }[activeReg] || {};
+
     if (best) {
       ctnActive.classList.remove('hidden');
-      const currSym = window.STATE?.market?.monetary?.currency_symbol || (activeReg === 'mx' ? '$' : 'R$');
+      const currSym = window.STATE?.market?.monetary?.currency_symbol || regLabels.sym || 'R$';
       const rawCode = (best.coupon_code || '').trim();
       const rawInfo = (best.coupon_info || '').trim();
       let hasRealCoupon = false;
       let cleanCoup = '';
 
-      if (rawCode && /[A-Z]/i.test(rawCode) && !/^(HTTPS?|WWW|COM|BR|MX|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
+      if (rawCode && /[A-Z]/i.test(rawCode) && !/^(HTTPS?|WWW|COM|BR|MX|EU|OFERTA|PROMO|LINK|NULL|UNDEFINED|OFERTAFLASH)$/i.test(rawCode)) {
         cleanCoup = rawCode.replace(/[^a-zA-Z0-9_\-]/g, '').toUpperCase();
         if (cleanCoup.length >= 3) hasRealCoupon = true;
       } else if (rawInfo && !/^(oferta|link|site|preço|preco|cash|sem|pix)/i.test(rawInfo)) {
@@ -4250,7 +4288,7 @@ function onBFTargetItemChange(silent) {
           hasRealCoupon = true;
         } else {
           const m = rawInfo.match(/\b([A-Z0-9_\-]{4,22})\b/);
-          if (m && /[A-Z]/i.test(m[1]) && !/^(HTTPS?|WWW|COM|BR|MX|OFERTA|PROMO|LINK|NULL|OFERTAFLASH|RESGATE|CUPOM|DESCONTO)$/i.test(m[1])) {
+          if (m && /[A-Z]/i.test(m[1]) && !/^(HTTPS?|WWW|COM|BR|MX|EU|OFERTA|PROMO|LINK|NULL|OFERTAFLASH|RESGATE|CUPOM|DESCONTO)$/i.test(m[1])) {
             cleanCoup = m[1].toUpperCase();
             hasRealCoupon = true;
           }
@@ -4274,35 +4312,35 @@ function onBFTargetItemChange(silent) {
       const isUnverifiedCoupon = !isExpired && !isVerifiedActive && (hasRealCoupon || best.deal_status === 'unverified_coupon');
       const liveStorePrice = (dealStatus && dealStatus.live_price) || best.live_store_price_brl || null;
       const buyUrl = best.buy_url || best.post_url || '#';
-      const resolvedStore = (dealStatus && dealStatus.store_name && dealStatus.store_name !== 'E-commerce') ? dealStatus.store_name : (best.store_name || (activeReg === 'mx' ? 'Cyberpuerta' : 'E-commerce'));
+      const resolvedStore = (dealStatus && dealStatus.store_name && dealStatus.store_name !== 'E-commerce') ? dealStatus.store_name : (best.store_name || regLabels.defStore || 'E-commerce');
 
       let freshBadge = '';
       if (isExpired) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${activeReg === 'mx' ? 'OFERTA TERMINADA EN TIENDA' : 'OFERTA ENCERRADA NA LOJA'}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Oferta encerrada'}">❌ ${regLabels.expired}</span>`;
       } else if (isVerifiedActive) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${activeReg === 'mx' ? '✅ CONFIRMADO ACTIVO EN TIENDA' : '✅ CONFIRMADO EM ESTOQUE NA LOJA'}</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-200 border border-emerald-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Confirmado em estoque na loja'}">${regLabels.verified}</span>`;
       } else if (isUnverifiedCoupon) {
         freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-500/50 font-mono text-xs font-bold" title="${(dealStatus && dealStatus.reason) || 'Depende do cupom aplicar no carrinho da loja'}">⚠️ DEPENDE DE CUPOM NO CARRINHO${liveStorePrice ? ` (Sem cupom: ${formatMoney(liveStorePrice)})` : ''}</span>`;
       } else if (best.age_hours <= 2) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold">🟢 ${activeReg === 'mx' ? 'Fresco' : 'Fresco'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold">🟢 Fresco (${best.age_hours}h)</span>`;
       } else if (best.age_hours <= 8) {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold">🟡 ${activeReg === 'mx' ? 'Moderado' : 'Moderado'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono text-xs font-bold">🟡 Moderado (${best.age_hours}h)</span>`;
       } else {
-        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs font-bold">🔴 ${activeReg === 'mx' ? 'Riesgo de Expirado' : 'Risco de Expirado'} (${best.age_hours}h)</span>`;
+        freshBadge = `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 font-mono text-xs font-bold">🔴 ${regLabels.riskExp} (${best.age_hours}h)</span>`;
       }
 
       let titleHtml = '';
       if (hasRealCoupon) {
         titleHtml = `
-          <span class="font-mono text-amber-300 font-bold">🎟️ ${activeReg === 'mx' ? 'Cupón Detectado' : 'Cupom Detectado'}:</span>
+          <span class="font-mono text-amber-300 font-bold">🎟️ ${regLabels.couponTitle}:</span>
           <span class="text-white font-mono font-bold ${isExpired ? 'line-through text-slate-400' : ''}">${cleanCoup}</span>
           <span class="text-emerald-400 font-mono font-bold">(${formatMoney(best.price_brl)})</span>
         `;
       } else {
         titleHtml = `
-          <span class="font-mono text-emerald-400 font-bold">⚡ ${activeReg === 'mx' ? 'Oferta Directa (Sin Cupón)' : 'Oferta Direta (Sem Cupom)'}:</span>
+          <span class="font-mono text-emerald-400 font-bold">⚡ ${regLabels.directTitle}:</span>
           <span class="text-white font-mono font-bold">${formatMoney(best.price_brl)}</span>
-          <span class="text-slate-400 font-mono text-xs">(${activeReg === 'mx' ? 'Precio de contado en enlace' : 'Preço à vista no link'})</span>
+          <span class="text-slate-400 font-mono text-xs">(${regLabels.directSub})</span>
         `;
       }
 
@@ -4315,28 +4353,28 @@ function onBFTargetItemChange(silent) {
           </div>
           <div class="flex items-center gap-1 flex-wrap">
             <button onclick="testDealCouponNow('${best.post_id}', '${buyUrl}', '${cleanCoup}', ${best.price_brl}, '${best.matched_slug || slug}', '${best.matched_kind || st.kind}')" class="px-2 py-1 rounded bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 border border-sky-500/40 transition font-bold text-xs cursor-pointer flex items-center gap-1" title="Testar status">
-              <span>🧪 ${activeReg === 'mx' ? 'Probar' : 'Testar'}</span>
+              <span>🧪 ${regLabels.btnTest}</span>
             </button>
             ${hasRealCoupon ? `
               <button onclick="copyCouponAndOpen('${cleanCoup}', '${buyUrl}')" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-xs cursor-pointer" title="Copiar cupom">
-                📋 ${activeReg === 'mx' ? 'Copiar Cupón' : 'Copiar Cupom'}
+                📋 ${regLabels.btnCopy}
               </button>
             ` : ''}
             <a href="${buyUrl}" target="_blank" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition font-bold text-xs cursor-pointer flex items-center gap-1" title="Abrir loja">
-              ↗ ${activeReg === 'mx' ? 'Abrir Tienda' : 'Abrir Loja'}
+              ↗ ${regLabels.btnOpen}
             </a>
             <button onclick="applyActiveCouponToBF(${best.price_brl}, '${escape(cleanCoup)}')" class="px-2 py-1 rounded bg-amber-400 text-slate-950 text-xs font-bold hover:bg-amber-300 transition cursor-pointer" title="Simular preço">
-              ⚡ ${activeReg === 'mx' ? 'Simular Precio' : 'Simular Preço'}
+              ⚡ ${regLabels.btnSim}
             </button>
           </div>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-xs text-slate-400 pt-1 border-t border-slate-800/80 font-mono">
-          <span>${activeReg === 'mx' ? 'Fuente' : 'Canal'}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${activeReg === 'mx' ? 'Tienda' : 'Loja'}: ${resolvedStore} • Modelo: ${(best.title || '').slice(0, 55)}</span>
+          <span>${regLabels.src}: ${best.channel_name || '@' + best.channel_id} • há ${best.age_hours}h • ${regLabels.store}: ${resolvedStore} • Modelo: ${(best.title || '').slice(0, 55)}</span>
           <div class="flex items-center gap-1">
-            <span class="text-slate-400 text-xs">${activeReg === 'mx' ? '¿Funcionó en el carrito?' : 'Funcionou no carrinho?'}</span>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-xs cursor-pointer">${activeReg === 'mx' ? '👍 Sí' : '👍 Sim'}</button>
-            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-xs cursor-pointer">${activeReg === 'mx' ? '👎 Expiró' : '👎 Expirou'}</button>
-            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs cursor-pointer" title="Limpar">↺ ${activeReg === 'mx' ? 'Limpiar' : 'Limpar'}</button>` : ''}
+            <span class="text-slate-400 text-xs">${regLabels.worked}</span>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'working')" class="px-1.5 py-0.5 rounded ${isVerifiedActive ? 'bg-emerald-500 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-emerald-500/30 text-emerald-300'} text-xs cursor-pointer">${regLabels.yes}</button>
+            <button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', 'expired')" class="px-1.5 py-0.5 rounded ${isExpired ? 'bg-rose-500 text-white font-bold' : 'bg-slate-800 hover:bg-rose-500/30 text-rose-300'} text-xs cursor-pointer">${regLabels.expBtn}</button>
+            ${(isVerifiedActive || isExpired) ? `<button onclick="setCouponUserStatus('${cleanCoup || best.post_id}', null)" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs cursor-pointer" title="Limpar">↺ ${regLabels.clr}</button>` : ''}
           </div>
         </div>
       `;
@@ -4347,10 +4385,10 @@ function onBFTargetItemChange(silent) {
         ctnActive.className = 'p-3 rounded-lg bg-rose-950/20 border border-rose-500/30 flex flex-col gap-1 text-xs';
         ctnActive.innerHTML = `
           <div class="flex items-center justify-between gap-1.5 flex-wrap">
-            <span class="font-mono text-rose-300 font-bold">❌ ${activeReg === 'mx' ? 'Ninguna promoción activa en México' : 'Nenhuma promoção ativa no momento'}</span>
-            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-xs">${activeReg === 'mx' ? 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' terminada' : 'Última oferta de ' + formatMoney(latestExpired.price_brl) + ' encerrada'}</span>
+            <span class="font-mono text-rose-300 font-bold">❌ ${regLabels.noneTitle}</span>
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono text-xs">${regLabels.noneDesc(latestExpired.price_brl)}</span>
           </div>
-          <div class="text-xs text-slate-400 font-mono">${activeReg === 'mx' ? 'Precio de referencia en México: ' + formatMoney(st.current) : 'Preço mantido no catálogo oficial: ' + formatMoney(st.current)}.</div>
+          <div class="text-xs text-slate-400 font-mono">${regLabels.refDesc(st.current)}.</div>
         `;
       } else {
         ctnActive.innerHTML = '';
@@ -4648,10 +4686,17 @@ const PROMO_CACHE_KEY = 'gpuAnalyzerPromoCache_v1';
 function getActiveRegionId() {
   const regFromState = (typeof STATE !== 'undefined' && STATE?.market?.region_id) ||
                        (typeof window !== 'undefined' && window.STATE?.market?.region_id);
-  if (regFromState) return String(regFromState).toLowerCase().trim();
+  if (regFromState) {
+    const r = String(regFromState).toLowerCase().trim();
+    if (r === 'mx' || r === 'br' || r === 'eu') return r;
+  }
   try {
-    const saved = localStorage.getItem('selected_market_region');
-    if (saved && (saved === 'mx' || saved === 'br')) return saved;
+    const urlReg = (typeof URLSearchParams !== 'undefined' && window.location && window.location.search)
+      ? (new URLSearchParams(window.location.search).get('region') || '').toLowerCase().trim()
+      : '';
+    if (urlReg === 'mx' || urlReg === 'br' || urlReg === 'eu') return urlReg;
+    const saved = (localStorage.getItem('selected_market_region') || '').toLowerCase().trim();
+    if (saved === 'mx' || saved === 'br' || saved === 'eu') return saved;
   } catch (_) {}
   return 'br';
 }
@@ -4668,7 +4713,7 @@ function getCouponStatusCacheKey() {
 
 // Purge obsolete v1 caches to prevent stale unverified deals
 try {
-  ['br', 'mx'].forEach(r => {
+  ['br', 'mx', 'eu'].forEach(r => {
     localStorage.removeItem(`gpuAnalyzerPromoCache_${r}_v1`);
     localStorage.removeItem(`gpuAnalyzerCouponStatus_${r}_v1`);
   });
@@ -4816,6 +4861,13 @@ function getClientPromoChannels() {
       { id: 'ddtech_ofertas',       name: 'DDTech Promociones MX' }
     ];
   }
+  if (reg === 'eu') {
+    return [
+      { id: 'mydealz_de',     name: 'MyDealz DE (Deals EU)' },
+      { id: 'dealabs_fr',     name: 'Dealabs FR (Deals EU)' },
+      { id: 'chollometro_es', name: 'Chollometro ES (Deals EU)' }
+    ];
+  }
   return CLIENT_PROMO_CHANNELS;
 }
 
@@ -4828,6 +4880,9 @@ function getClientPromoQueries() {
   const reg = getActiveRegionId();
   if (reg === 'mx') {
     return ['', 'RTX', '5060', '5070', '4060', '7600', 'RX', 'Ryzen', 'DDR4', 'DDR5', 'agotado', 'expiró'];
+  }
+  if (reg === 'eu') {
+    return ['', 'RTX', '5060', '5070', '9070', 'RX', 'Ryzen', 'DDR5', 'Caseking', 'abgelaufen', 'ausverkauft'];
   }
   return CLIENT_PROMO_QUERIES;
 }
@@ -5620,10 +5675,17 @@ function _applyCouponAndExpiryOverlay(item) {
   const dealsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.deals) || {};
   const couponsMap = (PROMO_STATE.couponStatus && PROMO_STATE.couponStatus.coupons) || {};
   const cStatus = couponCode ? couponsMap[couponCode] : null;
-  const dStatus = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
+  const activeReg = getActiveRegionId();
+  const rawDStatus = dealsMap[pId] || dealsMap[pIdLower] || (buyUrl ? dealsMap[buyUrl] : null);
+  const isBrStatusLeak = activeReg !== 'br' && rawDStatus && (
+    /\.br\b|kabum|terabyte|pichau|magalu|performancesolutions|performance-solutions|zoom\.com\.br|mercadolivre/i.test(
+      `${rawDStatus.final_url || ''} ${rawDStatus.store_name || ''}`
+    )
+  );
+  const dStatus = isBrStatusLeak ? null : rawDStatus;
 
   if (dStatus) {
-    if (dStatus.store_name && dStatus.store_name !== 'E-commerce' && dStatus.store_name !== 'Loja') {
+    if (!item._isStoreDirect && dStatus.store_name && dStatus.store_name !== 'E-commerce' && dStatus.store_name !== 'Loja') {
       item.store_name = dStatus.store_name;
     }
     if (dStatus.live_price) {
@@ -5938,7 +6000,9 @@ function persistNotifiedKeys() {
 async function syncNotifiedHistoryFromServer() {
   try {
     const regId = getActiveRegionId();
-    const staticFile = regId === 'mx' ? 'data/notified_history_mx.json' : 'data/notified_history.json';
+    const staticFile = regId === 'eu'
+      ? 'data/notified_history_eu.json'
+      : (regId === 'mx' ? 'data/notified_history_mx.json' : 'data/notified_history.json');
     const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     const urls = isStatic
       ? [
@@ -5965,7 +6029,9 @@ async function syncNotifiedHistoryFromServer() {
 async function syncCouponStatusFromServer() {
   try {
     const regId = getActiveRegionId();
-    const staticFile = regId === 'mx' ? 'data/coupon_status_mx.json' : 'data/coupon_status.json';
+    const staticFile = regId === 'eu'
+      ? 'data/coupon_status_eu.json'
+      : (regId === 'mx' ? 'data/coupon_status_mx.json' : 'data/coupon_status.json');
     const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
     let statusObj = null;
     if (!isStatic) {
@@ -5995,7 +6061,9 @@ async function syncCouponStatusFromServer() {
       }
     }
     if (statusObj && typeof statusObj === 'object') {
-      if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+      if (!PROMO_STATE.couponStatus || PROMO_STATE.couponStatus._region !== regId) {
+        PROMO_STATE.couponStatus = { _region: regId, coupons: {}, deals: {} };
+      }
       if (!PROMO_STATE.couponStatus.coupons) PROMO_STATE.couponStatus.coupons = {};
       if (!PROMO_STATE.couponStatus.deals) PROMO_STATE.couponStatus.deals = {};
       if (statusObj.coupons) Object.assign(PROMO_STATE.couponStatus.coupons, statusObj.coupons);
@@ -7803,11 +7871,12 @@ function evaluateDealsForAlerts() {
   allEvalDeals.forEach(d => {
     const dReg = (d.region_id || lastDataReg).toLowerCase();
     if (dReg !== activeReg) return;
-    if (activeReg === 'mx') {
+    if (activeReg === 'mx' || activeReg === 'eu') {
       const ch = (d.channel_id || '').toLowerCase().replace(/^@/, '');
       if (brChannels.has(ch)) return;
-      const bUrl = (d.buy_url || '').toLowerCase();
+      const bUrl = (d.buy_url || d.post_url || '').toLowerCase();
       if (bUrl.includes('.br') || bUrl.includes('kabum') || bUrl.includes('terabyte') || bUrl.includes('pichau')) return;
+      if (activeReg === 'eu' && (bUrl.includes('.mx') || bUrl.includes('cyberpuerta') || bUrl.includes('ddtech'))) return;
     }
     if (!dealMatchesPromoPreferences(d)) return;
 
@@ -7882,9 +7951,11 @@ function evaluateDealsForAlerts() {
     else hitHB = passBrl || passPct;
 
     if (hitHB && d.savings_vs_hb_brl > 0) {
-      reasons.push(activeReg === 'mx'
-        ? `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Catálogo`
-        : `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Database`);
+      reasons.push(activeReg === 'eu'
+        ? `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Catálogo EU`
+        : (activeReg === 'mx'
+          ? `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Catálogo`
+          : `📉 −${formatMoneyShort(d.savings_vs_hb_brl)} (−${Math.round(pctVsHB)}%) vs Database`));
     }
 
     // 4. Evaluate 30-day rolling average flash drop (default >= 5%)
@@ -8157,7 +8228,19 @@ async function testPhoneAlertNow() {
   if (statusEl) statusEl.textContent = 'Enviando teste para o celular...';
 
   const activeReg = getActiveRegionId();
-  const sampleDeal = activeReg === 'mx' ? {
+  const sampleDeal = activeReg === 'eu' ? {
+    matched_kind: 'gpu',
+    matched_slug: 'rtx-5060',
+    matched_name: 'RTX 5060 8GB (Teste EU)',
+    price_brl: 499,
+    hb_price_brl: 559,
+    savings_vs_hb_brl: 60,
+    alert_reasons: ['🏆 CB 95/100', '🔥 DEAL EU', `−${formatMoney(60)} vs Catálogo EU`],
+    coupon_code: 'EU10',
+    channel_id: 'mydealz_de',
+    title: 'GeForce RTX 5060 8GB em oferta verificada na Europa (Caseking / MyDealz)!',
+    buy_url: 'https://geizhals.eu/?fs=RTX+5060'
+  } : (activeReg === 'mx' ? {
     matched_kind: 'gpu',
     matched_slug: 'rtx-5060',
     matched_name: 'RTX 5060 8GB (Prueba Celular)',
@@ -8181,7 +8264,7 @@ async function testPhoneAlertNow() {
     channel_id: 'ofertasadrenaline',
     title: 'Placa de Vídeo GeForce RTX 5060 com cupom de desconto nos grupos!',
     buy_url: 'https://t.me/s/ofertasadrenaline'
-  };
+  });
 
   const prevSetting = PROMO_STATE.notifyPhone;
   PROMO_STATE.notifyPhone = true;
@@ -8189,12 +8272,16 @@ async function testPhoneAlertNow() {
   try {
     const payload = {
       channel: PROMO_STATE.phoneService || 'ntfy',
-      title: activeReg === 'mx'
-        ? `🔥 [PRUEBA] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (c/ Cupón: MX10)`
-        : `🔥 [TESTE] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (c/ Cupom: PC10)`,
-      message: activeReg === 'mx'
-        ? `🔔 ¡Prueba de notificación móvil exitosa!\n\n🏆 CB 95/100 • GANGA\n🎟️ Cupón: MX10\n📉 Ahorro: -${formatMoney(1079)} vs Catálogo\n📢 Canal: @promos_gamer_mexico\n\nRecibida en celular respetando modo No Molestar.`
-        : `🔔 Teste de disparo no celular bem-sucedido!\n\n🏆 CB 95/100 • PECHINCHA\n🎟️ Cupom Necessário: PC10\n📉 Economia: -${formatMoney(310)} vs Catálogo\n📢 Canal: @ofertasadrenaline\n\nRecebida como notificação comum (respeitando o modo Não Perturbe e volume padrão).`,
+      title: activeReg === 'eu'
+        ? `🔥 [TESTE EU] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (EU10)`
+        : (activeReg === 'mx'
+          ? `🔥 [PRUEBA] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (c/ Cupón: MX10)`
+          : `🔥 [TESTE] ${sampleDeal.matched_name} por ${formatMoney(sampleDeal.price_brl)} (c/ Cupom: PC10)`),
+      message: activeReg === 'eu'
+        ? `🔔 Teste de notificação EU bem-sucedido!\n\n🏆 CB 95/100 • DEAL EU\n🎟️ Cupom: EU10\n📉 Economia: -${formatMoney(60)} vs Catálogo EU\n📢 Fonte: MyDealz DE\n\nRecebida normalmente no celular.`
+        : (activeReg === 'mx'
+          ? `🔔 ¡Prueba de notificación móvil exitosa!\n\n🏆 CB 95/100 • GANGA\n🎟️ Cupón: MX10\n📉 Ahorro: -${formatMoney(1079)} vs Catálogo\n📢 Canal: @promos_gamer_mexico\n\nRecibida en celular respetando modo No Molestar.`
+          : `🔔 Teste de disparo no celular bem-sucedido!\n\n🏆 CB 95/100 • PECHINCHA\n🎟️ Cupom Necessário: PC10\n📉 Economia: -${formatMoney(310)} vs Catálogo\n📢 Canal: @ofertasadrenaline\n\nRecebida como notificação comum (respeitando o modo Não Perturbe e volume padrão).`),
       url: sampleDeal.buy_url,
       force: true,
       region: activeReg
@@ -8310,7 +8397,22 @@ function checkAndFireDealNotifications(forceTest = false) {
   } else if (forceTest) {
     const activeReg = getActiveRegionId();
     // If user clicked "Testar Alerta" and no new unnotified deal existed, show the best qualifying deal or a demo alert
-    const sample = qualifying[0] || (activeReg === 'mx' ? {
+    const sample = qualifying[0] || (activeReg === 'eu' ? {
+      matched_kind: 'gpu',
+      matched_slug: 'rtx-5060',
+      matched_name: 'GeForce RTX 5060 8GB (Teste EU)',
+      price_brl: 499,
+      hb_price_brl: 559,
+      savings_vs_hb_brl: 60,
+      cb_score: 95,
+      is_high_cb: true,
+      is_pechincha: true,
+      alert_reasons: [`🏆 CB 95/100`, `🔥 −${formatMoneyShort(60)} vs Catálogo EU`],
+      coupon_code: 'EU10',
+      channel_id: 'mydealz_de',
+      title: 'Teste de Notificação EU: GeForce RTX 5060 em oferta na Europa!',
+      buy_url: 'https://geizhals.eu/?fs=RTX+5060'
+    } : (activeReg === 'mx' ? {
       matched_kind: 'gpu',
       matched_slug: 'rtx-5060',
       matched_name: 'GeForce RTX 5060 8GB (Prueba México)',
@@ -8340,7 +8442,7 @@ function checkAndFireDealNotifications(forceTest = false) {
       channel_id: 'ofertasadrenaline',
       title: 'Teste de Notificação: Placa de Vídeo RTX 5060 com cupom relâmpago nos grupos!',
       buy_url: 'https://t.me/s/ofertasadrenaline'
-    });
+    }));
     playDealAlertChime();
     showDealToastNotification(sample);
     fireWindowsNativeNotification(sample);
@@ -8428,9 +8530,10 @@ function applyFlashPromosToCatalog(forceRefresh = false) {
 
       const promo = bestMap[it.slug];
       const promoRegion = (promo && promo.region_id ? promo.region_id : lastDataReg).toLowerCase();
-      const isBrLeak = activeReg !== 'br' && promo && (
-        brChannels.has((promo.channel_id || '').toLowerCase()) ||
-        /\.br\b|t\.me\/(?:peperaio|ofertasadrenaline|iskandar|kabum|benchpromos|nerdofertas|ofertastechbr)/i.test(promo.buy_url || promo.post_url || '')
+      const promoUrlLower = ((promo && (promo.buy_url || promo.post_url)) || '').toLowerCase();
+      const isCrossRegionLeak = promo && (
+        (activeReg !== 'br' && (brChannels.has((promo.channel_id || '').toLowerCase()) || /\.br\b|t\.me\/(?:peperaio|ofertasadrenaline|iskandar|kabum|benchpromos|nerdofertas|ofertastechbr)/i.test(promoUrlLower))) ||
+        (activeReg === 'eu' && /\.mx\b|cyberpuerta|ddtech|promodescuentos/i.test(promoUrlLower))
       );
 
       const requiresCoup = Boolean(promo && (promo.requires_coupon || promo.coupon_code || promo.coupon_info || promo.is_conditional_voucher));
@@ -8440,7 +8543,7 @@ function applyFlashPromosToCatalog(forceRefresh = false) {
         PROMO_STATE.applyFlash &&
         promo &&
         promoRegion === activeReg &&
-        !isBrLeak &&
+        !isCrossRegionLeak &&
         !promo.is_expired &&
         promo.deal_status === 'active' &&
         isStockVerified &&
@@ -8451,7 +8554,7 @@ function applyFlashPromosToCatalog(forceRefresh = false) {
 
       if (isDirectActive) {
         it.price_brl = promo.price_brl;
-        it.coupon = promo.coupon_code || promo.coupon_info || (activeReg === 'mx' ? 'OFERTA MX' : 'OFERTA DIRETA');
+        it.coupon = promo.coupon_code || promo.coupon_info || (activeReg === 'eu' ? 'OFERTA EU' : (activeReg === 'mx' ? 'OFERTA MX' : 'OFERTA DIRETA'));
         it.store_name = promo.store_name || `@${promo.channel_id}`;
         it.offer_url = promo.buy_url || promo.post_url;
         it._flashPromo = promo;
@@ -8644,38 +8747,52 @@ async function scanLivePromos(force = false) {
     syncCouponStatusFromServer()
   ]);
 
-  // MEXICO PIPELINE: Fetch strictly from /api/promos?region=mx (Promodescuentos + Cyberpuerta + DDTech)
-  if (activeRegId === 'mx') {
+  // REGIONAL PIPELINE (MX / EU): Fetch strictly from /api/promos?region=<reg>
+  if (activeRegId === 'mx' || activeRegId === 'eu') {
+    const isEu = activeRegId === 'eu';
+    const cacheFile = isEu ? 'data/promos_cache_eu.json' : 'data/promos_cache_mx.json';
+    const scanLabel = isEu
+      ? 'Buscando ofertas na Europa (Caseking / MyDealz / Dealabs / Chollometro)...'
+      : 'Buscando ofertas y cupones en México (Promodescuentos / Cyberpuerta / DDTech)...';
+    const donePrefix = isEu ? 'Radar Europa (€ EUR)' : 'Radar México ($ MXN)';
+    const dealNoun = isEu ? 'ofertas na Europa' : 'ofertas en tiendas MX';
     if (btn) btn.disabled = true;
-    if (statusEl) statusEl.textContent = 'Buscando ofertas y cupones en México (Promodescuentos / Cyberpuerta / DDTech)...';
+    if (statusEl) statusEl.textContent = scanLabel;
     try {
       const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
       let prData = null;
       if (!isStatic) {
         try {
-          const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=mx&market=mx` + (force ? '&force=1' : ''));
+          const apiRes = await fetch(`/api/promos?max_age=${maxAge}&region=${activeRegId}&market=${activeRegId}` + (force ? '&force=1' : ''));
           if (apiRes.ok) prData = await apiRes.json();
+        } catch (_) {}
+      }
+
+      if ((!prData || !Array.isArray(prData.matched_deals)) && isStatic) {
+        try {
+          const rawRes = await fetch(`https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/${cacheFile}?t=` + Date.now(), { cache: 'no-store' });
+          if (rawRes.ok) prData = await rawRes.json();
         } catch (_) {}
       }
 
       if (!prData || !Array.isArray(prData.matched_deals)) {
         try {
-          const prRes = await fetch(`data/promos_cache_mx.json?t=` + Date.now(), { cache: 'no-store' });
+          const prRes = await fetch(`${cacheFile}?t=` + Date.now(), { cache: 'no-store' });
           if (prRes.ok) prData = await prRes.json();
         } catch (_) {}
       }
 
       if (!prData || (!Array.isArray(prData.matched_deals) && !Array.isArray(prData.recent_feed))) {
         try {
-          const rawRes = await fetch(`https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache_mx.json?t=` + Date.now(), { cache: 'no-store' });
+          const rawRes = await fetch(`https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/${cacheFile}?t=` + Date.now(), { cache: 'no-store' });
           if (rawRes.ok) prData = await rawRes.json();
         } catch (_) {}
       }
 
       if (!prData || typeof prData !== 'object') {
-        prData = { ok: true, region_id: 'mx', scanned_at: new Date().toLocaleTimeString(), channels_scanned: [], matched_count: 0, matched_deals: [], best_by_slug: {}, recent_feed: [] };
+        prData = { ok: true, region_id: activeRegId, scanned_at: new Date().toLocaleTimeString(), channels_scanned: [], matched_count: 0, matched_deals: [], best_by_slug: {}, recent_feed: [] };
       }
-      prData.region_id = 'mx';
+      prData.region_id = activeRegId;
       PROMO_STATE.rawPosts = [];
       PROMO_STATE.lastData = prData;
       PROMO_STATE.channelsScanned = prData.channels_scanned || [];
@@ -8684,7 +8801,7 @@ async function scanLivePromos(force = false) {
       updateBFPromoEvaluator(true);
       renderPromoRadarPanel();
       if (statusEl) {
-        statusEl.textContent = `Radar México ($ MXN): Sincronizado às ${prData.scanned_at || 'agora'} • ${prData.matched_deals.length} ofertas en tiendas MX`;
+        statusEl.textContent = `${donePrefix}: Sincronizado às ${prData.scanned_at || 'agora'} • ${(prData.matched_deals || []).length} ${dealNoun}`;
       }
     } finally {
       if (btn) btn.disabled = false;
@@ -8953,7 +9070,7 @@ function renderPromoRadarPanel() {
         price_brl: it.price_brl,
         hb_price_brl: it.price_brl,
         savings_vs_hb_brl: 0,
-        store_name: it.store_name || 'Loja BR',
+        store_name: it.store_name || (getActiveRegionId() === 'eu' ? 'EU Store' : (getActiveRegionId() === 'mx' ? 'Tienda MX' : 'Loja BR')),
         channel_id: 'catalogo_lojas',
         buy_url: it.offer_url || it.href || '#',
         post_url: it.href || it.offer_url || '#',
@@ -10006,7 +10123,7 @@ function renderBFPromosCardsTab() {
         price_brl: it.price_brl,
         hb_price_brl: it.price_brl,
         coupon_code: it.coupon || null,
-        store_name: it.store_name || 'Loja BR',
+        store_name: it.store_name || (getActiveRegionId() === 'eu' ? 'EU Store' : (getActiveRegionId() === 'mx' ? 'Tienda MX' : 'Loja BR')),
         channel_id: 'catalogo_lojas',
         buy_url: it.offer_url || it.href || '#',
         post_url: it.href || it.offer_url || '#',
@@ -10240,16 +10357,19 @@ function renderBFPromosCardsTab() {
       specTagVals.push(kLbl);
       if (sp.brand || d.brand) specTagVals.push(sp.brand || d.brand);
       if (sp.wireless || d.is_wireless) specTagVals.push('Sem fio');
-    } else if (d.matched_kind === 'air_fryer') {
+    }
+    const _cardSym = (typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$';
+    const _cardReg = typeof getActiveRegionId === 'function' ? getActiveRegionId() : 'br';
+    if (d.matched_kind === 'air_fryer') {
       const af = _parseAirFryerClient(`${d.title || ''} ${d.matched_name || ''}`, d.price_brl, d.misc_specs || sp);
       if (af.brand) specTagVals.push(af.brand);
       if (af.liters > 0) specTagVals.push(`${af.liters}L`);
-      if (af.price_per_liter > 0) specTagVals.push(`R$${Math.round(af.price_per_liter)}/L`);
+      if (af.price_per_liter > 0) specTagVals.push(`${_cardSym}${Math.round(af.price_per_liter)}/L`);
     } else if (d.matched_kind === 'diapers') {
       const dp = _parseDiaperClient(`${d.title || ''} ${d.matched_name || ''}`, d.price_brl, d.misc_specs || sp);
       if (dp.brand) specTagVals.push(dp.brand);
       if (dp.size) specTagVals.push(`Tam. ${dp.size}`);
-      if (dp.price_per_unit > 0) specTagVals.push(`R$${Number(dp.price_per_unit).toFixed(2)}/un`);
+      if (dp.price_per_unit > 0) specTagVals.push(`${_cardSym}${Number(dp.price_per_unit).toFixed(2)}/un`);
     }
     const specTagsHtml = [
       ...specTagVals.slice(0, 3).map(v => `<span class="ui-spec-tag">${v}</span>`),
@@ -10274,7 +10394,7 @@ function renderBFPromosCardsTab() {
                 ${discountHtml}
               </div>
               <div class="text-xs text-slate-400 flex items-center flex-wrap gap-1.5">
-                <span class="text-slate-200 font-semibold">${d.store_name || 'Loja BR'}</span>
+                <span class="text-slate-200 font-semibold">${d.store_name || (_cardReg === 'eu' ? 'EU Store' : (_cardReg === 'mx' ? 'Tienda MX' : 'Loja BR'))}</span>
                 <span>•</span>
                 <span>${d._isStoreDirect ? 'Catálogo' : '@' + (d.channel_id || 'grupo')}</span>
                 ${!ribbonHtml ? `<span>• há ${ageLabel}</span>` : ''}

@@ -86,6 +86,17 @@ OOS_PATTERNS_MX = [
     (r"stock\s+agotado", "Stock agotado"),
 ]
 
+OOS_PATTERNS_EU = [
+    (r"\bausverkauft\b", "Ausverkauft in EU store"),
+    (r"derzeit\s+nicht\s+verf[üu]gbar", "Derzeit nicht verfügbar"),
+    (r"nicht\s+auf\s+lager", "Nicht auf Lager"),
+    (r"aktuell\s+nicht\s+lieferbar", "Aktuell nicht lieferbar"),
+    (r"rupture\s+de\s+stock", "Rupture de stock"),
+    (r"\bindisponible\b", "Indisponible"),
+    (r"producto\s+agotado|sin\s+stock", "Agotado en tienda ES"),
+    (r"currently\s+unavailable|out\s+of\s+stock", "Out of stock"),
+]
+
 
 def unwrap_affiliate_url(url_str):
     """Decodes HTML entities and unwraps affiliate redirectors (e.g. awin1 cread.php?ued=...)."""
@@ -809,7 +820,7 @@ def test_deal_url_and_coupon(
     if body:
         low = body.lower()
         # Check region-appropriate Out-Of-Stock patterns
-        oos_list = OOS_PATTERNS_MX if reg == "mx" else OOS_PATTERNS_BR
+        oos_list = OOS_PATTERNS_MX if reg == "mx" else (OOS_PATTERNS_EU if reg == "eu" else OOS_PATTERNS_BR)
         for pat, reason_text in oos_list:
             if re.search(pat, low):
                 res["valid"] = False
@@ -1101,9 +1112,12 @@ def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None):
             else:
                 item["is_expired"] = False
         else:
-            item["deal_status"] = "untested"
-            item["stock_verified"] = False
-            item["is_expired"] = bool(item.get("age_hours", 0) > 8.0)
+            if reg_id == "eu" and item.get("deal_status") == "active" and item.get("stock_verified"):
+                item["is_expired"] = bool(item.get("is_expired"))
+            else:
+                item["deal_status"] = "untested"
+                item["stock_verified"] = False
+                item["is_expired"] = bool(item.get("age_hours", 0) > 8.0)
 
         if coup_st:
             c_status_val = coup_st.get("status", "unverified")

@@ -937,9 +937,10 @@ function setSmartphoneCBChartMetric(metric) {
   if (pBtn) pBtn.classList.toggle('is-active', _spCbChartMetric === 'benchmark');
   const titleEl = document.getElementById('smartphone-cb-chart-title');
   if (titleEl) {
+    const _spSym = (typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$';
     titleEl.textContent = _spCbChartMetric === 'benchmark'
-      ? 'Mapa de Eficiência de Smartphones: Preço (R$) vs Índice Contextual (0–100)'
-      : 'Mapa de Eficiência de Smartphones: Preço (R$) vs Custo-Benefício (0–100)';
+      ? `Mapa de Eficiência de Smartphones: Preço (${_spSym}) vs Índice Contextual (0–100)`
+      : `Mapa de Eficiência de Smartphones: Preço (${_spSym}) vs Custo-Benefício (0–100)`;
   }
   renderSmartphoneCBTable();
 }

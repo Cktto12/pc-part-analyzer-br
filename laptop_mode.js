@@ -1558,9 +1558,10 @@ function renderLaptopCBTable() {
     btnM.classList.toggle('is-active', isBench);
   }
   if (titleEl) {
+    const _lapSym = (typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$';
     titleEl.textContent = isBench
-      ? 'Mapa Full-System: Preço (R$) vs Score Geral do Sistema (0–100)'
-      : 'Mapa de Eficiência de Notebooks: Preço (R$) vs Custo-Benefício (0–100)';
+      ? `Mapa Full-System: Preço (${_lapSym}) vs Score Geral do Sistema (0–100)`
+      : `Mapa de Eficiência de Notebooks: Preço (${_lapSym}) vs Custo-Benefício (0–100)`;
   }
 
   // Scatter Chart
@@ -2703,7 +2704,7 @@ function renderConfigLaptopSection() {
         <input type="text" value="${_escLapHtml(ref.name)}" placeholder="Ex: Dell Inspiron i5 16GB" oninput="onConfigRefLaptopField('name', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
       </div>
       <div class="md:col-span-2">
-        <label class="text-xs font-bold text-slate-300 block mb-1">Valor Estimado (R$)</label>
+        <label class="text-xs font-bold text-slate-300 block mb-1">Valor Estimado (${(typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$'})</label>
         <input type="number" value="${Math.round(ref.price || 0)}" step="100" oninput="onConfigRefLaptopField('price', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300">
       </div>
     </div>

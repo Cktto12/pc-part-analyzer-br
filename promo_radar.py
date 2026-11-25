@@ -48,7 +48,7 @@ LAPTOP_ACCESSORY_RE = re.compile(
 )
 
 EXCLUDE_SYSTEM_RE = re.compile(
-    r"\b(computador\s*completo|pc\s*completo|pc\s*gamer\s*armada|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|silla|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
+    r"\b(computador\s*completo|pc\s*completo|pc\s*gamer\s*armada|pc\s*gamer|gaming\s*pc|komplett-?pc|pc\s*komplett|desktop-?pc|all\s*in\s*one|console|playstation|ps5|xbox|monitor|tv\s|smart\s*tv|cadeira|silla|teclado|mouse|headset|smartphone|celular|iphone|galaxy\s*s)\b",
     re.IGNORECASE,
 )
 
@@ -141,6 +141,7 @@ _PROMO_CACHE = {"updated_at": 0, "data": None}
 _PROMO_CACHE_BY_REGION = {
     "br": {"updated_at": 0, "data": None},
     "mx": {"updated_at": 0, "data": None},
+    "eu": {"updated_at": 0, "data": None},
 }
 
 
@@ -877,13 +878,117 @@ def fetch_mexico_native_promotions():
     return posts
 
 
-def classify_smartphone_deal(title_and_text, price_brl, db):
-    if price_brl < 420 or price_brl > 18000:
+def fetch_europe_native_promotions():
+    """
+    Scrapes live European EUR hardware, smartphone, peripheral & misc deals from Pepper EU sites:
+    1. MyDealz.de (Germany)
+    2. Dealabs.com (France)
+    3. Chollometro.com (Spain)
+    """
+    posts = []
+    seen_ids = set()
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8",
+    }
+
+    eu_urls = [
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/gruppe/grafikkarten"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=rtx"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=radeon"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=ryzen"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=ddr5+ram"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=mainboard"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=netzteil"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/gruppe/notebooks"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/gruppe/smartphones"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=maus+tastatur+headset"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=airfryer+heissluftfritteuse"),
+        ("mydealz_de",     "MyDealz DE",     "https://www.mydealz.de/search?q=pampers+windeln"),
+        ("dealabs_fr",     "Dealabs FR",     "https://www.dealabs.com/groupe/cartes-graphiques"),
+        ("dealabs_fr",     "Dealabs FR",     "https://www.dealabs.com/groupe/processeurs"),
+        ("dealabs_fr",     "Dealabs FR",     "https://www.dealabs.com/groupe/smartphones"),
+        ("dealabs_fr",     "Dealabs FR",     "https://www.dealabs.com/search?q=airfryer"),
+        ("dealabs_fr",     "Dealabs FR",     "https://www.dealabs.com/search?q=pampers"),
+        ("chollometro_es", "Chollometro ES", "https://www.chollometro.com/categorias/tarjetas-graficas"),
+    ]
+
+    def _fetch_one(args):
+        ch_id, ch_name, url = args
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=9) as resp:
+                return ch_id, ch_name, url, resp.read().decode("utf-8", errors="ignore")
+        except Exception as e:
+            print(f"[PromoRadar EU] Warning ({url}): {e}")
+            return ch_id, ch_name, url, ""
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+        pages = list(ex.map(_fetch_one, eu_urls))
+
+    for ch_id, ch_name, page_url, raw_html in pages:
+        if not raw_html:
+            continue
+        for m in re.finditer(r"data-vue[23]='(\{[\s\S]*?\})'\s*>", raw_html):
+            try:
+                payload = json.loads(m.group(1))
+                th = payload.get("props", {}).get("thread") or {}
+                tid = str(th.get("threadId") or "")
+                uid = f"{ch_id}/{tid}"
+                if not tid or uid in seen_ids or th.get("isExpired"):
+                    continue
+
+                price = float(th.get("price") or 0)
+                if price < 4.0 or price > 7500.0:
+                    continue
+
+                title = (th.get("title") or "").strip()
+                if not title:
+                    continue
+
+                seen_ids.add(uid)
+                voucher = (th.get("voucherCode") or "").strip() or None
+                merchant = (th.get("merchant") or {}).get("merchantName") or "EU Shop"
+                pub_ts = th.get("publishedAt") or int(time.time())
+                iso_dt = datetime.fromtimestamp(pub_ts, tz=timezone.utc).isoformat()
+                share_url = th.get("shareableLink") or th.get("url") or page_url
+                next_best = float(th.get("nextBestPrice") or price)
+
+                posts.append({
+                    "post_id": uid,
+                    "channel_id": ch_id,
+                    "channel_name": ch_name,
+                    "store_name": merchant,
+                    "post_url": share_url,
+                    "timestamp": iso_dt,
+                    "title": title[:160],
+                    "head_text": f"{title} {price:,.2f} €",
+                    "raw_text": f"{title} - {merchant} - {price:,.2f} €",
+                    "price_brl": round(price, 2),
+                    "raw_price_brl": round(max(price, next_best), 2),
+                    "discount_applied": round(max(0.0, next_best - price), 2),
+                    "coupon_code": voucher,
+                    "coupon_info": f"Code: {voucher}" if voucher else None,
+                    "buy_url": share_url,
+                    "coupon_url": None,
+                    "deal_status": "active",
+                    "stock_verified": True,
+                    "region_id": "eu"
+                })
+            except Exception:
+                continue
+
+    return posts
+
+
+def classify_smartphone_deal(title_and_text, price_brl, db, region_id="br"):
+    min_p, max_p = (70, 3500) if region_id == "eu" else (420, 18000)
+    if price_brl < min_p or price_brl > max_p:
         return None
     low = (title_and_text or "").lower()
-    if re.search(r"\b(capa|capinha|pel[íi]cula|carregador|cabo\s*usb|suporte|smartwatch|watch|tablet|ipad|fone\s*bluetooth|earbud|airpods|buds)\b", low) and not re.search(r"\b(iphone\s*1[3-7]|galaxy\s*[sa]\d{2}|poco\s*[xfmc]\d|redmi\s*note\s*\d+|moto\s*[ge]\d+|edge\s*\d{2})\b", low):
+    if re.search(r"\b(capa|capinha|pel[íi]cula|carregador|cabo\s*usb|suporte|smartwatch|watch|tablet|ipad|fone\s*bluetooth|earbud|airpods|buds|h[üu]lle|schutzfolie|ladeger[äa]t|coque)\b", low) and not re.search(r"\b(iphone\s*1[3-8]|galaxy\s*[sa]\d{2}|poco\s*[xfmc]\d|redmi\s*note\s*\d+|moto\s*[ge]\d+|edge\s*\d{2}|pixel\s*(?:8|9|10))\b", low):
         return None
-    if not re.search(r"\b(smartphone|celular|iphone\s*1[3-8]|galaxy\s*(?:[saz]\d|z\s*(?:fold|flip)\s*\d?)|poco\s*[xfmc]\d|redmi\s*(?:note|1[2-5]|a\d)|xiaomi\s*1[45]t|pixel\s*(?:8|9|10)|moto\s*[ge]\d{2}|motorola\s*edge|realme\s*(?:c\d|gt|\d{2})|rog\s*phone)\b", low):
+    if not re.search(r"\b(smartphone|celular|handy|t[ée]l[ée]phone|m[óo]vil|iphone\s*1[3-8]|galaxy\s*(?:[saz]\d|z\s*(?:fold|flip)\s*\d?)|poco\s*[xfmc]\d|redmi\s*(?:note|1[2-5]|a\d)|xiaomi\s*1[45]t|pixel\s*(?:8|9|10)|moto\s*[ge]\d{2}|motorola\s*edge|realme\s*(?:c\d|gt|\d{2})|rog\s*phone)\b", low):
         return None
 
     phones = (db or {}).get("smartphones") or []
@@ -958,17 +1063,18 @@ def classify_smartphone_deal(title_and_text, price_brl, db):
     }
 
 
-def classify_peripheral_deal(title_and_text, price_brl):
-    if price_brl < 25 or price_brl > 4500:
+def classify_peripheral_deal(title_and_text, price_brl, region_id="br"):
+    min_p, max_p = (8, 1000) if region_id == "eu" else (25, 4500)
+    if price_brl < min_p or price_brl > max_p:
         return None
     low = (title_and_text or "").lower()
-    if re.search(r"\b(mousepad|mouse\s*pad|keycap|wrist|apoio\s*de\s*pulso|cabo\s*coiled|suporte\s*para\s*headset|earpad|almofada)\b", low):
+    if re.search(r"\b(mousepad|mouse\s*pad|mauspad|tapis\s*de\s*souris|keycap|wrist|apoio\s*de\s*pulso|cabo\s*coiled|suporte\s*para\s*headset|earpad|almofada)\b", low):
         return None
-    if re.search(r"\b(mouse\s*gamer|mouse\s*sem\s*fio|superlight|viper\s*v[23]|deathadder|g305|g203|g403|g502|g703|attack\s*shark|darmoshark|cobra\s*pro)\b", low) or re.match(r"^\s*[^a-z]*mouse\b", low):
+    if re.search(r"\b(mouse\s*gamer|mouse\s*sem\s*fio|gaming\s*maus|souris\s*(?:gamer|sans\s*fil)|rat[óo]n|superlight|viper\s*v[23]|deathadder|g305|g203|g403|g502|g703|attack\s*shark|darmoshark|cobra\s*pro)\b", low) or re.match(r"^\s*[^a-z]*(?:mouse|maus|souris)\b", low):
         return "mouse"
-    if re.search(r"\b(teclado\s*mec[âa]nic|teclado\s*gamer|teclado\s*magn[ée]tico|teclado\s*sem\s*fio|kumara|fizz|draconic|aula\s*f75|keychron|huntsman|alloy\s*origins|wooting)\b", low) or re.match(r"^\s*[^a-z]*teclado\b", low):
+    if re.search(r"\b(teclado\s*mec[âa]nic|teclado\s*gamer|teclado\s*magn[ée]tico|teclado\s*sem\s*fio|gaming[- ]?tastatur|mechanische\s*tastatur|clavier|kumara|fizz|draconic|aula\s*f75|keychron|huntsman|alloy\s*origins|wooting)\b", low) or re.match(r"^\s*[^a-z]*(?:teclado|tastatur|clavier)\b", low):
         return "keyboard"
-    if re.search(r"\b(headset|cloud\s*(?:ii|iii|stinger|alpha)|h2002d|zeus\s*x?|quantum\s*\d+|blackshark|barracuda|g435|g733|fifine\s*h[689]|arctis)\b", low):
+    if re.search(r"\b(headset|kopfh[öo]rer|casque\s*gaming|auriculares|cloud\s*(?:ii|iii|stinger|alpha)|h2002d|zeus\s*x?|quantum\s*\d+|blackshark|barracuda|g435|g733|fifine\s*h[689]|arctis)\b", low):
         return "headset"
     return None
 
@@ -1058,10 +1164,11 @@ def _enrich_misc_deal_metadata(txt_probe, price_brl, misc_cat_id, misc_specs, db
     }
 
 
-def classify_misc_deal(title_and_text, price_brl, misc_categories):
+def classify_misc_deal(title_and_text, price_brl, misc_categories, region_id="br"):
     low = (title_and_text or "").lower()
-    if re.search(r"\b(fralda|pampers|huggies|babysec|pom\s*pom|mamypoko|cremer)\b", low) and not re.search(r"\blen[çc]o\b", low):
-        if price_brl < 18 or price_brl > 600:
+    is_eu = region_id == "eu"
+    if re.search(r"\b(fralda|pampers|huggies|babysec|pom\s*pom|mamypoko|cremer|windel(?:n|pak)?|couches|pa[ñn]ales|lillydoo|rascal)\b", low) and not re.search(r"\b(len[çc]o|feuchtt[üu]cher|lingettes)\b", low):
+        if price_brl < (4 if is_eu else 18) or price_brl > (160 if is_eu else 600):
             return None, {}
         try:
             import misc_scraper
@@ -1069,8 +1176,8 @@ def classify_misc_deal(title_and_text, price_brl, misc_categories):
         except Exception:
             specs = {}
         return "diapers", specs
-    if re.search(r"\b(air\s*fry(?:er)?|fritadeira\s*(?:el[ée]trica|sem\s*[óo]leo))\b", low):
-        if price_brl < 120 or price_brl > 3000:
+    if re.search(r"\b(air\s*fry(?:er)?|fritadeira\s*(?:el[ée]trica|sem\s*[óo]leo)|hei[ßs]+luftfritteuse|friteuse\s*(?:sans\s*huile|air)|freidora\s*de\s*aire)\b", low):
+        if price_brl < (25 if is_eu else 120) or price_brl > (650 if is_eu else 3000):
             return None, {}
         try:
             import misc_scraper
@@ -1089,12 +1196,12 @@ def classify_misc_deal(title_and_text, price_brl, misc_categories):
 
 def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_hours=72.0, force=False, region_id=None, fast_poll=False):
     """
-    Scans live promotions strictly isolated by region_id ('br' or 'mx').
-    Never mixes Brazilian and Mexican channels, coupons, or caches.
+    Scans live promotions strictly isolated by region_id ('br', 'mx', or 'eu').
+    Never mixes regional channels, coupons, or caches.
     """
     market_cfg = get_market_config() if get_market_config else {}
     reg = (region_id or market_cfg.get("region_id") or "br").lower().strip()
-    if reg not in ("br", "mx"):
+    if reg not in ("br", "mx", "eu"):
         reg = "br"
 
     reg_cache = _PROMO_CACHE_BY_REGION.setdefault(reg, {"updated_at": 0, "data": None})
@@ -1105,17 +1212,21 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     misc_cfg = {}
     misc_categories = []
     misc_channels_meta = []
+    try:
+        import misc_scraper
+        misc_cfg = misc_scraper.load_misc_config()
+        misc_categories = misc_cfg.get("categories") or []
+        misc_channels_meta = misc_cfg.get("telegram_groups") or []
+    except Exception:
+        misc_cfg = {}
+
     if reg == "mx":
         raw_posts = fetch_mexico_native_promotions()
         channels_scanned = ["promodescuentos_gpus", "promodescuentos_pc", "cyberpuerta_ofertas"]
+    elif reg == "eu":
+        raw_posts = fetch_europe_native_promotions()
+        channels_scanned = ["mydealz_de", "dealabs_fr", "chollometro_es"]
     else:
-        try:
-            import misc_scraper
-            misc_cfg = misc_scraper.load_misc_config()
-            misc_categories = misc_cfg.get("categories") or []
-            misc_channels_meta = misc_cfg.get("telegram_groups") or []
-        except Exception:
-            misc_cfg = {}
 
         channels = list(DEFAULT_BR_CHANNELS)
         if extra_channels:
@@ -1192,9 +1303,11 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
         txt_probe = (item.get("head_text", "") or item.get("title", "")) + " " + (item.get("raw_text", "")[:180])
         kind, cat_item = match_catalog_item(item.get("head_text", "") or item.get("title", ""), db)
         if kind and cat_item:
-            if kind == "mobo" and float(item.get("price_brl") or 0) < 220:
+            mobo_floor = 45 if reg == "eu" else (1100 if reg == "mx" else 220)
+            psu_floor = 30 if reg == "eu" else (550 if reg == "mx" else 110)
+            if kind == "mobo" and float(item.get("price_brl") or 0) < mobo_floor:
                 kind, cat_item = None, None
-            elif kind == "psu" and float(item.get("price_brl") or 0) < 110:
+            elif kind == "psu" and float(item.get("price_brl") or 0) < psu_floor:
                 kind, cat_item = None, None
         if kind and cat_item:
             hb_price = float(cat_item.get("price_brl") or 0)
@@ -1213,30 +1326,35 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
                 or item.get("coupon_info")
                 or item.get("discount_applied", 0) > 0
                 or is_cond
-                or re.search(r"\b(cupom|cupon|cupón|resgate|sacola\s*laranja|moedas|no\s*app)\b", item.get("raw_text", ""), re.I)
+                or re.search(r"\b(cupom|cupon|cupón|gutschein|code\s*promo|rabatt|resgate|sacola\s*laranja|moedas|no\s*app)\b", item.get("raw_text", ""), re.I)
             )
             item["requires_coupon"] = requires_coup
             item["promo_price_brl"] = item["price_brl"]
             item["is_expired"] = False
-            item["deal_status"] = "untested"
+            if reg != "eu":
+                item["deal_status"] = "untested"
+                item["stock_verified"] = False
+            else:
+                item.setdefault("deal_status", "active")
+                item.setdefault("stock_verified", True)
             item["is_coupon_expired"] = False
             item["coupon_status"] = "unverified" if requires_coup else "none"
             matched_deals.append(item)
         else:
             # Classify isolated tracks: Misc (diapers / air fryer / custom), Smartphone, Peripherals
-            misc_cat_id, misc_specs = classify_misc_deal(txt_probe, float(item.get("price_brl") or 0), misc_categories)
+            misc_cat_id, misc_specs = classify_misc_deal(txt_probe, float(item.get("price_brl") or 0), misc_categories, region_id=reg)
             if misc_cat_id:
                 m_copy = dict(item)
                 m_copy.update(_enrich_misc_deal_metadata(txt_probe, float(item.get("price_brl") or 0), misc_cat_id, misc_specs, db))
                 misc_deals.append(m_copy)
             else:
-                ph_match = classify_smartphone_deal(txt_probe, float(item.get("price_brl") or 0), db)
+                ph_match = classify_smartphone_deal(txt_probe, float(item.get("price_brl") or 0), db, region_id=reg)
                 if ph_match:
                     s_copy = dict(item)
                     s_copy.update(ph_match)
                     smartphone_deals.append(s_copy)
                 else:
-                    per_kind = classify_peripheral_deal(txt_probe, float(item.get("price_brl") or 0))
+                    per_kind = classify_peripheral_deal(txt_probe, float(item.get("price_brl") or 0), region_id=reg)
                     if per_kind:
                         p_copy = dict(item)
                         p_copy.update(_enrich_peripheral_deal_metadata(txt_probe, float(item.get("price_brl") or 0), per_kind, db))
@@ -1284,13 +1402,14 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     try:
         import coupon_tracker
         coupon_tracker.scan_texts_for_expiries(all_promos)
-        if fast_poll:
-            existing_deals_status = coupon_tracker.load_coupon_status(reg).get("deals", {})
-            untested_or_new = [d for d in matched_deals if not existing_deals_status.get(d.get("post_id", ""))]
-            if untested_or_new:
-                coupon_tracker.test_deals_batch(untested_or_new, max_items=12, reg_id=reg)
-        else:
-            coupon_tracker.test_deals_batch(matched_deals, max_items=40, reg_id=reg)
+        if reg != "eu":
+            if fast_poll:
+                existing_deals_status = coupon_tracker.load_coupon_status(reg).get("deals", {})
+                untested_or_new = [d for d in matched_deals if not existing_deals_status.get(d.get("post_id", ""))]
+                if untested_or_new:
+                    coupon_tracker.test_deals_batch(untested_or_new, max_items=12, reg_id=reg)
+            else:
+                coupon_tracker.test_deals_batch(matched_deals, max_items=40, reg_id=reg)
         matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(matched_deals, all_promos, reg_id=reg)
         coupon_status_obj = coupon_tracker.load_coupon_status(reg)
     except Exception as e:
@@ -1361,11 +1480,20 @@ if __name__ == "__main__":
         except Exception:
             pass
 
+    db_eu_path = os.path.join(BASE_DIR, "data", "hardware_db_eu.json")
+    db_eu = {}
+    if os.path.exists(db_eu_path):
+        try:
+            with open(db_eu_path, "r", encoding="utf-8") as f:
+                db_eu = json.load(f)
+        except Exception:
+            pass
+
     regions = [args.region.lower()] if args.region else ["br", "mx"]
 
     for reg in regions:
         print(f"=== Scanning live promotions for region '{reg}' ===")
-        db_to_use = db_mx if reg == "mx" else db_br
+        db_to_use = db_eu if reg == "eu" else (db_mx if reg == "mx" else db_br)
         res = scan_live_promotions(db_to_use, max_age_hours=args.max_age, region_id=reg, force=args.force)
         print(f"[{reg.upper()}] Matched {res.get('matched_count', 0)} deals, {len(res.get('recent_feed', []))} feed items at {res.get('scanned_at')}")
 
@@ -1386,6 +1514,14 @@ if __name__ == "__main__":
                 print(f"[MX] Successfully embedded fresh live_promos into hardware_db_mx.json")
             except Exception as e:
                 print(f"[MX] Warning saving embedded live_promos: {e}")
+        elif reg == "eu" and db_eu and os.path.exists(db_eu_path):
+            db_eu["live_promos"] = res
+            try:
+                with open(db_eu_path, "w", encoding="utf-8") as f:
+                    json.dump(db_eu, f, ensure_ascii=False, indent=2)
+                print(f"[EU] Successfully embedded fresh live_promos into hardware_db_eu.json")
+            except Exception as e:
+                print(f"[EU] Warning saving embedded live_promos: {e}")
 
     if args.notify:
         print("=== Checking alert rules and dispatching notifications ===")

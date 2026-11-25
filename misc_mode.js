@@ -52,6 +52,41 @@ function _escMiscHtml(v) {
     .replace(/"/g, '&quot;');
 }
 
+function _miscReg() {
+  if (typeof getActiveRegionId === 'function') return getActiveRegionId();
+  return (typeof STATE !== 'undefined' && STATE?.market?.region_id) || 'br';
+}
+
+function _miscSym() {
+  if (typeof STATE !== 'undefined' && STATE?.market?.monetary?.currency_symbol) {
+    return STATE.market.monetary.currency_symbol;
+  }
+  const r = _miscReg();
+  return r === 'eu' ? '€' : (r === 'mx' ? '$' : 'R$');
+}
+
+function _miscUnitMoney(val, digits = 2) {
+  const sym = _miscSym();
+  const n = Number(val || 0);
+  if (_miscReg() === 'eu') {
+    const s = digits === 0 ? String(Math.round(n)) : n.toFixed(digits).replace('.', ',');
+    return `${s} ${sym}`;
+  }
+  return digits === 0 ? `${sym} ${Math.round(n)}` : `${sym} ${n.toFixed(digits)}`;
+}
+
+function _miscStoreFallback() {
+  const r = _miscReg();
+  return r === 'eu' ? 'EU Store' : (r === 'mx' ? 'Tienda MX' : 'Loja BR');
+}
+
+function _miscSearchFallbackUrl(qEnc) {
+  const r = _miscReg();
+  if (r === 'eu') return { name: 'Geizhals EU', url: `https://geizhals.eu/?fs=${qEnc}` };
+  if (r === 'mx') return { name: 'Mercado Libre MX', url: `https://listado.mercadolibre.com.mx/${qEnc}` };
+  return { name: 'Zoom BR', url: `https://www.zoom.com.br/search?q=${qEnc}` };
+}
+
 function _slugifyMisc(txt) {
   return String(txt || 'item')
     .toLowerCase()
@@ -353,22 +388,26 @@ function renderMiscTab() {
   const activeQuery = _miscLiveSearchState.query || qCustom;
   const searchBanner = document.getElementById('misc-search-status-banner');
   if (searchBanner) {
+    const fb = _miscSearchFallbackUrl(encodeURIComponent(_miscLiveSearchState.query || ''));
     if (_miscLiveSearchState.loading) {
-      searchBanner.innerHTML = `<div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-xs text-sky-200">🔎 Buscando "${_escMiscHtml(_miscLiveSearchState.query)}" ao vivo no Zoom BR e nos canais do Telegram...</div>`;
+      searchBanner.innerHTML = `<div class="p-3 rounded-xl bg-sky-950/40 border border-sky-500/40 text-xs text-sky-200">🔎 Buscando "${_escMiscHtml(_miscLiveSearchState.query)}" ao vivo (${fb.name} e ofertas monitoradas)...</div>`;
     } else if (_miscLiveSearchState.usedFallback && _miscLiveSearchState.query) {
       const qEnc = encodeURIComponent(_miscLiveSearchState.query);
+      const linksHtml = _miscReg() === 'eu'
+        ? `<a href="https://geizhals.eu/?fs=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Geizhals EU ↗</a>
+           <a href="https://www.amazon.de/s?k=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Amazon DE ↗</a>
+           <a href="https://www.mydealz.de/search?q=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">MyDealz ↗</a>`
+        : `<a href="https://www.zoom.com.br/search?q=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Zoom BR ↗</a>
+           <a href="https://www.amazon.com.br/s?k=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Amazon BR ↗</a>
+           <a href="https://lista.mercadolivre.com.br/${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Mercado Livre ↗</a>`;
       searchBanner.innerHTML = `
         <div class="p-3 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-2">
-          <span>Modo estático (sem backend Python ativo para busca ad-hoc): pesquise <strong>${_escMiscHtml(_miscLiveSearchState.query)}</strong> direto nos sites BR:</span>
-          <div class="flex flex-wrap gap-2">
-            <a href="https://www.zoom.com.br/search?q=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Zoom BR ↗</a>
-            <a href="https://www.amazon.com.br/s?k=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Amazon BR ↗</a>
-            <a href="https://lista.mercadolivre.com.br/${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Mercado Livre ↗</a>
-          </div>
+          <span>Modo estático (sem backend Python ativo para busca ad-hoc): pesquise <strong>${_escMiscHtml(_miscLiveSearchState.query)}</strong> direto:</span>
+          <div class="flex flex-wrap gap-2">${linksHtml}</div>
         </div>
       `;
     } else if (_miscLiveSearchState.query) {
-      searchBanner.innerHTML = `<div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/35 text-xs text-emerald-200 flex items-center justify-between gap-2"><span>✓ Resultados ao vivo para "<strong>${_escMiscHtml(_miscLiveSearchState.query)}</strong>": ${_miscLiveSearchState.zoom_items.length} no Zoom BR • ${_miscLiveSearchState.telegram_deals.length} no Telegram</span><button type="button" onclick="selectMiscCategory('${_escMiscHtml(_miscActiveCatId)}')" class="ui-btn ui-btn--sm">Limpar Busca</button></div>`;
+      searchBanner.innerHTML = `<div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/35 text-xs text-emerald-200 flex items-center justify-between gap-2"><span>✓ Resultados ao vivo para "<strong>${_escMiscHtml(_miscLiveSearchState.query)}</strong>": ${_miscLiveSearchState.zoom_items.length} no catálogo • ${_miscLiveSearchState.telegram_deals.length} em promoções</span><button type="button" onclick="selectMiscCategory('${_escMiscHtml(_miscActiveCatId)}')" class="ui-btn ui-btn--sm">Limpar Busca</button></div>`;
     } else {
       searchBanner.innerHTML = '';
     }
@@ -406,22 +445,26 @@ function renderMiscTab() {
   if (catGrid) {
     if (!catalogItems.length) {
       const qEnc = encodeURIComponent(activeQuery || (cat ? cat.name : 'ofertas'));
+      const fb = _miscSearchFallbackUrl(qEnc);
       catGrid.innerHTML = `
         <div class="col-span-full p-5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 flex flex-wrap items-center justify-between gap-3">
-          <span>Nenhum item salvo ainda para "${_escMiscHtml(cat ? cat.name : _miscActiveCatId)}". Clique em <strong>🔎 Buscar Agora</strong> para consultar Zoom BR e Telegram ao vivo.</span>
-          <a href="https://www.zoom.com.br/search?q=${qEnc}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Pesquisar no Zoom ↗</a>
+          <span>Nenhum item salvo ainda para "${_escMiscHtml(cat ? cat.name : _miscActiveCatId)}". Clique em <strong>🔎 Buscar Agora</strong> para consultar ofertas ao vivo.</span>
+          <a href="${fb.url}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm">Pesquisar no ${fb.name} ↗</a>
         </div>
       `;
     } else {
+      const isEu = _miscReg() === 'eu';
+      const airLowLimit = isEu ? 28 : 150;
       catGrid.innerHTML = catalogItems.slice(0, 24).map(it => {
         const sp = it.specs || {};
         const ppu = sp.price_per_unit;
         const ppl = sp.price_per_liter;
         const unitHighlight = ppu
-          ? `<span class="ui-badge ui-badge--good ui-mono">R$ ${Number(ppu).toFixed(2)}/fralda</span>`
-          : (ppl ? `<span class="ui-badge ui-badge--a ui-mono">R$ ${Math.round(ppl)}/L</span>` : '');
-        const lowAirWarn = (_miscActiveCatId === 'air_fryer' && Number(it.price_brl || 0) < 150)
+          ? `<span class="ui-badge ui-badge--good ui-mono">${_miscUnitMoney(ppu, 2)}/unid</span>`
+          : (ppl ? `<span class="ui-badge ui-badge--a ui-mono">${_miscUnitMoney(ppl, 0)}/L</span>` : '');
+        const lowAirWarn = (_miscActiveCatId === 'air_fryer' && Number(it.price_brl || 0) < airLowLimit)
           ? '<span class="text-xs text-amber-300 block">⚠️ Preço baixo: pode ser parcela ou acessório</span>' : '';
+        const storeLabel = _escMiscHtml(it.store_name || (isEu ? 'EU Store' : 'Oferta'));
         return `
           <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-sky-500/40 transition flex flex-col justify-between gap-2.5">
             <div class="flex items-start gap-3">
@@ -439,7 +482,7 @@ function renderMiscTab() {
                 </div>
                 ${lowAirWarn}
               </div>
-              ${it.offer_url ? `<a href="${_escMiscHtml(it.offer_url)}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm shrink-0">Zoom ↗</a>` : ''}
+              ${it.offer_url ? `<a href="${_escMiscHtml(it.offer_url)}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm shrink-0">${storeLabel} ↗</a>` : ''}
             </div>
           </div>
         `;
@@ -477,14 +520,14 @@ function renderMiscTab() {
     } else {
       promosEl.innerHTML = deals.slice(0, 24).map(d => {
         const sp = d.misc_specs || {};
-        const ppu = sp.price_per_unit ? `<span class="ui-badge ui-badge--good ui-mono">R$ ${Number(sp.price_per_unit).toFixed(2)}/fralda</span>` : '';
+        const ppu = sp.price_per_unit ? `<span class="ui-badge ui-badge--good ui-mono">${_miscUnitMoney(sp.price_per_unit, 2)}/unid</span>` : '';
         const link = d.url || d.post_url || '#';
         return `
           <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/40 transition flex flex-col justify-between gap-2.5">
             <div class="space-y-1.5">
               <div class="flex items-center justify-between gap-2 flex-wrap">
-                <span class="ui-badge ui-badge--a">${_escMiscHtml(d.channel_name || ('@' + (d.channel || 'telegram')))}</span>
-                <span class="text-xs ui-mono text-slate-400">${Math.round(Number(d.age_hours || 1))}h • ${_escMiscHtml(d.store || 'Loja BR')}</span>
+                <span class="ui-badge ui-badge--a">${_escMiscHtml(d.channel_name || ('@' + (d.channel || 'deals')))}</span>
+                <span class="text-xs ui-mono text-slate-400">${Math.round(Number(d.age_hours || 1))}h • ${_escMiscHtml(d.store || _miscStoreFallback())}</span>
               </div>
               <div class="text-xs sm:text-sm font-bold text-white line-clamp-2" title="${_escMiscHtml(d.title)}">${_escMiscHtml(d.title)}</div>
               ${sp.summary ? `<div class="text-xs ui-mono text-slate-300">${_escMiscHtml(sp.summary)}</div>` : ''}
@@ -541,10 +584,10 @@ function getMiscCatalogPool(catId = null) {
 function getMiscUnitValue(it) {
   const sp = (it && it.specs) || {};
   if ((it.category_id || '') === 'diapers' && Number(sp.price_per_unit || 0) > 0) {
-    return { val: Number(sp.price_per_unit), label: `R$ ${Number(sp.price_per_unit).toFixed(2)}/fralda`, unit: 'fralda' };
+    return { val: Number(sp.price_per_unit), label: `${_miscUnitMoney(sp.price_per_unit, 2)}/unid`, unit: 'unid' };
   }
   if ((it.category_id || '') === 'air_fryer' && Number(sp.price_per_liter || 0) > 0) {
-    return { val: Number(sp.price_per_liter), label: `R$ ${Math.round(sp.price_per_liter)}/L`, unit: 'L' };
+    return { val: Number(sp.price_per_liter), label: `${_miscUnitMoney(sp.price_per_liter, 0)}/L`, unit: 'L' };
   }
   return { val: Number((it && it.price_brl) || 0), label: '', unit: '' };
 }
@@ -689,8 +732,9 @@ function renderMiscDuelAnalysis() {
       const pwr = Math.max(40, Math.min(98, ((sp.watts || 1500) / 2000) * 95));
       return [Math.round(lit), Math.round(pwr), Math.round(Number(it.overall_score || 65)), Math.round(discScore)];
     };
+    const sym = _miscSym();
     const rLbls = _miscMainDuelCat === 'diapers'
-      ? ['Economia R$/fralda', 'Volume Pacote', 'Qualidade Linha', 'Momento Preço']
+      ? [`Economia ${sym}/fralda`, 'Volume Pacote', 'Qualidade Linha', 'Momento Preço']
       : ['Capacidade (L)', 'Potência (W)', 'Nota Geral', 'Momento Preço'];
     _miscCharts.mainRadar = new Chart(radarCanvas, {
       type: 'radar',
@@ -953,7 +997,7 @@ function renderMiscCBView() {
           tooltip: { callbacks: { label: ctx => `${ctx.raw.name}: ${fmtBRLShort(ctx.raw.x)} • C/B ${Math.round(ctx.raw.y)}/100` } }
         },
         scales: {
-          x: { title: { display: true, text: 'Preço Atual (R$)', color: mutClr }, ticks: { color: mutClr, callback: v => fmtBRLShort(v) }, grid: { color: grdClr } },
+          x: { title: { display: true, text: `Preço Atual (${_miscSym()})`, color: mutClr }, ticks: { color: mutClr, callback: v => fmtBRLShort(v) }, grid: { color: grdClr } },
           y: { title: { display: true, text: 'Score Custo-Benefício (0-100)', color: mutClr }, ticks: { color: mutClr }, grid: { color: grdClr } }
         }
       }
@@ -1024,42 +1068,53 @@ function renderMiscUpgrades() {
   const root = document.getElementById('upgrades-misc-view');
   if (!root) return;
   const cfg = loadMiscConfigState();
+  const sym = _miscSym();
+  const isEu = _miscReg() === 'eu';
+  const dpRefs = isEu
+    ? ['• Size 1–2 (RN / P): € 0,11 – € 0,14/unid.', '• Size 3–4 (M / G): € 0,13 – € 0,18/unid.', '• Size 5–6+ / Pants: € 0,17 – € 0,25/unid.']
+    : ['• RN / P: alvo bom R$ 0,65 – R$ 0,85/unid.', '• M / G: alvo bom R$ 0,80 – R$ 1,05/unid.', '• XG / XXG / Pants: alvo bom R$ 0,95 – R$ 1,35/unid.'];
+  const afRefs = isEu
+    ? ['• Basket 4L–5.5L: ideal € 10 – € 15/L', '• Basket 7L–8L: ideal € 9 – € 13/L', '• Dual / Oven 9L–12L: ideal € 8 – € 13/L']
+    : ['• Cesto 4L–5.5L: ideal R$ 55 – R$ 85/L', '• Cesto 7L–8L: ideal R$ 55 – R$ 75/L', '• Oven / Forno 10L–12L: ideal R$ 45 – R$ 75/L'];
+  const displayGroups = isEu
+    ? [
+        { id: 'mydealz_de', name: 'MyDealz DE (Windeln & Heißluftfritteuse)' },
+        { id: 'dealabs_fr', name: 'Dealabs FR (Couches & Air Fryer)' },
+        { id: 'chollometro_es', name: 'Chollometro ES (Pañales & Hogar)' }
+      ]
+    : cfg.telegram_groups;
   root.innerHTML = `
     <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
       <div>
-        <span class="ui-label">Guia de Compra + Grupos de Fraldas &amp; Casa</span>
-        <h2 class="ui-title-lg">Valores de Referência (R$/L &amp; R$/fralda) e Grupos Monitorados</h2>
+        <span class="ui-label">Guia de Compra + Fontes de Fraldas &amp; Casa</span>
+        <h2 class="ui-title-lg">Valores de Referência (${sym}/L &amp; ${sym}/fralda) e Fontes Monitoradas</h2>
       </div>
       <button type="button" onclick="switchTab('misc')" class="ui-btn ui-btn--sm ui-btn--primary">Buscar Produto ao Vivo</button>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
       <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-        <div class="text-sm font-bold text-emerald-300">👶 Referência R$/fralda por Tamanho</div>
+        <div class="text-sm font-bold text-emerald-300">👶 Referência ${sym}/fralda por Tamanho</div>
         <ul class="space-y-1 text-slate-300 ui-mono">
-          <li>• RN / P: alvo bom R$ 0,65 – R$ 0,85/unid.</li>
-          <li>• M / G: alvo bom R$ 0,80 – R$ 1,05/unid.</li>
-          <li>• XG / XXG / Pants: alvo bom R$ 0,95 – R$ 1,35/unid.</li>
+          ${dpRefs.map(x => `<li>${x}</li>`).join('')}
         </ul>
       </div>
       <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
-        <div class="text-sm font-bold text-amber-300">🍟 Referência Air Fryer (R$/Litro)</div>
+        <div class="text-sm font-bold text-amber-300">🍟 Referência Air Fryer (${sym}/Litro)</div>
         <ul class="space-y-1 text-slate-300 ui-mono">
-          <li>• Cesto 4L–5.5L: ideal R$ 55 – R$ 85/L</li>
-          <li>• Cesto 7L–8L: ideal R$ 55 – R$ 75/L</li>
-          <li>• Oven / Forno 10L–12L: ideal R$ 45 – R$ 75/L</li>
+          ${afRefs.map(x => `<li>${x}</li>`).join('')}
         </ul>
       </div>
     </div>
     <div class="space-y-2">
-      <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Grupos do Telegram onde Fraldas &amp; Casa aparecem</h3>
+      <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">${isEu ? 'Plataformas Europeias onde Fraldas & Casa aparecem' : 'Grupos do Telegram onde Fraldas & Casa aparecem'}</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
-        ${cfg.telegram_groups.map(g => `
+        ${displayGroups.map(g => `
           <div class="p-3 rounded-xl bg-slate-950 border ${g.enabled !== false ? 'border-slate-700' : 'border-slate-800/60'} flex items-center justify-between gap-2 text-xs">
             <div class="min-w-0">
-              <div class="font-bold text-white truncate">@${_escMiscHtml(g.id)}</div>
+              <div class="font-bold text-white truncate">${isEu ? '' : '@'}${_escMiscHtml(g.id)}</div>
               <div class="text-slate-400 truncate">${_escMiscHtml(g.name || '')}</div>
             </div>
-            <button type="button" onclick="toggleMiscTelegramGroup('${_escMiscHtml(g.id)}'); renderMiscUpgrades();" class="ui-btn ui-btn--sm shrink-0">${g.enabled !== false ? 'Ativo' : 'Pausado'}</button>
+            ${isEu ? '<span class="ui-badge ui-badge--good shrink-0">EU Ativo</span>' : `<button type="button" onclick="toggleMiscTelegramGroup('${_escMiscHtml(g.id)}'); renderMiscUpgrades();" class="ui-btn ui-btn--sm shrink-0">${g.enabled !== false ? 'Ativo' : 'Pausado'}</button>`}
           </div>
         `).join('')}
       </div>
@@ -1076,6 +1131,8 @@ function setMiscSimParam(kind, val) {
 function renderMiscSimulator() {
   const root = document.getElementById('sim-misc-view');
   if (!root) return;
+  const sym = _miscSym();
+  const isEu = _miscReg() === 'eu';
   const dps = getMiscCatalogPool('diapers').filter(x => Number((x.specs || {}).price_per_unit || 0) > 0);
   const afs = getMiscCatalogPool('air_fryer');
   const sortedDp = dps.slice().sort((a, b) => Number(a.specs.price_per_unit) - Number(b.specs.price_per_unit));
@@ -1086,7 +1143,7 @@ function renderMiscSimulator() {
   const midMonth = midDp ? monthlyUnits * Number(midDp.specs.price_per_unit) : 0;
   const annualSaving = Math.max(0, (midMonth - bestMonth) * 12);
   const selAf = afs.find(x => x.slug === _miscBuilderAirSlug) || afs[0];
-  const afWithCoupon = selAf ? Math.max(50, Number(selAf.price_brl || 0) - _miscSimCouponBrl) : 0;
+  const afWithCoupon = selAf ? Math.max(isEu ? 10 : 50, Number(selAf.price_brl || 0) - _miscSimCouponBrl) : 0;
 
   root.innerHTML = `
     <div class="ui-card space-y-4">
@@ -1103,8 +1160,8 @@ function renderMiscSimulator() {
           </div>
           ${bestDp ? `
             <div class="text-xs space-y-1 ui-mono">
-              <div class="text-emerald-400">Melhor R$/fralda: ${_escMiscHtml(_shortMiscName(bestDp))} → ${fmtBRL(bestMonth)}/mês (R$ ${Number(bestDp.specs.price_per_unit).toFixed(2)}/unid.)</div>
-              <div class="text-slate-400">Mediana do catálogo → ${fmtBRL(midMonth)}/mês (R$ ${Number(midDp.specs.price_per_unit).toFixed(2)}/unid.)</div>
+              <div class="text-emerald-400">Melhor ${sym}/fralda: ${_escMiscHtml(_shortMiscName(bestDp))} → ${fmtBRL(bestMonth)}/mês (${_miscUnitMoney(bestDp.specs.price_per_unit, 2)}/unid.)</div>
+              <div class="text-slate-400">Mediana do catálogo → ${fmtBRL(midMonth)}/mês (${_miscUnitMoney(midDp.specs.price_per_unit, 2)}/unid.)</div>
               <div class="text-sky-300 font-bold pt-1">Economia estimada em 1 ano escolhendo o pacote certo: ${fmtBRL(annualSaving)}!</div>
             </div>
           ` : '<div class="text-xs text-slate-400">Aguardando pacotes com contagem de fraldas.</div>'}
@@ -1112,14 +1169,14 @@ function renderMiscSimulator() {
         <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
           <div class="text-sm font-bold text-amber-300">🍟 Simulador de Cupom Air Fryer</div>
           <div>
-            <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Cupom / Cashback aplicado (R$ OFF):</span><strong class="ui-mono text-amber-300">−${fmtBRLShort(_miscSimCouponBrl)}</strong></div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Cupom / Cashback aplicado (${sym} OFF):</span><strong class="ui-mono text-amber-300">−${fmtBRLShort(_miscSimCouponBrl)}</strong></div>
             <input type="number" min="0" max="500" step="10" value="${_miscSimCouponBrl}" onchange="setMiscSimParam('coupon', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs ui-mono text-white" />
           </div>
           ${selAf ? `
             <div class="text-xs space-y-1 ui-mono">
               <div class="text-slate-300 font-semibold">${_escMiscHtml(_shortMiscName(selAf))}</div>
               <div>Hoje: ${fmtBRL(selAf.price_brl)} → Com cupom: <strong class="text-emerald-400">${fmtBRL(afWithCoupon)}</strong></div>
-              ${(selAf.specs && selAf.specs.liters) ? `<div class="text-sky-300">Custo por Litro cai para R$ ${(afWithCoupon / Number(selAf.specs.liters)).toFixed(2)}/L</div>` : ''}
+              ${(selAf.specs && selAf.specs.liters) ? `<div class="text-sky-300">Custo por Litro cai para ${_miscUnitMoney(afWithCoupon / Number(selAf.specs.liters), 2)}/L</div>` : ''}
             </div>
           ` : ''}
         </div>
@@ -1140,7 +1197,7 @@ function renderMiscConfigSection() {
       <div class="p-3 rounded-xl bg-slate-950 border border-slate-800"><span class="text-slate-400 block">👶 Fraldas</span><strong class="text-lg ui-mono text-white">${dps}</strong></div>
       <div class="p-3 rounded-xl bg-slate-950 border border-slate-800"><span class="text-slate-400 block">📢 Grupos Ativos</span><strong class="text-lg ui-mono text-emerald-400">${cfg.telegram_groups.filter(g => g.enabled !== false).length}</strong></div>
     </div>
-    <p class="text-xs text-slate-400">Personalize alertas de Air Fryer, tamanho/preço por fralda (R$/unid.) ou qualquer item livre na aba <strong>Promoções → Filtros</strong>.</p>
+    <p class="text-xs text-slate-400">Personalize alertas de Air Fryer, tamanho/preço por fralda (${_miscSym()}/unid.) ou qualquer item livre na aba <strong>Promoções → Filtros</strong>.</p>
   `;
 }
 

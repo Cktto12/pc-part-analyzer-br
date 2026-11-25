@@ -395,7 +395,7 @@ function renderPeripheralsTab() {
             <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
               <div>
                 <span class="text-base font-black ui-mono text-emerald-400">${fmtBRL(d.price_brl)}</span>
-                <span class="text-xs text-slate-400 block">${_escPerHtml(d.store || 'Loja BR')}</span>
+                <span class="text-xs text-slate-400 block">${_escPerHtml(d.store || ((typeof getActiveRegionId === 'function' && getActiveRegionId() === 'eu') ? 'EU Store' : (typeof getActiveRegionId === 'function' && getActiveRegionId() === 'mx' ? 'Tienda MX' : 'Loja BR')))}</span>
               </div>
               <a href="${_escPerHtml(link)}" target="_blank" rel="noopener noreferrer" class="ui-btn ui-btn--sm ui-btn--primary">Ver Oferta ↗</a>
             </div>
@@ -516,7 +516,7 @@ function renderPeripheralsDuelAnalysis() {
       <span class="ui-label">Modelo A</span>
       <div class="font-bold text-white text-sm truncate">${_escPerHtml(shortPeripherName(itemA))}</div>
       <div class="text-xs ui-mono text-sky-300">${fmtBRL(pA)} • Nota ${itemA.overall_score}/100 • C/B ${itemA.cb_score}</div>
-      ${itemA.offer_url ? `<a href="${_escPerHtml(itemA.offer_url)}" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-400 hover:underline inline-block pt-1">Ver no Zoom ↗</a>` : ''}
+      ${itemA.offer_url ? `<a href="${_escPerHtml(itemA.offer_url)}" target="_blank" rel="noopener noreferrer" class="text-xs text-sky-400 hover:underline inline-block pt-1">Ver em ${_escPerHtml(itemA.store_name || 'Oferta')} ↗</a>` : ''}
     </div>
     <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1 flex flex-col justify-center">
       <span class="ui-label">Veredito do Duelo</span>
@@ -528,7 +528,7 @@ function renderPeripheralsDuelAnalysis() {
       <span class="ui-label">Modelo B</span>
       <div class="font-bold text-white text-sm truncate">${_escPerHtml(shortPeripherName(itemB))}</div>
       <div class="text-xs ui-mono text-purple-300">${fmtBRL(pB)} • Nota ${itemB.overall_score}/100 • C/B ${itemB.cb_score}</div>
-      ${itemB.offer_url ? `<a href="${_escPerHtml(itemB.offer_url)}" target="_blank" rel="noopener noreferrer" class="text-xs text-purple-300 hover:underline inline-block pt-1">Ver no Zoom ↗</a>` : ''}
+      ${itemB.offer_url ? `<a href="${_escPerHtml(itemB.offer_url)}" target="_blank" rel="noopener noreferrer" class="text-xs text-purple-300 hover:underline inline-block pt-1">Ver em ${_escPerHtml(itemB.store_name || 'Oferta')} ↗</a>` : ''}
     </div>
   `;
 
@@ -588,7 +588,7 @@ function renderPeripheralsDuelAnalysis() {
   if (specsEl) {
     const rows = [
       ['Marca', itemA.brand || '--', itemB.brand || '--'],
-      ['Preço Atual (Zoom BR)', fmtBRL(itemA.price_brl), fmtBRL(itemB.price_brl)],
+      ['Preço Atual', fmtBRL(itemA.price_brl), fmtBRL(itemB.price_brl)],
       ['Média 90d / Mín. 90d', `${fmtBRLShort((itemA.price_stats || {}).avg_90d || itemA.price_brl)} / ${fmtBRLShort((itemA.price_stats || {}).min_90d || itemA.price_brl)}`, `${fmtBRLShort((itemB.price_stats || {}).avg_90d || itemB.price_brl)} / ${fmtBRLShort((itemB.price_stats || {}).min_90d || itemB.price_brl)}`],
       ..._buildPeripheralSpecRows(itemA, itemB)
     ];
@@ -749,7 +749,7 @@ function renderPeripheralsCBView() {
           tooltip: { callbacks: { label: ctx => `${ctx.raw.name}: ${fmtBRLShort(ctx.raw.x)} • Nota ${ctx.raw.y}/100 (C/B ${ctx.raw.cb})` } }
         },
         scales: {
-          x: { title: { display: true, text: 'Preço Atual (R$)', color: colors.muted }, ticks: { color: colors.muted, callback: v => fmtBRLShort(v) }, grid: { color: colors.grid } },
+          x: { title: { display: true, text: `Preço Atual (${(typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$'})`, color: colors.muted }, ticks: { color: colors.muted, callback: v => fmtBRLShort(v) }, grid: { color: colors.grid } },
           y: { title: { display: true, text: 'Nota Técnica (0-100)', color: colors.muted }, ticks: { color: colors.muted }, grid: { color: colors.grid } }
         }
       }
@@ -924,7 +924,7 @@ function renderPeripheralsSimulator() {
             <input type="range" min="0" max="45" step="1" value="${_periphSimDiscountPct}" oninput="setPeriphSimParam('disc', this.value)" class="w-full" />
           </div>
           <div>
-            <div class="flex justify-between text-xs mb-1"><span class="text-slate-300 font-semibold">Cupom extra (R$ OFF)</span><strong class="ui-mono text-amber-300">−${fmtBRLShort(_periphSimCouponBrl)}</strong></div>
+            <div class="flex justify-between text-xs mb-1"><span class="text-slate-300 font-semibold">Cupom extra (${(typeof STATE !== 'undefined' && STATE.market?.monetary?.currency_symbol) || 'R$'} OFF)</span><strong class="ui-mono text-amber-300">−${fmtBRLShort(_periphSimCouponBrl)}</strong></div>
             <input type="number" min="0" max="1500" step="10" value="${_periphSimCouponBrl}" onchange="setPeriphSimParam('coupon', this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs ui-mono text-white" />
           </div>
         </div>
