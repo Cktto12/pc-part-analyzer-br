@@ -839,9 +839,17 @@ if __name__ == "__main__":
         with open(db_path, "r", encoding="utf-8") as f:
             db = json.load(f)
     phones = build_smartphones_catalog(existing_smartphones=db.get("smartphones"))
-    db["smartphones"] = phones
-    db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    with open(db_path, "w", encoding="utf-8") as f:
-        json.dump(db, f, ensure_ascii=False, indent=2)
-    print(f"Saved {len(phones)} smartphones to {db_path}")
+    if phones:
+        by_slug = {item.get("slug"): item for item in (db.get("smartphones") or []) if item.get("slug")}
+        for item in phones:
+            if item.get("slug"):
+                by_slug[item["slug"]] = item
+        fresh_slugs = {item.get("slug") for item in phones if item.get("slug")}
+        db["smartphones"] = list(phones) + [v for k, v in by_slug.items() if k not in fresh_slugs]
+        db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        with open(db_path, "w", encoding="utf-8") as f:
+            json.dump(db, f, ensure_ascii=False, indent=2)
+        print(f"Saved {len(db['smartphones'])} smartphones to {db_path}")
+    else:
+        print("Warning: 0 smartphones scraped (rate-limited/offline); preserving existing catalog.")
