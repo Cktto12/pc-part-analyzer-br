@@ -1,8 +1,8 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "19:12:00",
-  "last_sitewise_test_at": "2026-11-26 19:12:00",
+  "scanned_at": "19:15:38",
+  "last_sitewise_test_at": "2026-11-26 19:15:38",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -67,28 +67,6 @@
   ],
   "recent_feed": [
     {
-      "post_id": "pdmx/1213738",
-      "channel_id": "promodescuentos_pc",
-      "channel_name": "Promodescuentos PC",
-      "store_name": "CyberPuerta",
-      "post_url": "https://www.promodescuentos.com/share-deal/1213738",
-      "timestamp": "2026-11-26T18:40:10+00:00",
-      "title": "CyberPuerta: Impresora Brother Multifuncional DCP L2540DW",
-      "head_text": "CyberPuerta: Impresora Brother Multifuncional DCP L2540DW $3,719 MXN",
-      "raw_text": "CyberPuerta: Impresora Brother Multifuncional DCP L2540DW - CyberPuerta - $3,719 MXN",
-      "price_brl": 3719,
-      "raw_price_brl": 3719,
-      "discount_applied": 0,
-      "coupon_code": null,
-      "coupon_info": null,
-      "buy_url": "https://www.promodescuentos.com/share-deal/1213738",
-      "coupon_url": null,
-      "region_id": "mx",
-      "age_hours": 0.5,
-      "requires_coupon": false,
-      "promo_price_brl": 3719
-    },
-    {
       "post_id": "pdmx/1213737",
       "channel_id": "promodescuentos_gpus",
       "channel_name": "Promodescuentos GPUs",
@@ -109,6 +87,28 @@
       "age_hours": 0.6,
       "requires_coupon": true,
       "promo_price_brl": 4147
+    },
+    {
+      "post_id": "pdmx/1213738",
+      "channel_id": "promodescuentos_pc",
+      "channel_name": "Promodescuentos PC",
+      "store_name": "CyberPuerta",
+      "post_url": "https://www.promodescuentos.com/share-deal/1213738",
+      "timestamp": "2026-11-26T18:40:10+00:00",
+      "title": "CyberPuerta: Impresora Brother Multifuncional DCP L2540DW",
+      "head_text": "CyberPuerta: Impresora Brother Multifuncional DCP L2540DW $3,719 MXN",
+      "raw_text": "CyberPuerta: Impresora Brother Multifuncional DCP L2540DW - CyberPuerta - $3,719 MXN",
+      "price_brl": 3719,
+      "raw_price_brl": 3719,
+      "discount_applied": 0,
+      "coupon_code": null,
+      "coupon_info": null,
+      "buy_url": "https://www.promodescuentos.com/share-deal/1213738",
+      "coupon_url": null,
+      "region_id": "mx",
+      "age_hours": 0.6,
+      "requires_coupon": false,
+      "promo_price_brl": 3719
     }
   ],
   "coupon_status": {
@@ -326,8 +326,8 @@
         "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-        "tested_ts": 1795720056.1784112,
-        "updated_at": "2026-11-26 19:07:36"
+        "tested_ts": 1795720321.860804,
+        "updated_at": "2026-11-26 19:12:01"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
         "status": "untested",
@@ -338,8 +338,8 @@
         "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-        "tested_ts": 1795720056.6983333,
-        "updated_at": "2026-11-26 19:07:36"
+        "tested_ts": 1795720322.4236484,
+        "updated_at": "2026-11-26 19:12:02"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
         "status": "untested",
@@ -350,11 +350,11 @@
         "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-        "tested_ts": 1795720057.376448,
-        "updated_at": "2026-11-26 19:07:37"
+        "tested_ts": 1795720323.0290818,
+        "updated_at": "2026-11-26 19:12:03"
       }
     },
-    "updated_at": "2026-11-26 19:12:00",
+    "updated_at": "2026-11-26 19:15:38",
     "group_coupons": {
       "MXBF1": {
         "store_key": null,
@@ -374,11 +374,11 @@
         "channels": [
           "promodescuentos_gpus"
         ],
-        "seen_count": 8,
+        "seen_count": 9,
         "first_seen_ts": 1795718218.0,
         "last_seen_ts": 1795718218.0,
         "sample_info": "Cupón MX: SANTT526",
-        "updated_at": "2026-11-26 19:12:00"
+        "updated_at": "2026-11-26 19:15:38"
       }
     }
   }
