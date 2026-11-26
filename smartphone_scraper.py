@@ -10,8 +10,10 @@ import os
 import sys
 import re
 import json
+import time
 import statistics
 import urllib.request
+import urllib.error
 import concurrent.futures
 from datetime import datetime
 
@@ -26,6 +28,48 @@ SCRAPER_HEADERS = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8",
 }
+ZOOM_RESTQL_HEADERS = {
+    "User-Agent": SCRAPER_HEADERS["User-Agent"],
+    "Accept": "application/json",
+    "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
+    "Referer": "https://www.zoom.com.br/",
+    "Origin": "https://www.zoom.com.br",
+}
+
+
+def fetch_zoom_12m_history(pid):
+    """Fetches up to 12 months (~366 days) of Zoom BR daily price history via public RESTQL."""
+    clean_pid = re.sub(r"\D+", "", str(pid or ""))
+    if not clean_pid:
+        return []
+    for amount in (12, 6, 3):
+        url = f"https://api-v1.zoom.com.br/restql/run-query/sherlock/product_price_history/1?tenant=DEFAULT&product_id={clean_pid}&period=months&amount={amount}"
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request(url, headers=ZOOM_RESTQL_HEADERS)
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    payload = json.loads(resp.read().decode("utf-8", errors="ignore"))
+                ph = payload.get("product_price_history") or {}
+                res = ph.get("result") or []
+                if res:
+                    return res
+                break
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt < 2:
+                    time.sleep(1.2 * (attempt + 1))
+                    continue
+                if e.code in (400, 404):
+                    break
+                if attempt < 2:
+                    time.sleep(1.0)
+                    continue
+                break
+            except Exception:
+                if attempt < 2:
+                    time.sleep(1.0)
+                    continue
+                break
+    return []
 
 ZOOM_SMARTPHONE_SHELVES = [
     "/celular",
@@ -610,6 +654,7 @@ def enrich_smartphone(raw):
 
     return {
         "slug": raw["slug"],
+        "zoom_product_id": str(raw.get("zoom_product_id") or ""),
         "name": name,
         "brand": brand,
         "line": line,
@@ -691,6 +736,7 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
     ph_days = []
     img_url = hit.get("image") or ""
     prod_name = name
+    pid = str(hit.get("sourceId") or "")
 
     try:
         req = urllib.request.Request(full_url, headers=SCRAPER_HEADERS)
@@ -700,7 +746,9 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
             d = json.loads(m.group(1))
             props = d.get("props", {})
             redux = props.get("initialReduxState", {})
-            pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+            page_pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+            if page_pid:
+                pid = page_pid
             prod_root = redux.get("products", {}).get("product", {}) or {}
             prod_info = prod_root.get("product") or {}
             if prod_info.get("name"):
@@ -717,10 +765,12 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
     except Exception as e:
         print(f"Warning fetching smartphone {slug}: {e}")
 
+    ph_12m = fetch_zoom_12m_history(pid) if pid else []
+
     price_brl = float(best_offer.get("price") or hit.get("price") or 0.0)
-    if price_brl <= 0 and ph_days:
+    if price_brl <= 0 and (ph_12m or ph_days):
         valid_days = []
-        for d_item in ph_days:
+        for d_item in (ph_12m or []) + (ph_days or []):
             try:
                 dp = float(d_item.get("price") or 0)
             except (TypeError, ValueError):
@@ -737,7 +787,7 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
     num_parcels = best_offer.get("numParcels") or 10
     total_parceled = float(best_offer.get("totalParceledValue") or price_brl)
 
-    floor_valid = max(320.0, price_brl * 0.38) if price_brl > 0 else 320.0
+    floor_valid = max(320.0, price_brl * 0.35) if price_brl > 0 else 320.0
     hist_by_date = {}
     for h in (existing_history or []):
         d_str = str(h.get("date") or "")[:10]
@@ -745,7 +795,7 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
         if d_str and p_val >= floor_valid:
             hist_by_date[d_str] = {"date": d_str, "price": round(p_val, 2), "store": h.get("store") or "zoom"}
 
-    for h in ph_days:
+    for h in (ph_12m or []) + (ph_days or []):
         d_str = str(h.get("date") or "")[:10]
         try:
             p_val = float(h.get("price") or 0)
@@ -764,6 +814,7 @@ def fetch_zoom_smartphone_detail(hit, existing_history=None):
 
     return enrich_smartphone({
         "slug": slug,
+        "zoom_product_id": pid,
         "name": prod_name,
         "price_brl": price_brl,
         "store_name": store_name,
@@ -832,8 +883,159 @@ def refresh_live_smartphone_prices(db):
     return updated, dropped
 
 
+def _recompute_smartphone_price_stats(price_brl, history):
+    prices = [float(h["price"]) for h in (history or []) if h.get("price") and float(h["price"]) > 300]
+    if price_brl > 0:
+        prices.append(float(price_brl))
+    min_all = round(min(prices), 2) if prices else round(float(price_brl), 2)
+    min_90d = round(min(prices[-90:]), 2) if prices else min_all
+    avg_30d = round(statistics.mean(prices[-30:]), 2) if prices else min_all
+    avg_90d = round(statistics.mean(prices[-90:]), 2) if prices else min_all
+    median_180d = round(statistics.median(prices[-180:]), 2) if prices else min_all
+    target_price = round(min(avg_90d * 0.92, min_90d * 1.04), 2) if prices else min_all
+    vs_avg_90d_pct = round(((price_brl - avg_90d) / avg_90d) * 100, 1) if avg_90d > 0 else 0.0
+    vs_min_90d_pct = round(((price_brl - min_90d) / min_90d) * 100, 1) if min_90d > 0 else 0.0
+    vs_target_brl = round(price_brl - target_price, 2)
+    p_status = "great" if price_brl <= target_price else ("fair" if price_brl <= avg_90d * 1.03 else "high")
+    return {
+        "target_price": target_price,
+        "min_all_time": min_all,
+        "min_90d": min_90d,
+        "avg_30d": avg_30d,
+        "avg_90d": avg_90d,
+        "median_180d": median_180d,
+        "vs_avg_90d_pct": vs_avg_90d_pct,
+        "vs_min_90d_pct": vs_min_90d_pct,
+        "vs_target_brl": vs_target_brl,
+        "status": p_status,
+    }
+
+
+def backfill_smartphone_histories(db_path):
+    """Backfills up to 12 months (~366 days) of real Zoom BR price history for all saved smartphones."""
+    with open(db_path, "r", encoding="utf-8") as f:
+        db = json.load(f)
+    phones = db.get("smartphones") or []
+    if not phones:
+        print("No smartphones found in database to backfill.")
+        return 0
+
+    before_lens = [len(p.get("history") or []) for p in phones]
+    print(f"Backfilling 12-month histories for {len(phones)} smartphones (before: min={min(before_lens)}, median={sorted(before_lens)[len(before_lens)//2]}, max={max(before_lens)})...")
+
+    shelf_hits = fetch_zoom_smartphone_listings()
+    pid_by_slug = {}
+    for h in shelf_hits:
+        sl = (h.get("seoUrl") or "").strip().lower()
+        sid = str(h.get("sourceId") or "").strip()
+        if sl and sid.isdigit():
+            pid_by_slug[sl] = sid
+
+    missing = []
+    for p in phones:
+        sl = (p.get("slug") or "").strip().lower()
+        pid = str(p.get("zoom_product_id") or "").strip()
+        if not pid.isdigit() and sl in pid_by_slug:
+            pid = pid_by_slug[sl]
+        if pid.isdigit():
+            p["zoom_product_id"] = pid
+        else:
+            missing.append(p)
+
+    print(f"Resolved {len(phones) - len(missing)}/{len(phones)} product IDs from cache & shelves; fetching remaining {len(missing)} product pages...")
+
+    def _resolve_pid(phone):
+        url = phone.get("offer_url") or f"{ZOOM_BASE_URL}/celular/{phone.get('slug')}"
+        for attempt in range(2):
+            time.sleep(0.25)
+            try:
+                req = urllib.request.Request(url, headers=SCRAPER_HEADERS)
+                html_str = urllib.request.urlopen(req, timeout=12).read().decode("utf-8", errors="ignore")
+                m = re.search(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', html_str, re.S)
+                if m:
+                    d = json.loads(m.group(1))
+                    pid = str(d.get("props", {}).get("pageProps", {}).get("page", {}).get("productID") or "").strip()
+                    if pid.isdigit():
+                        return phone.get("slug"), pid
+                return phone.get("slug"), ""
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt == 0:
+                    time.sleep(1.8)
+                    continue
+                return phone.get("slug"), ""
+            except Exception:
+                return phone.get("slug"), ""
+        return phone.get("slug"), ""
+
+    if missing:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+            for sl, pid in ex.map(_resolve_pid, missing):
+                if pid:
+                    pid_by_slug[sl] = pid
+        for p in phones:
+            sl = p.get("slug")
+            if not str(p.get("zoom_product_id") or "").isdigit() and sl in pid_by_slug:
+                p["zoom_product_id"] = pid_by_slug[sl]
+
+    to_fetch = [p for p in phones if str(p.get("zoom_product_id") or "").isdigit()]
+    print(f"Fetching 12-month sherlock histories for {len(to_fetch)}/{len(phones)} smartphones...")
+
+    def _fetch_hist_pair(phone):
+        return phone.get("slug"), fetch_zoom_12m_history(phone["zoom_product_id"])
+
+    hist_results = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+        for sl, res in ex.map(_fetch_hist_pair, to_fetch):
+            if res:
+                hist_results[sl] = res
+
+    upgraded = 0
+    for p in phones:
+        sl = p.get("slug")
+        new_rows = hist_results.get(sl) or []
+        cur_price = float(p.get("price_brl") or 0)
+        floor_valid = max(320.0, cur_price * 0.35) if cur_price > 0 else 320.0
+
+        hist_by_date = {}
+        for h in (p.get("history") or []):
+            d_str = str(h.get("date") or "")[:10]
+            try:
+                pv = float(h.get("price") or 0)
+            except (TypeError, ValueError):
+                pv = 0.0
+            if d_str and pv >= floor_valid:
+                hist_by_date[d_str] = {"date": d_str, "price": round(pv, 2), "store": h.get("store") or "zoom"}
+
+        for h in new_rows:
+            d_str = str(h.get("date") or "")[:10]
+            try:
+                pv = float(h.get("price") or 0)
+            except (TypeError, ValueError):
+                pv = 0.0
+            if d_str and pv >= floor_valid:
+                prev_pt = hist_by_date.get(d_str)
+                if not prev_pt or prev_pt.get("store") == "zoom":
+                    hist_by_date[d_str] = {"date": d_str, "price": round(pv, 2), "store": "zoom"}
+
+        merged = sorted(hist_by_date.values(), key=lambda x: x["date"])[-600:]
+        if len(merged) > len(p.get("history") or []):
+            upgraded += 1
+        p["history"] = merged
+        p["price_stats"] = _recompute_smartphone_price_stats(cur_price, merged)
+
+    after_lens = [len(p.get("history") or []) for p in phones]
+    db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(db_path, "w", encoding="utf-8") as f:
+        json.dump(db, f, ensure_ascii=False, indent=2)
+    print(f"Backfill complete: {upgraded}/{len(phones)} smartphones expanded (after: min={min(after_lens)}, median={sorted(after_lens)[len(after_lens)//2]}, max={max(after_lens)})")
+    return upgraded
+
+
 if __name__ == "__main__":
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "hardware_db.json")
+    if "--backfill-history" in sys.argv:
+        backfill_smartphone_histories(db_path)
+        sys.exit(0)
     db = {}
     if os.path.exists(db_path):
         with open(db_path, "r", encoding="utf-8") as f:

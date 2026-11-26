@@ -303,6 +303,7 @@ def fetch_zoom_peripheral_detail(pair, existing_history=None):
     ph_days = []
     img_url = hit.get("image") or ""
     prod_name = name
+    pid = str(hit.get("sourceId") or "")
 
     try:
         req = urllib.request.Request(full_url, headers=SCRAPER_HEADERS)
@@ -312,7 +313,9 @@ def fetch_zoom_peripheral_detail(pair, existing_history=None):
             d = json.loads(m.group(1))
             props = d.get("props", {})
             redux = props.get("initialReduxState", {})
-            pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+            page_pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+            if page_pid:
+                pid = page_pid
             prod_root = redux.get("products", {}).get("product", {}) or {}
             prod_info = prod_root.get("product") or {}
             if prod_info.get("name"):
@@ -329,6 +332,14 @@ def fetch_zoom_peripheral_detail(pair, existing_history=None):
     except Exception:
         pass
 
+    ph_12m = []
+    if pid:
+        try:
+            from smartphone_scraper import fetch_zoom_12m_history
+            ph_12m = fetch_zoom_12m_history(pid)
+        except Exception:
+            ph_12m = []
+
     price_brl = float(best_offer.get("price") or hit.get("price") or 0.0)
     if best_offer.get("imageUrl"):
         img_url = best_offer["imageUrl"]
@@ -341,7 +352,7 @@ def fetch_zoom_peripheral_detail(pair, existing_history=None):
         p_val = float(h.get("price") or 0)
         if d_str and p_val >= floor_valid:
             hist_by_date[d_str] = {"date": d_str, "price": round(p_val, 2), "store": h.get("store") or "zoom"}
-    for h in ph_days:
+    for h in (ph_12m or []) + (ph_days or []):
         d_str = str(h.get("date") or "")[:10]
         try:
             p_val = float(h.get("price") or 0)

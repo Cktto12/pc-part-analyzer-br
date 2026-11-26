@@ -5897,16 +5897,17 @@ async function changeMarketRegion(regionId) {
 function ensureDatabaseConvertedToActiveMarket(dbObj) {
   if (!dbObj) return;
   const targetReg = (STATE.market?.region_id || localStorage.getItem('selected_market_region') || 'br').toLowerCase();
+  const isNativeEu = (targetReg === 'eu' && (dbObj.data_origin === 'eu_live_retailers' || dbObj.source_id === 'eu_live_retailers' || dbObj.region_id === 'eu'));
   const defaultRate = targetReg === 'eu' ? 0.1586 : (targetReg === 'mx' ? 3.48 : 1.0);
-  const rate = parseFloat(STATE.market?.monetary?.exchange_rate_vs_brl || defaultRate);
+  const rate = isNativeEu ? 1.0 : parseFloat(STATE.market?.monetary?.exchange_rate_vs_brl || defaultRate);
   const decimals = rate < 1 ? 100 : 1;
   const roundCurr = v => Math.round(v * rate * decimals) / decimals;
 
   // Has this database ALREADY been localized/converted for the target region?
-  const alreadyLocalized = (dbObj.region_id === targetReg && (dbObj.exchange_rate === rate || targetReg === 'mx' || targetReg === 'eu'));
+  const alreadyLocalized = isNativeEu || (dbObj.region_id === targetReg && (dbObj.exchange_rate === rate || targetReg === 'mx' || targetReg === 'eu'));
 
   if (!alreadyLocalized) {
-    // If we loaded the base Brazilian database but target is Mexico or European Union:
+    // Only if an offline emergency fallback loaded the Brazilian base database for Mexico/EU:
     if (targetReg !== 'br') {
       const convItem = (it) => {
         if (!it) return;
@@ -5940,7 +5941,7 @@ function ensureDatabaseConvertedToActiveMarket(dbObj) {
     }
   }
 
-  // Scrub Mexican or European stores and links when outside Brazil
+  // Strip BR promo badges; preserve native European stores/URLs untouched
   if (targetReg === 'mx' || targetReg === 'eu') {
     const scrubRegionalItem = it => {
       if (!it) return;
@@ -5948,13 +5949,14 @@ function ensureDatabaseConvertedToActiveMarket(dbObj) {
       it.coupon_label = null;
       it._hbCoupon = null;
       it._flashPromo = null;
+      if (isNativeEu) return;
       const q = encodeURIComponent(it.name || it.slug || '');
       if (!it.store_name || /kabum|pichau|terabyte|magalu|shopee|loja|@|peperaio|adrenaline|iskandar|benchpromos|zoom/i.test(it.store_name)) {
-        it.store_name = targetReg === 'eu' ? 'Geizhals EU' : 'Cyberpuerta';
+        it.store_name = targetReg === 'eu' ? 'Alternate DE' : 'Cyberpuerta';
       }
       if (!it.offer_url || /\.br\b|t\.me\/|hardwarebarato|zoom\.com\.br/i.test(it.offer_url)) {
         it.offer_url = targetReg === 'eu'
-          ? `https://geizhals.eu/?fs=${q}`
+          ? `https://www.alternate.de/listing.xhtml?q=${q}`
           : `https://www.cyberpuerta.mx/index.php?cl=search&searchparam=${q}`;
       }
       it.href = it.offer_url;
@@ -6000,6 +6002,10 @@ async function loadHardwareDatabase() {
         : (targetReg === 'mx' ? 'data/hardware_db_mx.json' : 'data/hardware_db.json');
       try {
         res = await fetch(dbFile + '?t=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok && targetReg !== 'br') {
+          const rawUrl = `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/${dbFile}?t=` + Date.now();
+          res = await fetch(rawUrl, { cache: 'no-store' });
+        }
         if (!res.ok && targetReg !== 'br') {
           res = await fetch('data/hardware_db.json?t=' + Date.now(), { cache: 'no-store' });
         }
@@ -6100,7 +6106,7 @@ async function refreshDatabase() {
       updateAllCurrencyLabels();
       renderActiveTab();
       renderPCBuilder();
-      const sourceLabel = DB.source_name || (targetReg === 'eu' ? 'Caseking, Geizhals & Pepper EU' : (targetReg === 'mx' ? 'Cyberpuerta & DDTech MX' : 'Hardware Barato'));
+      const sourceLabel = DB.source_name || (targetReg === 'eu' ? 'Caseking DE, Alternate DE & dm.de' : (targetReg === 'mx' ? 'Cyberpuerta & DDTech MX' : 'Hardware Barato'));
       if (status) {
         status.textContent = `Atualizado com sucesso da ${sourceLabel} em ${DB.updated_at || 'agora'} (${DB.gpus.length} GPUs • ${(DB.laptops || []).length} Notebooks • ${(DB.smartphones || []).length} Celulares)`;
       }

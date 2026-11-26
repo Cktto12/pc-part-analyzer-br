@@ -1509,138 +1509,6 @@ def localize_item_for_mexico(it, rate, live_mx_map=None):
         it["href"] = it["offer_url"]
 
 
-def fetch_caseking_live_eu_prices():
-    """Scrapes live EUR GPU and CPU prices and direct .de product links from Caseking JSON-LD catalogs."""
-    urls = [
-        ("gpus", "https://www.caseking.de/en/pc-components/graphics-cards/nvidia?sz=100"),
-        ("gpus", "https://www.caseking.de/en/pc-components/graphics-cards/amd?sz=100"),
-        ("cpus", "https://www.caseking.de/en/pc-components/cpus-processors?sz=100"),
-    ]
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8",
-    }
-    from promo_radar import GPU_MATCH_RULES, CPU_MATCH_RULES
-    found = {"gpus": {}, "cpus": {}}
-    exclude_re = re.compile(r"\b(wireview|water\s*block|waterblock|k[üu]hler|cooler|bracket|riser|backplate|cable|adapter|bundle)\b", re.I)
-
-    def _fetch_one(args):
-        grp, u = args
-        try:
-            req = urllib.request.Request(u, headers=headers)
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                return grp, resp.read().decode("utf-8", errors="ignore")
-        except Exception as e:
-            print(f"[Europe Scraper] Warning on {u}: {e}")
-            return grp, ""
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ex:
-        pages = list(ex.map(_fetch_one, urls))
-
-    for grp, html_str in pages:
-        if not html_str:
-            continue
-        rules = GPU_MATCH_RULES if grp == "gpus" else CPU_MATCH_RULES
-        target_map = found[grp]
-        min_eur, max_eur = (90.0, 4800.0) if grp == "gpus" else (45.0, 2200.0)
-        for ld_raw in re.findall(r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>', html_str, re.S):
-            try:
-                d = json.loads(ld_raw)
-            except Exception:
-                continue
-            if d.get("@type") != "ItemList":
-                continue
-            for entry in (d.get("itemListElement") or []):
-                it = entry.get("item") or {}
-                title = (it.get("name") or "").strip()
-                prod_url = (it.get("url") or "").strip()
-                offers = it.get("offers") or {}
-                try:
-                    price_eur = float(offers.get("price") or 0)
-                except (TypeError, ValueError):
-                    price_eur = 0.0
-                if not title or not prod_url or price_eur < min_eur or price_eur > max_eur:
-                    continue
-                if exclude_re.search(title):
-                    continue
-                for slug, pat in rules:
-                    if re.search(pat, title, re.IGNORECASE):
-                        if slug not in target_map or price_eur < target_map[slug]["price"]:
-                            target_map[slug] = {
-                                "price": round(price_eur, 2),
-                                "url": prod_url,
-                                "title": title,
-                                "store": "Caseking DE",
-                                "image": it.get("image") or "",
-                            }
-                        break
-    return found
-
-
-def localize_item_for_europe(it, rate, live_eu_map=None, group="gpus"):
-    """Converts prices to EUR, applies live Caseking EUR prices when matched, and strips 100% of Brazilian links/coupons."""
-    def conv_val(v):
-        if v is None or not isinstance(v, (int, float)):
-            return v
-        return round(float(v) * rate, 2)
-
-    for k in ("price_brl", "regular_price_brl", "installment_price_brl", "custom_price"):
-        if k in it and it[k]:
-            it[k] = conv_val(it[k])
-    if "price_stats" in it and isinstance(it["price_stats"], dict):
-        ps = it["price_stats"]
-        for pk in ("target_price", "min_all_time", "min_90d", "avg_30d", "avg_90d", "median_180d", "vs_target_brl"):
-            if pk in ps and ps[pk] is not None:
-                ps[pk] = conv_val(ps[pk])
-    store_hist_lbl = "Amazon DE / Idealo" if group == "misc_catalog" else "Caseking DE / Geizhals EU"
-    if "history" in it and isinstance(it["history"], list):
-        for h in it["history"]:
-            if "price" in h and h["price"]:
-                h["price"] = conv_val(h["price"])
-            h["store"] = store_hist_lbl
-
-    if group == "misc_catalog" and isinstance(it.get("specs"), dict):
-        sp = it["specs"]
-        if sp.get("price_per_unit"):
-            sp["price_per_unit"] = round(float(sp["price_per_unit"]) * rate, 2)
-        if sp.get("price_per_liter"):
-            sp["price_per_liter"] = round(float(sp["price_per_liter"]) * rate, 2)
-        if sp.get("summary"):
-            if sp.get("price_per_unit"):
-                sp["summary"] = re.sub(r"R\$\s*[0-9.,]+/fralda", f"€ {sp['price_per_unit']:.2f}/unit", sp["summary"])
-            elif sp.get("price_per_liter"):
-                sp["summary"] = re.sub(r"R\$\s*[0-9.,]+/L", f"€ {sp['price_per_liter']:.0f}/L", sp["summary"])
-
-    # Strip region-locked Brazilian coupons and links completely!
-    it["coupon"] = None
-    it["coupon_label"] = None
-    slug = it.get("slug", "")
-    q_name = quote(it.get("name", slug))
-
-    if live_eu_map and slug in live_eu_map:
-        eu_hit = live_eu_map[slug]
-        it["price_brl"] = eu_hit["price"]
-        it["regular_price_brl"] = eu_hit["price"]
-        it["store_name"] = eu_hit["store"]
-        it["offer_url"] = eu_hit["url"]
-        it["offer_title"] = eu_hit["title"]
-        it["href"] = eu_hit["url"]
-        if eu_hit.get("image"):
-            it["image"] = eu_hit["image"]
-        today_str = time.strftime("%Y-%m-%d")
-        if "history" in it and isinstance(it["history"], list):
-            if not it["history"] or it["history"][-1].get("date") != today_str:
-                it["history"].append({"date": today_str, "price": eu_hit["price"], "store": eu_hit["store"]})
-    elif group == "misc_catalog":
-        it["store_name"] = "Amazon DE"
-        it["offer_url"] = f"https://www.amazon.de/s?k={q_name}"
-        it["href"] = it["offer_url"]
-    else:
-        it["store_name"] = "Geizhals EU"
-        it["offer_url"] = f"https://geizhals.eu/?fs={q_name}"
-        it["href"] = it["offer_url"]
-
-
 def convert_db_to_active_region(raw_db=None, force_refresh=False):
     """Returns a strictly isolated regional database with zero cross-region store/coupon/link leakage."""
     market_cfg = config.get_market_config()
@@ -1650,14 +1518,23 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
     curr_sym = market_cfg.get("monetary", {}).get("currency_symbol", "R$")
 
     reg_db_path = get_db_path(active_region)
-    if active_region in ("mx", "eu") and not force_refresh and os.path.exists(reg_db_path):
+    prev_eu_db = None
+    if active_region == "eu" and os.path.exists(reg_db_path):
         try:
             with open(reg_db_path, "r", encoding="utf-8") as f:
-                db = json.load(f)
+                prev_eu_db = json.load(f)
+        except Exception:
+            prev_eu_db = None
+
+    if active_region in ("mx", "eu") and not force_refresh and os.path.exists(reg_db_path):
+        try:
+            db = prev_eu_db if (active_region == "eu" and prev_eu_db is not None) else json.load(open(reg_db_path, "r", encoding="utf-8"))
+            if active_region == "eu" and db.get("data_origin") != "eu_live_retailers":
+                raise ValueError("Legacy converted EU DB detected; rebuilding live EU catalog")
             db["region_id"] = active_region
             db["currency_code"] = curr_code
             db["currency_symbol"] = curr_sym
-            db["exchange_rate"] = rate
+            db["exchange_rate"] = 1.0 if active_region == "eu" else rate
             return db
         except Exception:
             pass
@@ -1669,6 +1546,29 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
                 raw_db = json.load(f)
         else:
             raw_db = sources.sync_active_source(br_path)
+
+    if active_region == "eu":
+        import eu_scraper
+        eu_promo_path = get_promos_cache_path("eu")
+        try:
+            db = eu_scraper.build_eu_database(raw_db, existing_eu_db=prev_eu_db, eu_promo_path=eu_promo_path)
+            if len(db.get("gpus") or []) >= 5 and len(db.get("cpus") or []) >= 5:
+                db["region_id"] = "eu"
+                db["currency_code"] = curr_code
+                db["currency_symbol"] = curr_sym
+                db["exchange_rate"] = 1.0
+                try:
+                    with open(reg_db_path, "w", encoding="utf-8") as f:
+                        json.dump(db, f, ensure_ascii=False, indent=2)
+                except Exception:
+                    pass
+                return db
+        except Exception as e:
+            print(f"[Europe Scraper] Build failed: {e}")
+
+        if prev_eu_db and prev_eu_db.get("data_origin") == "eu_live_retailers":
+            return prev_eu_db
+        raise RuntimeError("Failed to fetch live European retail data and no real eu_live_retailers cache exists.")
 
     db = json.loads(json.dumps(raw_db))
 
@@ -1693,40 +1593,6 @@ def convert_db_to_active_region(raw_db=None, force_refresh=False):
         db["source_id"] = "cyberpuerta_mlm_mx"
         db["source_name"] = "Cyberpuerta & Mercado Libre MX"
         db["source"] = "https://www.cyberpuerta.mx/"
-        db["region_id"] = active_region
-        db["currency_code"] = curr_code
-        db["currency_symbol"] = curr_sym
-        db["exchange_rate"] = rate
-        try:
-            with open(reg_db_path, "w", encoding="utf-8") as f:
-                json.dump(db, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
-    elif active_region == "eu":
-        live_eu = fetch_caseking_live_eu_prices()
-        for group in ("gpus", "cpus", "motherboards", "rams", "psus", "laptops", "smartphones", "peripherals"):
-            live_map = live_eu.get(group) if group in ("gpus", "cpus") else None
-            for item in db.get(group, []):
-                localize_item_for_europe(item, rate, live_map, group=group)
-        for mcid, mitems in (db.get("misc_catalog") or {}).items():
-            for item in (mitems or []):
-                localize_item_for_europe(item, rate, None, group="misc_catalog")
-
-        # Attach ONLY European promos_cache_eu.json (never Brazilian live_promos!)
-        eu_promo_path = get_promos_cache_path("eu")
-        if os.path.exists(eu_promo_path):
-            try:
-                with open(eu_promo_path, "r", encoding="utf-8") as f:
-                    db["live_promos"] = json.load(f)
-            except Exception:
-                db["live_promos"] = None
-        else:
-            db["live_promos"] = None
-
-        db["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
-        db["source_id"] = "caseking_geizhals_eu"
-        db["source_name"] = "Caseking DE & Geizhals EU"
-        db["source"] = "https://www.caseking.de/en"
         db["region_id"] = active_region
         db["currency_code"] = curr_code
         db["currency_symbol"] = curr_sym
@@ -2278,7 +2144,15 @@ if __name__ == "__main__":
                 raw_db = convert_db_to_active_region(force_refresh=True)
                 import promo_radar
                 print(f"[Cloud Cron ({reg.upper()})] Varrendo promoções e validando lojas em tempo real...")
-                promo_radar.scan_live_promotions(raw_db, max_age_hours=48.0, force=True, region_id=reg)
+                promo_data = promo_radar.scan_live_promotions(raw_db, max_age_hours=48.0, force=True, region_id=reg)
+                if reg in ("eu", "mx") and isinstance(promo_data, dict):
+                    reg_db_path = get_db_path(reg)
+                    if os.path.exists(reg_db_path):
+                        with open(reg_db_path, "r", encoding="utf-8") as f:
+                            reg_db = json.load(f)
+                        reg_db["live_promos"] = promo_data
+                        with open(reg_db_path, "w", encoding="utf-8") as f:
+                            json.dump(reg_db, f, ensure_ascii=False, indent=2)
             except Exception as e:
                 print(f"[Cloud Cron ({reg.upper()}) Promo Scan Erro] {e}")
 

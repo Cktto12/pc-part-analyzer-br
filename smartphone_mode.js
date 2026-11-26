@@ -866,23 +866,29 @@ function renderSmartphoneDuelAnalysis() {
     const mapA = Object.fromEntries(histA.map(h => [h.date, h.price]));
     const mapB = Object.fromEntries(histB.map(h => [h.date, h.price]));
     const labels = dateSet.length ? dateSet : ['Hoje'];
-    const dataA = labels.map(d => mapA[d] ?? basePrice);
-    const dataB = labels.map(d => mapB[d] ?? candPrice);
+    const dataA = labels.map(d => mapA[d] ?? (dateSet.length ? null : basePrice));
+    const dataB = labels.map(d => mapB[d] ?? (dateSet.length ? null : candPrice));
+    const multiYear = labels.length > 1 && labels[0].length >= 4 && labels[labels.length - 1].length >= 4 && labels[0].slice(0, 4) !== labels[labels.length - 1].slice(0, 4);
+    const fmtDateLbl = d => (d && d.length >= 10)
+      ? (multiYear ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}` : `${d.slice(8, 10)}/${d.slice(5, 7)}`)
+      : (d || '');
+    const ptRadius = labels.length > 90 ? 0 : 2;
     _spCharts.duelHistory = new Chart(histCanvas, {
       type: 'line',
       data: {
-        labels: labels.map(d => d.slice(5) || d),
+        labels: labels.map(fmtDateLbl),
         datasets: [
-          { label: shortSmartphoneName(baseSp), data: dataA, borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, pointRadius: 2 },
-          { label: shortSmartphoneName(candSp), data: dataB, borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, pointRadius: 2 }
+          { label: shortSmartphoneName(baseSp), data: dataA, borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, spanGaps: true, pointRadius: ptRadius, pointHoverRadius: 4 },
+          { label: shortSmartphoneName(candSp), data: dataB, borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, spanGaps: true, pointRadius: ptRadius, pointHoverRadius: 4 }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: { legend: { labels: { color: colors.text, boxWidth: 10, font: { size: 11 } } } },
         scales: {
-          x: { ticks: { color: colors.muted, maxTicksLimit: 8 }, grid: { color: colors.grid } },
+          x: { ticks: { color: colors.muted, maxTicksLimit: 9 }, grid: { color: colors.grid } },
           y: { ticks: { color: colors.muted, callback: v => fmtBRLShort(v) }, grid: { color: colors.grid } }
         }
       }

@@ -3349,7 +3349,7 @@ const BF_FAMILIES = {
   // --- PERIPHERALS FAMILIES ---
   periph_mouse: {
     kind: 'peripherals',
-    label: '🖱️ Mouses Gamer & Sem Fio (Zoom BR)',
+    label: '🖱️ Mouses Gamer & Sem Fio',
     filterFn: p => p.kind === 'mouse'
   },
   periph_keyboard: {
@@ -3366,7 +3366,7 @@ const BF_FAMILIES = {
   // --- MISC FAMILIES (AIR FRYER & FRALDAS) ---
   misc_air_fryer: {
     kind: 'misc',
-    label: '🍟 Air Fryers — Cesto & Oven (Preços Históricos Zoom BR)',
+    label: '🍟 Air Fryers — Cesto & Oven',
     filterFn: m => m.category_id === 'air_fryer'
   },
   misc_diapers: {
@@ -4258,7 +4258,7 @@ function onBFTargetItemChange(silent) {
         refDesc: p => `Precio de referencia en México: ${formatMoney(p)}`
       },
       eu: {
-        sym: '€', defStore: 'Geizhals EU', expired: 'OFERTA ENCERRADA NA EUROPA',
+        sym: '€', defStore: 'Alternate DE', expired: 'OFERTA ENCERRADA NA EUROPA',
         verified: '✅ CONFIRMADO EM ESTOQUE (EU)', riskExp: 'Risco de Expirado',
         couponTitle: 'Cupom / Voucher EU', directTitle: 'Oferta Direta EU',
         directSub: 'Preço direto no link europeu', btnTest: 'Testar', btnCopy: 'Copiar Cupom',
@@ -9744,6 +9744,20 @@ function setBFCardsFilter(filterKey) {
 window.setBFCardsFilter = setBFCardsFilter;
 
 async function pollBFLiveCardsFeed(manual) {
+  const activeReg = typeof getActiveRegionId === 'function' ? getActiveRegionId() : 'br';
+  if (activeReg !== 'br') {
+    const statusEl = document.getElementById('bf-cards-live-status');
+    const nowStr = new Date().toLocaleTimeString('pt-BR');
+    if (statusEl) {
+      statusEl.textContent = activeReg === 'eu'
+        ? `🟢 Radar EU • MyDealz / Dealabs / Chollometro (${nowStr})`
+        : `🟢 Radar MX • Promodescuentos / Cyberpuerta (${nowStr})`;
+    }
+    if (manual && typeof scanLivePromos === 'function') {
+      scanLivePromos(true);
+    }
+    return;
+  }
   if (_bfLiveBusy) return;
   _bfLiveBusy = true;
   const statusEl = document.getElementById('bf-cards-live-status');

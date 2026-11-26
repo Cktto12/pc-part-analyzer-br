@@ -186,6 +186,7 @@ def fetch_zoom_laptop_detail(hit, existing_history=None):
     ph_days = []
     img_url = hit.get("image") or ""
     prod_name = name
+    pid = str(hit.get("sourceId") or "")
 
     try:
         req = urllib.request.Request(full_url, headers=SCRAPER_HEADERS)
@@ -195,7 +196,9 @@ def fetch_zoom_laptop_detail(hit, existing_history=None):
             d = json.loads(m.group(1))
             props = d.get("props", {})
             redux = props.get("initialReduxState", {})
-            pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+            page_pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+            if page_pid:
+                pid = page_pid
             prod_root = redux.get("products", {}).get("product", {}) or {}
             prod_info = prod_root.get("product") or {}
             if prod_info.get("name"):
@@ -212,6 +215,14 @@ def fetch_zoom_laptop_detail(hit, existing_history=None):
     except Exception as e:
         print(f"Warning fetching laptop {slug}: {e}")
 
+    ph_12m = []
+    if pid:
+        try:
+            from smartphone_scraper import fetch_zoom_12m_history
+            ph_12m = fetch_zoom_12m_history(pid)
+        except Exception:
+            ph_12m = []
+
     price_brl = float(best_offer.get("price") or hit.get("price") or 0.0)
     if best_offer.get("imageUrl"):
         img_url = best_offer["imageUrl"]
@@ -220,7 +231,7 @@ def fetch_zoom_laptop_detail(hit, existing_history=None):
     num_parcels = best_offer.get("numParcels") or 10
     total_parceled = float(best_offer.get("totalParceledValue") or price_brl)
 
-    floor_valid = max(800.0, price_brl * 0.38) if price_brl > 0 else 800.0
+    floor_valid = max(800.0, price_brl * 0.35) if price_brl > 0 else 800.0
     hist_by_date = {}
     for h in (existing_history or []):
         d_str = str(h.get("date") or "")[:10]
@@ -228,7 +239,7 @@ def fetch_zoom_laptop_detail(hit, existing_history=None):
         if d_str and p_val >= floor_valid:
             hist_by_date[d_str] = {"date": d_str, "price": round(p_val, 2), "store": h.get("store") or "zoom"}
 
-    for h in ph_days:
+    for h in (ph_12m or []) + (ph_days or []):
         d_str = str(h.get("date") or "")[:10]
         try:
             p_val = float(h.get("price") or 0)
