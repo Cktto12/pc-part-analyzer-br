@@ -628,7 +628,21 @@ def build_database(output_path):
             if p <= 0:
                 continue
             href = m.get('href', '')
-            socket = "AM5" if "am5" in href else ("AM4" if "am4" in href else ("LGA1851" if any(k in href for k in ["h810", "b860", "z890"]) else "LGA1700"))
+            try:
+                from promo_radar import extract_mobo_specs_from_text
+                m_specs = extract_mobo_specs_from_text(f"{m.get('name', '')} {m.get('slug', '')} {href}")
+                socket = m_specs.get("socket") or ""
+            except Exception:
+                socket = ""
+            if not socket:
+                if "am5" in href:
+                    socket = "AM5"
+                elif "am4" in href:
+                    socket = "AM4"
+                elif any(k in href for k in ["h810", "b860", "z890", "lga1851"]):
+                    socket = "LGA1851"
+                elif any(k in href for k in ["h610", "b660", "b760", "z690", "z790", "lga1700"]):
+                    socket = "LGA1700"
             mobos.append({
                 "slug": m['slug'],
                 "name": m.get('name', ''),

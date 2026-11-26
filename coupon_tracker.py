@@ -28,6 +28,7 @@ _STATUS_LOCK = threading.Lock()
 _HB_LIVE_CACHE = {}
 _HB_CACHE_LOCK = threading.Lock()
 _HB_SLUG_LOCKS = {}
+_HB_GLOBAL_COUPONS = {"ts": 0.0, "by_store": {}, "details": {}}
 
 CHROME_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -43,21 +44,29 @@ def get_status_file(reg_id=None):
 
 # Non-coupon words that can follow or precede 'expirou'/'acabou'
 STOP_WORDS = {
-    "PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA",
-    "SHOPEE", "KABUM", "MAGALU", "MERCADO", "AMAZON", "PROMO", "OFERTA",
+    "PARA", "ESTA", "ESSA", "ESSE", "HOJE", "AQUI", "MAIS", "MENOS", "PELO", "SITE", "LOJA",
+    "SHOPEE", "KABUM", "MAGALU", "MERCADO", "LIVRE", "AMAZON", "PROMO", "OFERTA",
     "LINK", "DISPONIVEL", "DISPONÍVEL", "VALOR", "PRECO", "PREÇO", "ESTOQUE",
-    "PRODUTO", "AINDA", "LIVRE", "AGORA", "TUDO", "NAQUELE", "KKKKKKK",
+    "PRODUTO", "AINDA", "AGORA", "TUDO", "NAQUELE", "KKKKKKK", "PISCOU",
     "CUPOMO", "BLUSINHAS", "RESGATE", "SUBSTITUEM", "APARECER", "IFP43VOM",
-    "QUEM", "ESSE", "QUAL", "ONDE", "QUANDO", "MUITO", "POUCO", "GRATIS", "GRÁTIS",
+    "QUEM", "QUAL", "ONDE", "QUANDO", "MUITO", "POUCO", "GRATIS", "GRÁTIS",
+    "PIX", "NOPIX", "APP", "NOAPP", "PELOAPP", "MOEDAS", "SEGUIR", "TECNOLOGIA",
+    "CLIENTES", "MEMBROS", "EXCLUSIVO", "NOTES", "INTEL", "AMD", "NVIDIA",
     "HTTPS", "HTTP", "WWW", "COM", "BR", "MX", "CYBERPUERTA", "DDTECH", "PROMODESCUENTOS"
 }
 
+_HYPE_NEGATION_RE = re.compile(
+    r"(?:piscou\s+acabou|achou\s+que\s+acabou|n[ãa]o\s+acabou|n[ãa]o\s+expirou|n[ãa]o\s+esgotou|ainda\s+n[ãa]o\s+(?:acabou|expirou|esgotou)|quase\s+(?:acabando|esgotando)|esgotando)",
+    re.IGNORECASE,
+)
+
 EXPIRY_REGEXES = [
-    re.compile(r"\b([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|morreu|invalido|inválido|finalizou|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\b", re.IGNORECASE),
-    re.compile(r"(?:cupom|cupón|cupon|c[oó]digo)\s+([A-Z0-9]{4,22})\s+(?:expirou|acabou|esgotou|encerrou|invalido|inválido|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\b", re.IGNORECASE),
-    re.compile(r"(?:expirou|acabou|esgotou|encerrou|finalizou|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\s+(?:o\s+|el\s+)?(?:cupom\s+|cupón\s+|cupon\s+)?[:\-]?\s*\b([A-Z0-9]{4,22})\b", re.IGNORECASE),
-    re.compile(r"(?:o|el)\s+(?:cupom|cupón|cupon)\s+([A-Z0-9]{4,22})\s+(?:expirou|expiró)", re.IGNORECASE),
-    re.compile(r"(?:cupom|cupón|cupon)\s+(?:expirou|expiró|esgotado|agotado|inv[aá]lido)[\s\S]{1,80}?(?:cupom|cupón|cupon|c[oó]digo)\s*[:\-]?\s*\b([A-Z0-9]{4,22})\b", re.IGNORECASE),
+    re.compile(r"\b([A-Z0-9][A-Z0-9_\-]{3,21})\s+(?:expirou|acabou|esgotou|encerrou|morreu|invalido|inválido|finalizou|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\b", re.IGNORECASE),
+    re.compile(r"(?:^|\n)\s*([A-Z0-9][A-Z0-9_\-]{3,21})\s*\n+\s*(?:expirou|acabou|esgotou|encerrou|morreu|invalido|inválido|finalizou|foi\s+de\s+base|j[aá]\s+era)\b", re.IGNORECASE),
+    re.compile(r"(?:cupom|cupón|cupon|c[oó]digo)\s+([A-Z0-9][A-Z0-9_\-]{3,21})\s+(?:expirou|acabou|esgotou|encerrou|invalido|inválido|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\b", re.IGNORECASE),
+    re.compile(r"(?:expirou|acabou|esgotou|encerrou|finalizou|expiró|expiro|agotó|agoto|terminó|termino|venció|vencio)\s+(?:o\s+|el\s+)?(?:cupom\s+|cupón\s+|cupon\s+)?[:\-]?\s*\b([A-Z0-9][A-Z0-9_\-]{3,21})\b", re.IGNORECASE),
+    re.compile(r"(?:o|el)\s+(?:cupom|cupón|cupon)\s+([A-Z0-9][A-Z0-9_\-]{3,21})\s+(?:expirou|expiró)", re.IGNORECASE),
+    re.compile(r"(?:cupom|cupón|cupon)\s+(?:expirou|expiró|esgotado|agotado|inv[aá]lido)[\s\S]{1,80}?(?:cupom|cupón|cupon|c[oó]digo)\s*[:\-]?\s*\b([A-Z0-9][A-Z0-9_\-]{3,21})\b", re.IGNORECASE),
 ]
 
 OOS_PATTERNS_BR = [
@@ -274,6 +283,14 @@ def fetch_hb_live_slug_info(kind, slug):
             }
             with _HB_CACHE_LOCK:
                 _HB_LIVE_CACHE[cache_key] = {"ts": time.time(), "data": info}
+                if time.time() - _HB_GLOBAL_COUPONS["ts"] > 600:
+                    _HB_GLOBAL_COUPONS["by_store"] = {}
+                    _HB_GLOBAL_COUPONS["details"] = {}
+                _HB_GLOBAL_COUPONS["ts"] = time.time()
+                for st_k, codes_set in active_coupons.items():
+                    _HB_GLOBAL_COUPONS["by_store"].setdefault(st_k, set()).update(codes_set)
+                for st_k, det_map in active_coupons_details.items():
+                    _HB_GLOBAL_COUPONS["details"].setdefault(st_k, {}).update(det_map)
             return info
         except Exception:
             with _HB_CACHE_LOCK:
@@ -479,16 +496,22 @@ def _load_coupon_status_unlocked(reg_id=None):
                         data["coupons"] = {}
                     if "deals" not in data:
                         data["deals"] = {}
+                    if "group_coupons" not in data:
+                        data["group_coupons"] = {}
                     return data
         except Exception:
             pass
-    return {"coupons": {}, "deals": {}, "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")}
+    return {"coupons": {}, "deals": {}, "group_coupons": {}, "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")}
 
 
 def _save_coupon_status_unlocked(data, reg_id=None):
     fpath = get_status_file(reg_id)
     try:
         os.makedirs(os.path.dirname(fpath), exist_ok=True)
+        # Keep coupon_status files lean over time
+        if isinstance(data.get("deals"), dict) and len(data["deals"]) > 2400:
+            sorted_d = sorted(data["deals"].items(), key=lambda kv: str((kv[1] or {}).get("updated_at") or ""), reverse=True)[:2200]
+            data["deals"] = dict(sorted_d)
         data["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
         with open(fpath, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -506,7 +529,40 @@ def save_coupon_status(data, reg_id=None):
         _save_coupon_status_unlocked(data, reg_id)
 
 
-def record_coupon_status(coupon_code, status, reason, source="channel_report", reg_id=None):
+def _iso_to_epoch(ts_str):
+    if not ts_str:
+        return None
+    try:
+        from datetime import datetime, timezone
+        s = str(ts_str).strip()
+        if "T" in s:
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.timestamp()
+        dt = datetime.strptime(s[:19], "%Y-%m-%d %H:%M:%S")
+        return dt.timestamp()
+    except Exception:
+        return None
+
+
+def _get_global_hb_store_coupons(store_key, reg_id="br"):
+    if not store_key or (reg_id or "br").lower() != "br":
+        return set(), {}
+    now = time.time()
+    need_warm = False
+    with _HB_CACHE_LOCK:
+        if not _HB_GLOBAL_COUPONS["by_store"] or (now - _HB_GLOBAL_COUPONS["ts"] > 600):
+            need_warm = True
+    if need_warm:
+        fetch_hb_slug_live_data_safe("gpu", "rtx-5060")
+    with _HB_CACHE_LOCK:
+        codes = set(_HB_GLOBAL_COUPONS["by_store"].get(store_key, set()))
+        details = dict(_HB_GLOBAL_COUPONS["details"].get(store_key, {}))
+    return codes, details
+
+
+def record_coupon_status(coupon_code, status, reason, source="channel_report", reg_id=None, reported_ts=None):
     if not coupon_code:
         return
     code = coupon_code.strip().upper()
@@ -519,6 +575,7 @@ def record_coupon_status(coupon_code, status, reason, source="channel_report", r
             "status": status,  # "expired", "verified", "unverified", "out_of_stock"
             "reason": reason,
             "source": source,
+            "reported_ts": float(reported_ts or time.time()),
             "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
         _save_coupon_status_unlocked(data, reg_id)
@@ -530,6 +587,7 @@ def record_deal_status(post_id, status, reason, source="live_test", url=None, re
         return
     with _STATUS_LOCK:
         data = _load_coupon_status_unlocked(reg_id)
+        now_ts = time.time()
         entry = {
             "status": status,
             "reason": reason,
@@ -539,6 +597,7 @@ def record_deal_status(post_id, status, reason, source="live_test", url=None, re
             "coupon_status": coupon_status,
             "store_name": store_name,
             "final_url": final_url,
+            "tested_ts": now_ts,
             "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         }
         if post_id:
@@ -550,63 +609,169 @@ def record_deal_status(post_id, status, reason, source="live_test", url=None, re
         return entry
 
 
+def record_group_coupon_announcements(messages, reg_id=None):
+    """Records coupon codes seen in recent group messages and clears stale expiries when explicitly reactivated."""
+    if not messages:
+        return {}
+    reg = (reg_id or "br").lower().strip()
+    now_ts = time.time()
+    updated = {}
+    with _STATUS_LOCK:
+        data = _load_coupon_status_unlocked(reg)
+        gc = data.setdefault("group_coupons", {})
+        coupons_map = data.setdefault("coupons", {})
+        changed = False
+
+        for msg in messages:
+            if not isinstance(msg, dict):
+                continue
+            codes = []
+            for c in (msg.get("coupon_codes") or []):
+                cu = str(c).strip().upper()
+                if cu and cu not in STOP_WORDS and len(cu) >= 4 and cu not in codes:
+                    codes.append(cu)
+            c0 = str(msg.get("coupon_code") or "").strip().upper()
+            if c0 and c0 not in STOP_WORDS and len(c0) >= 4 and c0 not in codes:
+                codes.insert(0, c0)
+            if not codes:
+                continue
+
+            post_ts = _iso_to_epoch(msg.get("timestamp")) or now_ts
+            if (now_ts - post_ts) > 48 * 3600:
+                continue
+
+            txt = (msg.get("title", "") + "\n" + msg.get("head_text", "") + "\n" + msg.get("raw_text", "")).strip()
+            clean_for_chk = _HYPE_NEGATION_RE.sub(" ", html.unescape(re.sub(r"<[^>]+>", " ", txt)))
+            is_reactivation = bool(re.search(r"\b(?:voltou|retornou|ativ[oa]\s+novamente|novo\s+cupom)\b", txt, re.I))
+            is_expiry_msg = any(k in clean_for_chk.lower() for k in ("expirou", "acabou", "esgotou", "encerrou", "morreu", "invalido", "inválido", "finalizou"))
+            if is_expiry_msg and not is_reactivation:
+                continue
+
+            st_key, st_label = normalize_br_store_key(msg.get("buy_url") or "", msg.get("store_name") or "")
+            ch_id = msg.get("channel_id") or ""
+            for code in codes:
+                prev = gc.get(code)
+                channels = list(prev.get("channels", [])) if prev else []
+                if ch_id and ch_id not in channels:
+                    channels.append(ch_id)
+                gc[code] = {
+                    "store_key": st_key or (prev.get("store_key") if prev else None),
+                    "store_name": st_label if st_label not in ("Loja", "E-commerce BR") else ((prev.get("store_name") if prev else None) or st_label),
+                    "channels": channels[-10:],
+                    "seen_count": (int(prev.get("seen_count", 0)) + 1) if prev else 1,
+                    "first_seen_ts": prev.get("first_seen_ts", post_ts) if prev else post_ts,
+                    "last_seen_ts": max(float(prev.get("last_seen_ts", 0) or 0), post_ts) if prev else post_ts,
+                    "sample_info": (msg.get("coupon_info") or (prev.get("sample_info") if prev else ""))[:120],
+                    "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+                updated[code] = gc[code]
+                changed = True
+
+                prev_c = coupons_map.get(code)
+                if prev_c and prev_c.get("status") == "expired" and is_reactivation:
+                    prev_rep = float(prev_c.get("reported_ts") or 0)
+                    if post_ts > prev_rep + 1800:
+                        coupons_map[code] = {
+                            "status": "unverified",
+                            "reason": f"Cupom {code} reativado em @{ch_id or 'grupo'}",
+                            "source": "channel_report",
+                            "reported_ts": post_ts,
+                            "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        }
+
+        # Prune group coupons older than 7 days
+        for k in list(gc.keys()):
+            if (now_ts - float(gc[k].get("last_seen_ts") or 0)) > 7 * 86400:
+                del gc[k]
+                changed = True
+
+        if changed:
+            _save_coupon_status_unlocked(data, reg)
+    return updated
+
+
 def scan_texts_for_expiries(texts_or_messages, reg_id=None):
     data = load_coupon_status(reg_id)
     detected = {"coupons": {}, "deals": {}}
+    now_ts = time.time()
 
     for msg in texts_or_messages:
         if isinstance(msg, dict):
             text = (msg.get("title", "") + "\n" + msg.get("head_text", "") + "\n" + msg.get("raw_text", "")).strip()
             ch_id = msg.get("channel_id", "")
             post_id = msg.get("post_id", "")
+            reply_to_post_id = msg.get("reply_to_post_id")
+            post_ts = _iso_to_epoch(msg.get("timestamp")) or now_ts
         else:
             text = str(msg).strip()
             ch_id = ""
             post_id = ""
+            reply_to_post_id = None
+            post_ts = now_ts
 
         if not text:
             continue
 
         clean = html.unescape(re.sub(r"<[^>]+>", " ", text))
-        low = clean.lower()
+        # Strip hype/negation phrases ("PISCOU ACABOU", "NÃO ACABOU", "esgotando") BEFORE checking expiries
+        clean_eff = _HYPE_NEGATION_RE.sub(" ", clean)
+        low_eff = clean_eff.lower()
 
-        if not any(k in low for k in ["acabou", "expir", "esgot", "encerr", "finaliz", "invalido", "inválido", "morreu", "agot", "venc"]):
+        has_exp_kw = any(k in low_eff for k in ["acabou", "expir", "esgot", "encerr", "finaliz", "invalido", "inválido", "morreu", "agot", "venc", "foi de base"])
+        if not has_exp_kw and not (reply_to_post_id and any(k in low_eff for k in ["subiu", "pausad", "ja era", "já era"])):
             continue
 
-        ref_post = re.search(r"t\.me/([^/\s]+)/(\d+)", clean)
+        ref_post = re.search(r"t\.me/([^/\s]+)/(\d+)", clean_eff)
         ref_post_id = f"{ref_post.group(1)}/{ref_post.group(2)}" if ref_post else None
 
         for pat in EXPIRY_REGEXES:
-            for m in pat.finditer(clean):
-                code = m.group(1).upper()
-                if code in STOP_WORDS or len(code) < 4:
+            for m in pat.finditer(clean_eff):
+                raw_code = m.group(1).strip("-_ ")
+                code = raw_code.upper()
+                if code in STOP_WORDS or len(code) < 4 or code.isdigit() or not re.search(r"[A-Z]", code):
+                    continue
+                prev_c = data["coupons"].get(code)
+                prev_rep = float((prev_c or {}).get("reported_ts") or 0)
+                if prev_c and prev_c.get("source") == "channel_report" and prev_rep > post_ts + 60:
                     continue
                 reason = f"Grupo/Canal @{ch_id or 'radar'} avisou: '{clean[:80]}...'"
                 data["coupons"][code] = {
                     "status": "expired",
                     "reason": reason,
                     "source": "channel_report",
+                    "reported_ts": post_ts,
                     "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
                 }
                 detected["coupons"][code] = data["coupons"][code]
 
-        if ref_post_id and any(k in low for k in ["acabou", "esgotou", "expirou", "encerrado", "finalizado", "agotado", "expiró"]):
-            data["deals"][ref_post_id] = {
-                "status": "out_of_stock",
-                "reason": f"Canal avisou término: '{clean[:80]}...'",
-                "source": "channel_report",
-                "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-            }
-            detected["deals"][ref_post_id] = data["deals"][ref_post_id]
+        target_post_ids = [pid for pid in (reply_to_post_id, ref_post_id) if pid]
+        if target_post_ids and any(k in low_eff for k in ["acabou", "esgot", "expir", "encerr", "finaliz", "agot", "morreu", "subiu", "pausad", "foi de base", "já era", "ja era"]):
+            for tgt_pid in target_post_ids:
+                entry = {
+                    "status": "out_of_stock",
+                    "reason": f"Resposta/Canal avisou término: '{clean[:80]}...'",
+                    "source": "channel_report",
+                    "tested_ts": post_ts,
+                    "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                }
+                data["deals"][tgt_pid] = entry
+                data["deals"][tgt_pid.lower()] = entry
+                detected["deals"][tgt_pid] = entry
 
-        if post_id and re.search(r"^\s*\[?(?:esgotou|acabou|encerrado|expirado|finalizado|agotado|expiró)\]?", clean, re.I):
-            data["deals"][post_id] = {
+        if post_id and (
+            re.search(r"^\s*\[?(?:esgotou|esgotado|acabou|encerrado|expirado|finalizado|agotado|expir[oó])\]?", clean_eff, re.I)
+            or re.search(r"(?:^|\n)\s*(?:edit\s*:\s*|❌\s*|🚫\s*)(?:esgotou|esgotado|acabou|encerrado|expirado|finalizado)\b", clean_eff, re.I)
+        ):
+            entry = {
                 "status": "out_of_stock",
-                "reason": "Post editado para Esgotado / Agotado",
+                "reason": "Post editado para Esgotado / Acabou",
                 "source": "channel_report",
+                "tested_ts": post_ts,
                 "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             }
-            detected["deals"][post_id] = data["deals"][post_id]
+            data["deals"][post_id] = entry
+            data["deals"][post_id.lower()] = entry
+            detected["deals"][post_id] = entry
 
     if detected["coupons"] or detected["deals"]:
         save_coupon_status(data, reg_id)
@@ -621,15 +786,16 @@ def _infer_slug_from_cache(post_id=None, buy_url=None, reg_id="br"):
         if os.path.exists(cache_path):
             with open(cache_path, "r", encoding="utf-8") as f:
                 c_data = json.load(f)
-            for d in c_data.get("matched_deals", []):
-                if (post_id and d.get("post_id") == post_id) or (buy_url and d.get("buy_url") == buy_url):
-                    return (
-                        d.get("matched_slug"),
-                        d.get("matched_kind", "gpu"),
-                        bool(d.get("requires_coupon") or d.get("coupon_code") or d.get("coupon_info")),
-                        float(d.get("age_hours") or 1.0),
-                        d.get("store_name") or ""
-                    )
+            for grp in ("matched_deals", "smartphone_deals", "peripheral_deals", "misc_deals"):
+                for d in c_data.get(grp, []):
+                    if (post_id and d.get("post_id") == post_id) or (buy_url and d.get("buy_url") == buy_url):
+                        return (
+                            d.get("matched_slug"),
+                            d.get("matched_kind", "gpu"),
+                            bool(d.get("requires_coupon") or d.get("coupon_code") or d.get("coupon_codes") or d.get("coupon_info")),
+                            float(d.get("age_hours") or 1.0),
+                            d.get("store_name") or "",
+                        )
     except Exception:
         pass
     return None, "gpu", False, 1.0, ""
@@ -637,7 +803,7 @@ def _infer_slug_from_cache(post_id=None, buy_url=None, reg_id="br"):
 
 def _is_direct_store_product_url(url_str):
     low = (url_str or "").lower()
-    if any(s in low for s in ("kabum.com.br/produto", "terabyteshop.com.br/produto", "amazon.com.br/dp", "amazon.com.br/gp/product", "mercadolivre.com.br/p/", "mercadolivre.com.br/mlb")):
+    if any(s in low for s in ("kabum.com.br/produto", "terabyteshop.com.br/produto", "amazon.com.br/dp", "amazon.com.br/gp/product", "mercadolivre.com.br/p/", "produto.mercadolivre.com.br/mlb")):
         return True
     if "pichau.com.br/" in low:
         try:
@@ -647,6 +813,52 @@ def _is_direct_store_product_url(url_str):
     return False
 
 
+def _is_bot_challenge_html(body, final_url=""):
+    low = (body or "").lower()
+    if not low:
+        return False
+    if any(k in low for k in (
+        "validatecaptcha", "api-services-support@amazon.com", "opfcaptcha",
+        "cf-browser-verification", "just a moment...", "attention required! | cloudflare",
+        "enable javascript and cookies to continue", "g-recaptcha", "hcaptcha"
+    )):
+        return True
+    u_low = (final_url or "").lower()
+    if "amazon.com" in u_low and len(body) < 12000 and "producttitle" not in low and "pricetopay" not in low:
+        return True
+    return False
+
+
+def _extract_ml_social_product_url(body_html):
+    """Extracts the primary featured product link from a Mercado Livre /social/ hub page."""
+    unescaped = html.unescape(body_html or "")
+    # Prefer featured card first (c_id=/home/card-featured or reco_item_pos=0)
+    m_all = re.findall(
+        r'https?://(?:www\.|produto\.)?mercadolivre\.com\.br/(?:[^"\'\s<>\\]+?/p/MLB\d+[^"\'\s<>\\]*|p/MLB\d+[^"\'\s<>\\]*|MLB[-_]?\d+[^"\'\s<>\\]*)',
+        unescaped,
+        re.I,
+    )
+    best = None
+    best_score = -999
+    for raw_u in m_all:
+        u = raw_u.rstrip("\\\"',).;")
+        ul = u.lower()
+        if "/c/" in ul or "/social/" in ul or "categories" in ul:
+            continue
+        score = 0
+        if "card-featured" in ul:
+            score += 50
+        if "reco_item_pos=0" in ul:
+            score += 30
+        if "/p/mlb" in ul or "produto.mercadolivre" in ul:
+            score += 20
+        if score > best_score:
+            best_score = score
+            # Strip tracking hash so redirector loads the clean PDP fast
+            best = u.split("#")[0]
+    return best
+
+
 def _extract_aggregator_outgoing_url(body_html, base_url):
     unescaped = html.unescape(body_html or "")
     candidates = re.findall(
@@ -654,16 +866,23 @@ def _extract_aggregator_outgoing_url(body_html, base_url):
         unescaped,
         re.I,
     )
-    skip_tokens = ("t.me/", "adrena.click/ofertas", "nerdofertas.com/t", "linktr.ee", "/politica", "/privacidade", "whatsapp.com")
+    skip_tokens = ("t.me/", "adrena.click/ofertas", "nerdofertas.com/t", "linktr.ee", "/politica", "/privacidade", "whatsapp.com", "escolha.cc", "instagram.com", "youtube.com")
     scored = []
     for raw_u in candidates:
         u = unwrap_affiliate_url(raw_u.rstrip("\\\"',).;"))
         u_low = u.lower()
         if u_low == (base_url or "").lower() or any(t in u_low for t in skip_tokens):
             continue
+        # Skip generic homepages like 'https://www.amazon.com.br/' without a product path
+        try:
+            path = urllib.parse.urlparse(u_low).path.strip("/")
+            if not path and "awin1.com" not in raw_u.lower():
+                continue
+        except Exception:
+            pass
         score = 0
-        if "/produto/" in u_low or "/dp/" in u_low or "/mlb" in u_low:
-            score += 50
+        if "/produto/" in u_low or "/dp/" in u_low or "/p/mlb" in u_low or "produto.mercadolivre" in u_low:
+            score += 60
         if any(s in u_low for s in ("kabum.com.br", "terabyteshop.com.br", "pichau.com.br", "amazon.com.br", "mercadolivre.com.br")):
             score += 30
         if "awin1.com/cread.php" in raw_u.lower() or "meli.la" in u_low or "amzn.to" in u_low or "s.shopee" in u_low:
@@ -675,10 +894,85 @@ def _extract_aggregator_outgoing_url(body_html, base_url):
     return scored[0][1]
 
 
+def _extract_page_product_title(body, final_url=""):
+    if not body or _is_bot_challenge_html(body, final_url):
+        return ""
+    # Prefer Amazon productTitle, JSON-LD Product name, og:title, h1, then <title>
+    candidates = []
+    m_az = re.search(r'id=["\']productTitle["\'][^>]*>(.*?)</span>', body, re.I | re.S)
+    if m_az:
+        candidates.append(m_az.group(1))
+    m_og = re.search(r'<meta[^>]+property=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']', body, re.I) or re.search(r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+property=["\']og:title["\']', body, re.I)
+    if m_og:
+        candidates.append(m_og.group(1))
+    m_h1 = re.search(r'<h1[^>]*>(.*?)</h1>', body, re.I | re.S)
+    if m_h1:
+        candidates.append(m_h1.group(1))
+    m_t = re.search(r'<title[^>]*>(.*?)</title>', body, re.I | re.S)
+    if m_t:
+        candidates.append(m_t.group(1))
+
+    generic_titles = {"amazon.com.br", "mercado livre", "shopee brasil", "kabum!", "pichau", "terabyteshop", "magalu", "just a moment..."}
+    for raw_c in candidates:
+        cleaned = html.unescape(re.sub(r"<[^>]+>", " ", raw_c))
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if cleaned and cleaned.lower() not in generic_titles and len(cleaned) >= 10:
+            return cleaned[:200]
+    return ""
+
+
+def _strip_vram_suffix(slug):
+    return re.sub(r"-(?:4gb|6gb|8gb|10gb|12gb|16gb|24gb)$", "", (slug or "").lower().strip())
+
+
+def _check_resolved_page_mismatch(matched_kind, matched_slug, item_specs, final_url, page_title):
+    """Detects when a resolved store page clearly depicts a different GPU or Intel/AMD motherboard than claimed."""
+    kind = (matched_kind or "").lower().strip()
+    if kind not in ("gpu", "mobo"):
+        return False, ""
+    url_path = ""
+    try:
+        url_path = urllib.parse.unquote(urllib.parse.urlparse(final_url or "").path or "")
+    except Exception:
+        url_path = ""
+    probe = f"{page_title or ''} {url_path}".strip()
+    if not probe or len(probe) < 6:
+        return False, ""
+
+    if kind == "gpu" and matched_slug:
+        try:
+            import promo_radar
+            cleaned = promo_radar._strip_gpu_comparison_clauses(probe)
+            page_slug = promo_radar.match_gpu_slug_in_text(cleaned, allow_bare_with_gpu_title=False)
+            if page_slug and _strip_vram_suffix(page_slug) != _strip_vram_suffix(matched_slug):
+                return True, f"Link aponta para {page_slug.upper()} na loja (esperado {matched_slug.upper()})"
+        except Exception:
+            pass
+
+    if kind == "mobo":
+        try:
+            import promo_radar
+            page_sp = promo_radar.extract_mobo_specs_from_text(probe)
+            deal_sp = item_specs if isinstance(item_specs, dict) else {}
+            deal_sock = (deal_sp.get("socket") or "").upper()
+            deal_plat = (deal_sp.get("platform") or promo_radar._platform_from_socket(deal_sock)).upper()
+            deal_chip = (deal_sp.get("chip_base") or (deal_sp.get("chipset") or "")[:4]).lower()
+            page_plat = (page_sp.get("platform") or promo_radar._platform_from_socket(page_sp.get("socket"))).upper()
+            page_chip = (page_sp.get("chip_base") or "").lower()
+            if deal_plat and page_plat and deal_plat != page_plat:
+                return True, f"Link da loja é placa {page_plat} ({page_sp.get('socket') or page_sp.get('chipset')}), não {deal_plat}"
+            if deal_chip and page_chip and deal_chip != page_chip and deal_chip in promo_radar._MOBO_CHIPSET_INFO and page_chip in promo_radar._MOBO_CHIPSET_INFO:
+                return True, f"Link da loja é chipset {page_chip.upper()}, diferente de {deal_chip.upper()}"
+        except Exception:
+            pass
+
+    return False, ""
+
+
 def _fetch_resolved_product_page(start_url, timeout=5):
     """
     Follows HTTP redirects, affiliate wrappers (awin1 ued=), meta/JS redirects,
-    and aggregator pages (benchpromos, seuhardware, aoferta, etc.) up to 4 hops.
+    ML /social/ hubs, and aggregator pages (benchpromos, seuhardware, aoferta, pechinchou, etc.) up to 4 hops.
     Returns (final_url, status_code, body, http_error_code, redirected_lost_product).
     """
     cur = unwrap_affiliate_url(start_url)
@@ -719,13 +1013,18 @@ def _fetch_resolved_product_page(start_url, timeout=5):
             break
 
         target_url = None
+        f_low = final_url.lower()
         meta_refresh = re.search(r'<meta[^>]*http-equiv=[\'"]refresh[\'"][^>]*content=[\'"][^;]*;\s*url=([^\'"]+)', body, re.I)
         js_redirect = re.search(r'(?:window\.location(?:\.replace|\.href)?|location\.href)\s*=\s*[\'"](https?://[^\'"]+)[\'"]', body, re.I)
         if meta_refresh:
             target_url = unwrap_affiliate_url(meta_refresh.group(1).strip())
         elif js_redirect:
             target_url = unwrap_affiliate_url(js_redirect.group(1).strip())
-        elif any(k in final_url.lower() for k in ("benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net", "nerdofertas", "linkmc.click", "tidd.ly")):
+        elif "mercadolivre.com.br/social/" in f_low:
+            target_url = _extract_ml_social_product_url(body)
+        elif "pechinchou.com.br" in f_low and re.search(r"oferta\s+encerrada|promo[çc][ãa]o\s+encerrada|cupom\s+esgotado", body, re.I):
+            break
+        elif any(k in f_low for k in ("benchpromos.com.br", "promocoes", "adrena.click", "seuhardware", "aoferta.net", "nerdofertas", "linkmc.click", "tidd.ly", "pechinchou.com.br", "pechin.co", "curt.link", "link.amazon")):
             target_url = _extract_aggregator_outgoing_url(body, final_url)
 
         if target_url and target_url.startswith("http") and target_url not in visited:
@@ -735,6 +1034,30 @@ def _fetch_resolved_product_page(start_url, timeout=5):
 
     lost_prod = had_product_path and ("kabum.com.br" in final_url.lower() or "terabyteshop.com.br" in final_url.lower()) and not re.search(r"/produto/\d+", final_url)
     return final_url, code, body, None, lost_prod
+
+
+def _collect_candidate_coupons(coupon_code=None, coupon_codes=None):
+    out = []
+    seen = set()
+    for c in list(coupon_codes or []) + ([coupon_code] if coupon_code else []):
+        cu = str(c or "").strip().upper()
+        if cu and cu not in STOP_WORDS and len(cu) >= 4 and cu not in seen:
+            seen.add(cu)
+            out.append(cu)
+    return out
+
+
+def _is_channel_coupon_expired(coup_entry, post_ts=None):
+    if not isinstance(coup_entry, dict) or coup_entry.get("status") != "expired":
+        return False
+    if coup_entry.get("source") != "channel_report":
+        return False
+    if post_ts is None:
+        return True
+    rep_ts = float(coup_entry.get("reported_ts") or 0)
+    if rep_ts <= 0:
+        return True
+    return rep_ts >= (float(post_ts) - 1800.0)
 
 
 def test_deal_url_and_coupon(
@@ -748,13 +1071,18 @@ def test_deal_url_and_coupon(
     matched_kind=None,
     requires_coupon=None,
     age_hours=None,
-    store_name=None
+    store_name=None,
+    coupon_codes=None,
+    coupon_mode=None,
+    title=None,
+    item_specs=None,
+    post_ts=None,
 ):
     """
     Comprehensive 2-Layer Store & Coupon Validator:
-    Layer 1: Direct HTTP store inspection (KaBuM __NEXT_DATA__, ML, Amazon, etc.)
-    Layer 2: Hardware Barato Live In-Stock Offer & Coupon Cross-Verification (solves Terabyte/Pichau 403,
-             Shopee SPA shells, ML social hubs, and verifies whether a coupon code is actually active!)
+    Layer 1: Direct HTTP store inspection (KaBuM __NEXT_DATA__, ML PDP/social, Amazon, Pichau, Pechinchou, etc.)
+             including bot-challenge filtering and product identity mismatch verification (GPU & Intel/AMD Mobo).
+    Layer 2: Hardware Barato Live In-Stock Offer & Global Store Coupon Cross-Verification + Group Expiry Check.
     """
     reg = (reg_id or "br").lower().strip()
     if not matched_slug and (post_id or buy_url):
@@ -768,23 +1096,47 @@ def test_deal_url_and_coupon(
         if not store_name:
             store_name = inf_store
 
+    candidate_coupons = _collect_candidate_coupons(coupon_code, coupon_codes)
     if requires_coupon is None:
-        requires_coupon = bool(coupon_code)
+        requires_coupon = bool(candidate_coupons)
     if age_hours is None:
         age_hours = 1.0
 
-    clean_coup = (coupon_code or "").strip().upper() or None
+    clean_coup = candidate_coupons[0] if candidate_coupons else None
 
     res = {
         "valid": False,
-        "status": "untested",  # "active" | "unverified_coupon" | "expired" | "out_of_stock" | "untested"
+        "status": "untested",  # "active" | "unverified_coupon" | "expired" | "out_of_stock" | "mismatch" | "untested"
         "coupon_status": "unverified" if (clean_coup or requires_coupon) else "none",
+        "working_coupon_code": clean_coup,
         "stock_verified": False,
         "reason": "Aguardando verificação na loja",
         "final_url": buy_url,
+        "page_title": "",
         "live_price": None,
         "tested_at": time.strftime("%Y-%m-%d %H:%M:%S")
     }
+
+    # Pre-check channel_report coupon expiries
+    status_db = load_coupon_status(reg)
+    coupons_db = status_db.get("coupons", {})
+    group_coupons_db = status_db.get("group_coupons", {})
+    surviving_coupons = [c for c in candidate_coupons if not _is_channel_coupon_expired(coupons_db.get(c), post_ts)]
+    expired_by_group = [c for c in candidate_coupons if c not in surviving_coupons]
+
+    if candidate_coupons and ((coupon_mode == "stack" and expired_by_group) or (not surviving_coupons)):
+        dead_lbl = ", ".join(expired_by_group)
+        res["valid"] = False
+        res["status"] = "expired"
+        res["coupon_status"] = "expired"
+        res["working_coupon_code"] = None
+        res["reason"] = f"Cupom {dead_lbl} expirado segundo aviso recente nos grupos"
+        record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, coupon_status="expired", store_name=store_name, final_url=buy_url)
+        return res
+
+    if surviving_coupons:
+        clean_coup = surviving_coupons[0]
+        res["working_coupon_code"] = clean_coup
 
     buy_url = unwrap_affiliate_url(buy_url)
     if not buy_url or not buy_url.startswith("http"):
@@ -795,6 +1147,7 @@ def test_deal_url_and_coupon(
     direct_live_price = None
     direct_is_available = None
     http_error_code = None
+    page_coupons = set()
 
     # --- LAYER 1: Direct Store HTTP Check ---
     final_url, code, body, http_error_code, redirected_lost_product = _fetch_resolved_product_page(buy_url, timeout=timeout)
@@ -817,8 +1170,31 @@ def test_deal_url_and_coupon(
         record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
         return res
 
+    bot_blocked = _is_bot_challenge_html(body, final_url)
+    if bot_blocked:
+        body = ""
+
+    page_title = _extract_page_product_title(body, final_url) if body else ""
+    res["page_title"] = page_title
+
+    is_mismatch, mismatch_reason = _check_resolved_page_mismatch(matched_kind, matched_slug, item_specs, final_url, page_title)
+    if is_mismatch:
+        res["valid"] = False
+        res["status"] = "mismatch"
+        res["stock_verified"] = False
+        res["reason"] = mismatch_reason
+        record_deal_status(post_id, "mismatch", res["reason"], url=buy_url, reg_id=reg, stock_verified=False, store_name=store_label, final_url=final_url)
+        return res
+
     if body:
         low = body.lower()
+        if "pechinchou.com" in (final_url or "").lower() and re.search(r"oferta\s+encerrada|promo[çc][ãa]o\s+encerrada|cupom\s+esgotado", low):
+            res["valid"] = False
+            res["status"] = "out_of_stock"
+            res["reason"] = "Oferta encerrada / cupom esgotado no Pechinchou"
+            record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
+            return res
+
         # Check region-appropriate Out-Of-Stock patterns
         oos_list = OOS_PATTERNS_MX if reg == "mx" else (OOS_PATTERNS_EU if reg == "eu" else OOS_PATTERNS_BR)
         for pat, reason_text in oos_list:
@@ -829,7 +1205,7 @@ def test_deal_url_and_coupon(
                 record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
                 return res
 
-        direct_live_price, direct_is_available, _ = extract_store_price_and_availability(body, final_url)
+        direct_live_price, direct_is_available, page_coupons = extract_store_price_and_availability(body, final_url)
         if direct_is_available is False:
             res["valid"] = False
             res["status"] = "out_of_stock"
@@ -837,19 +1213,27 @@ def test_deal_url_and_coupon(
             record_deal_status(post_id, "out_of_stock", res["reason"], url=buy_url, reg_id=reg, store_name=store_label, final_url=final_url)
             return res
 
-    # --- LAYER 2: Cross-Verify Against Hardware Barato Live In-Stock Index (Brazil) ---
+    # --- LAYER 2: Cross-Verify Against Hardware Barato Live In-Stock Index & Global Coupons (Brazil) ---
     store_key, store_label = normalize_br_store_key(final_url or buy_url, store_name)
     res["store_name"] = store_label
-    hb_info = fetch_hb_live_slug_info(matched_kind, matched_slug) if (reg == "br" and matched_slug) else None
+    is_hb_kind = (matched_kind or "").lower() in ("gpu", "cpu", "ram", "mobo", "psu")
+    hb_info = fetch_hb_live_slug_info(matched_kind, matched_slug) if (reg == "br" and matched_slug and is_hb_kind and not str(matched_slug).startswith("mobo-") and not str(matched_slug).startswith("psu-")) else None
 
     store_min_base = None
     store_min_coup = None
-    store_active_coupons = set()
+    store_active_coupons = set(page_coupons or set())
+    store_coupon_details = {}
     store_has_stock = None
+
+    if reg == "br" and store_key:
+        g_codes, g_details = _get_global_hb_store_coupons(store_key, reg_id=reg)
+        store_active_coupons.update(g_codes)
+        store_coupon_details.update(g_details)
 
     if hb_info and store_key:
         store_offers = hb_info["by_store"].get(store_key, [])
-        store_active_coupons = set(hb_info["active_coupons"].get(store_key, []))
+        store_active_coupons.update(hb_info["active_coupons"].get(store_key, []))
+        store_coupon_details.update(hb_info.get("active_coupons_details", {}).get(store_key, {}))
         if len(store_offers) == 0:
             store_has_stock = False
         else:
@@ -869,7 +1253,6 @@ def test_deal_url_and_coupon(
                     if matching_pid_offers[0].get("coupon_price"):
                         store_min_coup = matching_pid_offers[0]["coupon_price"]
                 elif store_key in ("terabyte", "kabum") and direct_live_price is None:
-                    # Specific Terabyte or KaBuM product ID is NOT in Hardware Barato's live in-stock list!
                     res["valid"] = False
                     res["status"] = "out_of_stock"
                     res["reason"] = f"Produto esgotado na {store_label} (anúncio #{pid} sem estoque ativo)"
@@ -888,8 +1271,8 @@ def test_deal_url_and_coupon(
     res["live_price"] = effective_live_price
 
     # Evaluate price & coupon honesty
-    if effective_live_price and expected_price and expected_price > 50:
-        if not clean_coup and not requires_coupon:
+    if effective_live_price and expected_price and expected_price > 15:
+        if not surviving_coupons and not requires_coupon:
             # Direct offer (no coupon needed): store price must match expected promo within 6%
             if effective_live_price > expected_price * 1.06:
                 res["valid"] = False
@@ -906,31 +1289,30 @@ def test_deal_url_and_coupon(
                 record_deal_status(post_id, "active", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="none", store_name=store_label, final_url=final_url)
                 return res
         else:
-            # Offer requires a coupon or app voucher
-            store_coupon_details = hb_info.get("active_coupons_details", {}).get(store_key, {}) if hb_info else {}
-            coup_rule = store_coupon_details.get(clean_coup) if clean_coup else None
-            is_coupon_confirmed = bool(clean_coup and clean_coup in store_active_coupons)
+            # Offer requires a coupon or app voucher: test surviving coupon codes against confirmed store coupons & min_spend
+            confirmed_code = None
+            min_spend_fail_reason = None
+            for cand in surviving_coupons:
+                coup_rule = store_coupon_details.get(cand)
+                in_hb = cand in store_active_coupons
+                if in_hb:
+                    min_spend = (coup_rule or {}).get("min_spend")
+                    if min_spend and expected_price and expected_price < (min_spend - 5.0):
+                        min_spend_fail_reason = f"Cupom {cand} exige gasto mínimo de R$ {min_spend:,.2f} na {store_label} (item anunciado: R$ {expected_price:,.2f})"
+                        continue
+                    confirmed_code = cand
+                    break
 
-            # Minimum purchase spend validation (Argon Item 2)
-            if is_coupon_confirmed and coup_rule:
-                min_spend = coup_rule.get("min_spend")
-                if min_spend and expected_price and expected_price < (min_spend - 5.0):
-                    res["valid"] = False
-                    res["status"] = "expired"
-                    res["coupon_status"] = "expired"
-                    res["reason"] = f"Cupom {clean_coup} exige gasto mínimo de R$ {min_spend:,.2f} na {store_label} (item anunciado: R$ {expected_price:,.2f})"
-                    record_coupon_status(clean_coup, "expired", res["reason"], source="live_test", reg_id=reg)
-                    record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="expired", store_name=store_label, final_url=final_url)
-                    return res
+            max_plausible_base = max(expected_price * 1.25, expected_price + 450)
 
-            if is_coupon_confirmed and store_min_coup and store_min_coup <= expected_price * 1.06:
-                res["valid"] = True
-                res["status"] = "active"
-                res["coupon_status"] = "verified"
-                res["stock_verified"] = True
-                res["reason"] = f"Cupom {clean_coup} confirmado ativo na {store_label} (R$ {store_min_coup:,.2f})"
-                record_coupon_status(clean_coup, "verified", res["reason"], source="live_test", reg_id=reg)
-                record_deal_status(post_id, "active", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="verified", store_name=store_label, final_url=final_url)
+            # Check min_spend violation when no backup code passed
+            if min_spend_fail_reason and not confirmed_code:
+                res["valid"] = False
+                res["status"] = "expired"
+                res["coupon_status"] = "expired"
+                res["reason"] = min_spend_fail_reason
+                # Deal-level only (do NOT poison global coupon for higher-priced items!)
+                record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="expired", store_name=store_label, final_url=final_url)
                 return res
 
             # If store base price already matches expected_price without needing a coupon
@@ -938,62 +1320,174 @@ def test_deal_url_and_coupon(
                 res["valid"] = True
                 res["status"] = "active"
                 res["coupon_status"] = "verified"
+                res["working_coupon_code"] = confirmed_code or clean_coup
                 res["stock_verified"] = True
                 res["reason"] = f"Em estoque na {store_label} já por R$ {effective_live_price:,.2f} direto!"
                 record_deal_status(post_id, "active", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="verified", store_name=store_label, final_url=final_url)
                 return res
 
-            # If store base price is way too high even for a coupon (>22% or >R$ 400 above expected)
-            max_plausible_base = max(expected_price * 1.22, expected_price + 400)
+            if confirmed_code and effective_live_price <= max_plausible_base and (not store_min_coup or store_min_coup <= expected_price * 1.08 or (direct_live_price and direct_live_price <= max_plausible_base)):
+                res["valid"] = True
+                res["status"] = "active"
+                res["coupon_status"] = "verified"
+                res["working_coupon_code"] = confirmed_code
+                res["stock_verified"] = True
+                price_note = f"R$ {store_min_coup:,.2f}" if store_min_coup else f"R$ {effective_live_price:,.2f} base"
+                res["reason"] = f"Cupom {confirmed_code} confirmado ativo na {store_label} ({price_note})"
+                record_coupon_status(confirmed_code, "verified", res["reason"], source="live_test", reg_id=reg)
+                record_deal_status(post_id, "active", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="verified", store_name=store_label, final_url=final_url)
+                return res
+
+            # If store base price jumped way too high even with a coupon -> offer ended for THIS deal
             if effective_live_price > max_plausible_base:
                 res["valid"] = False
                 res["status"] = "expired"
                 res["coupon_status"] = "expired"
                 res["reason"] = f"Oferta encerrada na {store_label} — preço atual subiu para R$ {effective_live_price:,.2f} (anunciado R$ {expected_price:,.2f})"
-                if clean_coup:
-                    record_coupon_status(clean_coup, "expired", res["reason"], source="live_test", reg_id=reg)
                 record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=False, coupon_status="expired", store_name=store_label, final_url=final_url)
                 return res
 
-            # If post is > 6 hours old and coupon is NOT in store's active coupon list -> expired coupon!
-            if age_hours > 6.0 and not is_coupon_confirmed:
+            # If post is > 6 hours old and coupon is NOT confirmed -> expired for this deal
+            if age_hours > 6.0 and not confirmed_code:
                 res["valid"] = False
                 res["status"] = "expired"
                 res["coupon_status"] = "expired"
                 coup_lbl = f"Cupom {clean_coup}" if clean_coup else "Cupom/desconto do grupo"
                 res["reason"] = f"{coup_lbl} expirado/inativo na {store_label} — preço atual em estoque sem cupom: R$ {effective_live_price:,.2f}"
-                if clean_coup:
-                    record_coupon_status(clean_coup, "expired", res["reason"], source="live_test", reg_id=reg)
                 record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="expired", store_name=store_label, final_url=final_url)
                 return res
 
-            # Fresh post (<= 6h) with product in stock, but coupon requires cart/app verification
+            # Fresh post (<= 6h) with product in stock; check if multiple groups corroborated the coupon
+            gc_info = group_coupons_db.get(clean_coup) if clean_coup else None
+            seen_cnt = int((gc_info or {}).get("seen_count") or 0)
             res["valid"] = True
             res["status"] = "unverified_coupon"
             res["coupon_status"] = "unverified"
             res["stock_verified"] = True
             coup_lbl = f"cupom {clean_coup}" if clean_coup else "cupom/app"
-            res["reason"] = f"Em estoque na {store_label} por R$ {effective_live_price:,.2f} (sem cupom). Valor de R$ {expected_price:,.2f} depende do {coup_lbl} aplicar no carrinho"
-            if clean_coup:
-                record_coupon_status(clean_coup, "unverified", res["reason"], source="live_test", reg_id=reg)
+            corroboration = f" (visto {seen_cnt}x nos grupos)" if seen_cnt >= 2 else ""
+            res["reason"] = f"Em estoque na {store_label} por R$ {effective_live_price:,.2f} (sem cupom). Valor de R$ {expected_price:,.2f} depende do {coup_lbl} aplicar no carrinho{corroboration}"
             record_deal_status(post_id, "unverified_coupon", res["reason"], url=buy_url, reg_id=reg, live_price=effective_live_price, stock_verified=True, coupon_status="unverified", store_name=store_label, final_url=final_url)
             return res
 
     # If we could not extract a live price from either Layer 1 or Layer 2:
-    # NEVER falsely claim "Confirmado ativo na loja"!
+    # Check if at least the coupon itself is confirmed active globally for this store
+    if clean_coup and store_key and clean_coup in store_active_coupons and age_hours <= 6.0:
+        res["coupon_status"] = "verified"
     if age_hours > 8.0:
         res["valid"] = False
         res["status"] = "expired"
         res["reason"] = f"Oferta antiga ({age_hours:.1f}h) sem confirmação de estoque ativo na {store_label}"
-        record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, stock_verified=False, store_name=store_label, final_url=final_url)
+        record_deal_status(post_id, "expired", res["reason"], url=buy_url, reg_id=reg, stock_verified=False, coupon_status=res["coupon_status"], store_name=store_label, final_url=final_url)
         return res
 
     res["valid"] = False
     res["status"] = "untested"
     res["stock_verified"] = False
-    res["reason"] = f"Estoque/preço na {store_label} não pôde ser confirmado automaticamente (verifique no link)"
-    record_deal_status(post_id, "untested", res["reason"], url=buy_url, reg_id=reg, stock_verified=False, store_name=store_label, final_url=final_url)
+    note = " (proteção anti-bot da loja — confira no link)" if bot_blocked else ""
+    res["reason"] = f"Estoque/preço na {store_label} não pôde ser confirmado automaticamente{note}"
+    record_deal_status(post_id, "untested", res["reason"], url=buy_url, reg_id=reg, stock_verified=False, coupon_status=res["coupon_status"], store_name=store_label, final_url=final_url)
     return res
+
+
+def verify_deal_before_notify(deal, reg_id="br", freshness_secs=90):
+    """
+    Mandatory Pre-Notification Gate called right before dispatching a Windows or Phone alert.
+    Re-verifies channel expiries and runs a live store & coupon test if no fresh live_test exists.
+    Returns (ok_to_notify: bool, verification_result: dict, block_reason: str).
+    """
+    reg = (reg_id or (deal.get("region_id") if isinstance(deal, dict) else None) or "br").lower().strip()
+    if not isinstance(deal, dict):
+        return False, {}, "Oferta inválida"
+    if reg == "eu":
+        return True, {
+            "status": deal.get("deal_status") or "active",
+            "stock_verified": True,
+            "coupon_status": deal.get("coupon_status") or ("verified" if deal.get("coupon_code") else "none"),
+            "working_coupon_code": deal.get("coupon_code"),
+        }, ""
+
+    post_id = deal.get("post_id") or ""
+    buy_url = deal.get("buy_url") or deal.get("post_url") or ""
+    candidate_coupons = _collect_candidate_coupons(deal.get("coupon_code"), deal.get("coupon_codes"))
+    coupon_mode = deal.get("coupon_mode")
+    post_ts = _iso_to_epoch(deal.get("timestamp"))
+    kind = (deal.get("matched_kind") or "gpu").lower()
+    is_core_hw = kind in ("gpu", "cpu", "ram", "mobo", "psu")
+    req_coup = bool(deal.get("requires_coupon") or candidate_coupons or deal.get("coupon_info"))
+    age_hours = float(deal.get("age_hours") or 0.1)
+
+    status_db = load_coupon_status(reg)
+    coupons_db = status_db.get("coupons", {})
+    deals_map = status_db.get("deals", {})
+
+    # 1. Check deal-level blocks & coupon expiry announcements from Telegram groups
+    deal_st = deals_map.get(post_id) or (deals_map.get(post_id.lower()) if post_id else None) or (deals_map.get(buy_url) if buy_url else None)
+    if deal_st and deal_st.get("status") in ("expired", "out_of_stock", "mismatch"):
+        return False, deal_st, deal_st.get("reason") or f"Status {deal_st.get('status')}"
+
+    surviving = [c for c in candidate_coupons if not _is_channel_coupon_expired(coupons_db.get(c), post_ts)]
+    dead = [c for c in candidate_coupons if c not in surviving]
+    if candidate_coupons and ((coupon_mode == "stack" and dead) or (not surviving)):
+        return False, {"status": "expired", "coupon_status": "expired"}, f"Cupom {', '.join(dead)} expirado nos grupos"
+
+    # 2. Reuse ultra-fresh live test (< freshness_secs) or run live check right now
+    ver = None
+    now_ts = time.time()
+    if deal_st and deal_st.get("source") == "live_test":
+        tested_ts = float(deal_st.get("tested_ts") or _iso_to_epoch(deal_st.get("updated_at")) or 0)
+        if tested_ts > 0 and (now_ts - tested_ts) <= freshness_secs and deal_st.get("status") in ("active", "unverified_coupon"):
+            # Even on cached live_test, run mismatch check cleanly against cached final_url/store
+            ver = dict(deal_st)
+            ver.setdefault("working_coupon_code", surviving[0] if surviving else None)
+
+    if ver is None:
+        if buy_url.startswith("http") and "t.me/" not in buy_url.lower():
+            ver = test_deal_url_and_coupon(
+                buy_url,
+                coupon_code=surviving[0] if surviving else deal.get("coupon_code"),
+                coupon_codes=surviving or candidate_coupons,
+                coupon_mode=coupon_mode,
+                expected_price=deal.get("promo_price_brl") or deal.get("price_brl"),
+                timeout=5,
+                post_id=post_id or None,
+                reg_id=reg,
+                matched_slug=deal.get("matched_slug"),
+                matched_kind=kind,
+                requires_coupon=req_coup,
+                age_hours=age_hours,
+                store_name=deal.get("store_name"),
+                title=deal.get("title"),
+                item_specs=deal.get("item_specs"),
+                post_ts=post_ts,
+            )
+        else:
+            ver = {
+                "status": "active" if deal.get("_isStoreDirect") else "untested",
+                "stock_verified": bool(deal.get("_isStoreDirect")),
+                "coupon_status": "none",
+                "reason": "Sem link direto de loja",
+            }
+
+    st = ver.get("status", "untested")
+    if st in ("expired", "out_of_stock", "mismatch") or ver.get("coupon_status") == "expired":
+        return False, ver, ver.get("reason") or f"Bloqueado na verificação ({st})"
+
+    if reg == "br" and is_core_hw and not ver.get("stock_verified"):
+        return False, ver, ver.get("reason") or "Estoque de hardware não confirmado na loja"
+
+    if req_coup and age_hours > 4.0 and ver.get("coupon_status") != "verified":
+        return False, ver, ver.get("reason") or "Cupom não confirmado após 4h — bloqueado"
+
+    if not is_core_hw and not ver.get("stock_verified"):
+        # For non-HB items on SPA/anti-bot stores (Shopee SPA, Amazon captcha), only allow very fresh posts (< 20 min)
+        # that passed 404/OOS/mismatch/expiry checks; block anything older without stock confirmation.
+        if st == "untested" and age_hours <= 0.35:
+            ver["soft_verified_fresh"] = True
+            return True, ver, ""
+        return False, ver, ver.get("reason") or "Sem confirmação de estoque/preço na loja"
+
+    return True, ver, ""
 
 
 def test_deals_batch(deals, max_items=60, reg_id=None):
@@ -1018,7 +1512,13 @@ def test_deals_batch(deals, max_items=60, reg_id=None):
 
     # Pre-warm Hardware Barato live slug cache with gentle concurrency (avoids rate limiting)
     if reg == "br":
-        unique_slugs = {(d.get("matched_kind", "gpu"), d.get("matched_slug")) for d in to_test if d.get("matched_slug")}
+        unique_slugs = {
+            (d.get("matched_kind", "gpu"), d.get("matched_slug"))
+            for d in to_test
+            if d.get("matched_slug")
+            and (d.get("matched_kind") in ("gpu", "cpu", "ram", "mobo", "psu"))
+            and not str(d.get("matched_slug")).startswith(("mobo-", "psu-"))
+        }
         if unique_slugs:
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
                 list(ex.map(lambda ks: fetch_hb_slug_live_data_safe(ks[0], ks[1]), unique_slugs))
@@ -1028,20 +1528,26 @@ def test_deals_batch(deals, max_items=60, reg_id=None):
     def _worker(deal):
         url = deal.get("buy_url") or deal.get("post_url")
         coup = deal.get("coupon_code")
+        coups = deal.get("coupon_codes")
         exp_price = deal.get("promo_price_brl") or deal.get("price_brl")
         p_id = deal.get("post_id")
         r = test_deal_url_and_coupon(
             url,
             coupon_code=coup,
+            coupon_codes=coups,
+            coupon_mode=deal.get("coupon_mode"),
             expected_price=exp_price,
             timeout=4.5,
             post_id=p_id,
             reg_id=reg,
             matched_slug=deal.get("matched_slug"),
             matched_kind=deal.get("matched_kind"),
-            requires_coupon=bool(deal.get("requires_coupon") or coup or deal.get("coupon_info")),
+            requires_coupon=bool(deal.get("requires_coupon") or coup or coups or deal.get("coupon_info")),
             age_hours=float(deal.get("age_hours") or 1.0),
-            store_name=deal.get("store_name")
+            store_name=deal.get("store_name"),
+            title=deal.get("title"),
+            item_specs=deal.get("item_specs"),
+            post_ts=_iso_to_epoch(deal.get("timestamp")),
         )
         deal_id = p_id or url
         return deal_id, r
@@ -1065,12 +1571,100 @@ def fetch_hb_slug_live_data_safe(kind, slug):
         return None
 
 
-def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None):
+def _overlay_deal_status_entry(item, coupons, deals_map, reg_id=None, is_core_hw=True):
+    p_id = item.get("post_id", "")
+    b_url = item.get("buy_url", "")
+    post_ts = _iso_to_epoch(item.get("timestamp"))
+    candidate_coupons = _collect_candidate_coupons(item.get("coupon_code"), item.get("coupon_codes"))
+    coupon_mode = item.get("coupon_mode")
+    req_coup = bool(item.get("requires_coupon") or candidate_coupons or item.get("coupon_info"))
+    item["requires_coupon"] = req_coup
+    item["promo_price_brl"] = item.get("promo_price_brl") or item.get("price_brl")
+
+    deal_st = (deals_map.get(p_id) if p_id else None) or (deals_map.get(p_id.lower()) if p_id else None) or (deals_map.get(b_url) if b_url else None)
+
+    if deal_st:
+        st_val = deal_st.get("status", "untested")
+        item["deal_status"] = st_val
+        item["deal_status_reason"] = deal_st.get("reason", "")
+        item["stock_verified"] = bool(deal_st.get("stock_verified", False))
+        if deal_st.get("store_name") and deal_st["store_name"] not in ("E-commerce", "Loja"):
+            item["store_name"] = deal_st["store_name"]
+        if deal_st.get("live_price"):
+            item["live_store_price_brl"] = deal_st["live_price"]
+            if st_val == "active" and not req_coup and deal_st["live_price"] < item["price_brl"]:
+                item["price_brl"] = deal_st["live_price"]
+                if item.get("hb_price_brl"):
+                    item["savings_vs_hb_brl"] = round(item["hb_price_brl"] - item["price_brl"], 2)
+        if st_val in ("expired", "out_of_stock", "mismatch"):
+            item["is_expired"] = True
+        else:
+            item["is_expired"] = False
+    elif is_core_hw:
+        if reg_id == "eu" and item.get("deal_status") == "active" and item.get("stock_verified"):
+            item["is_expired"] = bool(item.get("is_expired"))
+        else:
+            item["deal_status"] = "untested"
+            item["stock_verified"] = False
+            item["is_expired"] = bool(item.get("age_hours", 0) > 8.0)
+
+    # Multi-coupon aware status resolution (promote backup 'ou' code if primary expired)
+    surviving = []
+    any_verified = None
+    first_expired_entry = None
+    for code in candidate_coupons:
+        cs = coupons.get(code)
+        if cs and _is_channel_coupon_expired(cs, post_ts):
+            first_expired_entry = first_expired_entry or cs
+            continue
+        if cs and cs.get("status") == "expired" and not (deal_st and deal_st.get("status") == "unverified_coupon" and item.get("age_hours", 99) <= 6.0):
+            first_expired_entry = first_expired_entry or cs
+            continue
+        surviving.append(code)
+        if cs and cs.get("status") == "verified" and not any_verified:
+            any_verified = (code, cs)
+
+    all_coupons_dead = bool(candidate_coupons) and ((coupon_mode == "stack" and bool(first_expired_entry) and len(surviving) < len(candidate_coupons)) or (not surviving))
+
+    if all_coupons_dead:
+        item["coupon_status"] = "expired"
+        item["coupon_status_reason"] = (first_expired_entry or {}).get("reason", "Cupom expirado")
+        item["is_coupon_expired"] = True
+        item["is_expired"] = True
+        if item.get("live_store_price_brl") and item["live_store_price_brl"] > item["price_brl"]:
+            item["price_brl"] = item["live_store_price_brl"]
+            item["coupon_discount_revoked"] = True
+        elif item.get("raw_price_brl") and item["raw_price_brl"] > item["price_brl"]:
+            item["price_brl"] = item["raw_price_brl"]
+            item["coupon_discount_revoked"] = True
+        if item.get("hb_price_brl"):
+            item["savings_vs_hb_brl"] = round(item["hb_price_brl"] - item["price_brl"], 2)
+    elif surviving:
+        if any_verified:
+            item["coupon_code"] = any_verified[0]
+            item["coupon_status"] = "verified"
+            item["coupon_status_reason"] = any_verified[1].get("reason", "")
+        else:
+            item["coupon_code"] = surviving[0]
+            if deal_st and deal_st.get("coupon_status"):
+                item["coupon_status"] = deal_st["coupon_status"]
+            else:
+                c0_st = coupons.get(surviving[0])
+                if c0_st:
+                    item["coupon_status"] = c0_st.get("status", "unverified")
+    elif deal_st and deal_st.get("coupon_status"):
+        item["coupon_status"] = deal_st["coupon_status"]
+        if item["coupon_status"] == "expired":
+            item["is_coupon_expired"] = True
+            item["is_expired"] = True
+
+
+def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None, extra_deal_lists=()):
     """
     Overlays verified live test statuses onto deals list and recomputes best_by_slug.
     Crucial Policy:
-    1. Out-of-stock or expired deals are flagged is_expired = True.
-    2. Deals with expired coupons have their coupon revoked and are flagged is_coupon_expired = True.
+    1. Out-of-stock, mismatched, or expired deals are flagged is_expired = True.
+    2. Deals with expired coupons (with no surviving backup code) have their coupon revoked and are flagged is_coupon_expired = True.
     3. Deals with unverified coupons keep their live_store_price_brl (price without coupon) visible
        and NEVER overwrite best_by_slug at an unverified coupon price!
     4. Only 100% stock_verified active deals (with no coupon needed, or a store-verified coupon)
@@ -1083,89 +1677,18 @@ def rewire_deals_and_best_by_slug(matched_deals, all_promos=None, reg_id=None):
     rewired = []
     for d in matched_deals:
         item = dict(d)
-        p_id = item.get("post_id", "")
-        c_code = (item.get("coupon_code") or "").strip().upper()
-        b_url = item.get("buy_url", "")
-        req_coup = bool(item.get("requires_coupon") or c_code or item.get("coupon_info"))
-        item["requires_coupon"] = req_coup
-        item["promo_price_brl"] = item.get("promo_price_brl") or item.get("price_brl")
-
-        deal_st = deals_map.get(p_id) or deals_map.get(p_id.lower()) or deals_map.get(b_url)
-        coup_st = coupons.get(c_code) if c_code else None
-
-        if deal_st:
-            st_val = deal_st.get("status", "untested")
-            item["deal_status"] = st_val
-            item["deal_status_reason"] = deal_st.get("reason", "")
-            item["stock_verified"] = bool(deal_st.get("stock_verified", False))
-            if deal_st.get("store_name") and deal_st["store_name"] not in ("E-commerce", "Loja"):
-                item["store_name"] = deal_st["store_name"]
-            if deal_st.get("live_price"):
-                item["live_store_price_brl"] = deal_st["live_price"]
-                # If the store's direct price without coupon is already lower than or equal to expected price, use the real lower price
-                if st_val == "active" and not req_coup and deal_st["live_price"] < item["price_brl"]:
-                    item["price_brl"] = deal_st["live_price"]
-                    if item.get("hb_price_brl"):
-                        item["savings_vs_hb_brl"] = round(item["hb_price_brl"] - item["price_brl"], 2)
-            if st_val in ("expired", "out_of_stock"):
-                item["is_expired"] = True
-            else:
-                item["is_expired"] = False
-        else:
-            if reg_id == "eu" and item.get("deal_status") == "active" and item.get("stock_verified"):
-                item["is_expired"] = bool(item.get("is_expired"))
-            else:
-                item["deal_status"] = "untested"
-                item["stock_verified"] = False
-                item["is_expired"] = bool(item.get("age_hours", 0) > 8.0)
-
-        if coup_st:
-            c_status_val = coup_st.get("status", "unverified")
-            # Do not let an old deal's coupon expiry flag a brand-new post (<= 6h) whose deal_status is unverified_coupon
-            if c_status_val == "expired" and deal_st and deal_st.get("status") == "unverified_coupon" and item.get("age_hours", 99) <= 6.0 and coup_st.get("source") != "channel_report":
-                c_status_val = "unverified"
-            item["coupon_status"] = c_status_val
-            item["coupon_status_reason"] = coup_st.get("reason", "") if c_status_val == "expired" else ""
-            if c_status_val == "expired":
-                item["is_coupon_expired"] = True
-                item["is_expired"] = True
-                if item.get("live_store_price_brl") and item["live_store_price_brl"] > item["price_brl"]:
-                    item["price_brl"] = item["live_store_price_brl"]
-                    item["coupon_discount_revoked"] = True
-                elif item.get("raw_price_brl") and item["raw_price_brl"] > item["price_brl"]:
-                    item["price_brl"] = item["raw_price_brl"]
-                    item["coupon_discount_revoked"] = True
-                if item.get("hb_price_brl"):
-                    item["savings_vs_hb_brl"] = round(item["hb_price_brl"] - item["price_brl"], 2)
-        elif deal_st and deal_st.get("coupon_status"):
-            item["coupon_status"] = deal_st["coupon_status"]
-            if item["coupon_status"] == "expired":
-                item["is_coupon_expired"] = True
-                item["is_expired"] = True
-
+        _overlay_deal_status_entry(item, coupons, deals_map, reg_id=reg_id, is_core_hw=True)
         rewired.append(item)
 
     if all_promos:
         for p in all_promos:
-            p_id = p.get("post_id", "")
-            b_url = p.get("buy_url", "")
-            deal_st = deals_map.get(p_id) or deals_map.get(p_id.lower()) or deals_map.get(b_url)
-            if deal_st:
-                st_val = deal_st.get("status", "untested")
-                p["deal_status"] = st_val
-                p["deal_status_reason"] = deal_st.get("reason", "")
-                p["stock_verified"] = bool(deal_st.get("stock_verified", False))
-                if deal_st.get("store_name") and deal_st["store_name"] not in ("E-commerce", "Loja"):
-                    p["store_name"] = deal_st["store_name"]
-                if deal_st.get("live_price"):
-                    p["live_store_price_brl"] = deal_st["live_price"]
-                if st_val in ("expired", "out_of_stock"):
-                    p["is_expired"] = True
-                if deal_st.get("coupon_status"):
-                    p["coupon_status"] = deal_st["coupon_status"]
-                    if deal_st["coupon_status"] == "expired":
-                        p["is_coupon_expired"] = True
-                        p["is_expired"] = True
+            _overlay_deal_status_entry(p, coupons, deals_map, reg_id=reg_id, is_core_hw=False)
+
+    for extra_list in (extra_deal_lists or ()):
+        if isinstance(extra_list, list):
+            for x in extra_list:
+                if isinstance(x, dict):
+                    _overlay_deal_status_entry(x, coupons, deals_map, reg_id=reg_id, is_core_hw=False)
 
     # Recompute best_by_slug strictly using ONLY stock_verified, active deals that do NOT rely on unverified coupons
     best_by_slug = {}

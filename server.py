@@ -729,8 +729,10 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
         if kind == "mobo":
             parsed_mobo_post = promo_radar.extract_mobo_specs_from_text(post_txt)
             parsed = promo_radar.extract_mobo_specs_from_text(txt)
-            for fk in ("socket", "memory_type", "chipset", "brand"):
-                if not specs.get(fk) and parsed.get(fk):
+            for fk in ("socket", "platform", "memory_type", "chipset", "chip_base", "brand"):
+                if parsed_mobo_post.get(fk):
+                    specs[fk] = parsed_mobo_post[fk]
+                elif not specs.get(fk) and parsed.get(fk):
                     if fk == "memory_type" and specs.get("memory_type_ambiguous"):
                         continue
                     specs[fk] = parsed[fk]
@@ -743,10 +745,30 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
         pass
 
     if kind == "mobo":
-        sock = str(specs.get("socket") or parsed_mobo_post.get("socket") or cat_item.get("socket") or "").strip().upper()
+        try:
+            import promo_radar
+            _plat_fn = promo_radar._platform_from_socket
+        except Exception:
+            _plat_fn = lambda s: "AMD" if str(s or "").upper() in ("AM4", "AM5") else ("Intel" if str(s or "").upper().startswith("LGA") else "")
+
+        cat_sock = str(cat_item.get("socket") or "").strip().upper()
+        cat_plat = _plat_fn(cat_sock)
+        post_sock = str(parsed_mobo_post.get("socket") or "").strip().upper()
+        post_plat = str(parsed_mobo_post.get("platform") or _plat_fn(post_sock) or "").strip()
+        if post_sock:
+            sock = post_sock
+        elif post_plat and cat_plat and post_plat != cat_plat:
+            sock = ""
+        else:
+            sock = str(specs.get("socket") or cat_sock or "").strip().upper()
+        eff_plat = (post_plat or _plat_fn(sock) or str(specs.get("platform") or "")).strip().upper()
+
         req_sockets = [str(s).strip().upper() for s in (sf.get("sockets") or []) if str(s).strip()]
         if req_sockets:
             if not sock or sock not in req_sockets:
+                return False
+            req_plats = {_plat_fn(rs).upper() for rs in req_sockets if _plat_fn(rs)}
+            if req_plats and eff_plat and eff_plat not in req_plats:
                 return False
         req_mems = [str(m).strip().upper() for m in (sf.get("memory_types") or []) if str(m).strip()]
         if req_mems:
@@ -775,7 +797,7 @@ def _deal_matches_alert_prefs(deal, cfg, catalog_by_slug=None):
         chip_q = (sf.get("chipset_query") or "").strip().lower()
         if chip_q:
             tokens = [t.strip() for t in re.split(r"[,;\s]+", chip_q) if t.strip()]
-            hay = f"{specs.get('chipset', '')} {txt} {slug}".lower()
+            hay = f"{specs.get('chipset', '')} {post_txt} {slug}".lower()
             if tokens and not any(tok in hay for tok in tokens):
                 return False
 
@@ -1031,6 +1053,7 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 catalog_by_slug[it["slug"]] = (mkind, it)
 
     from promo_radar import scan_live_promotions
+    import coupon_tracker
     res = scan_live_promotions(db, max_age_hours=24, region_id=reg_id, force=fast_poll, fast_poll=fast_poll)
     matched = list(res.get("matched_deals", []))
     seen_pids = {d.get("post_id") for d in matched if d.get("post_id")}
@@ -1039,9 +1062,6 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         for sd in (res.get("smartphone_deals") or []):
             sd_copy = dict(sd)
             sd_copy.setdefault("matched_kind", "smartphone")
-            if not sd_copy.get("is_expired") and sd_copy.get("deal_status") not in ("expired", "out_of_stock"):
-                sd_copy.setdefault("stock_verified", True)
-                sd_copy.setdefault("deal_status", "ok")
             if sd_copy.get("post_id") not in seen_pids:
                 matched.append(sd_copy)
                 if sd_copy.get("post_id"):
@@ -1050,9 +1070,6 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
         for pd in (res.get("peripheral_deals") or []):
             pd_copy = dict(pd)
             pd_copy.setdefault("matched_kind", "peripheral")
-            if not pd_copy.get("is_expired") and pd_copy.get("deal_status") not in ("expired", "out_of_stock"):
-                pd_copy.setdefault("stock_verified", True)
-                pd_copy.setdefault("deal_status", "ok")
             if pd_copy.get("post_id") not in seen_pids:
                 matched.append(pd_copy)
                 if pd_copy.get("post_id"):
@@ -1064,9 +1081,6 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
             md_copy["matched_kind"] = mc if mc in ("air_fryer", "diapers") else "misc_custom"
             if md_copy.get("misc_specs") and not md_copy.get("item_specs"):
                 md_copy["item_specs"] = md_copy["misc_specs"]
-            if not md_copy.get("is_expired") and md_copy.get("deal_status") not in ("expired", "out_of_stock"):
-                md_copy.setdefault("stock_verified", True)
-                md_copy.setdefault("deal_status", "ok")
             if md_copy.get("post_id") not in seen_pids:
                 matched.append(md_copy)
                 if md_copy.get("post_id"):
@@ -1079,13 +1093,12 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                     continue
                 fd_copy = dict(fd)
                 fd_copy["matched_kind"] = "misc_custom"
-                fd_copy.setdefault("stock_verified", True)
-                fd_copy.setdefault("deal_status", "ok")
                 matched.append(fd_copy)
                 if fd_copy.get("post_id"):
                     seen_pids.add(fd_copy.get("post_id"))
     history = load_notified_history(reg_id)
     notified_count = 0
+    live_verifications = 0
 
     br_channels = {"ofertasadrenaline", "peperaiohardware", "iskandarsouza", "benchpromos", "kabumofertas", "nerdofertas"}
 
@@ -1100,12 +1113,10 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
     targets = cfg.get("custom_targets", [])
 
     for d in matched:
-        # Never notify expired, out-of-stock, or unverified offers!
+        # Never notify expired, out-of-stock, or mismatched offers!
         if d.get("is_expired") or d.get("is_coupon_expired"):
             continue
-        if d.get("deal_status") in ("expired", "out_of_stock", "untested"):
-            continue
-        if reg_id == "br" and not d.get("stock_verified", False):
+        if d.get("deal_status") in ("expired", "out_of_stock", "mismatch"):
             continue
         if not force_notify and not _deal_matches_alert_prefs(d, cfg, catalog_by_slug):
             continue
@@ -1219,6 +1230,30 @@ def check_and_notify_deals(cfg=None, db=None, force_notify=False, region_id=None
                 reasons.append("📦 Item personalizado encontrado")
 
         if qualifies:
+            # Mandatory pre-notification live coupon, stock & link verification
+            if reg_id != "eu":
+                if live_verifications >= 10:
+                    continue
+                live_verifications += 1
+                ok_notify, ver, block_reason = coupon_tracker.verify_deal_before_notify(d, reg_id=reg_id)
+                if not ok_notify:
+                    print(f"[Pre-Notify Gate] Bloqueado {post_id} ({d.get('matched_slug') or d_kind}): {block_reason}")
+                    continue
+                if ver.get("working_coupon_code"):
+                    d["coupon_code"] = ver["working_coupon_code"]
+                if ver.get("store_name") and ver["store_name"] not in ("Loja", "E-commerce", "E-commerce BR"):
+                    d["store_name"] = ver["store_name"]
+                if ver.get("live_price"):
+                    d["live_store_price_brl"] = ver["live_price"]
+                if ver.get("coupon_status") == "verified":
+                    if not any("Cupom confirmado" in str(r) for r in reasons):
+                        reasons.append("✅ Cupom confirmado ativo")
+                elif d.get("requires_coupon") and ver.get("coupon_status") == "unverified":
+                    if not any("carrinho" in str(r).lower() for r in reasons):
+                        reasons.append("⚠️ Cupom recém-postado (testar no carrinho)")
+                elif ver.get("stock_verified") and not any("Em estoque" in str(r) for r in reasons):
+                    reasons.append("✅ Estoque verificado")
+
             if d.get("unverified_memory_type") and not any("DDR4/DDR5" in str(r) for r in reasons):
                 reasons.append("⚠️ Verificar tipo de RAM (DDR4/DDR5)")
             _dispatch_alert_channels(cfg, d, reasons, reg_id)
@@ -1744,15 +1779,20 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 qs = parse_qs(parsed.query)
                 url = qs.get("url", [""])[0]
                 code = qs.get("code", [None])[0]
+                codes_raw = qs.get("codes", [""])[0]
+                coupon_codes = [c.strip().upper() for c in codes_raw.split(",") if c.strip()] if codes_raw else None
+                coupon_mode = qs.get("coupon_mode", [None])[0]
                 price = float(qs.get("price", ["0"])[0]) if qs.get("price") else None
                 post_id = qs.get("post_id", [""])[0] or None
                 slug = qs.get("slug", [""])[0] or None
                 kind = qs.get("kind", [""])[0] or None
+                title = qs.get("title", [""])[0] or None
                 age_hours = float(qs["age_hours"][0]) if qs.get("age_hours") and qs["age_hours"][0] else None
                 import coupon_tracker
                 res = coupon_tracker.test_deal_url_and_coupon(
-                    url, coupon_code=code, expected_price=price, post_id=post_id,
-                    matched_slug=slug, matched_kind=kind, age_hours=age_hours
+                    url, coupon_code=code, coupon_codes=coupon_codes, coupon_mode=coupon_mode,
+                    expected_price=price, post_id=post_id, matched_slug=slug, matched_kind=kind,
+                    age_hours=age_hours, title=title
                 )
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:
@@ -1799,14 +1839,20 @@ class AppRequestHandler(SimpleHTTPRequestHandler):
                 body = json.loads(self.rfile.read(length).decode("utf-8")) if length > 0 else {}
                 url = body.get("url", "")
                 code = body.get("coupon_code") or body.get("code")
+                coupon_codes = body.get("coupon_codes")
+                coupon_mode = body.get("coupon_mode")
                 price = body.get("price")
                 post_id = body.get("post_id")
                 slug = body.get("slug") or body.get("matched_slug")
                 kind = body.get("kind") or body.get("matched_kind")
+                title = body.get("title")
+                item_specs = body.get("item_specs")
+                age_hours = body.get("age_hours")
                 import coupon_tracker
                 res = coupon_tracker.test_deal_url_and_coupon(
-                    url, coupon_code=code, expected_price=price, post_id=post_id,
-                    matched_slug=slug, matched_kind=kind
+                    url, coupon_code=code, coupon_codes=coupon_codes, coupon_mode=coupon_mode,
+                    expected_price=price, post_id=post_id, matched_slug=slug, matched_kind=kind,
+                    age_hours=age_hours, title=title, item_specs=item_specs
                 )
                 return self.send_json({"ok": True, "result": res})
             except Exception as e:

@@ -34,7 +34,7 @@ DEFAULT_BR_CHANNELS = [
 ]
 
 DEFAULT_SEARCH_QUERIES = [
-    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "placa mãe", "B760", "H610", "B550", "B650", "Fonte", "notebook", "macbook", "nitro", "loq", "expirou", "acabou", "esgotou"
+    "", "RTX", "5060", "5070", "4060", "7600", "RX ", "Ryzen", "DDR4", "DDR5", "placa mãe", "B760", "H610", "B550", "B650", "Fonte", "notebook", "macbook", "nitro", "loq", "cupom", "expirou", "acabou", "esgotou"
 ]
 
 LAPTOP_CLUE_RE = re.compile(
@@ -52,54 +52,165 @@ EXCLUDE_SYSTEM_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Require explicit GPU prefix (rtx / geforce / gv-n) on NVIDIA rules so bare 4-digit model numbers,
+# prices, SKUs, or comparison mentions ("desempenho de RTX 5060") never hijack a different GPU.
+_NV_PFX = r"(?:\b(?:rtx|geforce(?:\s+rtx)?)\s*|gv-?n)"
+
 GPU_MATCH_RULES = [
-    ("rtx-5090",         r"\b(?:rtx|geforce)?\s*5090\b"),
-    ("rtx-5080",         r"\b(?:rtx|geforce)?\s*5080\b"),
-    ("rtx-5070-ti",      r"\b(?:rtx|geforce)?\s*5070\s*ti\b"),
-    ("rtx-5070",         r"\b(?:rtx|geforce)?\s*5070(?!\s*ti)\b"),
-    ("rtx-5060-ti-16gb", r"\b(?:rtx|geforce)?\s*5060\s*ti\b.*?\b16\s*gb\b|\b16\s*gb\b.*?\b(?:rtx|geforce)?\s*5060\s*ti\b"),
-    ("rtx-5060-ti-8gb",  r"\b(?:rtx|geforce)?\s*5060\s*ti\b(?!.*?\b16\s*gb\b)"),
-    ("rtx-5060",         r"\b(?:rtx|geforce)?\s*5060(?!\s*ti)\b"),
-    ("rtx-5050",         r"\b(?:rtx|geforce)?\s*5050\b"),
-    ("rtx-4080-super",   r"\b(?:rtx|geforce)?\s*4080\s*super\b"),
-    ("rtx-4080",         r"\b(?:rtx|geforce)?\s*4080(?!\s*super)\b"),
-    ("rtx-4070-ti",      r"\b(?:rtx|geforce)?\s*4070\s*ti\b"),
-    ("rtx-4070",         r"\b(?:rtx|geforce)?\s*4070(?!\s*ti)\b"),
-    ("rtx-4060-ti-8gb",  r"\b(?:rtx|geforce)?\s*4060\s*ti\b"),
-    ("rtx-4060",         r"\b(?:rtx|geforce)?\s*4060(?!\s*ti)\b"),
-    ("rtx-3080-ti",      r"\brtx\s*3080\s*ti\b"),
-    ("rtx-3080-12gb",    r"\brtx\s*3080\b.*?\b12\s*gb\b"),
-    ("rtx-3080-10gb",    r"\brtx\s*3080(?!\s*ti)\b"),
-    ("rtx-3070-ti",      r"\brtx\s*3070\s*ti\b"),
-    ("rtx-3070",         r"\brtx\s*3070(?!\s*ti)\b"),
-    ("rtx-3060-ti",      r"\brtx\s*3060\s*ti\b"),
-    ("rtx-3060-12gb",    r"\brtx\s*3060(?!\s*ti)\b.*?\b12\s*gb\b|\b12\s*gb\b.*?\brtx\s*3060(?!\s*ti)\b"),
-    ("rtx-3060-8gb",     r"\brtx\s*3060(?!\s*ti)\b.*?\b8\s*gb\b"),
-    ("rtx-3060-12gb",    r"\brtx\s*3060(?!\s*ti)\b"),
-    ("rtx-3050-8gb",     r"\brtx\s*3050\b.*?\b8\s*gb\b"),
-    ("rtx-3050-6gb",     r"\brtx\s*3050\b"),
-    ("rtx-2060-super",   r"\brtx\s*2060\s*super\b"),
-    ("rtx-2060-12gb",    r"\brtx\s*2060\b.*?\b12\s*gb\b"),
-    ("rtx-2060-6gb",     r"\brtx\s*2060(?!\s*super)\b"),
+    ("rtx-5090",         rf"{_NV_PFX}5090\b"),
+    ("rtx-5080",         rf"{_NV_PFX}5080\b"),
+    ("rtx-5070-ti",      rf"{_NV_PFX}5070\s*ti\b"),
+    ("rtx-5070",         rf"{_NV_PFX}5070(?!\s*ti)\b"),
+    ("rtx-5060-ti-16gb", rf"{_NV_PFX}5060\s*ti\b[^\n]{{0,45}}\b16\s*gb\b|\b16\s*gb\b[^\n]{{0,45}}{_NV_PFX}5060\s*ti\b"),
+    ("rtx-5060-ti-8gb",  rf"{_NV_PFX}5060\s*ti\b(?!.*?\b16\s*gb\b)"),
+    ("rtx-5060",         rf"{_NV_PFX}5060(?!\s*ti)\b"),
+    ("rtx-5050",         rf"{_NV_PFX}5050\b"),
+    ("rtx-4090",         rf"{_NV_PFX}4090\b"),
+    ("rtx-4080-super",   rf"{_NV_PFX}4080\s*super\b"),
+    ("rtx-4080",         rf"{_NV_PFX}4080(?!\s*super)\b"),
+    ("rtx-4070-ti",      rf"{_NV_PFX}4070\s*ti\b"),
+    ("rtx-4070",         rf"{_NV_PFX}4070(?!\s*ti)\b"),
+    ("rtx-4060-ti-8gb",  rf"{_NV_PFX}4060\s*ti\b"),
+    ("rtx-4060",         rf"{_NV_PFX}4060(?!\s*ti)\b"),
+    ("rtx-3090-ti",      rf"{_NV_PFX}3090\s*ti\b"),
+    ("rtx-3080-ti",      rf"{_NV_PFX}3080\s*ti\b"),
+    ("rtx-3080-12gb",    rf"{_NV_PFX}3080\b[^\n]{{0,45}}\b12\s*gb\b"),
+    ("rtx-3080-10gb",    rf"{_NV_PFX}3080(?!\s*ti)\b"),
+    ("rtx-3070-ti",      rf"{_NV_PFX}3070\s*ti\b"),
+    ("rtx-3070",         rf"{_NV_PFX}3070(?!\s*ti)\b"),
+    ("rtx-3060-ti",      rf"{_NV_PFX}3060\s*ti\b"),
+    ("rtx-3060-12gb",    rf"{_NV_PFX}3060(?!\s*ti)\b[^\n]{{0,45}}\b12\s*gb\b|\b12\s*gb\b[^\n]{{0,45}}{_NV_PFX}3060(?!\s*ti)\b"),
+    ("rtx-3060-8gb",     rf"{_NV_PFX}3060(?!\s*ti)\b[^\n]{{0,45}}\b8\s*gb\b"),
+    ("rtx-3060-12gb",    rf"{_NV_PFX}3060(?!\s*ti)\b"),
+    ("rtx-3050-8gb",     rf"{_NV_PFX}3050\b[^\n]{{0,45}}\b8\s*gb\b"),
+    ("rtx-3050-6gb",     rf"{_NV_PFX}3050\b"),
+    ("rtx-2080-ti",      rf"{_NV_PFX}2080\s*ti\b"),
+    ("rtx-2060-super",   rf"{_NV_PFX}2060\s*super\b"),
+    ("rtx-2060-12gb",    rf"{_NV_PFX}2060\b[^\n]{{0,45}}\b12\s*gb\b"),
+    ("rtx-2060-6gb",     rf"{_NV_PFX}2060(?!\s*super)\b"),
     ("rx-9070-xt",       r"\brx\s*9070\s*xt\b"),
     ("rx-9070-gre",      r"\brx\s*9070\s*gre\b"),
     ("rx-9070",          r"\brx\s*9070(?!\s*xt|\s*gre)\b"),
-    ("rx-9060-xt-16gb",  r"\brx\s*9060\s*xt\b.*?\b16\s*gb\b|\b16\s*gb\b.*?\brx\s*9060\s*xt\b"),
-    ("rx-9060-xt-8gb",   r"\brx\s*9060\s*xt\b"),
+    ("rx-9060-xt-16gb",  r"\brx\s*9060\s*xt\b[^\n]{0,45}\b16\s*gb\b|\b16\s*gb\b[^\n]{0,45}\brx\s*9060\s*xt\b"),
+    ("rx-9060-xt-8gb",   r"\brx\s*9060\s*xt\b(?!.*?\b16\s*gb\b)"),
+    ("rx-9050-8gb",      r"\brx\s*9050\b"),
     ("rx-7900-xtx",      r"\brx\s*7900\s*xtx\b"),
     ("rx-7900-gre",      r"\brx\s*7900\s*gre\b"),
     ("rx-7800-xt",       r"\brx\s*7800\s*xt\b"),
     ("rx-7700-xt",       r"\brx\s*7700\s*xt\b"),
     ("rx-7600-xt",       r"\brx\s*7600\s*xt\b(?!.*?\b8\s*gb\b)"),
     ("rx-7650-gre",      r"\brx\s*7650\s*gre\b"),
-    ("rx-7600",          r"\brx\s*7600(?!\s*xt)\b|\brx\s*7600\s*xt\b.*?\b8\s*gb\b"),
+    ("rx-7600",          r"\brx\s*7600(?!\s*xt)\b|\brx\s*7600\s*xt\b[^\n]{0,45}\b8\s*gb\b"),
+    ("rx-6900-xt",       r"\brx\s*6900\s*xt\b"),
+    ("rx-6800-xt",       r"\brx\s*6800\s*xt\b"),
     ("rx-6750-xt",       r"\brx\s*6750\s*xt\b"),
     ("rx-6700-xt",       r"\brx\s*6700\s*xt\b"),
     ("rx-6600-xt",       r"\brx\s*6600\s*xt\b"),
     ("rx-6600",          r"\brx\s*6600(?!\s*xt)\b"),
+    ("rx-6500-xt-4gb",   r"\brx\s*6500\s*xt\b"),
+    ("rx-6400",          r"\brx\s*6400\b"),
+    ("rx-5700",          r"\brx\s*5700(?!\s*xt)\b"),
+    ("rx-5600-xt",       r"\brx\s*5600\s*xt\b"),
+    ("rx-5500-xt",       r"\brx\s*5500\s*xt\b"),
+    ("rx-5500",          r"\brx\s*5500(?!\s*xt)\b"),
     ("arc-b580",         r"\barc\s*b580\b"),
     ("arc-b570",         r"\barc\s*b570\b"),
+    ("arc-a380",         r"\barc\s*a380\b"),
+    ("arc-a310",         r"\barc\s*a310\b"),
 ]
+
+_GPU_COMP_PHRASE_RE = re.compile(
+    r"(?:desempenho\s+(?:de|da|do|similar\s+[aà]|igual\s+[aà]?|pr[oó]ximo\s+[aà])?"
+    r"|performance\s+(?:de|da|do|of)?"
+    r"|n[íi]vel\s+(?:de|da|do)?"
+    r"|equivalente\s+[aà]?"
+    r"|melhor\s+que(?:\s+[ao])?"
+    r"|superior\s+[aà]o?"
+    r"|rival\s+d[ao]"
+    r"|concorrente\s+d[ao]"
+    r"|bate\s+[ao]"
+    r"|compar[aá]vel\s+[aà]"
+    r"|tipo\s+uma?"
+    r"|igual\s+[aà]?"
+    r"|perto\s+d[ao]"
+    r"|chega\s+na"
+    r"|vs\.?"
+    r"|versus"
+    r"|em\s+vez\s+d[ao]"
+    r"|no\s+lugar\s+d[ao])"
+    r"\s*(?:uma?\s+)?(?:nvidia\s+|amd\s+|intel\s+|geforce\s+|radeon\s+|arc\s+)*(?:rtx|gtx|rx|arc)?\s*\d{3,4}(?:\s*(?:ti|xt|xtx|super|gre))?(?:\s*\d{1,2}\s*gb)?",
+    re.IGNORECASE,
+)
+_GPU_COMP_BULLET_RE = re.compile(
+    r"^\s*[-•*👉✅➡️]+\s*.*?\b(?:desempenho|performance|n[íi]vel|equivalente|melhor\s+que|superior\s+[aà]|rival|concorrente|bate\s+[ao]|compar[aá]vel|vs\.?|versus)\b",
+    re.IGNORECASE,
+)
+
+
+def _strip_gpu_comparison_clauses(text):
+    if not text:
+        return ""
+    kept_lines = []
+    for ln in str(text).splitlines():
+        if _GPU_COMP_BULLET_RE.match(ln):
+            continue
+        cleaned = _GPU_COMP_PHRASE_RE.sub(" ", ln)
+        kept_lines.append(cleaned)
+    return "\n".join(kept_lines)
+
+
+def _gpu_rule_specificity(slug):
+    score = 0
+    if any(tok in slug for tok in ("-ti", "-super", "-xtx", "-xt", "-gre")):
+        score += 20
+    if any(tok in slug for tok in ("-16gb", "-12gb", "-10gb", "-8gb", "-6gb", "-4gb")):
+        score += 10
+    return score
+
+
+def match_gpu_slug_in_text(text, allow_bare_with_gpu_title=False):
+    """Returns matched GPU slug from text preferring earliest match position & higher variant specificity."""
+    if not text:
+        return None
+    best = None  # (start_pos, -specificity, rule_idx, slug)
+    for idx, (slug, pat) in enumerate(GPU_MATCH_RULES):
+        for m in re.finditer(pat, text, re.IGNORECASE):
+            cand = (m.start(), -_gpu_rule_specificity(slug), idx, slug)
+            if best is None or cand < best:
+                best = cand
+    if best is not None:
+        return best[3]
+
+    if allow_bare_with_gpu_title and re.search(r"\b(?:placa\s*de\s*v[íi]deo|geforce|nvidia)\b", text, re.I) and not LAPTOP_CLUE_RE.search(text):
+        bare_rules = [
+            ("rtx-5090", r"\b5090\b"), ("rtx-5080", r"\b5080\b"),
+            ("rtx-5070-ti", r"\b5070\s*ti\b"), ("rtx-5070", r"\b5070(?!\s*ti)\b"),
+            ("rtx-5060-ti-8gb", r"\b5060\s*ti\b"), ("rtx-5060", r"\b5060(?!\s*ti)\b"),
+            ("rtx-5050", r"\b5050\b"), ("rtx-4090", r"\b4090\b"),
+            ("rtx-4080-super", r"\b4080\s*super\b"), ("rtx-4080", r"\b4080(?!\s*super)\b"),
+            ("rtx-4070-ti", r"\b4070\s*ti\b"), ("rtx-4070", r"\b4070(?!\s*ti)\b"),
+            ("rtx-4060-ti-8gb", r"\b4060\s*ti\b"), ("rtx-4060", r"\b4060(?!\s*ti)\b"),
+        ]
+        for slug, pat in bare_rules:
+            m = re.search(pat, text, re.I)
+            if m:
+                return slug
+    return None
+
+
+def match_gpu_from_text(title, head_text, db):
+    """Matches a GPU catalog item prioritizing cleaned title before cleaned head_text."""
+    gpus = (db or {}).get("gpus", [])
+    if not gpus:
+        return None
+    cleaned_title = _strip_gpu_comparison_clauses(title or "")
+    slug = match_gpu_slug_in_text(cleaned_title, allow_bare_with_gpu_title=True)
+    if not slug and head_text:
+        cleaned_head = _strip_gpu_comparison_clauses(head_text)
+        slug = match_gpu_slug_in_text(cleaned_head, allow_bare_with_gpu_title=False)
+    if not slug:
+        return None
+    return next((g for g in gpus if g.get("slug") == slug), None)
 
 CPU_MATCH_RULES = [
     ("ryzen-7-9800x3d",  r"\bryzen\s*7\s*9800x3d\b|\b9800x3d\b"),
@@ -172,30 +283,141 @@ def parse_price_number(s, monetary=None):
 parse_brl_number = parse_price_number
 
 
-def extract_price_and_coupon(lines):
+_COUPON_STOP_WORDS = {
+    "PARA", "ESTA", "ESSA", "ESSE", "ISTO", "ISSO", "HOJE", "AQUI", "MAIS", "MENOS",
+    "PELO", "PELA", "PELOS", "PELAS", "SITE", "LOJA", "LOJAS", "SHOPEE", "KABUM",
+    "MAGALU", "MERCADO", "LIVRE", "AMAZON", "ALIEXPRESS", "TERABYTE", "PICHAU",
+    "HTTPS", "HTTP", "WWW", "COM", "BR", "MX", "PIX", "NOPIX", "APP", "NOAPP",
+    "PELOAPP", "DOAPP", "RESGATE", "RESGATEM", "RESGATAR", "ATIVE", "ATIVAR",
+    "APLICAR", "APLIQUE", "APLICATIVO", "ANUNCIO", "ANÚNCIO", "DESCONTO", "DESCUENTO",
+    "CLIENTE", "CLIENTES", "MEMBRO", "MEMBROS", "EXCLUSIVO", "EXCLUSIVA",
+    "CREDITO", "CRÉDITO", "PARCELADO", "PARCELA", "JUROS", "MOEDAS", "SEGUIR",
+    "TECNOLOGIA", "PAGINA", "PÁGINA", "CUPOM", "CUPONS", "CUPON", "CUPÓN",
+    "CODIGO", "CÓDIGO", "OFF", "DE", "DO", "DA", "DOS", "DAS", "NO", "NA",
+    "NOS", "NAS", "EM", "COM", "SEM", "POR", "PRO", "PRA", "LINK", "PRODUTO",
+    "OFERTA", "OFERTAS", "PROMO", "VALOR", "PRECO", "PREÇO", "ESTOQUE", "GRATIS",
+    "GRÁTIS", "ABAIXO", "ACIMA", "DISPONIVEL", "DISPONÍVEL", "AINDA", "AGORA",
+    "TUDO", "TODOS", "TODAS", "PISCOU", "ACABOU", "EXPIROU", "ESGOTOU",
+    "ESGOTADO", "ESGOTANDO", "ENCERRADO", "ENCERROU", "FINALIZADO", "FINALIZOU",
+    "INVALIDO", "INVÁLIDO", "MORREU", "MELI", "PRIME", "NOTES", "INTEL", "AMD",
+    "NVIDIA", "BLACK", "FRIDAY", "FRETE", "CARRINHO", "CONTA", "BANCO",
+    "GARANTIA", "BOLETO", "CARTAO", "CARTÃO", "VISTA", "SACOLA", "LARANJA",
+}
+
+_NON_COUPON_SPEC_RE = re.compile(
+    r"^(?:\d+(?:GB|TB|MB|HZ|MHZ|MTS|W|V|L|MM|CM|KG|BITS?)|DDR[345]|PCIE\d*|USB[A-Z0-9]*|HDMI\d*|BIVOLT|AM[45]|LGA\d+|ATX|MATX|ITX)$",
+    re.IGNORECASE,
+)
+
+_COUPON_HEADER_RE = re.compile(
+    r"(?:cupom|cupon|cup[oó]n|c[oó]digo|promo\s*code|coupon)"
+    r"(?:\s*\([^)]{1,35}\))?"
+    r"(?:\s+(?:de\s+desconto|de\s+descuento|para\s+clientes?(?:\s+meli\+?)?|para\s+membros?(?:\s+meli\+?)?|exclusivo(?:\s+para)?(?:\s+meli\+?)?|no\s+app|pelo\s+app|do\s+app|na\s+loja|do\s+site|no\s+site|no\s+pix|com\s+pix|pix|prime|meli\+?))*"
+    r"(?P<delim>\s*[:\-]\s*|\s+)"
+    r"(?P<code>[A-Za-z0-9][A-Za-z0-9_\-]{3,21})\b",
+    re.IGNORECASE,
+)
+
+_COUPON_CONT_RE = re.compile(
+    r"\s*(?P<sep>\bou\b|\bor\b|\+|/|,)\s*(?P<code>[A-Za-z0-9][A-Za-z0-9_\-]{3,21})\b",
+    re.IGNORECASE,
+)
+
+_COUPON_EMOJI_LINE_RE = re.compile(
+    r"^\s*(?:[🎟🏷🪙📝🔥✨➡️⚡✔️✅]+\s*)+(?P<code>[A-Z0-9][A-Z0-9_\-]{3,21})\s*$"
+)
+
+
+def _is_valid_coupon_token(raw_tok, strict_caps=False, line_ctx="", tok_end=0):
+    if not raw_tok:
+        return False
+    code = raw_tok.strip("-_ ").upper()
+    if len(code) < 4 or len(code) > 22:
+        return False
+    if code in _COUPON_STOP_WORDS:
+        return False
+    if code.isdigit() or not re.search(r"[A-Z]", code):
+        return False
+    if _NON_COUPON_SPEC_RE.match(code):
+        return False
+    if strict_caps:
+        # Without an explicit ':' delimiter, require uppercase (or digits+letters >=4 like '5do5chegou')
+        if raw_tok != raw_tok.upper() and not (re.search(r"\d", raw_tok) and re.search(r"[A-Za-z]", raw_tok)):
+            return False
+    if line_ctx and tok_end > 0:
+        after = line_ctx[tok_end:tok_end + 18]
+        if re.match(r"\s*(?:%|reais\b|off\b)", after, re.I):
+            return False
+    return True
+
+
+def _extract_coupon_codes_from_lines(lines):
+    codes = []
+    seen = set()
+    has_or = False
+    has_stack = False
+
+    def _add_code(c):
+        cu = c.strip("-_ ").upper()
+        if cu not in seen:
+            seen.add(cu)
+            codes.append(cu)
+
+    for line in (lines or []):
+        line_nourl = re.sub(r"https?://\S+", " ", str(line or ""))
+        matched_here = False
+        for m in _COUPON_HEADER_RE.finditer(line_nourl):
+            delim = m.group("delim") or ""
+            raw_tok = m.group("code") or ""
+            has_colon = (":" in delim) or ("-" in delim)
+            if not _is_valid_coupon_token(raw_tok, strict_caps=(not has_colon), line_ctx=line_nourl, tok_end=m.end("code")):
+                continue
+            matched_here = True
+            _add_code(raw_tok)
+            rest = line_nourl[m.end("code"):]
+            pos = 0
+            while pos < len(rest):
+                mc = _COUPON_CONT_RE.match(rest, pos)
+                if not mc:
+                    break
+                sep = (mc.group("sep") or "").lower().strip()
+                cont_raw = mc.group("code") or ""
+                pos = mc.end("code")
+                if _is_valid_coupon_token(cont_raw, strict_caps=True, line_ctx=rest, tok_end=mc.end("code")):
+                    _add_code(cont_raw)
+                    if sep in ("ou", "or", "/"):
+                        has_or = True
+                    elif sep == "+":
+                        has_stack = True
+        if not matched_here:
+            me = _COUPON_EMOJI_LINE_RE.match(line_nourl)
+            if me and _is_valid_coupon_token(me.group("code"), strict_caps=True, line_ctx=line_nourl, tok_end=me.end("code")):
+                _add_code(me.group("code"))
+
+    if len(codes) > 1:
+        mode = "or" if has_or and not has_stack else ("stack" if has_stack and not has_or else ("or" if has_or else "single"))
+    elif len(codes) == 1:
+        mode = "single"
+    else:
+        mode = "none"
+    return codes, mode
+
+
+def extract_price_and_coupon_details(lines):
     candidates = []
     coupon_info = None
-    coupon_code = None
     detected_discount_brl = 0.0
     detected_discount_pct = 0.0
 
     full_text = "\n".join(lines)
-
-    m_code = re.search(
-        r"(?:cupom|cupon|cup[oó]n|c[oó]digo)\s*(?:de\s*desconto|de\s*descuento)?\s*[:\-]?\s*\b([A-Z0-9]{4,18})\b",
-        full_text,
-        re.IGNORECASE,
-    )
-    if m_code:
-        word = m_code.group(1).upper()
-        if word not in {"PARA", "ESTA", "ESSA", "HOJE", "AQUI", "MAIS", "PELO", "SITE", "LOJA", "SHOPEE", "KABUM", "MAGALU", "MERCADO", "HTTPS", "HTTP", "WWW", "COM", "BR", "MX"}:
-            coupon_code = word
+    coupon_codes, coupon_mode = _extract_coupon_codes_from_lines(lines)
+    coupon_code = coupon_codes[0] if coupon_codes else None
 
     # extract_price_and_coupon parses Brazilian Telegram channel messages -> always use BRL format
     monetary = {"decimal_separator": ","}
     min_val = 18.0
     max_val = 45000.0
-    price_pat = r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*(?:,[0-9]{1,2})?|[0-9]{3,5}(?:,[0-9]{1,2})?)"
+    price_pat = r"R\$\s*([0-9]{1,3}(?:\.[0-9]{3})+(?:,[0-9]{1,2})?|[0-9]{1,5}(?:,[0-9]{1,2})?)(?![0-9])"
     cash_keywords = ["por r$", "valor", "💵", "💰", "pix", "à vista", "a vista", "no app", "🔥"]
 
     for line in lines:
@@ -203,7 +425,7 @@ def extract_price_and_coupon(lines):
         if m_disc:
             try:
                 d_val = float(m_disc.group(1))
-                if 30 <= d_val <= 3000:
+                if 15 <= d_val <= 3000:
                     detected_discount_brl = max(detected_discount_brl, d_val)
             except ValueError:
                 pass
@@ -211,15 +433,15 @@ def extract_price_and_coupon(lines):
         if m_pct:
             try:
                 p_val = float(m_pct.group(1))
-                if 3 <= p_val <= 40:
+                if 3 <= p_val <= 60:
                     detected_discount_pct = max(detected_discount_pct, p_val)
             except ValueError:
                 pass
 
         low = line.lower()
-        if any(k in low for k in ["cupom", "cupón", "cupon", "🎟", "🏷", "resgate", "moedas"]):
+        if any(k in low for k in ["cupom", "cupón", "cupon", "código", "codigo", "🎟", "🏷", "resgate", "moedas"]):
             if not coupon_info:
-                cleaned_c = re.sub(r"https?://\S+", "", line).strip(" -•🎟️🏷️💵🔥*")
+                cleaned_c = re.sub(r"https?://\S+", "", line).strip(" -•🎟️🏷️💵🔥📝*")
                 if len(cleaned_c) >= 4:
                     coupon_info = cleaned_c
 
@@ -245,9 +467,21 @@ def extract_price_and_coupon(lines):
                 prio = 0
             candidates.append((prio, val))
 
+    is_conditional_voucher = bool(re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*(?:app|meli\+?)|meli\+)\b", full_text, re.I))
+    if not coupon_codes and (coupon_info or detected_discount_brl > 0 or detected_discount_pct > 0):
+        coupon_mode = "voucher_only"
+
     if not candidates:
-        is_conditional_voucher = bool(re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", full_text, re.I))
-        return None, None, 0.0, coupon_code, coupon_info, is_conditional_voucher
+        return {
+            "price": None,
+            "raw_price": None,
+            "discount_applied": 0.0,
+            "coupon_code": coupon_code,
+            "coupon_codes": coupon_codes,
+            "coupon_mode": coupon_mode,
+            "coupon_info": coupon_info,
+            "is_conditional_voucher": is_conditional_voucher,
+        }
 
     max_prio = max(c[0] for c in candidates)
     best_vals = [c[1] for c in candidates if c[0] == max_prio]
@@ -269,42 +503,129 @@ def extract_price_and_coupon(lines):
         raw_price = final_price
         discount_applied = 0.0
 
-    is_conditional_voucher = bool(re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", full_text, re.I))
-    return round(final_price, 2), round(raw_price, 2), round(discount_applied, 2), coupon_code, coupon_info, is_conditional_voucher
+    return {
+        "price": round(final_price, 2),
+        "raw_price": round(raw_price, 2),
+        "discount_applied": round(discount_applied, 2),
+        "coupon_code": coupon_code,
+        "coupon_codes": coupon_codes,
+        "coupon_mode": coupon_mode,
+        "coupon_info": coupon_info,
+        "is_conditional_voucher": is_conditional_voucher,
+    }
 
 
-_MOBO_CHIPSET_SOCKET = {
-    "h610": "LGA1700", "b660": "LGA1700", "b760": "LGA1700", "z690": "LGA1700", "z790": "LGA1700",
-    "h810": "LGA1851", "b860": "LGA1851", "z890": "LGA1851",
-    "a520": "AM4", "b450": "AM4", "b550": "AM4", "x570": "AM4",
-    "a620": "AM5", "b650": "AM5", "b840": "AM5", "b850": "AM5", "x670": "AM5", "x870": "AM5",
+def extract_price_and_coupon(lines):
+    det = extract_price_and_coupon_details(lines)
+    return (
+        det["price"],
+        det["raw_price"],
+        det["discount_applied"],
+        det["coupon_code"],
+        det["coupon_info"],
+        det["is_conditional_voucher"],
+    )
+
+
+_MOBO_CHIPSET_INFO = {
+    # AMD AM4
+    "a320": ("AM4", "AMD", "DDR4"), "b350": ("AM4", "AMD", "DDR4"), "x370": ("AM4", "AMD", "DDR4"),
+    "b450": ("AM4", "AMD", "DDR4"), "x470": ("AM4", "AMD", "DDR4"), "a520": ("AM4", "AMD", "DDR4"),
+    "b550": ("AM4", "AMD", "DDR4"), "x570": ("AM4", "AMD", "DDR4"), "pro565": ("AM4", "AMD", "DDR4"),
+    # AMD AM5
+    "a620": ("AM5", "AMD", "DDR5"), "b650": ("AM5", "AMD", "DDR5"), "x670": ("AM5", "AMD", "DDR5"),
+    "b840": ("AM5", "AMD", "DDR5"), "b850": ("AM5", "AMD", "DDR5"), "x870": ("AM5", "AMD", "DDR5"),
+    # AMD HEDT / Legacy
+    "trx40": ("sTRX4", "AMD", "DDR4"), "wrx80": ("sWRX8", "AMD", "DDR4"),
+    "trx50": ("sTR5", "AMD", "DDR5"), "wrx90": ("sTR5", "AMD", "DDR5"),
+    "a68h": ("FM2+", "AMD", "DDR3"), "a68m": ("FM2+", "AMD", "DDR3"),
+    "a88x": ("FM2+", "AMD", "DDR3"), "a88xm": ("FM2+", "AMD", "DDR3"),
+    "970a": ("AM3+", "AMD", "DDR3"), "990fx": ("AM3+", "AMD", "DDR3"), "990x": ("AM3+", "AMD", "DDR3"),
+    # Intel LGA1151
+    "h110": ("LGA1151", "Intel", "DDR4"), "b150": ("LGA1151", "Intel", "DDR4"), "h170": ("LGA1151", "Intel", "DDR4"), "z170": ("LGA1151", "Intel", "DDR4"),
+    "b250": ("LGA1151", "Intel", "DDR4"), "h270": ("LGA1151", "Intel", "DDR4"), "z270": ("LGA1151", "Intel", "DDR4"),
+    "h310": ("LGA1151", "Intel", "DDR4"), "b360": ("LGA1151", "Intel", "DDR4"), "b365": ("LGA1151", "Intel", "DDR4"),
+    "h370": ("LGA1151", "Intel", "DDR4"), "z370": ("LGA1151", "Intel", "DDR4"), "z390": ("LGA1151", "Intel", "DDR4"),
+    # Intel LGA1200
+    "h410": ("LGA1200", "Intel", "DDR4"), "b460": ("LGA1200", "Intel", "DDR4"), "h470": ("LGA1200", "Intel", "DDR4"), "z490": ("LGA1200", "Intel", "DDR4"),
+    "h510": ("LGA1200", "Intel", "DDR4"), "b560": ("LGA1200", "Intel", "DDR4"), "h570": ("LGA1200", "Intel", "DDR4"), "z590": ("LGA1200", "Intel", "DDR4"),
+    # Intel LGA1700 (dual DDR4 / DDR5)
+    "h610": ("LGA1700", "Intel", ""), "b660": ("LGA1700", "Intel", ""), "h670": ("LGA1700", "Intel", ""),
+    "z690": ("LGA1700", "Intel", ""), "b760": ("LGA1700", "Intel", ""), "h770": ("LGA1700", "Intel", ""), "z790": ("LGA1700", "Intel", ""),
+    # Intel LGA1851
+    "h810": ("LGA1851", "Intel", "DDR5"), "b860": ("LGA1851", "Intel", "DDR5"), "z890": ("LGA1851", "Intel", "DDR5"),
+    # Intel HEDT
+    "x79": ("LGA2011", "Intel", "DDR4"), "x99": ("LGA2011-3", "Intel", "DDR4"), "x299": ("LGA2066", "Intel", "DDR4"),
 }
+_MOBO_CHIPSET_SOCKET = {k: v[0] for k, v in _MOBO_CHIPSET_INFO.items()}
+
+_CHIPSET_ALT = "|".join(sorted(_MOBO_CHIPSET_INFO.keys(), key=len, reverse=True))
+_MOBO_CHIPSET_RE = re.compile(
+    rf"(?:(?<![a-z0-9])|(?:9m|ga|mb|pm|msi|asus|asrock|gigabyte|maxsun)[-_]?)(?P<base>{_CHIPSET_ALT})(?P<suffix>[a-z]{{0,4}}(?:-[a-z0-9]{{1,4}})?)?\b",
+    re.IGNORECASE,
+)
 
 
 def extract_mobo_specs_from_text(text):
     t = text or ""
     low = t.lower()
-    m_chip = re.search(r"\b((?:h610|b660|b760|z690|z790|h810|b860|z890|a520|b450|b550|x570|a620|b650|b840|b850|x670|x870)[a-z0-9\-]*)\b", low)
-    chipset = m_chip.group(1).upper() if m_chip else ""
-    chip_base = chipset[:4].lower() if chipset else ""
+
+    m_chip = _MOBO_CHIPSET_RE.search(low)
+    chip_base = ""
+    chipset = ""
+    if m_chip:
+        chip_base = (m_chip.group("base") or "").lower()
+        suffix = (m_chip.group("suffix") or "").upper()
+        # Trim noisy '-00-20' style SKU suffixes if trailing digits aren't board variant
+        chipset = f"{chip_base.upper()}{suffix}".rstrip("-")
+    elif re.search(r"\bhpm550\b", low):
+        chip_base = "b550"
+        chipset = "B550"
 
     socket = None
-    if re.search(r"\blga\s*1700\b", low):
-        socket = "LGA1700"
-    elif re.search(r"\blga\s*1851\b", low):
-        socket = "LGA1851"
-    elif re.search(r"\bam5\b", low):
-        socket = "AM5"
+    platform = ""
+    if chip_base in _MOBO_CHIPSET_INFO:
+        socket, platform, _ = _MOBO_CHIPSET_INFO[chip_base]
+
+    # Explicit socket checks (only override if no chipset found, or to pick LGA1151/1200/1700/1851/AM4/AM5 cleanly)
+    explicit_socket = None
+    explicit_platform = ""
+    if re.search(r"\bam5\b", low):
+        explicit_socket, explicit_platform = "AM5", "AMD"
     elif re.search(r"\bam4\b", low):
-        socket = "AM4"
-    elif chip_base in _MOBO_CHIPSET_SOCKET:
-        socket = _MOBO_CHIPSET_SOCKET[chip_base]
+        explicit_socket, explicit_platform = "AM4", "AMD"
+    elif re.search(r"\blga\s*1851\b", low):
+        explicit_socket, explicit_platform = "LGA1851", "Intel"
+    elif re.search(r"\blga\s*1700\b", low):
+        explicit_socket, explicit_platform = "LGA1700", "Intel"
+    elif re.search(r"\blga\s*1200\b", low):
+        explicit_socket, explicit_platform = "LGA1200", "Intel"
+    elif re.search(r"\blga\s*1151\b", low):
+        explicit_socket, explicit_platform = "LGA1151", "Intel"
+    elif re.search(r"\blga\s*2011(?:-\d)?\b", low):
+        explicit_socket, explicit_platform = "LGA2011", "Intel"
+
+    if not socket and explicit_socket:
+        socket, platform = explicit_socket, explicit_platform
+
+    # Platform inference when neither chipset nor explicit socket identified it
+    # Guard against 'Intel Wi-Fi', 'Intel LAN', 'Intel 2.5G', 'Intel AX210', etc. on AMD motherboards!
+    if not platform:
+        has_amd_clue = bool(re.search(r"\b(ryzen|athlon|threadripper|amd)\b", low))
+        has_intel_cpu_clue = bool(re.search(r"\b(core\s*i[3579]|core\s*ultra|pentium|celeron|1[234][ªa]\s*ger(?:a[çc][ãa]o)?)\b", low))
+        has_intel_board_clue = bool(re.search(r"\bintel\b(?!\s*(?:wi-?fi|wifi|lan|ethernet|gbe|2\.?5g|1g|5g|bluetooth|bt|ax\d+|be\d+|i2\d+|nic|rede|optane|wireless))", low))
+        if has_amd_clue and not has_intel_cpu_clue:
+            platform = "AMD"
+        elif has_intel_cpu_clue or (has_intel_board_clue and not has_amd_clue):
+            platform = "Intel"
 
     memory_type = None
     if re.search(r"\bddr4\b|\bd4\b", low):
         memory_type = "DDR4"
     elif re.search(r"\bddr5\b|\bd5\b", low):
         memory_type = "DDR5"
+    elif chip_base in _MOBO_CHIPSET_INFO and _MOBO_CHIPSET_INFO[chip_base][2]:
+        memory_type = _MOBO_CHIPSET_INFO[chip_base][2]
     elif socket == "AM4":
         memory_type = "DDR4"
     elif socket in ("AM5", "LGA1851"):
@@ -316,7 +637,23 @@ def extract_mobo_specs_from_text(text):
             brand = b
             break
 
-    return {"brand": brand, "socket": socket, "memory_type": memory_type, "chipset": chipset}
+    return {
+        "brand": brand,
+        "socket": socket,
+        "platform": platform,
+        "memory_type": memory_type,
+        "chipset": chipset,
+        "chip_base": chip_base,
+    }
+
+
+def _platform_from_socket(sock):
+    s = (sock or "").strip().upper()
+    if s in ("AM4", "AM5", "STRX4", "SWRX8", "STR5", "FM2+", "AM3+"):
+        return "AMD"
+    if s.startswith("LGA"):
+        return "Intel"
+    return ""
 
 
 def match_mobo_catalog_item(text, db):
@@ -331,40 +668,55 @@ def match_mobo_catalog_item(text, db):
         return None, None
 
     mobos = [m for m in (db.get("motherboards") or []) if m.get("slug") != "x99-p4-lga2011"]
-    chip_base = (specs["chipset"] or "")[:4].lower()
+    chip_base = (specs.get("chip_base") or "").lower()
+    post_plat = specs.get("platform") or _platform_from_socket(specs.get("socket"))
+
+    # Never assign a socket-specific catalog board when post has neither socket nor chipset
     best_item = None
     best_score = 0
-    for m in mobos:
-        m_sock = m.get("socket") or ""
-        m_mem = (m.get("memory_type") or "").upper()
-        if specs["socket"] and m_sock and m_sock != specs["socket"]:
-            continue
-        if specs["memory_type"] and m_mem and m_mem != specs["memory_type"]:
-            continue
-        if specs["brand"] and m.get("brand") and specs["brand"].lower() != m.get("brand", "").lower():
-            continue
-        m_name = (m.get("name") or "").lower()
-        m_slug = (m.get("slug") or "").lower()
-        score = 0
-        if specs["socket"] and m_sock == specs["socket"]:
-            score += 10
-        if specs["memory_type"] and m_mem == specs["memory_type"]:
-            score += 10
-        if chip_base and (chip_base in m_name or chip_base in m_slug):
-            score += 35
-        if specs["brand"] and specs["brand"].lower() in (m.get("brand", "").lower() + " " + m_name):
-            score += 20
-        for tok in re.findall(r"[a-z0-9]{3,}", m_slug):
-            if tok not in ("pro", "ddr4", "ddr5", "wifi", "plus", "gaming") and tok in low:
-                score += 12
-        if score > best_score:
-            best_score = score
-            best_item = m
+    if specs.get("socket") or chip_base:
+        for m in mobos:
+            m_sock = (m.get("socket") or "").upper()
+            m_plat = _platform_from_socket(m_sock)
+            m_mem = (m.get("memory_type") or "").upper()
+            cand_specs = extract_mobo_specs_from_text(f"{m.get('name', '')} {m.get('slug', '')} {m_sock}")
+            cand_chip = (cand_specs.get("chip_base") or "").lower()
 
-    if best_item and best_score >= 35:
+            if post_plat and m_plat and post_plat != m_plat:
+                continue
+            if specs["socket"] and m_sock and m_sock != specs["socket"]:
+                continue
+            # Strictly enforce matching chipset family when known (never match A520 to B550 or B650 to B760)
+            if chip_base and cand_chip and chip_base != cand_chip:
+                continue
+            if specs["memory_type"] and m_mem and m_mem != specs["memory_type"]:
+                continue
+            if specs["brand"] and m.get("brand") and specs["brand"].lower() != m.get("brand", "").lower():
+                continue
+            m_name = (m.get("name") or "").lower()
+            m_slug = (m.get("slug") or "").lower()
+            score = 0
+            if specs["socket"] and m_sock == specs["socket"]:
+                score += 10
+            if specs["memory_type"] and m_mem == specs["memory_type"]:
+                score += 10
+            if chip_base and cand_chip == chip_base:
+                score += 40
+            if specs["brand"] and specs["brand"].lower() in (m.get("brand", "").lower() + " " + m_name):
+                score += 20
+            for tok in re.findall(r"[a-z0-9]{3,}", m_slug):
+                if tok not in ("pro", "ddr4", "ddr5", "wifi", "plus", "gaming") and tok in low:
+                    score += 12
+            if score > best_score:
+                best_score = score
+                best_item = m
+
+    if best_item and best_score >= 40:
         item_out = dict(best_item)
         if specs["chipset"]:
             item_out["_chipset"] = specs["chipset"]
+        if post_plat:
+            item_out["_platform"] = post_plat
         return "mobo", item_out
 
     if not has_mobo_word and not specs["chipset"]:
@@ -373,21 +725,25 @@ def match_mobo_catalog_item(text, db):
     pool = [
         float(m.get("price_brl") or 0) for m in mobos
         if float(m.get("price_brl") or 0) > 0
+        and (not post_plat or _platform_from_socket(m.get("socket")) == post_plat)
         and (not specs["socket"] or m.get("socket") == specs["socket"])
         and (not specs["memory_type"] or (m.get("memory_type") or "").upper() == specs["memory_type"])
     ]
     if not pool and specs["socket"]:
         pool = [float(m.get("price_brl") or 0) for m in mobos if float(m.get("price_brl") or 0) > 0 and m.get("socket") == specs["socket"]]
     med_price = round(sorted(pool)[len(pool) // 2], 2) if pool else 0.0
-    label_parts = [p for p in ("Placa-Mãe", specs["brand"], specs["chipset"] or specs["socket"], specs["memory_type"]) if p]
-    synth_slug = f"mobo-{(specs['socket'] or 'any').lower()}-{(specs['memory_type'] or 'any').lower()}"
+    label_parts = [p for p in ("Placa-Mãe", specs["brand"], post_plat if not specs["chipset"] and not specs["socket"] else "", specs["chipset"] or specs["socket"], specs["memory_type"]) if p]
+    sock_slug = (specs["socket"] or (f"{post_plat.lower()}" if post_plat else "any")).lower()
+    synth_slug = f"mobo-{sock_slug}-{(specs['memory_type'] or 'any').lower()}"
     return "mobo", {
         "slug": synth_slug,
         "name": " ".join(label_parts),
         "brand": specs["brand"],
         "socket": specs["socket"] or "",
+        "platform": post_plat or "",
         "memory_type": specs["memory_type"] or "",
         "chipset": specs["chipset"],
+        "chip_base": chip_base,
         "price_brl": med_price,
     }
 
@@ -490,21 +846,34 @@ def extract_item_specs(kind, item, cat_item):
         return {"memory_type": (cat.get("memory_type") or "").upper(), "capacity_gb": cat.get("capacity_gb") or 0, "speed_mtps": cat.get("speed_mtps") or 0}
     if kind == "mobo":
         parsed = extract_mobo_specs_from_text(txt)
-        resolved_sock = (parsed["socket"] or cat.get("socket") or "").upper()
+        parsed_title = extract_mobo_specs_from_text(item.get("title") or "")
+        eff = parsed_title if (parsed_title.get("socket") or parsed_title.get("platform") or parsed_title.get("chip_base")) else parsed
+        cat_sock = (cat.get("socket") or "").upper()
+        post_plat = eff.get("platform") or _platform_from_socket(eff.get("socket"))
+        cat_plat = _platform_from_socket(cat_sock) or (cat.get("_platform") or cat.get("platform") or "")
+        if eff.get("socket"):
+            resolved_sock = eff["socket"].upper()
+        elif post_plat and cat_plat and post_plat != cat_plat:
+            resolved_sock = ""
+        else:
+            resolved_sock = cat_sock
+        resolved_plat = post_plat or _platform_from_socket(resolved_sock) or cat_plat
         # Dual-DDR sockets (e.g. LGA1700) exist in both DDR4 and DDR5 variants; if the post didn't
         # explicitly mention DDR4/D4 or DDR5/D5, mark memory_type ambiguous instead of assuming the catalog match.
-        if resolved_sock in ("AM4", "AM5", "LGA1851") or parsed["memory_type"]:
-            resolved_mem = (parsed["memory_type"] or cat.get("memory_type") or "").upper()
+        if resolved_sock in ("AM4", "AM5", "LGA1851") or eff.get("memory_type"):
+            resolved_mem = (eff.get("memory_type") or cat.get("memory_type") or "").upper()
             mem_ambiguous = False
         else:
             resolved_mem = ""
             mem_ambiguous = True
         return {
-            "brand": cat.get("brand") or parsed["brand"] or "",
+            "brand": cat.get("brand") or eff.get("brand") or "",
             "socket": resolved_sock,
+            "platform": resolved_plat,
             "memory_type": resolved_mem,
             "memory_type_ambiguous": mem_ambiguous,
-            "chipset": cat.get("_chipset") or cat.get("chipset") or parsed["chipset"] or "",
+            "chipset": cat.get("_chipset") or eff.get("chipset") or cat.get("chipset") or "",
+            "chip_base": eff.get("chip_base") or cat.get("chip_base") or "",
         }
     if kind == "psu":
         parsed = extract_psu_specs_from_text(txt)
@@ -587,42 +956,53 @@ def match_laptop_catalog_item(text, db):
     return None, None
 
 
-def match_catalog_item(title_and_first_lines, db):
-    if LAPTOP_CLUE_RE.search(title_and_first_lines or "") and not LAPTOP_ACCESSORY_RE.search(title_and_first_lines or ""):
-        return match_laptop_catalog_item(title_and_first_lines, db)
+def match_catalog_item(title_and_first_lines, db, title=None):
+    title_probe = (title or title_and_first_lines or "").strip()
+    head_probe = (title_and_first_lines or title_probe).strip()
 
-    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|tarjeta\s*de\s*video|tarjeta\s*gr[áa]fica|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram|procesador|placa[\s-]*m[ãa]e|motherboard|mobo|fonte)\b", title_and_first_lines, re.I))
-    if not has_component_clue and EXCLUDE_SYSTEM_RE.search(title_and_first_lines):
+    if LAPTOP_CLUE_RE.search(title_probe) or (LAPTOP_CLUE_RE.search(head_probe) and not re.search(r"^\s*[^a-zA-Z0-9]*(?:placa\s*de\s*v[íi]deo|placa[\s-]*m[ãa]e|processador)\b", title_probe, re.I)):
+        if not LAPTOP_ACCESSORY_RE.search(title_probe):
+            return match_laptop_catalog_item(head_probe, db)
+
+    has_component_clue = bool(re.search(r"\b(placa\s*de\s*v[íi]deo|tarjeta\s*de\s*video|tarjeta\s*gr[áa]fica|gpu|rtx|geforce|radeon|ryzen|core\s*i[3579]|intel\s*core|ddr[45]|mem[óo]ria\s*ram|procesador|placa[\s-]*m[ãa]e|motherboard|mobo|fonte)\b", head_probe, re.I))
+    if not has_component_clue and EXCLUDE_SYSTEM_RE.search(head_probe):
         return None, None
 
-    is_explicit_mobo = bool(re.search(r"placa[\s-]*m[ãa]e|motherboard|\bmobo\b", title_and_first_lines or "", re.I)) and not re.search(r"\bkit\s*upgrade\b|\+\s*(?:processador|ryzen|core\s*i)", title_and_first_lines or "", re.I)
+    is_explicit_mobo = bool(re.search(r"placa[\s-]*m[ãa]e|motherboard|\bmobo\b", title_probe or head_probe, re.I)) and not re.search(r"\bkit\s*upgrade\b|\+\s*(?:processador|ryzen|core\s*i)", head_probe, re.I)
     if is_explicit_mobo:
-        mkind, mitem = match_mobo_catalog_item(title_and_first_lines, db)
+        mkind, mitem = match_mobo_catalog_item(title_probe or head_probe, db)
+        if not mitem and title_probe != head_probe:
+            mkind, mitem = match_mobo_catalog_item(head_probe, db)
         if mkind and mitem:
             return mkind, mitem
 
-    for slug, pat in GPU_MATCH_RULES:
-        if re.search(pat, title_and_first_lines, re.IGNORECASE):
-            gpu = next((g for g in db.get("gpus", []) if g["slug"] == slug), None)
-            if gpu:
-                return "gpu", gpu
+    gpu = match_gpu_from_text(title_probe, head_probe, db)
+    if gpu:
+        return "gpu", gpu
 
+    cpu_probe = title_probe or head_probe
     for slug, pat in CPU_MATCH_RULES:
-        if re.search(pat, title_and_first_lines, re.IGNORECASE):
+        if re.search(pat, cpu_probe, re.IGNORECASE):
             cpu = next((c for c in db.get("cpus", []) if c["slug"] == slug), None)
             if cpu:
                 return "cpu", cpu
+    if title_probe != head_probe:
+        for slug, pat in CPU_MATCH_RULES:
+            if re.search(pat, head_probe, re.IGNORECASE):
+                cpu = next((c for c in db.get("cpus", []) if c["slug"] == slug), None)
+                if cpu:
+                    return "cpu", cpu
 
-    mkind, mitem = match_mobo_catalog_item(title_and_first_lines, db)
+    mkind, mitem = match_mobo_catalog_item(head_probe, db)
     if mkind and mitem:
         return mkind, mitem
 
-    pkind, pitem = match_psu_catalog_item(title_and_first_lines, db)
+    pkind, pitem = match_psu_catalog_item(head_probe, db)
     if pkind and pitem:
         return pkind, pitem
 
     for slug, pat in RAM_MATCH_RULES:
-        if re.search(pat, title_and_first_lines, re.IGNORECASE):
+        if re.search(pat, head_probe, re.IGNORECASE):
             ram = next((r for r in db.get("rams", []) if r["slug"] == slug), None)
             if ram:
                 return "ram", ram
@@ -636,11 +1016,107 @@ def infer_br_store_name(url_str, title_str=""):
     if "kabum" in u or "kabum" in t: return "KaBuM!"
     if "pichau" in u or "pichau" in t: return "Pichau"
     if "terabyte" in u or "terabyte" in t: return "Terabyte"
-    if "amazon.com.br" in u or "amzn.to" in u or "amazon" in t: return "Amazon BR"
+    if "amazon.com.br" in u or "amzn.to" in u or "link.amazon" in u or "a.co/" in u or "amazon" in t: return "Amazon BR"
     if "mercadolivre" in u or "meli.la" in u or "mercado livre" in t: return "Mercado Livre"
     if "shopee" in u or "shopee" in t: return "Shopee"
     if "magalu" in u or "magazine" in u: return "Magalu"
     return "E-commerce BR"
+
+
+_FOOTER_LINK_EXCLUSIONS = (
+    "t.me/", "bit.ly/canal", "bit.ly/ofertas", "bit.ly/ofeertas", "bit.ly/grupo",
+    "nerdofertas.com/t", "linkmc.click", "adrena.click/ofertas",
+    "alertadaspromobot", "aquisuapromobot", "linktr.ee", "whatsapp.com", "chat.whatsapp.com",
+    "instagram.com", "youtube.com", "tiktok.com", "discord.gg", "x.com/", "twitter.com/",
+    "escolha.cc", "pechin.co/grupos", "pechinchou.com.br/grupos",
+)
+_PRODUCT_LINK_HINT_RE = re.compile(r"link\s*(?:do\s*)?produto|compre\s+aqui|🛒|⬇️", re.I)
+_COUPON_LINK_HINT_RE = re.compile(
+    r"resgat(?:e|em|ar)|pegue\s+o\s+cupom|ative\s+(?:o\s+cupom|aqui)|com\s+cupom\s+aqui|cupons?\s+desta\s+p[áa]gina|todos\s+os\s+cupons|cupom\s+(?:de\s+)?(?:r\$\s*)?\d+\s*off|cupom\s+no\s+an[úu]ncio",
+    re.I,
+)
+_SECONDARY_LINK_HINT_RE = re.compile(r"triple\s*fan|\blink\s*2\b|op[çc][ãa]o\s*2|alternativa|\bno\s+pc\b|vers[ãa]o\s*2", re.I)
+
+
+def _classify_and_rank_br_links(raw_html):
+    """Extracts and ranks product vs coupon URLs using per-line HTML context."""
+    try:
+        from coupon_tracker import unwrap_affiliate_url as _unwrap_aff
+    except Exception:
+        _unwrap_aff = lambda u: html.unescape((u or "").strip())
+
+    html_lines = re.split(r"<br\s*/?>|\n", raw_html or "", flags=re.IGNORECASE)
+    extracted = []
+    prev_ctx = ""
+    seen_urls = set()
+
+    for raw_ln in html_lines:
+        ln_hrefs = re.findall(r'href="(https?://[^"]+)"', raw_ln)
+        ln_clean = html.unescape(re.sub(r"<[^>]+>", " ", raw_ln)).strip()
+        ln_clean_text = re.sub(r"https?://\S+", "", ln_clean).strip()
+
+        for h in ln_hrefs:
+            decoded_h = _unwrap_aff(h)
+            hl = h.lower()
+            dl = decoded_h.lower()
+            if not decoded_h or any(x in dl or x in hl for x in _FOOTER_LINK_EXCLUSIONS):
+                continue
+            if decoded_h in seen_urls:
+                continue
+            seen_urls.add(decoded_h)
+
+            if _PRODUCT_LINK_HINT_RE.search(ln_clean_text):
+                ctx = ln_clean_text
+                has_prod = True
+                is_coup = False
+            elif _COUPON_LINK_HINT_RE.search(ln_clean_text):
+                ctx = ln_clean_text
+                has_prod = False
+                is_coup = True
+            else:
+                # URL on its own line (e.g. "🔗 https://...") inherits context from previous header line
+                effective_ctx = f"{prev_ctx} {ln_clean_text}".strip()
+                ctx = effective_ctx
+                has_prod = bool(_PRODUCT_LINK_HINT_RE.search(effective_ctx))
+                is_coup = bool(_COUPON_LINK_HINT_RE.search(effective_ctx)) and not has_prod
+
+            is_sec = bool(_SECONDARY_LINK_HINT_RE.search(ctx))
+            ul = dl
+            if any(cp in ul for cp in ("/cupons", "/cupom", "cupons.", "/coupons", "/voucher")):
+                is_coup = True
+            s = 0
+            if any(st in ul for st in (
+                "kabum.com.br", "terabyteshop.com.br", "pichau.com.br", "amazon.com.br", "amzn.to", "link.amazon", "a.co/",
+                "mercadolivre.com.br", "meli.la", "s.shopee.com.br", "shopee.com.br", "magazineluiza.com.br",
+                "magazinevoce.com.br", "divulgador.magalu.com", "gigantec.com.br", "patoloco.com.br"
+            )):
+                s += 50
+            if any(pt in ul for pt in ("/produto/", "/dp/", "/mlb", "benchpromos.com.br", "seuhardware", "aoferta.net", "tidd.ly", "curt.link", "pechin.co", "pechinchou.com.br")):
+                s += 30
+            if has_prod:
+                s += 80
+            if is_sec:
+                s -= 25
+            if is_coup:
+                s -= 120
+            extracted.append({
+                "idx": len(extracted),
+                "url": decoded_h,
+                "score": s,
+                "is_coupon": is_coup,
+            })
+
+        if ln_clean_text and len(re.sub(r"[^a-zA-Z0-9]", "", ln_clean_text)) >= 3:
+            prev_ctx = ln_clean_text
+
+    if not extracted:
+        return [], None, None
+    ranked = sorted(extracted, key=lambda x: (-x["score"], x["idx"]))
+    buy_url = ranked[0]["url"]
+    coupon_link = next((x["url"] for x in extracted if x["is_coupon"] and x["url"] != buy_url), None)
+    if not coupon_link:
+        coupon_link = next((x["url"] for x in ranked if x["url"] != buy_url), None)
+    return extracted, buy_url, coupon_link
 
 
 def fetch_channel_query(ch_id, ch_name, query=""):
@@ -671,24 +1147,16 @@ def fetch_channel_query(ch_id, ch_name, query=""):
             continue
         raw_html = txt_m.group(1)
 
-        raw_hrefs = re.findall(r'href="(https?://[^"]+)"', raw_html)
-        footer_exclusions = (
-            "t.me/", "bit.ly/canal", "bit.ly/ofertas", "bit.ly/ofeertas",
-            "nerdofertas.com/t", "linkmc.click", "adrena.click/ofertas",
-            "alertadaspromobot", "linktr.ee", "whatsapp.com", "chat.whatsapp.com",
-            "instagram.com", "youtube.com", "tiktok.com", "discord.gg", "x.com/", "twitter.com/"
-        )
-        try:
-            from coupon_tracker import unwrap_affiliate_url as _unwrap_aff
-        except Exception:
-            _unwrap_aff = lambda u: html.unescape((u or "").strip())
+        rep_block_m = re.search(r'<a[^>]+tgme_widget_message_reply[^>]*>', part, re.I)
+        reply_to_post_id = None
+        if rep_block_m:
+            rep_href = re.search(r'href="https?://t\.me/([^/"\s]+/\d+)"', rep_block_m.group(0), re.I)
+            if rep_href:
+                reply_to_post_id = rep_href.group(1)
 
-        product_links = []
-        for h in raw_hrefs:
-            decoded_h = _unwrap_aff(h)
-            if any(x in decoded_h.lower() or x in h.lower() for x in footer_exclusions):
-                continue
-            product_links.append(decoded_h)
+        _, buy_url, alt_coupon_url = _classify_and_rank_br_links(raw_html)
+        if not buy_url:
+            buy_url = f"https://t.me/{post_id}"
 
         text_with_lines = re.sub(r"<br\s*/?>", "\n", raw_html, flags=re.IGNORECASE)
         clean_text = html.unescape(re.sub(r"<[^>]+>", "", text_with_lines))
@@ -709,42 +1177,49 @@ def fetch_channel_query(ch_id, ch_name, query=""):
         ]
         title = (title_lines[0] if title_lines else lines[0]).strip(" ⭐️🔥🚨⚡🔹")
 
-        price, raw_price, discount_applied, coupon_code, coupon_info, is_conditional_voucher = extract_price_and_coupon(lines)
+        det = extract_price_and_coupon_details(lines)
+        price = det["price"]
+        raw_price = det["raw_price"]
+        discount_applied = det["discount_applied"]
+        coupon_code = det["coupon_code"]
+        coupon_codes = det["coupon_codes"]
+        coupon_mode = det["coupon_mode"]
+        coupon_info = det["coupon_info"]
+        is_conditional_voucher = det["is_conditional_voucher"]
+
+        has_expiry_cue = bool(re.search(r"acabou|expir|esgot|encerr|finaliz|inv[aá]lid|morreu|pausad|subiu|foi\s+de\s+base|j[aá]\s+era", clean_text, re.I))
+        is_signal_only = False
         if not price:
-            continue
+            if has_expiry_cue or reply_to_post_id or coupon_codes:
+                is_signal_only = True
+                price = 0.0
+                raw_price = 0.0
+            else:
+                continue
 
-        def _score_link(idx_u):
-            idx, u = idx_u
-            ul = u.lower()
-            s = 0
-            if any(st in ul for st in ("kabum.com.br", "terabyteshop.com.br", "pichau.com.br", "amazon.com.br", "amzn.to", "mercadolivre.com.br", "meli.la", "s.shopee.com.br", "shopee.com.br", "magazineluiza.com.br", "magazinevoce.com.br", "divulgador.magalu.com", "gigantec.com.br", "patoloco.com.br")):
-                s += 50
-            if any(pt in ul for pt in ("/produto/", "/dp/", "/mlb", "benchpromos.com.br", "seuhardware", "aoferta.net", "tidd.ly")):
-                s += 25
-            return (s, idx)
-
-        ranked_links = sorted(enumerate(product_links), key=_score_link, reverse=True)
-        buy_url = ranked_links[0][1] if ranked_links else f"https://t.me/{post_id}"
-        alt_coupon_url = next((u for _, u in ranked_links if u != buy_url), None) if len(ranked_links) > 1 else None
         results.append({
             "post_id": post_id,
             "channel_id": ch_id,
             "channel_name": ch_name,
             "store_name": infer_br_store_name(buy_url, clean_text),
             "post_url": f"https://t.me/{post_id}",
+            "reply_to_post_id": reply_to_post_id,
             "timestamp": iso_dt,
             "title": title[:160],
             "head_text": " ".join(lines[:3])[:260],
-            "raw_text": clean_text[:400],
+            "raw_text": clean_text[:650],
             "price_brl": price,
             "raw_price_brl": raw_price,
             "discount_applied": discount_applied,
             "coupon_code": coupon_code,
+            "coupon_codes": coupon_codes,
+            "coupon_mode": coupon_mode,
             "coupon_info": coupon_info,
             "is_conditional_voucher": is_conditional_voucher,
             "image_url": image_url,
             "buy_url": buy_url,
             "coupon_url": alt_coupon_url,
+            "is_signal_only": is_signal_only,
             "region_id": "br"
         })
     return results
@@ -1281,6 +1756,7 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     now_dt = datetime.now(timezone.utc)
     matched_deals = []
     all_promos = []
+    signal_posts = []
     smartphone_deals = []
     peripheral_deals = []
     misc_deals = []
@@ -1300,8 +1776,12 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
         if item["age_hours"] > max_age_hours:
             continue
 
-        txt_probe = (item.get("head_text", "") or item.get("title", "")) + " " + (item.get("raw_text", "")[:180])
-        kind, cat_item = match_catalog_item(item.get("head_text", "") or item.get("title", ""), db)
+        if item.get("is_signal_only"):
+            signal_posts.append(item)
+            continue
+
+        txt_probe = (item.get("head_text", "") or item.get("title", "")) + " " + (item.get("raw_text", "")[:220])
+        kind, cat_item = match_catalog_item(item.get("head_text", "") or item.get("title", ""), db, title=item.get("title", ""))
         if kind and cat_item:
             mobo_floor = 45 if reg == "eu" else (1100 if reg == "mx" else 220)
             psu_floor = 30 if reg == "eu" else (550 if reg == "mx" else 110)
@@ -1319,14 +1799,15 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
             item["hb_price_brl"] = hb_price
             item["savings_vs_hb_brl"] = round(hb_price - item["price_brl"], 2) if hb_price > 0 else 0.0
             item["item_specs"] = extract_item_specs(kind, item, cat_item)
-            is_cond = bool(item.get("is_conditional_voucher") or re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*app)\b", item.get("raw_text", ""), re.I))
+            is_cond = bool(item.get("is_conditional_voucher") or re.search(r"\b(no\s*app|pelo\s*app|aplicativo|moedas|live|resgate|resgatem|exclusivo\s*(?:app|meli\+?)|meli\+)\b", item.get("raw_text", ""), re.I))
             item["is_conditional_voucher"] = is_cond
             requires_coup = bool(
                 item.get("coupon_code")
+                or item.get("coupon_codes")
                 or item.get("coupon_info")
                 or item.get("discount_applied", 0) > 0
                 or is_cond
-                or re.search(r"\b(cupom|cupon|cupón|gutschein|code\s*promo|rabatt|resgate|sacola\s*laranja|moedas|no\s*app)\b", item.get("raw_text", ""), re.I)
+                or re.search(r"\b(cupom|cupon|cupón|gutschein|code\s*promo|rabatt|resgate|sacola\s*laranja|moedas|no\s*app|meli\+)\b", item.get("raw_text", ""), re.I)
             )
             item["requires_coupon"] = requires_coup
             item["promo_price_brl"] = item["price_brl"]
@@ -1401,7 +1882,9 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
     coupon_status_obj = {"coupons": {}, "deals": {}}
     try:
         import coupon_tracker
-        coupon_tracker.scan_texts_for_expiries(all_promos)
+        all_signal_inputs = all_promos + signal_posts
+        coupon_tracker.scan_texts_for_expiries(all_signal_inputs, reg_id=reg)
+        coupon_tracker.record_group_coupon_announcements(all_signal_inputs, reg_id=reg)
         if reg != "eu":
             if fast_poll:
                 existing_deals_status = coupon_tracker.load_coupon_status(reg).get("deals", {})
@@ -1410,7 +1893,12 @@ def scan_live_promotions(db, extra_queries=None, extra_channels=None, max_age_ho
                     coupon_tracker.test_deals_batch(untested_or_new, max_items=12, reg_id=reg)
             else:
                 coupon_tracker.test_deals_batch(matched_deals, max_items=40, reg_id=reg)
-        matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(matched_deals, all_promos, reg_id=reg)
+        matched_deals, best_by_slug = coupon_tracker.rewire_deals_and_best_by_slug(
+            matched_deals,
+            all_promos,
+            reg_id=reg,
+            extra_deal_lists=(smartphone_deals, peripheral_deals, misc_deals),
+        )
         coupon_status_obj = coupon_tracker.load_coupon_status(reg)
     except Exception as e:
         print(f"[PromoRadar ({reg})] Warning running coupon_tracker: {e}")
