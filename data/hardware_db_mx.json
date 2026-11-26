@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26 13:02:23",
+  "updated_at": "2026-11-26 13:12:20",
   "source": "https://www.cyberpuerta.mx/",
   "gpus": [
     {
@@ -522275,8 +522275,8 @@
   "live_promos": {
     "ok": true,
     "region_id": "mx",
-    "scanned_at": "13:02:31",
-    "last_sitewise_test_at": "2026-11-26 13:02:31",
+    "scanned_at": "13:12:29",
+    "last_sitewise_test_at": "2026-11-26 13:12:29",
     "channels_scanned": [
       "promodescuentos_gpus",
       "promodescuentos_pc",
@@ -522358,7 +522358,9 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1212958",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 44.5
+        "age_hours": 44.7,
+        "requires_coupon": true,
+        "promo_price_brl": 561
       }
     ],
     "coupon_status": {
@@ -522576,7 +522578,7 @@
           "coupon_status": null,
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-          "updated_at": "2026-11-26 12:56:50"
+          "updated_at": "2026-11-26 13:02:33"
         },
         "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
           "status": "untested",
@@ -522587,7 +522589,7 @@
           "coupon_status": null,
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-          "updated_at": "2026-11-26 12:56:50"
+          "updated_at": "2026-11-26 13:02:33"
         },
         "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
           "status": "untested",
@@ -522598,10 +522600,24 @@
           "coupon_status": null,
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-          "updated_at": "2026-11-26 12:56:51"
+          "updated_at": "2026-11-26 13:02:34"
         }
       },
-      "updated_at": "2026-11-26 12:56:51"
+      "updated_at": "2026-11-26 13:12:29",
+      "group_coupons": {
+        "MXBF1": {
+          "store_key": null,
+          "store_name": "AliExpress",
+          "channels": [
+            "promodescuentos_pc"
+          ],
+          "seen_count": 1,
+          "first_seen_ts": 1795537822.0,
+          "last_seen_ts": 1795537822.0,
+          "sample_info": "Cupón MX: MXBF1",
+          "updated_at": "2026-11-26 13:12:29"
+        }
+      }
     }
   },
   "smartphones": [
@@ -522612,8 +522628,8 @@
       "line": "Galaxy",
       "category": "flagship",
       "os": "Android 16",
-      "price_brl": 3998.7,
-      "regular_price_brl": 3998.7,
+      "price_brl": 4131.99,
+      "regular_price_brl": 4131.99,
       "store_name": "Magazine Luiza",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-s26-5g-256gb",
       "image_url": "https://i.zst.com.br/thumbs/51/indsp.gif",
@@ -524054,8 +524070,8 @@
       "line": "Galaxy",
       "category": "flagship",
       "os": "Android 16",
-      "price_brl": 5299.0,
-      "regular_price_brl": 5299.0,
+      "price_brl": 5475.64,
+      "regular_price_brl": 5475.64,
       "store_name": "Magazine Luiza",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-s26-5g-512gb-12-gb",
       "image_url": "https://image.zst.com.br/6432306CB5C6B5429D9CCE034DE308CC_235_235.jpg",
@@ -526913,8 +526929,8 @@
       "line": "Galaxy",
       "category": "flagship",
       "os": "Android 16",
-      "price_brl": 4999.0,
-      "regular_price_brl": 4999.0,
+      "price_brl": 5165.63,
+      "regular_price_brl": 5165.63,
       "store_name": "Magazine Luiza",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-s26-plus-5g-512gb-12-gb",
       "image_url": "https://image.zst.com.br/0640D45417BE80E474A11979CD27F330_235_235.jpg",
@@ -528330,8 +528346,8 @@
       "line": "Galaxy",
       "category": "flagship",
       "os": "Android",
-      "price_brl": 7648.2,
-      "regular_price_brl": 7648.2,
+      "price_brl": 6508.97,
+      "regular_price_brl": 6508.97,
       "store_name": "Magazine Luiza",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-s26-ultra-5g-256gb",
       "image_url": "https://image.zst.com.br/70185E8A1639C0637BCB97E514655692_235_235.jpg",
@@ -529742,8 +529758,8 @@
       "line": "Galaxy",
       "category": "flagship",
       "os": "Android",
-      "price_brl": 7829.1,
-      "regular_price_brl": 7829.1,
+      "price_brl": 7542.3,
+      "regular_price_brl": 7542.3,
       "store_name": "Magazine Luiza",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-s26-ultra-5g-512gb",
       "image_url": "https://image.zst.com.br/3AA0B30AA9A1F056E2C6B456240B0B03_235_235.jpg",
@@ -631048,8 +631064,8 @@
       "line": "Redmi",
       "category": "midrange",
       "os": "HyperOS",
-      "price_brl": 1470.41,
-      "regular_price_brl": 1470.41,
+      "price_brl": 1536.29,
+      "regular_price_brl": 1536.29,
       "store_name": "Magazine Luiza",
       "offer_url": "https://www.zoom.com.br/celular/celular-xiaomi-redmi-note-14-256gb-8-gb",
       "image_url": "https://image.zst.com.br/53C95BF417BCC13C3C35CCBF471595B8_235_235.jpg",
@@ -865739,7 +865755,7 @@
       "brand": "Havit",
       "is_wireless": true,
       "is_gamer": true,
-      "price_brl": 125.99,
+      "price_brl": 139.99,
       "store_name": "Amazon",
       "offer_url": "https://www.zoom.com.br/fone-de-ouvido-e-headset/headset-gamer-com-microfone-havit-hv-h2002d",
       "image_url": "https://image.zst.com.br/9314118AC2ADDBB4C5FA16148AAA362C_235_235.jpg",
