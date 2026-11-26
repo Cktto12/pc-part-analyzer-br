@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-26 18:32:43",
+  "updated_at": "2026-11-26 18:37:20",
   "source": "https://www.cyberpuerta.mx/",
   "gpus": [
     {
@@ -522275,8 +522275,8 @@
   "live_promos": {
     "ok": true,
     "region_id": "mx",
-    "scanned_at": "18:32:51",
-    "last_sitewise_test_at": "2026-11-26 18:32:51",
+    "scanned_at": "18:37:28",
+    "last_sitewise_test_at": "2026-11-26 18:37:28",
     "channels_scanned": [
       "promodescuentos_gpus",
       "promodescuentos_pc",
@@ -522339,7 +522339,30 @@
         "enabled": true
       }
     ],
-    "recent_feed": [],
+    "recent_feed": [
+      {
+        "post_id": "pdmx/1213737",
+        "channel_id": "promodescuentos_gpus",
+        "channel_name": "Promodescuentos GPUs",
+        "store_name": "Amazon",
+        "post_url": "https://www.promodescuentos.com/share-deal/1213737",
+        "timestamp": "2026-11-26T18:36:58+00:00",
+        "title": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI",
+        "head_text": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI $4,147 MXN",
+        "raw_text": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI - Amazon - $4,147 MXN",
+        "price_brl": 4147,
+        "raw_price_brl": 4147,
+        "discount_applied": 0,
+        "coupon_code": "SANTT526",
+        "coupon_info": "Cupón MX: SANTT526",
+        "buy_url": "https://www.promodescuentos.com/share-deal/1213737",
+        "coupon_url": null,
+        "region_id": "mx",
+        "age_hours": 0.1,
+        "requires_coupon": true,
+        "promo_price_brl": 4147
+      }
+    ],
     "coupon_status": {
       "coupons": {
         "ALIMX5": {
@@ -522555,8 +522578,8 @@
           "coupon_status": "none",
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-          "tested_ts": 1795717623.814073,
-          "updated_at": "2026-11-26 18:27:03"
+          "tested_ts": 1795717974.0333564,
+          "updated_at": "2026-11-26 18:32:54"
         },
         "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
           "status": "untested",
@@ -522567,8 +522590,8 @@
           "coupon_status": "none",
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-          "tested_ts": 1795717624.3426116,
-          "updated_at": "2026-11-26 18:27:04"
+          "tested_ts": 1795717974.7965822,
+          "updated_at": "2026-11-26 18:32:54"
         },
         "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
           "status": "untested",
@@ -522579,11 +522602,11 @@
           "coupon_status": "none",
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-          "tested_ts": 1795717624.9876723,
-          "updated_at": "2026-11-26 18:27:04"
+          "tested_ts": 1795717975.3302267,
+          "updated_at": "2026-11-26 18:32:55"
         }
       },
-      "updated_at": "2026-11-26 18:27:04",
+      "updated_at": "2026-11-26 18:37:28",
       "group_coupons": {
         "MXBF1": {
           "store_key": null,
@@ -522596,6 +522619,18 @@
           "last_seen_ts": 1795537822.0,
           "sample_info": "Cupón MX: MXBF1",
           "updated_at": "2026-11-26 16:26:58"
+        },
+        "SANTT526": {
+          "store_key": "amazon",
+          "store_name": "Amazon BR",
+          "channels": [
+            "promodescuentos_gpus"
+          ],
+          "seen_count": 1,
+          "first_seen_ts": 1795718218.0,
+          "last_seen_ts": 1795718218.0,
+          "sample_info": "Cupón MX: SANTT526",
+          "updated_at": "2026-11-26 18:37:28"
         }
       }
     }
@@ -552036,8 +552071,8 @@
       "line": "iPhone",
       "category": "flagship",
       "os": "iOS",
-      "price_brl": 4891.52,
-      "regular_price_brl": 4891.52,
+      "price_brl": 5148.97,
+      "regular_price_brl": 5148.97,
       "store_name": "Amazon",
       "offer_url": "https://www.zoom.com.br/celular/smartphone-apple-iphone-15-pro-max-256gb-camera-tripla",
       "image_url": "https://image.zst.com.br/E7D0F8DAEE826B67731A75468EF0A85D_235_235.jpg",
@@ -561211,8 +561246,8 @@
       "line": "Galaxy",
       "category": "flagship",
       "os": "Android 16",
-      "price_brl": 2699.1,
-      "regular_price_brl": 2699.1,
+      "price_brl": 2612.03,
+      "regular_price_brl": 2612.03,
       "store_name": "Amazon",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-s25-fe-5g-128gb-8-gb",
       "image_url": "https://image.zst.com.br/763F86D31EA8A7D1468BF6E936E7C120_235_235.jpg",
@@ -563100,7 +563135,7 @@
         },
         {
           "date": "2026-11-26",
-          "price": 2699.1,
+          "price": 2612.03,
           "store": "Amazon"
         }
       ],
@@ -573785,8 +573820,8 @@
       "line": "Poco",
       "category": "flagship",
       "os": "HyperOS 3",
-      "price_brl": 3001.05,
-      "regular_price_brl": 3001.05,
+      "price_brl": 3035.25,
+      "regular_price_brl": 3035.25,
       "store_name": "Amazon",
       "offer_url": "https://www.zoom.com.br/celular/celular-xiaomi-x8-poco-pro-512gb-12-gb",
       "image_url": "https://image.zst.com.br/C62FE8FE8701344434EC77A7FF91355C_235_235.jpg",
@@ -584694,8 +584729,8 @@
       "line": "Galaxy",
       "category": "midrange",
       "os": "Android 16",
-      "price_brl": 1231.99,
-      "regular_price_brl": 1231.99,
+      "price_brl": 1259.99,
+      "regular_price_brl": 1259.99,
       "store_name": "Amazon",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-a27-5g-128gb-8-gb",
       "image_url": "https://image.zst.com.br/B1E067D8D6DFD671A2F7979575A37C2A_235_235.jpg",
