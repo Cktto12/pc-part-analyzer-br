@@ -1647,9 +1647,9 @@ function renderLaptopCBTable() {
       : '';
     const cbTone = l._myCBScore >= 82 ? 'ui-badge--good' : (l._myCBScore >= 65 ? 'ui-badge--brand' : 'ui-badge--warn');
     const ssdLbl = l.storage_gb >= 1024 ? `${(l.storage_gb / 1024)}TB` : `${l.storage_gb}GB`;
-    const flashTag = l._flashPromo
-      ? `<span class="ui-badge ui-badge--good mt-1">Promo −${fmtBRLShort(l._flashPromo.savings_vs_hb_brl || 0)}</span>`
-      : '';
+    const promoBadgesHtml = typeof renderCatalogLivePromoBadges === 'function'
+      ? renderCatalogLivePromoBadges(l, true)
+      : (l._flashPromo ? `<span class="ui-badge ui-badge--good mt-1">Promo −${fmtBRLShort(l._flashPromo.savings_vs_hb_brl || 0)}</span>` : '');
 
     return `
       <tr class="${isBase ? 'bg-sky-950/20' : ''}">
@@ -1660,6 +1660,7 @@ function renderLaptopCBTable() {
             <div class="min-w-0">
               <div class="font-bold text-white text-sm truncate max-w-[260px]" title="${_escLapHtml(l.name)}">${_escLapHtml(l.name)}</div>
               <div class="text-xs ui-mono text-slate-400 truncate max-w-[260px]">${_escLapHtml(l.cpu_name)} • ${_escLapHtml(l.gpu_name)}</div>
+              ${promoBadgesHtml}
               ${l._readinessGate < 0.70 ? `<div class="text-xs text-rose-400 ui-mono font-semibold mt-0.5">Abaixo da carga exigida</div>` : ''}
               ${l._techNote ? `<div class="text-xs text-amber-300 ui-mono font-semibold mt-0.5">${_escLapHtml(l._techNote)}</div>` : ''}
             </div>
@@ -1676,7 +1677,6 @@ function renderLaptopCBTable() {
         <td class="text-right ui-mono">
           <div class="font-bold text-white text-sm">${fmtBRL(l.price_brl)}</div>
           <div class="mt-1 flex justify-end">${priceStatus.badgeHtml}</div>
-          ${flashTag}
         </td>
         <td class="text-right ui-mono">
           <div class="text-slate-200 font-semibold">${fmtBRLShort(tgt)}</div>

@@ -944,6 +944,7 @@ function renderMiscCBView() {
               <div class="min-w-0">
                 <div class="font-bold text-slate-100 text-xs sm:text-sm truncate max-w-[240px]" title="${_escMiscHtml(it.name)}">${_escMiscHtml(_shortMiscName(it))}</div>
                 <div class="text-xs text-slate-400 ui-mono">${it.category_id === 'diapers' ? '👶 Fralda' : (it.category_id === 'air_fryer' ? '🍟 Air Fryer' : '📦 Diverso')} • ${_escMiscHtml(it.brand || '')}</div>
+                ${typeof renderCatalogLivePromoBadges === 'function' ? renderCatalogLivePromoBadges(it, true) : ''}
               </div>
             </div>
           </td>

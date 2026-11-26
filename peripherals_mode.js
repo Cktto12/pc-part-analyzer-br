@@ -704,6 +704,7 @@ function renderPeripheralsCBView() {
               <div class="min-w-0">
                 <div class="font-bold text-slate-100 text-xs sm:text-sm truncate max-w-[240px]" title="${_escPerHtml(p.name)}">${_escPerHtml(shortPeripherName(p))}</div>
                 <div class="text-xs text-slate-400 ui-mono">${kindLbl} • ${_escPerHtml(p.brand || 'Marca')}${p.is_wireless ? ' • Sem fio' : ''}</div>
+                ${typeof renderCatalogLivePromoBadges === 'function' ? renderCatalogLivePromoBadges(p, true) : ''}
               </div>
             </div>
           </td>

@@ -1565,9 +1565,9 @@ function switchTab(tabId) {
     populateSelectors();
   }
   renderActiveTab();
-  if (tabId === 'bf-promos' && typeof startBFLivePolling === 'function') {
+  if (['bf-promos', 'bf', 'cb', 'home'].includes(tabId) && typeof startBFLivePolling === 'function') {
     startBFLivePolling();
-  } else if (tabId !== 'bf-promos' && typeof stopBFLivePolling === 'function') {
+  } else if (!['bf-promos', 'bf', 'cb', 'home'].includes(tabId) && typeof stopBFLivePolling === 'function') {
     stopBFLivePolling();
   }
 }
@@ -4306,10 +4306,13 @@ function renderCBTable() {
     </span>`;
 
     const techBadge = typeof getGpuTechProfile === 'function' ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono text-xs">✨ ${getGpuTechProfile(g).badge}</span>` : '';
-    const flashBadge = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
-    const couponBadge = g.coupon
-      ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-xs hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>`
-      : '';
+    const livePromoBadgesHtml = typeof renderCatalogLivePromoBadges === 'function'
+      ? renderCatalogLivePromoBadges(g, true)
+      : (() => {
+          const fb = g._flashPromo ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs" title="${g._flashPromo.title}">⚡ FLASH −${fmtBRLShort(g._flashPromo.savings_vs_hb_brl)} vs Catálogo (${g._flashPromo.age_hours}h)</span>` : '';
+          const cb = g.coupon ? `<button onclick="typeof copyCouponAndOpen === 'function' ? copyCouponAndOpen('${g.coupon}', '${g.offer_url}') : navigator.clipboard.writeText('${g.coupon}')" class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono text-xs hover:bg-amber-500/40 transition cursor-pointer" title="Clique para copiar cupom e abrir a loja">🎟️ Cupom: ${g.coupon} 📋</button>` : '';
+          return `${fb} ${cb}`.trim();
+        })();
 
     const gComp = typeof getContextualCompositeScore === 'function' ? getContextualCompositeScore(g) : (g.gaming_score || 1000);
 
@@ -4435,7 +4438,7 @@ function renderCBTable() {
             <span>${g.name}</span>
             <span class="ui-badge ui-mono">${g.vram_gb} GB ${g.memory_type}</span>
           </div>
-          ${(techBadge || techEvalBadges || flashBadge || couponBadge) ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5">${techBadge} ${techEvalBadges} ${flashBadge} ${couponBadge}</div>` : ''}
+          ${(techBadge || techEvalBadges || livePromoBadgesHtml) ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5">${techBadge} ${techEvalBadges} ${livePromoBadgesHtml}</div>` : ''}
           <div class="text-xs text-slate-400 ui-mono mt-1">
             ${g.brand} • Jogos <strong class="text-slate-200">${effGaming}</strong> • IA 14B <strong class="text-slate-200">${g.llm_14b_tok_s} tok/s</strong>
           </div>
@@ -4758,8 +4761,9 @@ function renderCpuCBTable() {
               ${isBase ? '<span class="ui-badge ui-badge--a">Base</span>' : ''}
               <span class="ui-badge ui-mono">${s.socket} • ${s.ddr}</span>
             </div>
+            ${typeof renderCatalogLivePromoBadges === 'function' ? renderCatalogLivePromoBadges(c, true) : ''}
             <div class="text-xs text-slate-400 ui-mono mt-1">
-              TDP ${s.tdp}W • ${c.store_name || 'loja'}
+              TDP ${s.tdp}W • ${c.offer_url ? `<a href="${c.offer_url}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline">${c.store_name || 'loja'} ↗</a>` : (c.store_name || 'loja')}
             </div>
           </td>
           <td class="text-center ui-mono text-slate-200">${s.cores}C / ${s.threads}T</td>
@@ -6415,6 +6419,9 @@ async function initApp() {
     renderPCBuilder();
     detectMyLocalPC(null);
     if (typeof scanLivePromos === 'function') scanLivePromos(false);
+    if (typeof startBFLivePolling === 'function' && ['bf-promos', 'bf', 'cb', 'home'].includes(STATE.activeTab)) {
+      startBFLivePolling();
+    }
 
     document.addEventListener('click', (e) => {
       const menu = document.getElementById('cb-col-menu');

@@ -1024,6 +1024,7 @@ function renderSmartphoneCBTable() {
               <div class="min-w-0">
                 <div class="font-bold text-slate-100 text-xs sm:text-sm truncate max-w-[230px]" title="${_escSpHtml(s.name)}">${_escSpHtml(shortSmartphoneName(s))}</div>
                 <div class="text-xs text-slate-400 ui-mono">${_escSpHtml(s.soc_name)} • ${catTag}${s.has_5g ? ' • 5G' : ''}</div>
+                ${typeof renderCatalogLivePromoBadges === 'function' ? renderCatalogLivePromoBadges(s, true) : ''}
               </div>
             </div>
           </td>
