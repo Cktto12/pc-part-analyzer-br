@@ -4766,14 +4766,21 @@ function enableMobileBackgroundKeepAlive(enable) {
 }
 
 // ===== Disjuntor dos proxies públicos do Telegram =====
-// Os proxies gratuitos (codetabs, allorigins, corsproxy) caem com frequência. Quando
-// falham em sequência, paramos de tentar por um tempo em vez de disparar dezenas de
-// requisições que demoram 4s cada. O robô do GitHub Actions continua trazendo as
-// promoções pelo promos_cache.json.
-const TG_PROXY_BREAKER_KEY = 'gca-tg-proxy-down-until';
-const TG_PROXY_FAIL_LIMIT = 3;            // canais seguidos sem resposta
-const TG_PROXY_COOLDOWN_MS = 30 * 60000;  // pausa de 30 min
+// Tenta primeiro o r.jina.ai (Cloudflare + HTML bruto com CORS), depois fallbacks
+// públicos. Em falhas consecutivas pausa 3 min para evitar rajadas de erro.
+const TG_PROXY_BREAKER_KEY = 'gca-tg-proxy-down-v2';
+const TG_PROXY_FAIL_LIMIT = 5;            // canais seguidos sem resposta
+const TG_PROXY_COOLDOWN_MS = 3 * 60000;   // pausa de 3 min
 let _tgProxyFailStreak = 0;
+
+function clearTgProxyBreaker() {
+  _tgProxyFailStreak = 0;
+  try {
+    sessionStorage.removeItem(TG_PROXY_BREAKER_KEY);
+    sessionStorage.removeItem('gca-tg-proxy-down-until');
+  } catch (_) {}
+}
+window.clearTgProxyBreaker = clearTgProxyBreaker;
 
 function isTgProxyDown() {
   let until = 0;
@@ -4782,8 +4789,7 @@ function isTgProxyDown() {
 }
 function _tgProxyResult(ok) {
   if (ok) {
-    _tgProxyFailStreak = 0;
-    try { sessionStorage.removeItem(TG_PROXY_BREAKER_KEY); } catch (_) {}
+    clearTgProxyBreaker();
     return;
   }
   _tgProxyFailStreak++;
@@ -4794,25 +4800,49 @@ function _tgProxyResult(ok) {
 }
 window.isTgProxyDown = isTgProxyDown;
 
-async function fetchTelegramChannelHTML(chId, query) {
+async function fetchTelegramChannelHTML(chId, query, forceDirect = false) {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
   if (!isStatic) {
     try {
       const r = await fetchWithTimeout(`/api/tg-raw?ch=${encodeURIComponent(chId)}&q=${encodeURIComponent(query || '')}`, { cache: 'no-store' }, 4500);
-      if (r.ok) return await r.text();
+      if (r.ok) {
+        const txt = await r.text();
+        if (txt) return txt;
+      }
     } catch (_) {}
   }
-  if (isTgProxyDown()) return '';
-  // Static GitHub Pages fallback: race CORS proxies concurrently with 4s timeout
+  if (forceDirect) {
+    clearTgProxyBreaker();
+  } else if (isTgProxyDown()) {
+    return '';
+  }
+
   const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
-  const proxies = [
+
+  // 1. Primary static reader: r.jina.ai with X-Respond-With: html (CORS preflight verified on github.io)
+  try {
+    const r = await fetchWithTimeout(
+      `https://r.jina.ai/${tgUrl}`,
+      { cache: 'no-store', headers: { 'X-Respond-With': 'html' } },
+      7000
+    );
+    if (r.ok) {
+      const txt = await r.text();
+      if (txt && txt.includes('tgme_widget_message')) {
+        _tgProxyResult(true);
+        return txt;
+      }
+    }
+  } catch (_) {}
+
+  // 2. Backup CORS proxies (only invoked when r.jina.ai is unavailable or rate-limited)
+  const fallbackProxies = [
     `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(tgUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`,
-    `https://corsproxy.io/?${encodeURIComponent(tgUrl)}`
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`
   ];
   try {
-    const html = await Promise.any(proxies.map(async (pUrl) => {
-      const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4000);
+    const html = await Promise.any(fallbackProxies.map(async (pUrl) => {
+      const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4500);
       if (!r.ok) throw new Error('HTTP ' + r.status);
       const txt = await r.text();
       if (!txt || !txt.includes('tgme_widget_message')) throw new Error('Empty TG feed');
@@ -4822,7 +4852,7 @@ async function fetchTelegramChannelHTML(chId, query) {
     return html;
   } catch (_) {}
   try {
-    const rJson = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4000);
+    const rJson = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4500);
     if (rJson.ok) {
       const j = await rJson.json();
       if (j && j.contents && j.contents.includes('tgme_widget_message')) {
@@ -8811,6 +8841,9 @@ async function scanLivePromos(force = false) {
 
   // BRAZIL PIPELINE: First try backend /api/promos (if local server.py is running), then fetch latest cloud-validated promos_cache.json from GitHub raw,
   // and if force=true on static GitHub Pages, also perform a throttled live Telegram scan (only main feed + extraQ) and merge!
+  if (force && typeof clearTgProxyBreaker === 'function') {
+    clearTgProxyBreaker();
+  }
   if (statusEl) statusEl.textContent = 'Sincronizando ofertas em tempo real e validação de estoque/cupons...';
   if (btn) btn.disabled = true;
 
@@ -9268,6 +9301,23 @@ async function _fetchHBLiveTextCached(kind, slug) {
 
   const p = (async () => {
     const hbUrl = `https://www.hardwarebarato.com/produtos/${cat}/${slug}`;
+    const parseValidHb = (rawHtml) => {
+      const unescaped = rawHtml.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      if (!unescaped.includes('"data":[') || (!unescaped.includes('"storeName":') && !unescaped.includes('"store":'))) {
+        return null;
+      }
+      return unescaped;
+    };
+    try {
+      const rJ = await fetchWithTimeout(`https://r.jina.ai/${hbUrl}`, { cache: 'no-store', headers: { 'X-Respond-With': 'html' } }, 6500);
+      if (rJ.ok) {
+        const parsed = parseValidHb(await rJ.text());
+        if (parsed) {
+          _HB_CLIENT_CACHE.set(cacheKey, { ts: Date.now(), txt: parsed });
+          return parsed;
+        }
+      }
+    } catch (_) {}
     const proxies = [
       `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(hbUrl)}`,
       `https://api.allorigins.win/raw?url=${encodeURIComponent(hbUrl)}`
@@ -9276,12 +9326,9 @@ async function _fetchHBLiveTextCached(kind, slug) {
       const txt = await Promise.any(proxies.map(async (pUrl) => {
         const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4500);
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        const rawHtml = await r.text();
-        const unescaped = rawHtml.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-        if (!unescaped.includes('"data":[') || (!unescaped.includes('"storeName":') && !unescaped.includes('"store":'))) {
-          throw new Error('Invalid HB payload');
-        }
-        return unescaped;
+        const parsed = parseValidHb(await r.text());
+        if (!parsed) throw new Error('Invalid HB payload');
+        return parsed;
       }));
       _HB_CLIENT_CACHE.set(cacheKey, { ts: Date.now(), txt });
       return txt;
@@ -9743,6 +9790,9 @@ function setBFCardsFilter(filterKey) {
 }
 window.setBFCardsFilter = setBFCardsFilter;
 
+let _bfInitialPollDone = false;
+let _bfChannelCursor = 0;
+
 async function pollBFLiveCardsFeed(manual) {
   const activeReg = typeof getActiveRegionId === 'function' ? getActiveRegionId() : 'br';
   if (activeReg !== 'br') {
@@ -9760,18 +9810,36 @@ async function pollBFLiveCardsFeed(manual) {
   }
   if (_bfLiveBusy) return;
   _bfLiveBusy = true;
+  if (manual && typeof clearTgProxyBreaker === 'function') {
+    clearTgProxyBreaker();
+  }
   const statusEl = document.getElementById('bf-cards-live-status');
   if (statusEl && manual) statusEl.textContent = '🔄 Puxando grupos...';
 
   try {
-    const channels = CLIENT_PROMO_CHANNELS || [];
+    const allChannels = CLIENT_PROMO_CHANNELS || [];
+    const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+    // On static GitHub Pages auto-ticks, poll 2 channels round-robin (keeps r.jina.ai ~6 req/min);
+    // manual click or initial load scans all channels immediately.
+    let channelsToPoll = allChannels;
+    if (isStatic && !manual && _bfInitialPollDone && allChannels.length > 2) {
+      channelsToPoll = [];
+      for (let i = 0; i < 2; i++) {
+        channelsToPoll.push(allChannels[(_bfChannelCursor + i) % allChannels.length]);
+      }
+      _bfChannelCursor = (_bfChannelCursor + 2) % allChannels.length;
+    }
+    _bfInitialPollDone = true;
+
     const maxAge = parseFloat(document.getElementById('select-promo-max-age')?.value || document.getElementById('promo-max-age')?.value || '48') || 48;
     const nowMs = Date.now();
-    const htmlList = await Promise.all(channels.map(ch => fetchTelegramChannelHTML(ch.id, '').then(raw => ({ ch, raw })).catch(() => ({ ch, raw: '' }))));
+    const htmlList = await Promise.all(channelsToPoll.map(ch => fetchTelegramChannelHTML(ch.id, '', Boolean(manual)).then(raw => ({ ch, raw })).catch(() => ({ ch, raw: '' }))));
 
     const freshPosts = [];
+    let receivedRawCount = 0;
     htmlList.forEach(({ ch, raw }) => {
       if (!raw) return;
+      receivedRawCount++;
       const parsed = parseTelegramHTMLInBrowser(raw, ch.id, ch.name);
       if (parsed && parsed.length) freshPosts.push(...parsed);
     });
@@ -9863,16 +9931,18 @@ async function pollBFLiveCardsFeed(manual) {
     }
     if (statusEl) {
       const nowStr = new Date().toLocaleTimeString('pt-BR');
-      const proxyDown = typeof isTgProxyDown === 'function' && isTgProxyDown();
+      const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+      const pollLabel = isStatic ? '20s' : '10s';
+      const proxyDown = receivedRawCount === 0 && typeof isTgProxyDown === 'function' && isTgProxyDown();
       statusEl.textContent = !_bfLiveEnabled
         ? `⏸️ Pausado (${nowStr})`
-        : (proxyDown ? `🟡 Dados do robô • leitura direta indisponível (${nowStr})` : `🟢 Ao vivo • 10s (${nowStr})`);
+        : (proxyDown ? `🟡 Dados do robô • leitura direta indisponível (${nowStr})` : `🟢 Ao vivo • ${pollLabel} (${nowStr})`);
       statusEl.title = proxyDown
-        ? 'Os serviços públicos usados para ler o Telegram direto do navegador estão fora do ar. As ofertas continuam vindo do robô que atualiza o site a cada poucas horas. Nova tentativa em até 30 min.'
-        : '';
+        ? 'Os serviços usados para ler o Telegram direto do navegador falharam temporariamente. As ofertas continuam vindo do robô e nova tentativa ocorrerá em até 3 min (ou ao clicar em Atualizar Agora).'
+        : 'Leitura direta dos canais do Telegram ativa.';
     }
   } catch (e) {
-    if (statusEl) statusEl.textContent = '⚠️ Reconectando (10s)...';
+    if (statusEl) statusEl.textContent = '⚠️ Reconectando...';
   } finally {
     _bfLiveBusy = false;
   }
@@ -9882,12 +9952,16 @@ window.pollBFLiveCardsFeed = pollBFLiveCardsFeed;
 function startBFLivePolling() {
   stopBFLivePolling();
   if (!_bfLiveEnabled) return;
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  const intervalMs = isStatic ? 20000 : 10000;
+  const btn = document.getElementById('btn-bf-live-toggle');
+  if (btn) btn.textContent = `Pausar Auto (${isStatic ? '20s' : '10s'})`;
   pollBFLiveCardsFeed(false);
   _bfLiveTimer = setInterval(() => {
     if (_bfLiveEnabled && typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') {
       pollBFLiveCardsFeed(false);
     }
-  }, 10000);
+  }, intervalMs);
 }
 window.startBFLivePolling = startBFLivePolling;
 
@@ -9903,8 +9977,10 @@ function toggleBFLivePolling() {
   _bfLiveEnabled = !_bfLiveEnabled;
   const btn = document.getElementById('btn-bf-live-toggle');
   const statusEl = document.getElementById('bf-cards-live-status');
+  const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  const pollLabel = isStatic ? '20s' : '10s';
   if (btn) {
-    btn.textContent = _bfLiveEnabled ? 'Pausar Auto (10s)' : 'Retomar Auto (10s)';
+    btn.textContent = _bfLiveEnabled ? `Pausar Auto (${pollLabel})` : `Retomar Auto (${pollLabel})`;
     btn.className = _bfLiveEnabled ? 'ui-btn ui-btn--sm' : 'ui-btn ui-btn--sm ui-btn--ghost';
   }
   if (_bfLiveEnabled) {
