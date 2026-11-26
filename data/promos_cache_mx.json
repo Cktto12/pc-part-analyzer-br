@@ -1,8 +1,8 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "18:42:01",
-  "last_sitewise_test_at": "2026-11-26 18:42:01",
+  "scanned_at": "18:47:28",
+  "last_sitewise_test_at": "2026-11-26 18:47:28",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -67,28 +67,6 @@
   ],
   "recent_feed": [
     {
-      "post_id": "pdmx/1213737",
-      "channel_id": "promodescuentos_gpus",
-      "channel_name": "Promodescuentos GPUs",
-      "store_name": "Amazon",
-      "post_url": "https://www.promodescuentos.com/share-deal/1213737",
-      "timestamp": "2026-11-26T18:36:58+00:00",
-      "title": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI",
-      "head_text": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI $4,147 MXN",
-      "raw_text": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI - Amazon - $4,147 MXN",
-      "price_brl": 4147,
-      "raw_price_brl": 4147,
-      "discount_applied": 0,
-      "coupon_code": "SANTT526",
-      "coupon_info": "Cupón MX: SANTT526",
-      "buy_url": "https://www.promodescuentos.com/share-deal/1213737",
-      "coupon_url": null,
-      "region_id": "mx",
-      "age_hours": 0.1,
-      "requires_coupon": true,
-      "promo_price_brl": 4147
-    },
-    {
       "post_id": "pdmx/1213738",
       "channel_id": "promodescuentos_pc",
       "channel_name": "Promodescuentos PC",
@@ -109,6 +87,28 @@
       "age_hours": 0.1,
       "requires_coupon": false,
       "promo_price_brl": 3719
+    },
+    {
+      "post_id": "pdmx/1213737",
+      "channel_id": "promodescuentos_gpus",
+      "channel_name": "Promodescuentos GPUs",
+      "store_name": "Amazon",
+      "post_url": "https://www.promodescuentos.com/share-deal/1213737",
+      "timestamp": "2026-11-26T18:36:58+00:00",
+      "title": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI",
+      "head_text": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI $4,147 MXN",
+      "raw_text": "DJI Mic 3 (2 TX + 1 RX + Estuche de carga) SANTANDER 12MSI - Amazon - $4,147 MXN",
+      "price_brl": 4147,
+      "raw_price_brl": 4147,
+      "discount_applied": 0,
+      "coupon_code": "SANTT526",
+      "coupon_info": "Cupón MX: SANTT526",
+      "buy_url": "https://www.promodescuentos.com/share-deal/1213737",
+      "coupon_url": null,
+      "region_id": "mx",
+      "age_hours": 0.2,
+      "requires_coupon": true,
+      "promo_price_brl": 4147
     }
   ],
   "coupon_status": {
@@ -326,8 +326,8 @@
         "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-        "tested_ts": 1795718250.907392,
-        "updated_at": "2026-11-26 18:37:30"
+        "tested_ts": 1795718522.92257,
+        "updated_at": "2026-11-26 18:42:02"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
         "status": "untested",
@@ -338,8 +338,8 @@
         "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-        "tested_ts": 1795718251.3839843,
-        "updated_at": "2026-11-26 18:37:31"
+        "tested_ts": 1795718523.414473,
+        "updated_at": "2026-11-26 18:42:03"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
         "status": "untested",
@@ -350,11 +350,11 @@
         "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-        "tested_ts": 1795718251.8542838,
-        "updated_at": "2026-11-26 18:37:31"
+        "tested_ts": 1795718523.9274082,
+        "updated_at": "2026-11-26 18:42:03"
       }
     },
-    "updated_at": "2026-11-26 18:42:01",
+    "updated_at": "2026-11-26 18:47:28",
     "group_coupons": {
       "MXBF1": {
         "store_key": null,
@@ -374,11 +374,11 @@
         "channels": [
           "promodescuentos_gpus"
         ],
-        "seen_count": 2,
+        "seen_count": 3,
         "first_seen_ts": 1795718218.0,
         "last_seen_ts": 1795718218.0,
         "sample_info": "Cupón MX: SANTT526",
-        "updated_at": "2026-11-26 18:42:01"
+        "updated_at": "2026-11-26 18:47:28"
       }
     }
   }
