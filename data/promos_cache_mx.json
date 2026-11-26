@@ -1,8 +1,8 @@
 {
   "ok": true,
   "region_id": "mx",
-  "scanned_at": "13:12:29",
-  "last_sitewise_test_at": "2026-11-26 13:12:29",
+  "scanned_at": "13:17:05",
+  "last_sitewise_test_at": "2026-11-26 13:17:05",
   "channels_scanned": [
     "promodescuentos_gpus",
     "promodescuentos_pc",
@@ -84,7 +84,7 @@
       "buy_url": "https://www.promodescuentos.com/share-deal/1212958",
       "coupon_url": null,
       "region_id": "mx",
-      "age_hours": 44.7,
+      "age_hours": 44.8,
       "requires_coupon": true,
       "promo_price_brl": 561
     }
@@ -297,39 +297,42 @@
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT": {
         "status": "untested",
-        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
-        "coupon_status": null,
+        "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-        "updated_at": "2026-11-26 13:02:33"
+        "tested_ts": 1795698751.6249843,
+        "updated_at": "2026-11-26 13:12:31"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
         "status": "untested",
-        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
-        "coupon_status": null,
+        "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-        "updated_at": "2026-11-26 13:02:33"
+        "tested_ts": 1795698751.9864275,
+        "updated_at": "2026-11-26 13:12:31"
       },
       "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
         "status": "untested",
-        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente (verifique no link)",
+        "reason": "Estoque/preço na Loja não pôde ser confirmado automaticamente",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
-        "coupon_status": null,
+        "coupon_status": "none",
         "store_name": "Loja",
         "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-        "updated_at": "2026-11-26 13:02:34"
+        "tested_ts": 1795698752.7327728,
+        "updated_at": "2026-11-26 13:12:32"
       }
     },
-    "updated_at": "2026-11-26 13:12:29",
+    "updated_at": "2026-11-26 13:17:05",
     "group_coupons": {
       "MXBF1": {
         "store_key": null,
@@ -337,11 +340,11 @@
         "channels": [
           "promodescuentos_pc"
         ],
-        "seen_count": 1,
+        "seen_count": 2,
         "first_seen_ts": 1795537822.0,
         "last_seen_ts": 1795537822.0,
         "sample_info": "Cupón MX: MXBF1",
-        "updated_at": "2026-11-26 13:12:29"
+        "updated_at": "2026-11-26 13:17:05"
       }
     }
   }
