@@ -1,14 +1,14 @@
 {
   "ok": true,
   "region_id": "eu",
-  "scanned_at": "21:53:02",
-  "last_sitewise_test_at": "2026-11-26 21:53:05",
+  "scanned_at": "21:57:28",
+  "last_sitewise_test_at": "2026-11-26 21:57:30",
   "channels_scanned": [
     "mydealz_de",
     "dealabs_fr",
     "chollometro_es"
   ],
-  "matched_count": 9,
+  "matched_count": 12,
   "matched_deals": [
     {
       "post_id": "mydealz_de/2882690",
@@ -30,7 +30,7 @@
       "deal_status": "untested",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 4.3,
+      "age_hours": 4.4,
       "matched_kind": "gpu",
       "matched_slug": "rx-9070-gre",
       "matched_name": "RX 9070 GRE",
@@ -68,7 +68,7 @@
       "deal_status": "untested",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 0.6,
+      "age_hours": 0.7,
       "matched_kind": "gpu",
       "matched_slug": "rtx-5070",
       "matched_name": "RTX 5070",
@@ -85,45 +85,6 @@
       "is_coupon_expired": false,
       "coupon_status": "unverified",
       "deal_status_reason": "Estoque/preço na Fnac não pôde ser confirmado automaticamente"
-    },
-    {
-      "post_id": "dealabs_fr/3468717",
-      "channel_id": "dealabs_fr",
-      "channel_name": "Dealabs FR",
-      "store_name": "AliExpress",
-      "post_url": "https://www.dealabs.com/share-deal/3468717",
-      "timestamp": "2026-11-25T10:16:19+00:00",
-      "title": "[Via Paypal] Processeur AMD Ryzen 7 9800X3D - 8 cœurs, 5,2 GHz, 96 Mo L3, TDP 120 W, AM5",
-      "head_text": "[Via Paypal] Processeur AMD Ryzen 7 9800X3D - 8 cœurs, 5,2 GHz, 96 Mo L3, TDP 120 W, AM5 268.90 €",
-      "raw_text": "[Via Paypal] Processeur AMD Ryzen 7 9800X3D - 8 cœurs, 5,2 GHz, 96 Mo L3, TDP 120 W, AM5 - AliExpress - 268.90 €",
-      "price_brl": 268.9,
-      "raw_price_brl": 268.9,
-      "discount_applied": 0.0,
-      "coupon_code": "11FRBF60",
-      "coupon_info": "Code: 11FRBF60",
-      "buy_url": "https://www.dealabs.com/share-deal/3468717",
-      "coupon_url": null,
-      "deal_status": "expired",
-      "stock_verified": false,
-      "region_id": "eu",
-      "age_hours": 35.6,
-      "matched_kind": "cpu",
-      "matched_slug": "ryzen-7-9800x3d",
-      "matched_name": "Ryzen 7 9800X3D",
-      "hb_price_brl": 434.0,
-      "savings_vs_hb_brl": 165.1,
-      "item_specs": {
-        "brand": "AMD",
-        "socket": "AM5",
-        "ddr": "DDR5"
-      },
-      "is_conditional_voucher": false,
-      "requires_coupon": true,
-      "promo_price_brl": 268.9,
-      "is_expired": true,
-      "is_coupon_expired": false,
-      "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (35.6h) sem confirmação de estoque ativo na AliExpress"
     },
     {
       "post_id": "dealabs_fr/3468702",
@@ -165,6 +126,162 @@
       "deal_status_reason": "Oferta antiga (35.7h) sem confirmação de estoque ativo na AliExpress"
     },
     {
+      "post_id": "dealabs_fr/3468717",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468717",
+      "timestamp": "2026-11-25T10:16:19+00:00",
+      "title": "[Via Paypal] Processeur AMD Ryzen 7 9800X3D - 8 cœurs, 5,2 GHz, 96 Mo L3, TDP 120 W, AM5",
+      "head_text": "[Via Paypal] Processeur AMD Ryzen 7 9800X3D - 8 cœurs, 5,2 GHz, 96 Mo L3, TDP 120 W, AM5 268.90 €",
+      "raw_text": "[Via Paypal] Processeur AMD Ryzen 7 9800X3D - 8 cœurs, 5,2 GHz, 96 Mo L3, TDP 120 W, AM5 - AliExpress - 268.90 €",
+      "price_brl": 268.9,
+      "raw_price_brl": 268.9,
+      "discount_applied": 0.0,
+      "coupon_code": "11FRBF60",
+      "coupon_info": "Code: 11FRBF60",
+      "buy_url": "https://www.dealabs.com/share-deal/3468717",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 35.7,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-9800x3d",
+      "matched_name": "Ryzen 7 9800X3D",
+      "hb_price_brl": 379.0,
+      "savings_vs_hb_brl": 110.1,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM5",
+        "ddr": "DDR5"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 268.9,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (35.7h) sem confirmação de estoque ativo na AliExpress"
+    },
+    {
+      "post_id": "dealabs_fr/3468712",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468712",
+      "timestamp": "2026-11-25T13:22:53+00:00",
+      "title": "Processeur AMD Ryzen 7 9700X - 8 cœurs, 16 threads, boost 5.5GHz, 32Mo L3, AM5, 65W, sans ventirad",
+      "head_text": "Processeur AMD Ryzen 7 9700X - 8 cœurs, 16 threads, boost 5.5GHz, 32Mo L3, AM5, 65W, sans ventirad 154.33 €",
+      "raw_text": "Processeur AMD Ryzen 7 9700X - 8 cœurs, 16 threads, boost 5.5GHz, 32Mo L3, AM5, 65W, sans ventirad - AliExpress - 154.33 €",
+      "price_brl": 154.33,
+      "raw_price_brl": 154.33,
+      "discount_applied": 0.0,
+      "coupon_code": "FRBF23",
+      "coupon_info": "Code: FRBF23",
+      "buy_url": "https://www.dealabs.com/share-deal/3468712",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 32.6,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-9700x",
+      "matched_name": "Ryzen 7 9700X",
+      "hb_price_brl": 264.0,
+      "savings_vs_hb_brl": 109.67,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM5",
+        "ddr": "DDR5"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 154.33,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (32.6h) sem confirmação de estoque ativo na AliExpress"
+    },
+    {
+      "post_id": "dealabs_fr/3468703",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468703",
+      "timestamp": "2026-11-25T14:21:23+00:00",
+      "title": "Processeur AMD Ryzen 7 5700X - 8 cœurs, 16 threads, boost 4.6GHz, 32Mo L3, AM4, sans ventirad",
+      "head_text": "Processeur AMD Ryzen 7 5700X - 8 cœurs, 16 threads, boost 4.6GHz, 32Mo L3, AM4, sans ventirad 116.74 €",
+      "raw_text": "Processeur AMD Ryzen 7 5700X - 8 cœurs, 16 threads, boost 4.6GHz, 32Mo L3, AM4, sans ventirad - AliExpress - 116.74 €",
+      "price_brl": 116.74,
+      "raw_price_brl": 116.74,
+      "discount_applied": 0.0,
+      "coupon_code": "FRBF13",
+      "coupon_info": "Code: FRBF13",
+      "buy_url": "https://www.dealabs.com/share-deal/3468703",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 31.6,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-5700x",
+      "matched_name": "Ryzen 7 5700X",
+      "hb_price_brl": 199.9,
+      "savings_vs_hb_brl": 83.16,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM4",
+        "ddr": "DDR4"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 116.74,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (31.6h) sem confirmação de estoque ativo na AliExpress"
+    },
+    {
+      "post_id": "dealabs_fr/3468772",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468772",
+      "timestamp": "2026-11-25T10:43:02+00:00",
+      "title": "Processeur AMD Ryzen 7 5700X - 8 coeurs, 16 threads, 4.6GHz, 32Mo L3, AM4, sans boite ni ventirad",
+      "head_text": "Processeur AMD Ryzen 7 5700X - 8 coeurs, 16 threads, 4.6GHz, 32Mo L3, AM4, sans boite ni ventirad 126.10 €",
+      "raw_text": "Processeur AMD Ryzen 7 5700X - 8 coeurs, 16 threads, 4.6GHz, 32Mo L3, AM4, sans boite ni ventirad - AliExpress - 126.10 €",
+      "price_brl": 126.1,
+      "raw_price_brl": 126.1,
+      "discount_applied": 0.0,
+      "coupon_code": "FRBF23",
+      "coupon_info": "Code: FRBF23",
+      "buy_url": "https://www.dealabs.com/share-deal/3468772",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 35.2,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-5700x",
+      "matched_name": "Ryzen 7 5700X",
+      "hb_price_brl": 199.9,
+      "savings_vs_hb_brl": 73.8,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM4",
+        "ddr": "DDR4"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 126.1,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (35.2h) sem confirmação de estoque ativo na AliExpress"
+    },
+    {
       "post_id": "dealabs_fr/3468680",
       "channel_id": "dealabs_fr",
       "channel_name": "Dealabs FR",
@@ -184,12 +301,12 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 30.8,
+      "age_hours": 30.9,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5600",
       "matched_name": "Ryzen 5 5600",
-      "hb_price_brl": 203.9,
-      "savings_vs_hb_brl": 105.94,
+      "hb_price_brl": 139.9,
+      "savings_vs_hb_brl": 41.94,
       "item_specs": {
         "brand": "AMD",
         "socket": "AM4",
@@ -201,7 +318,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (30.8h) sem confirmação de estoque ativo na AliExpress"
+      "deal_status_reason": "Oferta antiga (30.9h) sem confirmação de estoque ativo na AliExpress"
     },
     {
       "post_id": "mydealz_de/2881925",
@@ -223,7 +340,7 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 24.5,
+      "age_hours": 24.6,
       "matched_kind": "mobo",
       "matched_slug": "asus-tuf-gaming-b850-plus-wifi-motherboard-socket-am5-amd-b850-atx-ddr5",
       "matched_name": "ASUS TUF Gaming B850-Plus WiFi Motherboard, Socket AM5, AMD B850, ATX, DDR5",
@@ -244,7 +361,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (24.5h) sem confirmação de estoque ativo na Amazon BR"
+      "deal_status_reason": "Oferta antiga (24.6h) sem confirmação de estoque ativo na Amazon BR"
     },
     {
       "post_id": "dealabs_fr/3468827",
@@ -266,7 +383,7 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 34.4,
+      "age_hours": 34.5,
       "matched_kind": "gpu",
       "matched_slug": "rx-9070-gre",
       "matched_name": "RX 9070 GRE",
@@ -282,7 +399,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (34.4h) sem confirmação de estoque ativo na Interdiscount"
+      "deal_status_reason": "Oferta antiga (34.5h) sem confirmação de estoque ativo na Interdiscount"
     },
     {
       "post_id": "dealabs_fr/3470084",
@@ -304,7 +421,7 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 10.6,
+      "age_hours": 10.7,
       "matched_kind": "gpu",
       "matched_slug": "rtx-5070",
       "matched_name": "RTX 5070",
@@ -320,7 +437,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (10.6h) sem confirmação de estoque ativo na Darty"
+      "deal_status_reason": "Oferta antiga (10.7h) sem confirmação de estoque ativo na Darty"
     },
     {
       "post_id": "mydealz_de/2882273",
@@ -344,8 +461,8 @@
       "region_id": "eu",
       "age_hours": 11.8,
       "matched_kind": "laptop",
-      "matched_slug": "asus-tuf-gaming-a18-fa808up-s8133w-gaming-notebook",
-      "matched_name": "ASUS TUF Gaming A18 (FA808UP-S8133W), Gaming-Notebook",
+      "matched_slug": "asus-tuf-gaming-a16-fa608up-tu131w-gaming-notebook",
+      "matched_name": "ASUS TUF Gaming A16 (FA608UP-TU131W), Gaming-Notebook",
       "hb_price_brl": 1599.0,
       "savings_vs_hb_brl": -200.0,
       "item_specs": {
@@ -384,7 +501,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 2.2,
+      "age_hours": 2.3,
       "matched_kind": "smartphone",
       "matched_slug": null,
       "matched_name": null,
@@ -435,6 +552,41 @@
       "promo_price_brl": 1402.7
     },
     {
+      "post_id": "dealabs_fr/3470614",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "Cdiscount",
+      "post_url": "https://www.dealabs.com/share-deal/3470614",
+      "timestamp": "2026-11-26T17:41:18+00:00",
+      "title": "Smartphone 6.7\" Samsung Galaxy S26 FE AI - 128 Go, Vert d'eau (Via ODR de 100€)",
+      "head_text": "Smartphone 6.7\" Samsung Galaxy S26 FE AI - 128 Go, Vert d'eau (Via ODR de 100€) 414.00 €",
+      "raw_text": "Smartphone 6.7\" Samsung Galaxy S26 FE AI - 128 Go, Vert d'eau (Via ODR de 100€) - Cdiscount - 414.00 €",
+      "price_brl": 414.0,
+      "raw_price_brl": 600.0,
+      "discount_applied": 186.0,
+      "coupon_code": "25DES299",
+      "coupon_info": "Code: 25DES299",
+      "buy_url": "https://www.dealabs.com/share-deal/3470614",
+      "coupon_url": null,
+      "deal_status": "active",
+      "stock_verified": true,
+      "region_id": "eu",
+      "age_hours": 4.3,
+      "matched_kind": "smartphone",
+      "matched_slug": "samsung-galaxy-s26-fe-128gb",
+      "matched_name": "Samsung Galaxy S26 FE 128GB",
+      "brand": "Samsung",
+      "hb_price_brl": 504.0,
+      "savings_vs_hb_brl": 90.0,
+      "item_specs": {
+        "brand": "Samsung",
+        "ram_gb": 8,
+        "storage_gb": 128
+      },
+      "requires_coupon": true,
+      "promo_price_brl": 414.0
+    },
+    {
       "post_id": "mydealz_de/2839288",
       "channel_id": "mydealz_de",
       "channel_name": "MyDealz DE",
@@ -454,7 +606,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 8.6,
+      "age_hours": 8.7,
       "matched_kind": "smartphone",
       "matched_slug": null,
       "matched_name": null,
@@ -492,7 +644,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 0.7,
+      "age_hours": 0.8,
       "misc_category": "diapers",
       "misc_specs": {
         "brand": "Pampers",
@@ -541,7 +693,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 2.6,
+      "age_hours": 2.7,
       "misc_category": "air_fryer",
       "misc_specs": {
         "brand": "Air Fryer",
@@ -590,7 +742,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 4.5,
+      "age_hours": 4.6,
       "misc_category": "air_fryer",
       "misc_specs": {
         "brand": "Ninja",
@@ -688,7 +840,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 12.6,
+      "age_hours": 12.7,
       "misc_category": "diapers",
       "misc_specs": {
         "brand": "Pampers",
@@ -737,7 +889,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 14.4,
+      "age_hours": 14.5,
       "misc_category": "air_fryer",
       "misc_specs": {
         "brand": "Ninja",
@@ -835,7 +987,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 35.0,
+      "age_hours": 35.1,
       "misc_category": "air_fryer",
       "misc_specs": {
         "brand": "Air Fryer",
@@ -884,7 +1036,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 35.4,
+      "age_hours": 35.5,
       "misc_category": "air_fryer",
       "misc_specs": {
         "brand": "Ninja",
@@ -933,7 +1085,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 38.1,
+      "age_hours": 38.2,
       "misc_category": "air_fryer",
       "misc_specs": {
         "brand": "Air Fryer",
@@ -1035,7 +1187,7 @@
       "deal_status": "untested",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 0.6,
+      "age_hours": 0.7,
       "matched_kind": "gpu",
       "matched_slug": "rtx-5070",
       "matched_name": "RTX 5070",
@@ -1073,7 +1225,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 0.6,
+      "age_hours": 0.7,
       "requires_coupon": false,
       "promo_price_brl": 129.0
     },
@@ -1097,7 +1249,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 0.7,
+      "age_hours": 0.8,
       "requires_coupon": false,
       "promo_price_brl": 34.02
     },
@@ -1145,7 +1297,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 2.2,
+      "age_hours": 2.3,
       "requires_coupon": false,
       "promo_price_brl": 1414.46
     },
@@ -1169,7 +1321,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 2.6,
+      "age_hours": 2.7,
       "requires_coupon": false,
       "promo_price_brl": 34.99
     },
@@ -1193,7 +1345,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 2.9,
+      "age_hours": 3.0,
       "requires_coupon": false,
       "promo_price_brl": 21.84
     },
@@ -1246,6 +1398,30 @@
       "promo_price_brl": 1402.7
     },
     {
+      "post_id": "dealabs_fr/3470614",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "Cdiscount",
+      "post_url": "https://www.dealabs.com/share-deal/3470614",
+      "timestamp": "2026-11-26T17:41:18+00:00",
+      "title": "Smartphone 6.7\" Samsung Galaxy S26 FE AI - 128 Go, Vert d'eau (Via ODR de 100€)",
+      "head_text": "Smartphone 6.7\" Samsung Galaxy S26 FE AI - 128 Go, Vert d'eau (Via ODR de 100€) 414.00 €",
+      "raw_text": "Smartphone 6.7\" Samsung Galaxy S26 FE AI - 128 Go, Vert d'eau (Via ODR de 100€) - Cdiscount - 414.00 €",
+      "price_brl": 414.0,
+      "raw_price_brl": 600.0,
+      "discount_applied": 186.0,
+      "coupon_code": "25DES299",
+      "coupon_info": "Code: 25DES299",
+      "buy_url": "https://www.dealabs.com/share-deal/3470614",
+      "coupon_url": null,
+      "deal_status": "active",
+      "stock_verified": true,
+      "region_id": "eu",
+      "age_hours": 4.3,
+      "requires_coupon": true,
+      "promo_price_brl": 414.0
+    },
+    {
       "post_id": "mydealz_de/2882690",
       "channel_id": "mydealz_de",
       "channel_name": "MyDealz DE",
@@ -1265,7 +1441,7 @@
       "deal_status": "untested",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 4.3,
+      "age_hours": 4.4,
       "matched_kind": "gpu",
       "matched_slug": "rx-9070-gre",
       "matched_name": "RX 9070 GRE",
@@ -1303,7 +1479,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 4.5,
+      "age_hours": 4.6,
       "requires_coupon": false,
       "promo_price_brl": 103.99
     },
@@ -1327,7 +1503,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 5.5,
+      "age_hours": 5.6,
       "requires_coupon": true,
       "promo_price_brl": 174.52
     },
@@ -1351,7 +1527,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 6.5,
+      "age_hours": 6.6,
       "requires_coupon": false,
       "promo_price_brl": 37.98
     },
@@ -1399,7 +1575,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 8.6,
+      "age_hours": 8.7,
       "requires_coupon": false,
       "promo_price_brl": 1673.71
     },
@@ -1447,7 +1623,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 9.7,
+      "age_hours": 9.8,
       "requires_coupon": true,
       "promo_price_brl": 1399.31
     },
@@ -1471,7 +1647,7 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 10.6,
+      "age_hours": 10.7,
       "matched_kind": "gpu",
       "matched_slug": "rtx-5070",
       "matched_name": "RTX 5070",
@@ -1487,7 +1663,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (10.6h) sem confirmação de estoque ativo na Darty"
+      "deal_status_reason": "Oferta antiga (10.7h) sem confirmação de estoque ativo na Darty"
     },
     {
       "post_id": "mydealz_de/2882273",
@@ -1511,8 +1687,8 @@
       "region_id": "eu",
       "age_hours": 11.8,
       "matched_kind": "laptop",
-      "matched_slug": "asus-tuf-gaming-a18-fa808up-s8133w-gaming-notebook",
-      "matched_name": "ASUS TUF Gaming A18 (FA808UP-S8133W), Gaming-Notebook",
+      "matched_slug": "asus-tuf-gaming-a16-fa608up-tu131w-gaming-notebook",
+      "matched_name": "ASUS TUF Gaming A16 (FA608UP-TU131W), Gaming-Notebook",
       "hb_price_brl": 1599.0,
       "savings_vs_hb_brl": -200.0,
       "item_specs": {
@@ -1548,7 +1724,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 12.2,
+      "age_hours": 12.3,
       "requires_coupon": false,
       "promo_price_brl": 484.7
     },
@@ -1572,7 +1748,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 12.6,
+      "age_hours": 12.7,
       "requires_coupon": false,
       "promo_price_brl": 43.51
     },
@@ -1620,7 +1796,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 13.6,
+      "age_hours": 13.7,
       "requires_coupon": true,
       "promo_price_brl": 249.0
     },
@@ -1644,7 +1820,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 14.4,
+      "age_hours": 14.5,
       "requires_coupon": false,
       "promo_price_brl": 284.99
     },
@@ -1668,7 +1844,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 14.8,
+      "age_hours": 14.9,
       "requires_coupon": false,
       "promo_price_brl": 31.12
     },
@@ -1692,7 +1868,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 16.4,
+      "age_hours": 16.5,
       "requires_coupon": false,
       "promo_price_brl": 49.99
     },
@@ -1764,7 +1940,7 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 24.5,
+      "age_hours": 24.6,
       "matched_kind": "mobo",
       "matched_slug": "asus-tuf-gaming-b850-plus-wifi-motherboard-socket-am5-amd-b850-atx-ddr5",
       "matched_name": "ASUS TUF Gaming B850-Plus WiFi Motherboard, Socket AM5, AMD B850, ATX, DDR5",
@@ -1785,7 +1961,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (24.5h) sem confirmação de estoque ativo na Amazon BR"
+      "deal_status_reason": "Oferta antiga (24.6h) sem confirmação de estoque ativo na Amazon BR"
     },
     {
       "post_id": "mydealz_de/2881889",
@@ -1855,12 +2031,12 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 30.8,
+      "age_hours": 30.9,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-5-5600",
       "matched_name": "Ryzen 5 5600",
-      "hb_price_brl": 203.9,
-      "savings_vs_hb_brl": 105.94,
+      "hb_price_brl": 139.9,
+      "savings_vs_hb_brl": 41.94,
       "item_specs": {
         "brand": "AMD",
         "socket": "AM4",
@@ -1872,7 +2048,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (30.8h) sem confirmação de estoque ativo na AliExpress"
+      "deal_status_reason": "Oferta antiga (30.9h) sem confirmação de estoque ativo na AliExpress"
     },
     {
       "post_id": "mydealz_de/2842091",
@@ -1894,9 +2070,87 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 31.5,
+      "age_hours": 31.6,
       "requires_coupon": false,
       "promo_price_brl": 599.0
+    },
+    {
+      "post_id": "dealabs_fr/3468703",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468703",
+      "timestamp": "2026-11-25T14:21:23+00:00",
+      "title": "Processeur AMD Ryzen 7 5700X - 8 cœurs, 16 threads, boost 4.6GHz, 32Mo L3, AM4, sans ventirad",
+      "head_text": "Processeur AMD Ryzen 7 5700X - 8 cœurs, 16 threads, boost 4.6GHz, 32Mo L3, AM4, sans ventirad 116.74 €",
+      "raw_text": "Processeur AMD Ryzen 7 5700X - 8 cœurs, 16 threads, boost 4.6GHz, 32Mo L3, AM4, sans ventirad - AliExpress - 116.74 €",
+      "price_brl": 116.74,
+      "raw_price_brl": 116.74,
+      "discount_applied": 0.0,
+      "coupon_code": "FRBF13",
+      "coupon_info": "Code: FRBF13",
+      "buy_url": "https://www.dealabs.com/share-deal/3468703",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 31.6,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-5700x",
+      "matched_name": "Ryzen 7 5700X",
+      "hb_price_brl": 199.9,
+      "savings_vs_hb_brl": 83.16,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM4",
+        "ddr": "DDR4"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 116.74,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (31.6h) sem confirmação de estoque ativo na AliExpress"
+    },
+    {
+      "post_id": "dealabs_fr/3468712",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468712",
+      "timestamp": "2026-11-25T13:22:53+00:00",
+      "title": "Processeur AMD Ryzen 7 9700X - 8 cœurs, 16 threads, boost 5.5GHz, 32Mo L3, AM5, 65W, sans ventirad",
+      "head_text": "Processeur AMD Ryzen 7 9700X - 8 cœurs, 16 threads, boost 5.5GHz, 32Mo L3, AM5, 65W, sans ventirad 154.33 €",
+      "raw_text": "Processeur AMD Ryzen 7 9700X - 8 cœurs, 16 threads, boost 5.5GHz, 32Mo L3, AM5, 65W, sans ventirad - AliExpress - 154.33 €",
+      "price_brl": 154.33,
+      "raw_price_brl": 154.33,
+      "discount_applied": 0.0,
+      "coupon_code": "FRBF23",
+      "coupon_info": "Code: FRBF23",
+      "buy_url": "https://www.dealabs.com/share-deal/3468712",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 32.6,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-9700x",
+      "matched_name": "Ryzen 7 9700X",
+      "hb_price_brl": 264.0,
+      "savings_vs_hb_brl": 109.67,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM5",
+        "ddr": "DDR5"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 154.33,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (32.6h) sem confirmação de estoque ativo na AliExpress"
     },
     {
       "post_id": "dealabs_fr/3468827",
@@ -1918,7 +2172,7 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 34.4,
+      "age_hours": 34.5,
       "matched_kind": "gpu",
       "matched_slug": "rx-9070-gre",
       "matched_name": "RX 9070 GRE",
@@ -1934,7 +2188,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "none",
-      "deal_status_reason": "Oferta antiga (34.4h) sem confirmação de estoque ativo na Interdiscount"
+      "deal_status_reason": "Oferta antiga (34.5h) sem confirmação de estoque ativo na Interdiscount"
     },
     {
       "post_id": "dealabs_fr/3468784",
@@ -1956,7 +2210,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 35.0,
+      "age_hours": 35.1,
       "requires_coupon": false,
       "promo_price_brl": 394.99
     },
@@ -1980,9 +2234,48 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 35.0,
+      "age_hours": 35.1,
       "requires_coupon": false,
       "promo_price_brl": 69.99
+    },
+    {
+      "post_id": "dealabs_fr/3468772",
+      "channel_id": "dealabs_fr",
+      "channel_name": "Dealabs FR",
+      "store_name": "AliExpress",
+      "post_url": "https://www.dealabs.com/share-deal/3468772",
+      "timestamp": "2026-11-25T10:43:02+00:00",
+      "title": "Processeur AMD Ryzen 7 5700X - 8 coeurs, 16 threads, 4.6GHz, 32Mo L3, AM4, sans boite ni ventirad",
+      "head_text": "Processeur AMD Ryzen 7 5700X - 8 coeurs, 16 threads, 4.6GHz, 32Mo L3, AM4, sans boite ni ventirad 126.10 €",
+      "raw_text": "Processeur AMD Ryzen 7 5700X - 8 coeurs, 16 threads, 4.6GHz, 32Mo L3, AM4, sans boite ni ventirad - AliExpress - 126.10 €",
+      "price_brl": 126.1,
+      "raw_price_brl": 126.1,
+      "discount_applied": 0.0,
+      "coupon_code": "FRBF23",
+      "coupon_info": "Code: FRBF23",
+      "buy_url": "https://www.dealabs.com/share-deal/3468772",
+      "coupon_url": null,
+      "deal_status": "expired",
+      "stock_verified": false,
+      "region_id": "eu",
+      "age_hours": 35.2,
+      "matched_kind": "cpu",
+      "matched_slug": "ryzen-7-5700x",
+      "matched_name": "Ryzen 7 5700X",
+      "hb_price_brl": 199.9,
+      "savings_vs_hb_brl": 73.8,
+      "item_specs": {
+        "brand": "AMD",
+        "socket": "AM4",
+        "ddr": "DDR4"
+      },
+      "is_conditional_voucher": false,
+      "requires_coupon": true,
+      "promo_price_brl": 126.1,
+      "is_expired": true,
+      "is_coupon_expired": false,
+      "coupon_status": "unverified",
+      "deal_status_reason": "Oferta antiga (35.2h) sem confirmação de estoque ativo na AliExpress"
     },
     {
       "post_id": "dealabs_fr/3468752",
@@ -2004,7 +2297,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 35.4,
+      "age_hours": 35.5,
       "requires_coupon": false,
       "promo_price_brl": 129.99
     },
@@ -2028,12 +2321,12 @@
       "deal_status": "expired",
       "stock_verified": false,
       "region_id": "eu",
-      "age_hours": 35.6,
+      "age_hours": 35.7,
       "matched_kind": "cpu",
       "matched_slug": "ryzen-7-9800x3d",
       "matched_name": "Ryzen 7 9800X3D",
-      "hb_price_brl": 434.0,
-      "savings_vs_hb_brl": 165.1,
+      "hb_price_brl": 379.0,
+      "savings_vs_hb_brl": 110.1,
       "item_specs": {
         "brand": "AMD",
         "socket": "AM5",
@@ -2045,7 +2338,7 @@
       "is_expired": true,
       "is_coupon_expired": false,
       "coupon_status": "unverified",
-      "deal_status_reason": "Oferta antiga (35.6h) sem confirmação de estoque ativo na AliExpress"
+      "deal_status_reason": "Oferta antiga (35.7h) sem confirmação de estoque ativo na AliExpress"
     },
     {
       "post_id": "dealabs_fr/3468702",
@@ -2106,7 +2399,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 37.1,
+      "age_hours": 37.2,
       "requires_coupon": true,
       "promo_price_brl": 38.24
     },
@@ -2154,7 +2447,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 38.1,
+      "age_hours": 38.2,
       "requires_coupon": false,
       "promo_price_brl": 97.99
     },
@@ -2202,7 +2495,7 @@
       "deal_status": "active",
       "stock_verified": true,
       "region_id": "eu",
-      "age_hours": 40.2,
+      "age_hours": 40.3,
       "requires_coupon": false,
       "promo_price_brl": 329.0
     }
@@ -2234,99 +2527,99 @@
       },
       "dealabs_fr/3468680": {
         "status": "expired",
-        "reason": "Oferta antiga (30.8h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (30.9h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-5-5600-6-coeurs-12-threads-boost-44ghz-32mo-l3-am4-ddr4-sans-ventirad-3468680",
-        "tested_ts": 1795729984.0288618,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730249.7074656,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.dealabs.com/share-deal/3468680": {
         "status": "expired",
-        "reason": "Oferta antiga (30.8h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (30.9h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-5-5600-6-coeurs-12-threads-boost-44ghz-32mo-l3-am4-ddr4-sans-ventirad-3468680",
-        "tested_ts": 1795729984.0288618,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730249.7074656,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "dealabs_fr/3468703": {
         "status": "expired",
-        "reason": "Oferta antiga (31.4h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (31.6h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-7-5700x-8-coeurs-16-threads-boost-46ghz-32mo-l3-am4-sans-ventirad-3468703",
-        "tested_ts": 1795729390.9373424,
-        "updated_at": "2026-11-26 21:43:10"
+        "tested_ts": 1795730249.4756598,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.dealabs.com/share-deal/3468703": {
         "status": "expired",
-        "reason": "Oferta antiga (31.4h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (31.6h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-7-5700x-8-coeurs-16-threads-boost-46ghz-32mo-l3-am4-sans-ventirad-3468703",
-        "tested_ts": 1795729390.9373424,
-        "updated_at": "2026-11-26 21:43:10"
+        "tested_ts": 1795730249.4756598,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "dealabs_fr/3468712": {
         "status": "expired",
-        "reason": "Oferta antiga (32.3h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (32.6h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-7-9700x-8-coeurs-16-threads-boost-55ghz-32mo-l3-am5-65w-sans-ventirad-3468712",
-        "tested_ts": 1795729391.2754047,
-        "updated_at": "2026-11-26 21:43:11"
+        "tested_ts": 1795730249.4859674,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.dealabs.com/share-deal/3468712": {
         "status": "expired",
-        "reason": "Oferta antiga (32.3h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (32.6h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-7-9700x-8-coeurs-16-threads-boost-55ghz-32mo-l3-am5-65w-sans-ventirad-3468712",
-        "tested_ts": 1795729391.2754047,
-        "updated_at": "2026-11-26 21:43:11"
+        "tested_ts": 1795730249.4859674,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "dealabs_fr/3468717": {
         "status": "expired",
-        "reason": "Oferta antiga (35.6h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (35.7h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/via-paypal-processeur-amd-ryzen-7-9800x3d-8-coeurs-52-ghz-96-mo-l3-tdp-120-w-am5-3468717",
-        "tested_ts": 1795729983.9771395,
-        "updated_at": "2026-11-26 21:53:03"
+        "tested_ts": 1795730250.1458025,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "https://www.dealabs.com/share-deal/3468717": {
         "status": "expired",
-        "reason": "Oferta antiga (35.6h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (35.7h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/via-paypal-processeur-amd-ryzen-7-9800x3d-8-coeurs-52-ghz-96-mo-l3-tdp-120-w-am5-3468717",
-        "tested_ts": 1795729983.9771395,
-        "updated_at": "2026-11-26 21:53:03"
+        "tested_ts": 1795730250.1458025,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "dealabs_fr/3468702": {
         "status": "expired",
@@ -2337,8 +2630,8 @@
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/via-paypal-processeur-amd-ryzen-7-7800x3d-8-coeurs-16-threads-jusqua-5-ghz-96-mo-cache-3d-v-cache-socket-am5-sans-ventilateur-3468702",
-        "tested_ts": 1795729983.9854822,
-        "updated_at": "2026-11-26 21:53:03"
+        "tested_ts": 1795730249.792366,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.dealabs.com/share-deal/3468702": {
         "status": "expired",
@@ -2349,8 +2642,8 @@
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/via-paypal-processeur-amd-ryzen-7-7800x3d-8-coeurs-16-threads-jusqua-5-ghz-96-mo-cache-3d-v-cache-socket-am5-sans-ventilateur-3468702",
-        "tested_ts": 1795729983.9854822,
-        "updated_at": "2026-11-26 21:53:03"
+        "tested_ts": 1795730249.792366,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "dealabs_fr/3467173": {
         "status": "expired",
@@ -2376,27 +2669,27 @@
       },
       "dealabs_fr/3468827": {
         "status": "expired",
-        "reason": "Oferta antiga (34.4h) sem confirmação de estoque ativo na Interdiscount",
+        "reason": "Oferta antiga (34.5h) sem confirmação de estoque ativo na Interdiscount",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "none",
         "store_name": "Interdiscount",
         "final_url": "https://www.dealabs.com/bons-plans/gigabyte-technology-gigabyte-amd-radeon-rx-9070-gre-oc-fh-trio-3468827",
-        "tested_ts": 1795729985.1674955,
-        "updated_at": "2026-11-26 21:53:05"
+        "tested_ts": 1795730250.9077976,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "https://www.dealabs.com/share-deal/3468827": {
         "status": "expired",
-        "reason": "Oferta antiga (34.4h) sem confirmação de estoque ativo na Interdiscount",
+        "reason": "Oferta antiga (34.5h) sem confirmação de estoque ativo na Interdiscount",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "none",
         "store_name": "Interdiscount",
         "final_url": "https://www.dealabs.com/bons-plans/gigabyte-technology-gigabyte-amd-radeon-rx-9070-gre-oc-fh-trio-3468827",
-        "tested_ts": 1795729985.1674955,
-        "updated_at": "2026-11-26 21:53:05"
+        "tested_ts": 1795730250.9077976,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "mydealz_de/2881506": {
         "status": "expired",
@@ -2424,27 +2717,27 @@
       },
       "dealabs_fr/3468772": {
         "status": "expired",
-        "reason": "Oferta antiga (35.0h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (35.2h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-7-5700x-8-coeurs-16-threads-46ghz-32mo-l3-am4-sans-boite-ni-ventirad-3468772",
-        "tested_ts": 1795729392.0065,
-        "updated_at": "2026-11-26 21:43:12"
+        "tested_ts": 1795730250.7925172,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "https://www.dealabs.com/share-deal/3468772": {
         "status": "expired",
-        "reason": "Oferta antiga (35.0h) sem confirmação de estoque ativo na AliExpress",
+        "reason": "Oferta antiga (35.2h) sem confirmação de estoque ativo na AliExpress",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "AliExpress",
         "final_url": "https://www.dealabs.com/bons-plans/processeur-amd-ryzen-7-5700x-8-coeurs-16-threads-46ghz-32mo-l3-am4-sans-boite-ni-ventirad-3468772",
-        "tested_ts": 1795729392.0065,
-        "updated_at": "2026-11-26 21:43:12"
+        "tested_ts": 1795730250.7925172,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "dealabs_fr/3468395": {
         "status": "expired",
@@ -2639,27 +2932,27 @@
       },
       "dealabs_fr/3470084": {
         "status": "expired",
-        "reason": "Oferta antiga (10.6h) sem confirmação de estoque ativo na Darty",
+        "reason": "Oferta antiga (10.7h) sem confirmação de estoque ativo na Darty",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "Darty",
         "final_url": "https://www.dealabs.com/bons-plans/msi-rtx-5070-ventus-2x-3470084",
-        "tested_ts": 1795729984.2510214,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730249.769964,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.dealabs.com/share-deal/3470084": {
         "status": "expired",
-        "reason": "Oferta antiga (10.6h) sem confirmação de estoque ativo na Darty",
+        "reason": "Oferta antiga (10.7h) sem confirmação de estoque ativo na Darty",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "Darty",
         "final_url": "https://www.dealabs.com/bons-plans/msi-rtx-5070-ventus-2x-3470084",
-        "tested_ts": 1795729984.2510214,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730249.769964,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.alternate.de/Intel/Core-i5-14400F-Prozessor/html/product/100030194": {
         "status": "active",
@@ -2703,8 +2996,8 @@
         "coupon_status": "unverified",
         "store_name": "EU Shop",
         "final_url": "https://www.mydealz.de/deals/corporate-benefits-asus-rog-strix-g18-g814pp-s8091w-rtx-5070-gaming-laptop-2882273",
-        "tested_ts": 1795729984.32473,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730250.2920868,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "https://www.mydealz.de/share-deal/2882273": {
         "status": "expired",
@@ -2715,32 +3008,32 @@
         "coupon_status": "unverified",
         "store_name": "EU Shop",
         "final_url": "https://www.mydealz.de/deals/corporate-benefits-asus-rog-strix-g18-g814pp-s8091w-rtx-5070-gaming-laptop-2882273",
-        "tested_ts": 1795729984.32473,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730250.2920868,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "mydealz_de/2881925": {
         "status": "expired",
-        "reason": "Oferta antiga (24.5h) sem confirmação de estoque ativo na Amazon BR",
+        "reason": "Oferta antiga (24.6h) sem confirmação de estoque ativo na Amazon BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "Amazon BR",
         "final_url": "https://www.mydealz.de/deals/asus-tuf-gaming-b850m-plus-ii-mainboard-2881925",
-        "tested_ts": 1795729984.3257785,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730249.9242792,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.mydealz.de/share-deal/2881925": {
         "status": "expired",
-        "reason": "Oferta antiga (24.5h) sem confirmação de estoque ativo na Amazon BR",
+        "reason": "Oferta antiga (24.6h) sem confirmação de estoque ativo na Amazon BR",
         "source": "live_test",
         "live_price": null,
         "stock_verified": false,
         "coupon_status": "unverified",
         "store_name": "Amazon BR",
         "final_url": "https://www.mydealz.de/deals/asus-tuf-gaming-b850m-plus-ii-mainboard-2881925",
-        "tested_ts": 1795729984.3257785,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730249.9242792,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.caseking.de/en/intel-core-i5-14600k-3.5-ghz-raptor-lake-refresh-socket-1700-boxed/HPIT-806.html": {
         "status": "out_of_stock",
@@ -2811,8 +3104,8 @@
         "coupon_status": "unverified",
         "store_name": "Alza",
         "final_url": "https://www.mydealz.de/deals/12gb-xfx-swift-radeon-rx-9070-gre-triple-fan-gaming-edition-192bit-gddr6-hdmi-3x-dp-grafikkarte-versand-in-dhl-paketshop-2882690",
-        "tested_ts": 1795729983.8094199,
-        "updated_at": "2026-11-26 21:53:03"
+        "tested_ts": 1795730249.665515,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "https://www.mydealz.de/share-deal/2882690": {
         "status": "untested",
@@ -2823,8 +3116,8 @@
         "coupon_status": "unverified",
         "store_name": "Alza",
         "final_url": "https://www.mydealz.de/deals/12gb-xfx-swift-radeon-rx-9070-gre-triple-fan-gaming-edition-192bit-gddr6-hdmi-3x-dp-grafikkarte-versand-in-dhl-paketshop-2882690",
-        "tested_ts": 1795729983.8094199,
-        "updated_at": "2026-11-26 21:53:03"
+        "tested_ts": 1795730249.665515,
+        "updated_at": "2026-11-26 21:57:29"
       },
       "chollometro_es/2092014": {
         "status": "untested",
@@ -2859,8 +3152,8 @@
         "coupon_status": "unverified",
         "store_name": "Fnac",
         "final_url": "https://www.dealabs.com/bons-plans/msi-nvidia-geforce-rtx-5070-12g-ventus-2x-oc-bien-lire-la-description-3470928",
-        "tested_ts": 1795729984.3059995,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730250.723007,
+        "updated_at": "2026-11-26 21:57:30"
       },
       "https://www.dealabs.com/share-deal/3470928": {
         "status": "untested",
@@ -2871,11 +3164,11 @@
         "coupon_status": "unverified",
         "store_name": "Fnac",
         "final_url": "https://www.dealabs.com/bons-plans/msi-nvidia-geforce-rtx-5070-12g-ventus-2x-oc-bien-lire-la-description-3470928",
-        "tested_ts": 1795729984.3059995,
-        "updated_at": "2026-11-26 21:53:04"
+        "tested_ts": 1795730250.723007,
+        "updated_at": "2026-11-26 21:57:30"
       }
     },
-    "updated_at": "2026-11-26 21:53:05",
+    "updated_at": "2026-11-26 21:57:30",
     "group_coupons": {
       "AFBF26": {
         "store_key": null,
@@ -2883,11 +3176,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795698056.0,
         "last_seen_ts": 1795698056.0,
         "sample_info": "Code: AFBF26",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "BLACKFRIDAY1": {
         "store_key": null,
@@ -2895,11 +3188,11 @@
         "channels": [
           "mydealz_de"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795695023.0,
         "last_seen_ts": 1795695023.0,
         "sample_info": "Code: BLACKFRIDAY1",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "10DES129": {
         "store_key": null,
@@ -2907,11 +3200,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795691650.0,
         "last_seen_ts": 1795691650.0,
         "sample_info": "Code: 10DES129",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "BPKW48HP830G7": {
         "store_key": null,
@@ -2919,11 +3212,11 @@
         "channels": [
           "mydealz_de"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795681074.0,
         "last_seen_ts": 1795681074.0,
         "sample_info": "Code: BPKW48HP830G7",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "11FRBF40": {
         "store_key": null,
@@ -2931,11 +3224,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 186,
+        "seen_count": 187,
         "first_seen_ts": 1795635306.0,
         "last_seen_ts": 1795635306.0,
         "sample_info": "Code: 11FRBF40",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "FRITE10": {
         "store_key": null,
@@ -2943,11 +3236,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795619634.0,
         "last_seen_ts": 1795619634.0,
         "sample_info": "Code: FRITE10",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "FRBF13": {
         "store_key": null,
@@ -2955,11 +3248,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 195,
+        "seen_count": 197,
         "first_seen_ts": 1795619188.0,
         "last_seen_ts": 1795619188.0,
         "sample_info": "Code: FRBF13",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "15% ÜBER TRADEIN (LABDOO)": {
         "store_key": null,
@@ -2979,11 +3272,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 182,
+        "seen_count": 184,
         "first_seen_ts": 1795612973.0,
         "last_seen_ts": 1795612973.0,
         "sample_info": "Code: FRBF23",
-        "updated_at": "2026-11-26 21:43:09"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "11FRBF60": {
         "store_key": null,
@@ -2991,11 +3284,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795601779.0,
         "last_seen_ts": 1795601779.0,
         "sample_info": "Code: 11FRBF60",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "RSTRCW26": {
         "store_key": null,
@@ -3003,11 +3296,11 @@
         "channels": [
           "mydealz_de"
         ],
-        "seen_count": 104,
+        "seen_count": 105,
         "first_seen_ts": 1795596309.0,
         "last_seen_ts": 1795596309.0,
         "sample_info": "Code: RSTRCW26",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "BLACKFRIDAY + 12% CB CODE": {
         "store_key": null,
@@ -3039,11 +3332,11 @@
         "channels": [
           "mydealz_de"
         ],
-        "seen_count": 66,
+        "seen_count": 67,
         "first_seen_ts": 1795710150.0,
         "last_seen_ts": 1795710150.0,
         "sample_info": "Code: 11DEBF23",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "25DES299": {
         "store_key": null,
@@ -3051,11 +3344,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 33,
+        "seen_count": 34,
         "first_seen_ts": 1795710907.0,
-        "last_seen_ts": 1795710907.0,
+        "last_seen_ts": 1795714878.0,
         "sample_info": "Code: 25DES299",
-        "updated_at": "2026-11-26 19:28:24"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "11DEBF13": {
         "store_key": null,
@@ -3063,11 +3356,11 @@
         "channels": [
           "mydealz_de"
         ],
-        "seen_count": 46,
+        "seen_count": 47,
         "first_seen_ts": 1795716078.0,
         "last_seen_ts": 1795716078.0,
         "sample_info": "Code: 11DEBF13",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       },
       "HAPBF10": {
         "store_key": null,
@@ -3075,11 +3368,11 @@
         "channels": [
           "dealabs_fr"
         ],
-        "seen_count": 7,
+        "seen_count": 8,
         "first_seen_ts": 1795727816.0,
         "last_seen_ts": 1795727816.0,
         "sample_info": "Code: HAPBF10",
-        "updated_at": "2026-11-26 21:53:02"
+        "updated_at": "2026-11-26 21:57:28"
       }
     }
   }
