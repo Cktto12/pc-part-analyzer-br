@@ -1383,11 +1383,16 @@ function renderLaptopDuelAnalysis() {
     const dates = [...dateSet].sort();
     const bMap = Object.fromEntries(bHist.map(h => [h.date, h.price]));
     const cMap = Object.fromEntries(cHist.map(h => [h.date, h.price]));
+    const multiYear = dates.length > 1 && dates[0].length >= 4 && dates[dates.length - 1].length >= 4 && dates[0].slice(0, 4) !== dates[dates.length - 1].slice(0, 4);
+    const fmtDateLbl = d => (d && d.length >= 10)
+      ? (multiYear ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}` : `${d.slice(8, 10)}/${d.slice(5, 7)}`)
+      : (d || '');
+    const ptRadius = dates.length > 90 ? 0 : 2;
 
     chartLaptopDuelHistory = new Chart(histCanvas.getContext('2d'), {
       type: 'line',
       data: {
-        labels: dates.map(d => d.slice(5)),
+        labels: dates.map(fmtDateLbl),
         datasets: [
           {
             label: `Base: ${shortLaptopChipName(baseLap)}`,
@@ -1397,7 +1402,8 @@ function renderLaptopDuelAnalysis() {
             tension: 0.25,
             spanGaps: true,
             borderWidth: 2,
-            pointRadius: 2
+            pointRadius: ptRadius,
+            pointHoverRadius: 4
           },
           {
             label: `Cand: ${shortLaptopChipName(candLap)}`,
@@ -1407,7 +1413,8 @@ function renderLaptopDuelAnalysis() {
             tension: 0.25,
             spanGaps: true,
             borderWidth: 2,
-            pointRadius: 2
+            pointRadius: ptRadius,
+            pointHoverRadius: 4
           }
         ]
       },
@@ -1420,7 +1427,7 @@ function renderLaptopDuelAnalysis() {
           tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${fmtBRL(ctx.parsed.y)}` } }
         },
         scales: {
-          x: { ticks: { color: '#64748b', maxRotation: 0 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          x: { ticks: { color: '#64748b', maxTicksLimit: 9, maxRotation: 0 }, grid: { color: 'rgba(255,255,255,0.04)' } },
           y: { ticks: { color: '#64748b', callback: v => fmtBRLShort(v) }, grid: { color: 'rgba(255,255,255,0.06)' } }
         }
       }

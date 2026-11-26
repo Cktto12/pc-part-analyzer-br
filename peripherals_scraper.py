@@ -218,6 +218,7 @@ def enrich_peripheral(raw):
 
     return {
         "slug": raw["slug"],
+        "zoom_product_id": str(raw.get("zoom_product_id") or ""),
         "kind": kind,
         "name": name,
         "brand": brand,
@@ -365,11 +366,12 @@ def fetch_zoom_peripheral_detail(pair, existing_history=None):
         cur = hist_by_date.get(today_str)
         if not cur or price_brl < cur["price"]:
             hist_by_date[today_str] = {"date": today_str, "price": round(price_brl, 2), "store": store_name}
-    history = sorted(hist_by_date.values(), key=lambda x: x["date"])[-365:]
+    history = sorted(hist_by_date.values(), key=lambda x: x["date"])[-600:]
 
     return enrich_peripheral({
         "kind": kind,
         "slug": slug,
+        "zoom_product_id": pid,
         "name": prod_name,
         "price_brl": price_brl,
         "store_name": store_name,
@@ -428,8 +430,8 @@ def refresh_live_peripheral_prices(db):
                     hist[-1]["price"] = round(new_p, 2)
             else:
                 hist.append({"date": today_str, "price": round(new_p, 2), "store": it.get("store_name") or "zoom"})
-                if len(hist) > 365:
-                    it["history"] = hist[-365:]
+                if len(hist) > 600:
+                    it["history"] = hist[-600:]
         updated += 1
     return updated, dropped
 

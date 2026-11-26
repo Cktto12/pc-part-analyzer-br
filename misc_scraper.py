@@ -352,6 +352,7 @@ def _fetch_zoom_misc_detail(cat_id, hit, existing_history=None):
     ph_days = []
     img_url = hit.get("image") or best_offer.get("imageUrl") or ""
     prod_name = (hit.get("name") or slug).strip()
+    pid = str(hit.get("sourceId") or "")
 
     if full_url and slug:
         try:
@@ -362,7 +363,9 @@ def _fetch_zoom_misc_detail(cat_id, hit, existing_history=None):
                 d = json.loads(m.group(1))
                 props = d.get("props", {})
                 redux = props.get("initialReduxState", {})
-                pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+                page_pid = str(props.get("pageProps", {}).get("page", {}).get("productID") or "")
+                if page_pid:
+                    pid = page_pid
                 prod_root = redux.get("products", {}).get("product", {}) or {}
                 prod_info = prod_root.get("product") or {}
                 if prod_info.get("name"):
@@ -381,6 +384,14 @@ def _fetch_zoom_misc_detail(cat_id, hit, existing_history=None):
         except Exception:
             pass
 
+    ph_12m = []
+    if pid:
+        try:
+            from smartphone_scraper import fetch_zoom_12m_history
+            ph_12m = fetch_zoom_12m_history(pid)
+        except Exception:
+            ph_12m = []
+
     merged_hit = dict(hit)
     merged_hit["name"] = prod_name
     merged_hit["bestOffer"] = best_offer
@@ -394,14 +405,14 @@ def _fetch_zoom_misc_detail(cat_id, hit, existing_history=None):
         return None
 
     price_brl = enriched["price_brl"]
-    floor_valid = 8.0 if cat_id == "diapers" else 50.0
+    floor_valid = 8.0 if cat_id == "diapers" else max(50.0, price_brl * 0.35)
     hist_by_date = {}
     for h in (existing_history or []):
         d_str = str(h.get("date") or "")[:10]
         p_val = float(h.get("price") or 0)
         if d_str and p_val >= floor_valid:
             hist_by_date[d_str] = {"date": d_str, "price": round(p_val, 2), "store": h.get("store") or "zoom"}
-    for h in ph_days:
+    for h in (ph_12m or []) + (ph_days or []):
         d_str = str(h.get("date") or "")[:10]
         try:
             p_val = float(h.get("price") or 0)
@@ -414,11 +425,12 @@ def _fetch_zoom_misc_detail(cat_id, hit, existing_history=None):
         cur = hist_by_date.get(today_str)
         if not cur or price_brl < cur["price"]:
             hist_by_date[today_str] = {"date": today_str, "price": round(price_brl, 2), "store": enriched.get("store_name") or "Zoom BR"}
-    history = sorted(hist_by_date.values(), key=lambda x: x["date"])[-365:]
+    history = sorted(hist_by_date.values(), key=lambda x: x["date"])[-600:]
 
     price_stats = _compute_price_stats(price_brl, history)
     overall_score, cb_score = _compute_misc_scores(cat_id, price_brl, enriched["specs"], price_stats)
 
+    enriched["zoom_product_id"] = pid
     enriched["history"] = history
     enriched["price_stats"] = price_stats
     enriched["overall_score"] = overall_score
@@ -537,8 +549,8 @@ def refresh_live_misc_prices(db):
                         hist[-1]["price"] = new_p
                 else:
                     hist.append({"date": today_str, "price": new_p, "store": it.get("store_name") or "Zoom BR"})
-                    if len(hist) > 365:
-                        it["history"] = hist[-365:]
+                    if len(hist) > 600:
+                        it["history"] = hist[-600:]
                 it["price_stats"] = _compute_price_stats(new_p, it["history"])
                 it["overall_score"], it["cb_score"] = _compute_misc_scores(cid, new_p, it.get("specs") or {}, it["price_stats"])
             updated += 1

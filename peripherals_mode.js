@@ -270,21 +270,27 @@ function renderPeripheralsTab() {
         const mA = Object.fromEntries(hA.map(x => [x.date, x.price]));
         const mB = Object.fromEntries(hB.map(x => [x.date, x.price]));
         const lbls = dates.length ? dates : ['Hoje'];
+        const multiYear = lbls.length > 1 && lbls[0].length >= 4 && lbls[lbls.length - 1].length >= 4 && lbls[0].slice(0, 4) !== lbls[lbls.length - 1].slice(0, 4);
+        const fmtDateLbl = d => (d && d.length >= 10)
+          ? (multiYear ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}` : `${d.slice(8, 10)}/${d.slice(5, 7)}`)
+          : (d || '');
+        const ptRadius = lbls.length > 90 ? 0 : 2;
         _periphCharts.duelHistory = new Chart(histCanvas, {
           type: 'line',
           data: {
-            labels: lbls.map(d => d.slice(5) || d),
+            labels: lbls.map(fmtDateLbl),
             datasets: [
-              { label: shortPeripherName(itemA), data: lbls.map(d => mA[d] ?? itemA.price_brl), borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, pointRadius: 2 },
-              { label: shortPeripherName(itemB), data: lbls.map(d => mB[d] ?? itemB.price_brl), borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, pointRadius: 2 }
+              { label: shortPeripherName(itemA), data: lbls.map(d => mA[d] ?? (dates.length ? null : itemA.price_brl)), borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, spanGaps: true, pointRadius: ptRadius, pointHoverRadius: 4 },
+              { label: shortPeripherName(itemB), data: lbls.map(d => mB[d] ?? (dates.length ? null : itemB.price_brl)), borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, spanGaps: true, pointRadius: ptRadius, pointHoverRadius: 4 }
             ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
             plugins: { legend: { labels: { color: colors.text, boxWidth: 10 } } },
             scales: {
-              x: { ticks: { color: colors.muted, maxTicksLimit: 7 }, grid: { color: colors.grid } },
+              x: { ticks: { color: colors.muted, maxTicksLimit: 9 }, grid: { color: colors.grid } },
               y: { ticks: { color: colors.muted, callback: v => fmtBRLShort(v) }, grid: { color: colors.grid } }
             }
           }
@@ -564,21 +570,27 @@ function renderPeripheralsDuelAnalysis() {
     const mA = Object.fromEntries(hA.map(x => [x.date, x.price]));
     const mB = Object.fromEntries(hB.map(x => [x.date, x.price]));
     const lbls = dates.length ? dates : ['Hoje'];
+    const multiYear = lbls.length > 1 && lbls[0].length >= 4 && lbls[lbls.length - 1].length >= 4 && lbls[0].slice(0, 4) !== lbls[lbls.length - 1].slice(0, 4);
+    const fmtDateLbl = d => (d && d.length >= 10)
+      ? (multiYear ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}` : `${d.slice(8, 10)}/${d.slice(5, 7)}`)
+      : (d || '');
+    const ptRadius = lbls.length > 90 ? 0 : 2;
     _periphCharts.mainDuelHistory = new Chart(histCanvas, {
       type: 'line',
       data: {
-        labels: lbls.map(d => d.slice(5) || d),
+        labels: lbls.map(fmtDateLbl),
         datasets: [
-          { label: shortPeripherName(itemA), data: lbls.map(d => mA[d] ?? itemA.price_brl), borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, pointRadius: 2 },
-          { label: shortPeripherName(itemB), data: lbls.map(d => mB[d] ?? itemB.price_brl), borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, pointRadius: 2 }
+          { label: shortPeripherName(itemA), data: lbls.map(d => mA[d] ?? (dates.length ? null : itemA.price_brl)), borderColor: colors.cmpA, backgroundColor: colors.cmpAFill, tension: 0.25, spanGaps: true, pointRadius: ptRadius, pointHoverRadius: 4 },
+          { label: shortPeripherName(itemB), data: lbls.map(d => mB[d] ?? (dates.length ? null : itemB.price_brl)), borderColor: colors.cmpB, backgroundColor: colors.cmpBFill, tension: 0.25, spanGaps: true, pointRadius: ptRadius, pointHoverRadius: 4 }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: { legend: { labels: { color: colors.text, boxWidth: 10 } } },
         scales: {
-          x: { ticks: { color: colors.muted, maxTicksLimit: 8 }, grid: { color: colors.grid } },
+          x: { ticks: { color: colors.muted, maxTicksLimit: 9 }, grid: { color: colors.grid } },
           y: { ticks: { color: colors.muted, callback: v => fmtBRLShort(v) }, grid: { color: colors.grid } }
         }
       }

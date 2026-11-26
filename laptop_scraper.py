@@ -258,6 +258,7 @@ def fetch_zoom_laptop_detail(hit, existing_history=None):
 
     raw = {
         "slug": slug,
+        "zoom_product_id": pid,
         "name": prod_name,
         "offer_title": offer_title,
         "href": full_url,
@@ -701,6 +702,7 @@ def enrich_laptop_specs(raw):
 
     return {
         "slug": raw["slug"],
+        "zoom_product_id": str(raw.get("zoom_product_id") or ""),
         "name": name,
         "brand": brand,
         "line": line or brand,

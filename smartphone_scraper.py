@@ -1031,8 +1031,221 @@ def backfill_smartphone_histories(db_path):
     return upgraded
 
 
+def _recompute_laptop_price_stats(price_brl, history):
+    all_prices = [float(h["price"]) for h in (history or []) if h.get("price") and float(h["price"]) >= 800]
+    if price_brl > 0:
+        all_prices.append(float(price_brl))
+    if not all_prices:
+        all_prices = [float(price_brl or 3000.0)]
+    prices_30d = all_prices[-30:]
+    prices_90d = all_prices[-90:]
+    min_all = round(min(all_prices), 2)
+    min_90d = round(min(prices_90d), 2)
+    avg_30d = round(statistics.mean(prices_30d), 2)
+    avg_90d = round(statistics.mean(prices_90d), 2)
+    median_180d = round(statistics.median(all_prices[-180:]), 2)
+    sorted_recent = sorted(prices_90d)
+    p20_idx = max(0, int(len(sorted_recent) * 0.20) - 1)
+    target_price = round(sorted_recent[p20_idx], 2)
+    vs_avg_90d_pct = round(((price_brl - avg_90d) / avg_90d) * 100, 1) if avg_90d > 0 else 0.0
+    vs_min_90d_pct = round(((price_brl - min_90d) / min_90d) * 100, 1) if min_90d > 0 else 0.0
+    vs_target_brl = round(price_brl - target_price, 2)
+    if price_brl <= target_price * 1.03:
+        p_status = "great"
+    elif vs_avg_90d_pct <= 5.0:
+        p_status = "normal"
+    elif vs_avg_90d_pct <= 14.0:
+        p_status = "rising"
+    else:
+        p_status = "inflated"
+    return {
+        "target_price": target_price,
+        "min_all_time": min_all,
+        "min_90d": min_90d,
+        "avg_30d": avg_30d,
+        "avg_90d": avg_90d,
+        "median_180d": median_180d,
+        "vs_avg_90d_pct": vs_avg_90d_pct,
+        "vs_min_90d_pct": vs_min_90d_pct,
+        "vs_target_brl": vs_target_brl,
+        "status": p_status,
+    }
+
+
+def backfill_all_zoom_histories(db_path):
+    """Backfills full 12-month (~366d) Zoom BR price histories for laptops, peripherals, air fryers & diapers."""
+    import laptop_scraper
+    import peripherals_scraper
+    import misc_scraper
+
+    with open(db_path, "r", encoding="utf-8") as f:
+        db = json.load(f)
+
+    # 1. Resolve Zoom sourceIds quickly from category shelves
+    pid_by_slug = {}
+    try:
+        for h in (laptop_scraper.fetch_zoom_laptop_listings() or []):
+            sl = (h.get("seoUrl") or "").strip().lower()
+            sid = str(h.get("sourceId") or "").strip()
+            if sl and sid.isdigit():
+                pid_by_slug[sl] = sid
+    except Exception as e:
+        print(f"[BackfillAll] Laptop shelf warning: {e}")
+
+    try:
+        for _, h in (peripherals_scraper.fetch_zoom_peripheral_listings() or []):
+            sl = (h.get("seoUrl") or "").strip().lower()
+            sid = str(h.get("sourceId") or "").strip()
+            if sl and sid.isdigit():
+                pid_by_slug[sl] = sid
+    except Exception as e:
+        print(f"[BackfillAll] Peripherals shelf warning: {e}")
+
+    try:
+        cfg = misc_scraper.load_misc_config()
+        misc_paths = []
+        for cat in (cfg.get("categories") or misc_scraper.DEFAULT_MISC_CATEGORIES):
+            misc_paths.extend(cat.get("zoom_paths") or [])
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+            for batch in ex.map(lambda p: misc_scraper._fetch_zoom_search_hits(p, limit=24), misc_paths):
+                for h in (batch or []):
+                    sl = (h.get("seoUrl") or "").strip().lower()
+                    sid = str(h.get("sourceId") or "").strip()
+                    if sl and sid.isdigit():
+                        pid_by_slug[sl] = sid
+    except Exception as e:
+        print(f"[BackfillAll] Misc shelf warning: {e}")
+
+    targets = [
+        ("laptops", db.get("laptops") or [], 800.0),
+        ("peripherals", db.get("peripherals") or [], 18.0),
+        ("misc_air_fryer", (db.get("misc_catalog") or {}).get("air_fryer") or [], 50.0),
+        ("misc_diapers", (db.get("misc_catalog") or {}).get("diapers") or [], 8.0),
+    ]
+
+    all_items = []
+    missing = []
+    for gname, arr, _ in targets:
+        for it in arr:
+            sl = (it.get("slug") or "").strip().lower()
+            pid = str(it.get("zoom_product_id") or "").strip()
+            if not pid.isdigit() and sl in pid_by_slug:
+                pid = pid_by_slug[sl]
+            if pid.isdigit():
+                it["zoom_product_id"] = pid
+            else:
+                missing.append(it)
+            all_items.append(it)
+
+    print(f"[BackfillAll] Resolved {len(all_items) - len(missing)}/{len(all_items)} IDs from shelves; resolving {len(missing)} remaining product pages...")
+
+    def _resolve_pid_generic(it):
+        url = (it.get("offer_url") or it.get("href") or "").strip()
+        if not url or "zoom.com.br" not in url:
+            return it.get("slug"), ""
+        for attempt in range(2):
+            time.sleep(0.25)
+            try:
+                req = urllib.request.Request(url, headers=SCRAPER_HEADERS)
+                html_str = urllib.request.urlopen(req, timeout=12).read().decode("utf-8", errors="ignore")
+                m = re.search(r'id="__NEXT_DATA__"[^>]*>(.*?)</script>', html_str, re.S)
+                if m:
+                    d = json.loads(m.group(1))
+                    pid = str(d.get("props", {}).get("pageProps", {}).get("page", {}).get("productID") or "").strip()
+                    if pid.isdigit():
+                        return it.get("slug"), pid
+                return it.get("slug"), ""
+            except urllib.error.HTTPError as e:
+                if e.code == 429 and attempt == 0:
+                    time.sleep(1.8)
+                    continue
+                return it.get("slug"), ""
+            except Exception:
+                return it.get("slug"), ""
+        return it.get("slug"), ""
+
+    if missing:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+            for sl, pid in ex.map(_resolve_pid_generic, missing):
+                if sl and pid:
+                    pid_by_slug[sl] = pid
+        for it in all_items:
+            sl = (it.get("slug") or "").strip().lower()
+            if not str(it.get("zoom_product_id") or "").isdigit() and sl in pid_by_slug:
+                it["zoom_product_id"] = pid_by_slug[sl]
+
+    # Unique PID fetch map (dedup if two entries share a PID)
+    unique_pids = sorted({str(it.get("zoom_product_id")).strip() for it in all_items if str(it.get("zoom_product_id") or "").isdigit()})
+    print(f"[BackfillAll] Fetching 12-month RESTQL histories for {len(unique_pids)} unique Zoom IDs across {len(all_items)} items...")
+
+    hist_by_pid = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+        for pid, rows in zip(unique_pids, ex.map(fetch_zoom_12m_history, unique_pids)):
+            if rows:
+                hist_by_pid[pid] = rows
+
+    for gname, arr, min_abs in targets:
+        before_lens = [len(it.get("history") or []) for it in arr]
+        upgraded = 0
+        for it in arr:
+            pid = str(it.get("zoom_product_id") or "").strip()
+            new_rows = hist_by_pid.get(pid) or []
+            cur_price = float(it.get("price_brl") or 0)
+            floor_valid = max(min_abs, cur_price * 0.35) if cur_price > 0 else min_abs
+
+            hist_by_date = {}
+            for h in (it.get("history") or []):
+                d_str = str(h.get("date") or "")[:10]
+                try:
+                    pv = float(h.get("price") or 0)
+                except (TypeError, ValueError):
+                    pv = 0.0
+                if d_str and pv >= floor_valid:
+                    hist_by_date[d_str] = {"date": d_str, "price": round(pv, 2), "store": h.get("store") or "zoom"}
+
+            for h in new_rows:
+                d_str = str(h.get("date") or "")[:10]
+                try:
+                    pv = float(h.get("price") or 0)
+                except (TypeError, ValueError):
+                    pv = 0.0
+                if d_str and pv >= floor_valid:
+                    prev_pt = hist_by_date.get(d_str)
+                    if not prev_pt or prev_pt.get("store") in ("zoom", "Zoom BR"):
+                        hist_by_date[d_str] = {"date": d_str, "price": round(pv, 2), "store": "zoom"}
+
+            merged = sorted(hist_by_date.values(), key=lambda x: x["date"])[-600:]
+            if len(merged) > len(it.get("history") or []):
+                upgraded += 1
+            it["history"] = merged
+
+            if gname == "laptops":
+                it["price_stats"] = _recompute_laptop_price_stats(cur_price, merged)
+            elif gname == "peripherals":
+                it["price_stats"] = peripherals_scraper._compute_price_stats(cur_price, merged)
+            else:
+                cid = "air_fryer" if gname == "misc_air_fryer" else "diapers"
+                it["price_stats"] = misc_scraper._compute_price_stats(cur_price, merged)
+                it["overall_score"], it["cb_score"] = misc_scraper._compute_misc_scores(cid, cur_price, it.get("specs") or {}, it["price_stats"])
+
+        after_lens = [len(it.get("history") or []) for it in arr]
+        print(
+            f"  [{gname}] {upgraded}/{len(arr)} expanded | "
+            f"before(min={min(before_lens) if before_lens else 0}, med={sorted(before_lens)[len(before_lens)//2] if before_lens else 0}, max={max(before_lens) if before_lens else 0}) -> "
+            f"after(min={min(after_lens) if after_lens else 0}, med={sorted(after_lens)[len(after_lens)//2] if after_lens else 0}, max={max(after_lens) if after_lens else 0})"
+        )
+
+    db["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(db_path, "w", encoding="utf-8") as f:
+        json.dump(db, f, ensure_ascii=False, indent=2)
+    print(f"[BackfillAll] Saved updated histories to {db_path}")
+
+
 if __name__ == "__main__":
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "hardware_db.json")
+    if "--backfill-all" in sys.argv:
+        backfill_all_zoom_histories(db_path)
+        sys.exit(0)
     if "--backfill-history" in sys.argv:
         backfill_smartphone_histories(db_path)
         sys.exit(0)
