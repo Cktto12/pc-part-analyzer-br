@@ -4765,18 +4765,25 @@ function enableMobileBackgroundKeepAlive(enable) {
   }
 }
 
-// ===== Disjuntor dos proxies públicos do Telegram =====
-// Tenta primeiro o r.jina.ai (Cloudflare + HTML bruto com CORS), depois fallbacks
-// públicos. Em falhas consecutivas pausa 3 min para evitar rajadas de erro.
-const TG_PROXY_BREAKER_KEY = 'gca-tg-proxy-down-v2';
-const TG_PROXY_FAIL_LIMIT = 5;            // canais seguidos sem resposta
-const TG_PROXY_COOLDOWN_MS = 3 * 60000;   // pausa de 3 min
+// ===== Leitura direta do Telegram + fallback sincronizado (Cloud 5m) =====
+const TG_PROXY_BREAKER_KEY = 'gca-tg-proxy-down-v3';
+const TG_PROXY_FAIL_LIMIT = 4;
+const TG_PROXY_COOLDOWN_MS = 3 * 60000;
 let _tgProxyFailStreak = 0;
+let _localBridgeAlive = null;     // null | true | false
+let _localBridgeCheckedAt = 0;
+let _localBridgeProbePromise = null;
+let _jinaBlockedUntil = 0;
+let _lastCloudPromosSyncAt = 0;
 
 function clearTgProxyBreaker() {
   _tgProxyFailStreak = 0;
+  _jinaBlockedUntil = 0;
+  _localBridgeAlive = null;
+  _localBridgeCheckedAt = 0;
   try {
     sessionStorage.removeItem(TG_PROXY_BREAKER_KEY);
+    sessionStorage.removeItem('gca-tg-proxy-down-v2');
     sessionStorage.removeItem('gca-tg-proxy-down-until');
   } catch (_) {}
 }
@@ -4800,34 +4807,107 @@ function _tgProxyResult(ok) {
 }
 window.isTgProxyDown = isTgProxyDown;
 
+async function _isLocalLoopbackBridgeAvailable(forceCheck = false) {
+  const now = Date.now();
+  if (!forceCheck && _localBridgeAlive !== null && (now - _localBridgeCheckedAt) < 60000) {
+    return _localBridgeAlive;
+  }
+  if (_localBridgeProbePromise) return await _localBridgeProbePromise;
+  _localBridgeProbePromise = (async () => {
+    try {
+      const r = await fetchWithTimeout('http://127.0.0.1:8080/api/market-config', { cache: 'no-store' }, 1400);
+      _localBridgeAlive = Boolean(r && r.ok);
+    } catch (_) {
+      _localBridgeAlive = false;
+    } finally {
+      _localBridgeCheckedAt = Date.now();
+      _localBridgeProbePromise = null;
+    }
+    return _localBridgeAlive;
+  })();
+  return await _localBridgeProbePromise;
+}
+
 async function fetchTelegramChannelHTML(chId, query, forceDirect = false) {
   const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
+  const qs = `ch=${encodeURIComponent(chId)}&q=${encodeURIComponent(query || '')}`;
+
   if (!isStatic) {
     try {
-      const r = await fetchWithTimeout(`/api/tg-raw?ch=${encodeURIComponent(chId)}&q=${encodeURIComponent(query || '')}`, { cache: 'no-store' }, 4500);
+      const r = await fetchWithTimeout(`/api/tg-raw?${qs}`, { cache: 'no-store' }, 4500);
       if (r.ok) {
         const txt = await r.text();
         if (txt) return txt;
       }
     } catch (_) {}
   }
+
   if (forceDirect) {
     clearTgProxyBreaker();
-  } else if (isTgProxyDown()) {
-    return '';
   }
 
+  // 1. Optional custom proxy URL (e.g. user Cloudflare Worker stored in localStorage)
+  try {
+    const customBase = (localStorage.getItem('gca-custom-tg-proxy') || '').trim();
+    if (customBase) {
+      const target = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
+      const u = customBase.includes('{url}') ? customBase.replace('{url}', encodeURIComponent(target)) : `${customBase}?url=${encodeURIComponent(target)}`;
+      const rc = await fetchWithTimeout(u, { cache: 'no-store' }, 5000);
+      if (rc.ok) {
+        const txt = await rc.text();
+        if (txt && txt.includes('tgme_widget_message')) {
+          _tgProxyResult(true);
+          return txt;
+        }
+      }
+    }
+  } catch (_) {}
+
+  // 2. Local PC Python bridge (http://127.0.0.1:8080) works directly from GitHub Pages via PNA when server.py --lan runs on PC
+  if (isStatic && await _isLocalLoopbackBridgeAvailable(forceDirect)) {
+    try {
+      const rl = await fetchWithTimeout(`http://127.0.0.1:8080/api/tg-raw?${qs}`, { cache: 'no-store' }, 4500);
+      if (rl.ok) {
+        const txt = await rl.text();
+        if (txt && txt.includes('tgme_widget_message')) {
+          _tgProxyResult(true);
+          return txt;
+        }
+      }
+    } catch (_) {
+      _localBridgeAlive = false;
+      _localBridgeCheckedAt = Date.now();
+    }
+  }
+
+  if (!forceDirect && isTgProxyDown()) return '';
   const tgUrl = `https://t.me/s/${encodeURIComponent(chId)}` + (query ? `?q=${encodeURIComponent(query)}` : '');
 
-  // 1. Primary static reader: r.jina.ai with X-Respond-With: html (CORS preflight verified on github.io)
+  // 3. r.jina.ai raw HTML reader (skip cleanly for 5m if domain-throttled upstream)
+  if (forceDirect || Date.now() >= _jinaBlockedUntil) {
+    try {
+      const r = await fetchWithTimeout(
+        `https://r.jina.ai/${tgUrl}`,
+        { cache: 'no-store', headers: { 'X-Respond-With': 'html' } },
+        6000
+      );
+      if (r.status === 403 || r.status === 429) {
+        _jinaBlockedUntil = Date.now() + 5 * 60000;
+      } else if (r.ok) {
+        const txt = await r.text();
+        if (txt && txt.includes('tgme_widget_message')) {
+          _tgProxyResult(true);
+          return txt;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 4. Single reliable backup proxy (codetabs only; avoid CORS-less allorigins error floods)
   try {
-    const r = await fetchWithTimeout(
-      `https://r.jina.ai/${tgUrl}`,
-      { cache: 'no-store', headers: { 'X-Respond-With': 'html' } },
-      7000
-    );
-    if (r.ok) {
-      const txt = await r.text();
+    const rb = await fetchWithTimeout(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4500);
+    if (rb.ok) {
+      const txt = await rb.text();
       if (txt && txt.includes('tgme_widget_message')) {
         _tgProxyResult(true);
         return txt;
@@ -4835,32 +4915,6 @@ async function fetchTelegramChannelHTML(chId, query, forceDirect = false) {
     }
   } catch (_) {}
 
-  // 2. Backup CORS proxies (only invoked when r.jina.ai is unavailable or rate-limited)
-  const fallbackProxies = [
-    `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(tgUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(tgUrl)}`
-  ];
-  try {
-    const html = await Promise.any(fallbackProxies.map(async (pUrl) => {
-      const r = await fetchWithTimeout(pUrl, { cache: 'no-store' }, 4500);
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const txt = await r.text();
-      if (!txt || !txt.includes('tgme_widget_message')) throw new Error('Empty TG feed');
-      return txt;
-    }));
-    _tgProxyResult(true);
-    return html;
-  } catch (_) {}
-  try {
-    const rJson = await fetchWithTimeout(`https://api.allorigins.win/get?url=${encodeURIComponent(tgUrl)}`, { cache: 'no-store' }, 4500);
-    if (rJson.ok) {
-      const j = await rJson.json();
-      if (j && j.contents && j.contents.includes('tgme_widget_message')) {
-        _tgProxyResult(true);
-        return j.contents;
-      }
-    }
-  } catch (_) {}
   _tgProxyResult(false);
   return '';
 }
@@ -9904,6 +9958,43 @@ async function pollBFLiveCardsFeed(manual) {
     }
 
     PROMO_STATE.lastData.matched_deals = [...existingById.values()];
+
+    // When static public proxies return nothing, sync freshly from GitHub Actions 5-min promos_cache.json
+    let cloudSyncedTime = PROMO_STATE.lastData?.scanned_at || '';
+    if (isStatic && receivedRawCount === 0 && (manual || (Date.now() - _lastCloudPromosSyncAt) >= 25000)) {
+      try {
+        _lastCloudPromosSyncAt = Date.now();
+        const rawRes = await fetchWithTimeout(
+          `https://raw.githubusercontent.com/Cktto12/pc-part-analyzer-br/main/data/promos_cache.json?t=${Date.now()}`,
+          { cache: 'no-store' },
+          6000
+        );
+        if (rawRes.ok) {
+          const cloudData = await rawRes.json();
+          if (cloudData && Array.isArray(cloudData.matched_deals)) {
+            if (cloudData.coupon_status) {
+              if (!PROMO_STATE.couponStatus) PROMO_STATE.couponStatus = { coupons: {}, deals: {} };
+              Object.assign(PROMO_STATE.couponStatus.coupons || {}, cloudData.coupon_status.coupons || {});
+              Object.assign(PROMO_STATE.couponStatus.deals || {}, cloudData.coupon_status.deals || {});
+            }
+            cloudData.matched_deals.forEach(cd => {
+              if (!cd || !cd.post_id) return;
+              const ts = cd.timestamp ? Date.parse(cd.timestamp) : NaN;
+              const ageHrs = !isNaN(ts) ? Math.max(0.01, (Date.now() - ts) / 3600000) : (typeof cd.age_hours === 'number' ? cd.age_hours : 999);
+              if (!cd._isStoreDirect && (isNaN(ts) || ageHrs > maxAge)) return;
+              const overlaid = _applyCouponAndExpiryOverlay({ ...cd, age_hours: Math.round(ageHrs * 100) / 100 });
+              if (!overlaid.is_expired && overlaid.deal_status !== 'out_of_stock' && overlaid.deal_status !== 'expired') {
+                existingById.set(cd.post_id, overlaid);
+              }
+            });
+            PROMO_STATE.lastData.matched_deals = [...existingById.values()];
+            PROMO_STATE.lastData.scanned_at = cloudData.scanned_at || cloudSyncedTime;
+            cloudSyncedTime = PROMO_STATE.lastData.scanned_at;
+          }
+        }
+      } catch (_) {}
+    }
+
     if (typeof STATE !== 'undefined' && STATE.activeTab === 'bf-promos') {
       renderBFPromosCardsTab();
     }
@@ -9931,15 +10022,23 @@ async function pollBFLiveCardsFeed(manual) {
     }
     if (statusEl) {
       const nowStr = new Date().toLocaleTimeString('pt-BR');
-      const isStatic = window.location.hostname.endsWith('github.io') || window.location.protocol === 'file:';
       const pollLabel = isStatic ? '20s' : '10s';
-      const proxyDown = receivedRawCount === 0 && typeof isTgProxyDown === 'function' && isTgProxyDown();
-      statusEl.textContent = !_bfLiveEnabled
-        ? `⏸️ Pausado (${nowStr})`
-        : (proxyDown ? `🟡 Dados do robô • leitura direta indisponível (${nowStr})` : `🟢 Ao vivo • ${pollLabel} (${nowStr})`);
-      statusEl.title = proxyDown
-        ? 'Os serviços usados para ler o Telegram direto do navegador falharam temporariamente. As ofertas continuam vindo do robô e nova tentativa ocorrerá em até 3 min (ou ao clicar em Atualizar Agora).'
-        : 'Leitura direta dos canais do Telegram ativa.';
+      const hasCloudDeals = Boolean(cloudSyncedTime) && (PROMO_STATE.lastData?.matched_deals || []).length > 0;
+      if (!_bfLiveEnabled) {
+        statusEl.textContent = `⏸️ Pausado (${nowStr})`;
+        statusEl.title = 'Atualização automática pausada.';
+      } else if (receivedRawCount > 0) {
+        statusEl.textContent = `🟢 Ao vivo • ${pollLabel} (${nowStr})`;
+        statusEl.title = _localBridgeAlive
+          ? 'Leitura direta do Telegram ativa via ponte local (127.0.0.1:8080).'
+          : 'Leitura direta dos canais do Telegram ativa.';
+      } else if (hasCloudDeals) {
+        statusEl.textContent = `🟢 Radar Nuvem 5m • ${cloudSyncedTime}`;
+        statusEl.title = 'Ofertas sincronizadas automaticamente pelo robô GitHub Actions a cada 5 min. Com server.py --lan rodando no PC, o site também lê o Telegram diretamente.';
+      } else {
+        statusEl.textContent = `🟡 Reconectando (${nowStr})`;
+        statusEl.title = 'Aguardando resposta do radar.';
+      }
     }
   } catch (e) {
     if (statusEl) statusEl.textContent = '⚠️ Reconectando...';
