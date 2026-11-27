@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-27 00:17:30",
+  "updated_at": "2026-11-27 00:22:40",
   "source": "https://www.cyberpuerta.mx/",
   "gpus": [
     {
@@ -522520,8 +522520,8 @@
   "live_promos": {
     "ok": true,
     "region_id": "mx",
-    "scanned_at": "00:17:37",
-    "last_sitewise_test_at": "2026-11-27 00:17:37",
+    "scanned_at": "00:22:48",
+    "last_sitewise_test_at": "2026-11-27 00:22:48",
     "channels_scanned": [
       "promodescuentos_gpus",
       "promodescuentos_pc",
@@ -522603,7 +522603,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1213854",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 0.9,
+        "age_hours": 1.0,
         "requires_coupon": false,
         "promo_price_brl": 1109
       },
@@ -522625,7 +522625,7 @@
         "buy_url": "https://www.promodescuentos.com/share-deal/1213738",
         "coupon_url": null,
         "region_id": "mx",
-        "age_hours": 5.6,
+        "age_hours": 5.7,
         "requires_coupon": false,
         "promo_price_brl": 3719
       }
@@ -522845,8 +522845,8 @@
           "coupon_status": "none",
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206600%20XT",
-          "tested_ts": 1795738373.147337,
-          "updated_at": "2026-11-27 00:12:53"
+          "tested_ts": 1795738659.1479027,
+          "updated_at": "2026-11-27 00:17:39"
         },
         "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT": {
           "status": "untested",
@@ -522857,8 +522857,8 @@
           "coupon_status": "none",
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=RX%206700%20XT",
-          "tested_ts": 1795738373.7158794,
-          "updated_at": "2026-11-27 00:12:53"
+          "tested_ts": 1795738659.6373034,
+          "updated_at": "2026-11-27 00:17:39"
         },
         "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D": {
           "status": "untested",
@@ -522869,11 +522869,11 @@
           "coupon_status": "none",
           "store_name": "Loja",
           "final_url": "https://www.cyberpuerta.mx/index.php?cl=search&searchparam=Ryzen%209%207950X3D",
-          "tested_ts": 1795738374.6922488,
-          "updated_at": "2026-11-27 00:12:54"
+          "tested_ts": 1795738660.362279,
+          "updated_at": "2026-11-27 00:17:40"
         }
       },
-      "updated_at": "2026-11-27 00:12:54",
+      "updated_at": "2026-11-27 00:17:40",
       "group_coupons": {
         "MXBF1": {
           "store_key": null,
@@ -612720,8 +612720,8 @@
       "line": "Galaxy",
       "category": "entry",
       "os": "Android 15",
-      "price_brl": 989.0,
-      "regular_price_brl": 989.0,
+      "price_brl": 879.2,
+      "regular_price_brl": 879.2,
       "store_name": "Americanas",
       "offer_url": "https://www.zoom.com.br/celular/celular-samsung-galaxy-a17-128gb-4-gb",
       "image_url": "https://image.zst.com.br/FAEE241E16D914234C3A0850CC28F9B6_235_235.jpg",
@@ -614614,7 +614614,7 @@
         },
         {
           "date": "2026-11-27",
-          "price": 989.0,
+          "price": 879.2,
           "store": "Americanas"
         }
       ],
@@ -617848,8 +617848,8 @@
       "line": "iPhone",
       "category": "upper_mid",
       "os": "iOS",
-      "price_brl": 2629.0,
-      "regular_price_brl": 2629.0,
+      "price_brl": 2497.55,
+      "regular_price_brl": 2497.55,
       "store_name": "Amazon",
       "offer_url": "https://www.zoom.com.br/celular/smartphone-apple-iphone-13-256gb-ios",
       "image_url": "https://image.zst.com.br/38EFB89A4951631BAF0488E59F8F0E55_235_235.jpg",
@@ -619737,7 +619737,7 @@
         },
         {
           "date": "2026-11-27",
-          "price": 2629.0,
+          "price": 2497.55,
           "store": "Amazon"
         }
       ],
@@ -965303,21 +965303,26 @@
             "date": "2026-11-26",
             "price": 53.89,
             "store": "Americanas"
+          },
+          {
+            "date": "2026-11-27",
+            "price": 53.89,
+            "store": "Americanas"
           }
         ],
         "price_stats": {
           "target_price": 47.24,
           "min_all_time": 44.99,
           "min_90d": 44.99,
-          "avg_30d": 53.43,
-          "avg_90d": 57.92,
+          "avg_30d": 53.06,
+          "avg_90d": 57.83,
           "median_180d": 61.99,
-          "vs_avg_90d_pct": -7.0,
+          "vs_avg_90d_pct": -6.8,
           "vs_min_90d_pct": 19.8,
           "status": "fair"
         },
         "overall_score": 51.6,
-        "cb_score": 44.2,
+        "cb_score": 44.1,
         "zoom_product_id": "952578"
       },
       {
